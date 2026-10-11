@@ -126,7 +126,8 @@ pub use super::unbind_primitive_material::UnbindPrimitiveMaterialMutation;
 pub use super::unbind_scene_root_node::UnbindSceneRootNodeMutation;
 
 /// 🧬️ The complete glTF 2.0 semantic mutation vocabulary.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[mutations(snapshot = GltfSnapshot, diff = GltfDiff, schema = "s.stdio.gltf")]
 pub enum GltfMutation {

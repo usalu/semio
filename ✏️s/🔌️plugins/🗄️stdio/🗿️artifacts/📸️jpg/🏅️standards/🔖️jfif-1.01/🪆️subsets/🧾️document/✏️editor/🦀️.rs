@@ -44,7 +44,7 @@ use semio_framework_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum JpgAnyEditCommand {
     SetPixelRegion {
         pixels: Vec<u8>,
@@ -243,6 +243,7 @@ impl ArtifactEditor for JpgAnyEditor {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
+            retained: request.retained,
         };
         let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
@@ -264,7 +265,7 @@ impl ArtifactEditor for JpgAnyEditor {
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,

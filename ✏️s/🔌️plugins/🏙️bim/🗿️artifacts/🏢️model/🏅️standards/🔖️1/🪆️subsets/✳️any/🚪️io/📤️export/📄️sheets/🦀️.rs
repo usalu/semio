@@ -5,7 +5,7 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::{ModelInference, ModelSnapshot};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
@@ -75,8 +75,8 @@ pub struct ModelIntoSheetsPdf;
 impl Serializer<ModelSnapshot> for ModelIntoSheetsPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
-        let bytes = registry::try_with_inference(None, from, |inferred| sheets_pdf(from, inferred, None, &TitleLabels::english()))
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+        let bytes = inference::try_with_inference(None, from, |inferred| sheets_pdf(from, inferred, None, &TitleLabels::english()))
             .map_err(|error| error.to_string())
             .and_then(|written| written)
             .map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ModelIntoSheetsPdf: {message}"))))?;

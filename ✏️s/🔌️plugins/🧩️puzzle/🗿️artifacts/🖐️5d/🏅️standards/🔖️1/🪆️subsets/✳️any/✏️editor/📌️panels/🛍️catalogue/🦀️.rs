@@ -69,11 +69,11 @@ fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> Value {
     if let Some(object) = payload.as_object_mut() {
         for key in ["shape", "radius", "width", "height", "iconKind", "meshUrl"] {
             if let Some(value) = entry.get(key) {
-                object.insert(key.into(), value.clone());
+                object.insert(key, value.clone());
             }
         }
     }
-    json!({ (PUZZLE5D_CATALOGUE_DRAG_MIME): payload.to_string() })
+    semio_framework_pack_json::object([(PUZZLE5D_CATALOGUE_DRAG_MIME.to_string(), Value::String(payload.to_string()))])
 }
 
 fn add_part_args(kind_id: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {

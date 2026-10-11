@@ -119,7 +119,7 @@ enum TestRelayOutcome {
 }
 
 fn admit_test_relay(relay: GuestColdRelayJob, params: semio_framework_job::BatchJobParams) -> semio_framework_job::WorkerJobSession<GuestColdRelayJob> {
-    match semio_framework_job::WorkerJobSession::try_new(relay, params) {
+    match admit_guest_relay_session(relay, params, test_relay_drive_policy()) {
         Ok(session) => session,
         Err(mut rejected) => {
             rejected.begin_close();
@@ -131,41 +131,42 @@ fn admit_test_relay(relay: GuestColdRelayJob, params: semio_framework_job::Batch
     }
 }
 
-fn test_payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
-    let mut bytes = Vec::with_capacity(payload.len());
-    for page in 0..payload.page_count() {
-        if let Some(page) = payload.page(page) {
-            bytes.extend_from_slice(page);
-        }
-    }
-    bytes
-}
-
-async fn test_relay_step(session: &semio_framework_job::WorkerJobSession<GuestColdRelayJob>, _pool: &WorkerPool) -> TestRelayOutcome {
+async fn test_relay_step(session: &mut semio_framework_job::WorkerJobSession<GuestColdRelayJob>, _pool: &WorkerPool) -> TestRelayOutcome {
+    let grant = test_relay_drive_policy();
     if matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
-        let _ = session.close_step(test_relay_drive_policy());
+        let _ = session.close_step(grant);
         return TestRelayOutcome::Yield;
     }
-    let (ticket, poll) = session.try_step_on_caller().expect("relay test caller opportunity");
-    let mut owner = match poll {
-        semio_framework_job::WorkerJobPoll::Outcome => session.take_outcome(ticket).expect("relay test outcome"),
-        semio_framework_job::WorkerJobPoll::Terminal => session.take_terminal().expect("relay test terminal"),
-        _ => return TestRelayOutcome::Yield,
+    let GuestRelayStep::Checked(mut checked, _receipt) = step_guest_relay_owner(session, grant) else { return TestRelayOutcome::Yield };
+    let mut bytes = Vec::new();
+    let mut page = 0;
+    let kind = loop {
+        let (payload, kind) = read_guest_relay_outcome_page(&checked, page).expect("relay test outcome page");
+        match payload {
+            Some(payload) => {
+                bytes.extend_from_slice(payload);
+                page += 1;
+            }
+            None => break kind,
+        }
     };
-    let mut outcome = owner.take_outcome();
-    let result = match &outcome {
-        semio_framework_job::StepOutcome::Complete(candidate) => TestRelayOutcome::Complete(test_payload_bytes(&candidate.output)),
-        semio_framework_job::StepOutcome::Cancelled => TestRelayOutcome::Cancelled,
-        semio_framework_job::StepOutcome::Fault(fault) => TestRelayOutcome::Fault(test_payload_bytes(&fault.detail)),
-        semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => TestRelayOutcome::Yield,
+    let result = match kind {
+        GuestRelayOutcomeKind::Continues => TestRelayOutcome::Yield,
+        GuestRelayOutcomeKind::Complete => TestRelayOutcome::Complete(bytes),
+        GuestRelayOutcomeKind::Cancelled => TestRelayOutcome::Cancelled,
+        GuestRelayOutcomeKind::Fault => TestRelayOutcome::Fault(bytes),
     };
-    while !outcome.terminal_is_empty() {
-        let _ = outcome.close_step(test_relay_drive_policy());
+    for _ in 0..256 {
+        if matches!(checked.acknowledge_outcome(grant), semio_framework_value::RetainedCloneStep::Complete(_)) {
+            break;
+        }
     }
-    if outcome.is_terminal() {
-        owner.begin_close();
-    } else if let Err(owner) = owner.resume() {
-        owner.begin_close();
+    if kind == GuestRelayOutcomeKind::Continues {
+        if let Err(checked) = checked.resume() {
+            checked.begin_close();
+        }
+    } else {
+        checked.begin_close();
     }
     result
 }
@@ -210,7 +211,8 @@ fn mounted_test_session(generation: u64, lifecycle: GuestRelayMountedLifecycle, 
         owner: GuestRelayMountedOwner::Empty,
         checked_out: None,
         lifecycle_probe_checked_out: None,
-        outcome: None,
+        outcome_stage: GuestRelayOutcomeStage::Idle,
+        outcome_kind: GuestRelayOutcomeKind::Continues,
         outcome_page: 0,
         output: mounted_output,
         terminal: Some(GuestRelayMountedTerminal::Complete),
@@ -296,7 +298,7 @@ async fn relay_session_with_tokens(
     step: JobStep,
 ) -> (semio_framework_job::WorkerJobSession<GuestColdRelayJob>, Arc<MockJobStepGate>, Arc<Mutex<GuestInstanceSlot>>) {
     let compiled = mock.compile(&PackageRef { package: PackageId("relay-test".to_string()), hash: PackageHash([41; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
     let instance = Arc::new(Mutex::new(GuestInstanceSlot::Available(instance)));
     let gate = mock.script_pending_job_step(actor, step).await;
     let relay = GuestColdRelayJob::new(Arc::new(GuestRuntimes::Mock(mock)), Arc::clone(&instance), Arc::new(semio_framework_async::Semaphore::new(1)), pool, relay_cancel, 1, ("semio.infer".to_string(), b"request".to_vec()));
@@ -328,7 +330,7 @@ async fn relay_session(
 
 async fn mounted_handle(mock: Arc<MockGuestRuntime>, actor: RuntimeActorId) -> PluginInstanceHandle {
     let compiled = mock.compile(&PackageRef { package: PackageId("mounted-relay-test".to_string()), hash: PackageHash([43; 32]) }, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
     PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance,test_relay_wake_authority()).await
 }
 
@@ -358,7 +360,7 @@ async fn relay_session_for_handle(
     (admit_test_relay(relay, params), gate)
 }
 
-async fn drive_until_step_admitted(session: &semio_framework_job::WorkerJobSession<GuestColdRelayJob>, pool: &WorkerPool, mock: &MockGuestRuntime) {
+async fn drive_until_step_admitted(session: &mut semio_framework_job::WorkerJobSession<GuestColdRelayJob>, pool: &WorkerPool, mock: &MockGuestRuntime) {
     for _ in 0..64 {
         assert_eq!(test_relay_step(session, pool).await, TestRelayOutcome::Yield);
         if mock.step_admissions() == 1 {
@@ -555,11 +557,11 @@ async fn pending_guest_releases_the_only_worker_and_admits_no_duplicate_step() {
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
     let mock = Arc::new(MockGuestRuntime::new().await);
     let cancel = semio_framework_async::CancelToken::root_now();
-    let (session, gate, _) = relay_session(Arc::clone(&mock), RuntimeActorId(8_001), pool.clone(), cancel, JobStep::Done { output: b"done".to_vec() }).await;
-    drive_until_step_admitted(&session, &pool, &mock).await;
+    let (mut session, gate, _) = relay_session(Arc::clone(&mock), RuntimeActorId(8_001), pool.clone(), cancel, JobStep::Done { output: b"done".to_vec() }).await;
+    drive_until_step_admitted(&mut session, &pool, &mock).await;
 
     for _ in 0..8 {
-        assert_eq!(test_relay_step(&session, &pool).await, TestRelayOutcome::Yield);
+        assert_eq!(test_relay_step(&mut session, &pool).await, TestRelayOutcome::Yield);
     }
     assert_eq!(mock.start_admissions(), 1);
     assert_eq!(mock.step_admissions(), 1, "pending caller turns must only try-receive the admitted guest future");
@@ -575,13 +577,13 @@ async fn pending_guest_releases_the_only_worker_and_admits_no_duplicate_step() {
 
     gate.release();
     let terminal = loop {
-        let outcome = test_relay_step(&session, &pool).await;
+        let outcome = test_relay_step(&mut session, &pool).await;
         if !matches!(outcome, TestRelayOutcome::Yield) {
             break outcome;
         }
     };
     assert_eq!(terminal, TestRelayOutcome::Complete(b"done".to_vec()));
-    assert_eq!(test_relay_step(&session, &pool).await, TestRelayOutcome::Yield);
+    assert_eq!(test_relay_step(&mut session, &pool).await, TestRelayOutcome::Yield);
     assert_eq!(mock.step_admissions(), 1, "neither pending polls nor terminal replay may duplicate guest admission");
     pool.shutdown().expect("worker shutdown");
 }
@@ -591,18 +593,18 @@ async fn cancellation_race_admits_one_guest_cancel_and_one_terminal_outcome() {
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
     let mock = Arc::new(MockGuestRuntime::new().await);
     let cancel = semio_framework_async::CancelToken::root_now();
-    let (session, _gate, _) = relay_session(Arc::clone(&mock), RuntimeActorId(8_002), pool.clone(), cancel.clone(), JobStep::Done { output: b"raced".to_vec() }).await;
-    drive_until_step_admitted(&session, &pool, &mock).await;
+    let (mut session, _gate, _) = relay_session(Arc::clone(&mock), RuntimeActorId(8_002), pool.clone(), cancel.clone(), JobStep::Done { output: b"raced".to_vec() }).await;
+    drive_until_step_admitted(&mut session, &pool, &mock).await;
 
     cancel.cancel_now();
     let terminal = loop {
-        let outcome = test_relay_step(&session, &pool).await;
+        let outcome = test_relay_step(&mut session, &pool).await;
         if !matches!(outcome, TestRelayOutcome::Yield) {
             break outcome;
         }
     };
     assert_eq!(terminal, TestRelayOutcome::Cancelled);
-    assert_eq!(test_relay_step(&session, &pool).await, TestRelayOutcome::Yield, "the terminal cancellation must not be delivered twice");
+    assert_eq!(test_relay_step(&mut session, &pool).await, TestRelayOutcome::Yield, "the terminal cancellation must not be delivered twice");
     drop(session);
     wait_for_cancel_admission(&pool, &mock).await;
     assert_eq!(mock.step_admissions(), 1);
@@ -615,8 +617,8 @@ async fn dropping_a_live_nonterminal_relay_cancels_the_guest_exactly_once() {
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
     let mock = Arc::new(MockGuestRuntime::new().await);
     let cancel = semio_framework_async::CancelToken::root_now();
-    let (session, _gate, _) = relay_session(Arc::clone(&mock), RuntimeActorId(8_003), pool.clone(), cancel.clone(), JobStep::Done { output: b"unreachable".to_vec() }).await;
-    drive_until_step_admitted(&session, &pool, &mock).await;
+    let (mut session, _gate, _) = relay_session(Arc::clone(&mock), RuntimeActorId(8_003), pool.clone(), cancel.clone(), JobStep::Done { output: b"unreachable".to_vec() }).await;
+    drive_until_step_admitted(&mut session, &pool, &mock).await;
 
     drop(session);
     wait_for_cancel_admission(&pool, &mock).await;
@@ -728,19 +730,19 @@ async fn cancel_panic_quarantines_instance_releases_permit_and_faults_once_on_on
     let handle = mounted_handle(Arc::clone(&mock), RuntimeActorId(8_006)).await;
     let relay_cancel = semio_framework_async::CancelToken::root_now();
     let session_cancel = semio_framework_async::CancelToken::root_now();
-    let (session, _gate) = relay_session_for_handle(&handle, &mock, pool.clone(), relay_cancel.clone(), session_cancel, JobStep::Done { output: b"unreachable".to_vec() }).await;
-    drive_until_step_admitted(&session, &pool, &mock).await;
+    let (mut session, _gate) = relay_session_for_handle(&handle, &mock, pool.clone(), relay_cancel.clone(), session_cancel, JobStep::Done { output: b"unreachable".to_vec() }).await;
+    drive_until_step_admitted(&mut session, &pool, &mock).await;
     mock.panic_next_cancel();
     relay_cancel.cancel_now();
 
     let terminal = loop {
-        let outcome = test_relay_step(&session, &pool).await;
+        let outcome = test_relay_step(&mut session, &pool).await;
         if !matches!(outcome, TestRelayOutcome::Yield) {
             break outcome;
         }
     };
     assert_eq!(terminal, TestRelayOutcome::Fault(b"plugin instance quarantined after cancel-job panic".to_vec()));
-    assert_eq!(test_relay_step(&session, &pool).await, TestRelayOutcome::Yield);
+    assert_eq!(test_relay_step(&mut session, &pool).await, TestRelayOutcome::Yield);
     wait_for_cancel_admission(&pool, &mock).await;
     assert_eq!(mock.cancel_admissions(), 1, "a panicking cancel-job admission must never be retried");
     assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_quarantined(), "cancel unwind must retain but quarantine the uncertain instance before fault delivery");
@@ -783,13 +785,13 @@ async fn context_cancellation_failure_faults_once_quarantines_and_releases_one_w
     let handle = mounted_handle(Arc::clone(&mock), RuntimeActorId(8_009)).await;
     let relay_cancel = semio_framework_async::CancelToken::root_now();
     let session_cancel = semio_framework_async::CancelToken::root_now();
-    let (session, _gate) = relay_session_for_handle(&handle, &mock, pool.clone(), relay_cancel.clone(), session_cancel, JobStep::Done { output: b"unreachable".to_vec() }).await;
-    drive_until_step_admitted(&session, &pool, &mock).await;
+    let (mut session, _gate) = relay_session_for_handle(&handle, &mock, pool.clone(), relay_cancel.clone(), session_cancel, JobStep::Done { output: b"unreachable".to_vec() }).await;
+    drive_until_step_admitted(&mut session, &pool, &mock).await;
     mock.fail_next_cancel();
     relay_cancel.cancel_now();
 
     let terminal = loop {
-        let outcome = test_relay_step(&session, &pool).await;
+        let outcome = test_relay_step(&mut session, &pool).await;
         if !matches!(outcome, TestRelayOutcome::Yield) {
             break outcome;
         }
@@ -799,7 +801,7 @@ async fn context_cancellation_failure_faults_once_quarantines_and_releases_one_w
         TestRelayOutcome::Fault(fault)
             if fault == b"plugin instance quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"
     ));
-    assert_eq!(test_relay_step(&session, &pool).await, TestRelayOutcome::Yield);
+    assert_eq!(test_relay_step(&mut session, &pool).await, TestRelayOutcome::Yield);
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_quarantine(&pool, &handle.instance).await;
     assert_eq!(mock.cancel_admissions(), 1, "ordinary cancel failure must consume the sole admission without retry");
@@ -827,8 +829,8 @@ async fn drop_cleanup_cancel_failure_quarantines_before_the_next_mounted_route()
     let mock = Arc::new(MockGuestRuntime::new().await);
     let handle = mounted_handle(Arc::clone(&mock), RuntimeActorId(8_010)).await;
     let cancel = semio_framework_async::CancelToken::root_now();
-    let (session, _gate) = relay_session_for_handle(&handle, &mock, pool.clone(), cancel.clone(), cancel, JobStep::Done { output: b"unreachable".to_vec() }).await;
-    drive_until_step_admitted(&session, &pool, &mock).await;
+    let (mut session, _gate) = relay_session_for_handle(&handle, &mock, pool.clone(), cancel.clone(), cancel, JobStep::Done { output: b"unreachable".to_vec() }).await;
+    drive_until_step_admitted(&mut session, &pool, &mock).await;
     mock.fail_next_cancel();
 
     drop(session);
@@ -995,5 +997,5 @@ async fn poisoned_instance_slot_recovers_without_losing_the_mounted_route() {
 }
 
 fn test_relay_drive_policy()->semio_framework_value::RetainedCloneGrant{
- serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../../../⚡️effects/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap()
+ serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../../⚡️effects/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap()
 }

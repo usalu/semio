@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️AfNode
 /// 🔵️ Airflow network node (zone or outdoor reference).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct AfNode {
     pub id: u32,
     pub elevation_m: f64,
@@ -25,7 +25,7 @@ impl AfNode {
 
 // #region 🔖️AfLinkKind
 /// 🔗️ Airflow link type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum AfLinkKind {
     Crack,
     Opening,
@@ -36,7 +36,7 @@ pub enum AfLinkKind {
 
 // #region 🔖️AfLink
 /// ↔ Pressure-flow link between two nodes (power-law Q = C·|ΔP|ⁿ).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct AfLink {
     pub id: u32,
     pub node_a: u32,
@@ -53,7 +53,7 @@ pub struct AfLink {
 
 // #region 🔖️AirflowNetwork
 /// 🌐️ Multizone airflow network.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct AirflowNetwork {
     pub nodes: Vec<AfNode>,
     pub links: Vec<AfLink>,

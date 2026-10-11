@@ -9,6 +9,7 @@ async fn sequence_window_ownership_mutations_match_neutral_fixture_and_codecs() 
     let base_transient: SequenceScriptWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {
         let mutation: SequenceMainWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(serde_json::Value::from(&semio_framework_value::ToValue::to_value(&mutation)), row["mutation"], "set-mutation wire stays byte-identical to the committed neutral fixture");
         let after = protocol::apply_diff(mutation.diff(&base_config).diff(), &base_config).unwrap();
         let restored = mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().rev().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, base_config);

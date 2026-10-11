@@ -24,7 +24,7 @@ fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
 
 fn model_with(spaces: Vec<EnvelopeSpace>) -> (ModelSnapshot, ModelInference) {
     let snapshot = parse_dsl(BIM_EXAMPLE_TEXT).expect("the committed demo parses");
-    let mut inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, Clone::clone);
+    let mut inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     inference.energy_envelopes = spaces.into_iter().map(|space| (space.space.clone(), space)).collect();
     (snapshot, inference)
 }

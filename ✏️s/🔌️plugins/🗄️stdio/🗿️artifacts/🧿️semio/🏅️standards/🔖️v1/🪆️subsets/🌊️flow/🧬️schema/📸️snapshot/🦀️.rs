@@ -10,7 +10,8 @@ use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 
 //#region 🔖️PortRef
 /// 🔌️ Addresses one named port on one node — the endpoint shape `FlowEdge` connects through.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PortRef {
     pub node: String,
@@ -22,7 +23,8 @@ pub struct PortRef {
 /// 🎛️ One ordered key-value node parameter. String-valued is the honest boundary for a flow
 /// DAG's per-node config — a richer typed value graph is `value` subset's job (`SemioValue`), not
 /// flow's; see w1b-type-ownership.md's per-subset owned-types table.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FlowParam {
     pub key: String,
@@ -33,7 +35,8 @@ pub struct FlowParam {
 //#region 🔖️Node
 /// 🔁️ A node owned by the Flow subset.
 /// The workflow artifact owns its separate `semio_framework_artifact_workflow_workflow::WorkflowNode`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FlowNode {
     pub id: String,
@@ -49,7 +52,8 @@ pub struct FlowNode {
 /// ➡️ Owned by the `flow` subset. `id`-keyed (like `nodes`) so the sparse diff can address one
 /// edge by identity rather than by its `(from,to,kind)` value, which is not guaranteed unique in a
 /// real multigraph DAG.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FlowEdge {
     pub id: String,

@@ -4340,6 +4340,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-schema-state",
+ "semio-framework-trace",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -4391,6 +4392,7 @@ name = "semio-framework-artifact-reference"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-pack-json",
  "semio-framework-schema-registry",
  "semio-framework-value",
 ]
@@ -4709,6 +4711,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-replication",
+ "semio-framework-value",
  "semio-framework-value-derive",
 ]
 
@@ -5115,6 +5118,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-job",
+ "semio-framework-trace",
  "semio-framework-value",
  "serde_json",
  "tokio",

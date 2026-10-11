@@ -189,7 +189,7 @@ class LeaseScript extends BundleScript {
 class ArtifactPackageVerificationScript extends BundleScript {
   async run(): Promise<void> {
     const { ArtifactPackageContractScript } = await import("./🧪️tests/📦️artifact-packages/🟦️.ts");
-    await new ArtifactPackageContractScript(this.root, this.repoRoot).run();
+    await new ArtifactPackageContractScript(this.root, this.repoRoot, this.invocation).run();
   }
 }
 

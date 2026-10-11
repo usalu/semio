@@ -3,9 +3,7 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::mutations::*;
-use crate::::*;
-use set_payload::SetPayload;
+use crate::component::{ModulePayloadMutation, SetPayload};
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for ModulePayloadMutation {

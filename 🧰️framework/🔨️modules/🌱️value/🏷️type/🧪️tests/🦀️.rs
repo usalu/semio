@@ -11,10 +11,9 @@ fn corpus() -> serde_json::Value {
 fn original_type_variants_retire_through_actual_controlled_ownership() {
     use crate::{retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::RetainedCloneGrant,observe_retirement_allocations};
     assert!(ValueType::controlled_retirement_supported());
-    fn text_bytes(value:&ValueType)->usize {match value {ValueType::Schema(id)=>id.len(),ValueType::List(inner)=>text_bytes(inner),_=>0}}
     for row in corpus()["wire"].as_array().unwrap() {for copy in [1,3,64] {
         let (subject,(original_born,original_freed))=observe_retirement_allocations(||ValueType::from_value(DslValue::from(row.clone())).unwrap());
-        assert_eq!(serde_json::Value::from(subject.to_value()),*row);let expected=text_bytes(&subject);
+        assert_eq!(serde_json::Value::from(subject.to_value()),*row);
         let mut owner=ControlledRetirement::new(subject).map_err(|(error,_)|error).unwrap();let mut births=0;let mut released=0;let mut copied=0;
         for turn in 0..100000 {
             if owner.terminal_is_empty(){break;}
@@ -22,7 +21,7 @@ fn original_type_variants_retire_through_actual_controlled_ownership() {
             let (zero,(a,r))=observe_retirement_allocations(||owner.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(zero.progress().copied_items,0);assert_eq!((a,r),(0,0));
             let (step,(a,r))=observe_retirement_allocations(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_items<=1);assert!(progress.copied_bytes<=copy);assert!(a<=grant.maximum_capacity_bytes);assert!(r<=grant.maximum_release_bytes);births+=a;released+=r;copied+=progress.copied_bytes;assert!(progress.copied_items!=0,"exact type owner grant blocked on turn {turn}");
         }
-        assert!(owner.terminal_is_empty());assert_eq!(copied,expected);assert_eq!(released,original_born-original_freed+births);
+        assert!(owner.terminal_is_empty());assert_eq!(copied,0,"schema id text retires as native length metadata, copy0");assert_eq!(released,original_born-original_freed+births);
         eprintln!("[DEBUG] Actual General type controlled owner copy={copy} work={copied} original={} scaffolds={births} physical={released}",original_born-original_freed);
     }}
 }

@@ -11,15 +11,6 @@
     "freshnessAuthority": "ArtifactStoreOneItemLiveAuthority",
     "sealedByStore": true
   },
-  "artifactPreparation": {
-    "publicationLane": "Artifact",
-    "historyLane": "Document",
-    "maxBaseBytes": 32768,
-    "maxEditTextBytes": 4096,
-    "workItemsPerAdvance": 1,
-    "freshnessAuthority": "ArtifactStoreOneItemLiveAuthority",
-    "sealedByStore": true
-  },
   "migrated": [
     {
       "action": "textEdit",
@@ -150,6 +141,15 @@
     }
   ],
   "batchOnly": [],
+  "artifactPreparation": {
+    "publicationLane": "Artifact",
+    "historyLane": "Document",
+    "maxBaseBytes": 32768,
+    "maxEditTextBytes": 4096,
+    "workItemsPerAdvance": 1,
+    "freshnessAuthority": "ArtifactStoreOneItemLiveAuthority",
+    "sealedByStore": true
+  },
   "requiredLifecycle": [
     "exact-wire-admission",
     "retained-page-consume",

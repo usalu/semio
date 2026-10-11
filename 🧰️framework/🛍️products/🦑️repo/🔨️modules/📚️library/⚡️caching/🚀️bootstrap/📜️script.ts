@@ -9,7 +9,7 @@ import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve, win32, posix } from "node:path";
-import { Script, ScriptRouter, readScriptPolicy, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter, readScriptPolicy, scriptInvocationBudget, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { orchestratorBudgetOpts, semioShipEnv } from "../../🏃️process/🟦️.ts";
 import { devToolingEnv, semioNxParallelFlag } from "../../🏃️process/🌿️environment/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
@@ -419,6 +419,15 @@ export function createNxBootstrapCapabilitiesV1(root:string,args:readonly string
  const invocation=resolveNxInvocation(args.slice(1)),launches=[invocation.args,["run",NxScript.javascriptEnvironment,"--output-style=stream"]];
  if(invocation.watch)launches.push(["watch","--all","--includeGlobalWorkspaceFiles","--verbose","--","bun","nx","run",invocation.watch,"--output-style=stream"],["run",invocation.watch,"--output-style=stream"]);
  return createNativeNxCallerCapabilitiesV1(root,args,invocation.args,{...environment,...invocation.env},launches);
+}
+
+/** 🌳️ Runs a newly owned outer Nx invocation whose resources come from the current process environment, within the caller's remaining deadline. */
+export async function runOwnedNxInvocationV1(root:string,args:readonly string[],parent:ScriptInvocation):Promise<void>{
+ const remaining=parent.control.remainingMilliseconds(),now=Date.now(),inherited=process.env[SCRIPT_PROCESS_INVOCATION_ENV];
+ const envelope=readScriptProcessEnvelope({version:1,policy:parent.policy,deadlineEpochMilliseconds:remaining===null?null:now+remaining,capabilities:createNxBootstrapCapabilitiesV1(root,["nx",...args],process.env)},now);
+ process.env[SCRIPT_PROCESS_INVOCATION_ENV]=scriptProcessEnvironment(envelope,process.env)[SCRIPT_PROCESS_INVOCATION_ENV];
+ try{await withScriptProcessEnvelope(envelope,original=>new ScriptRouter(root).register("nx",NxScript).run(["nx",...args],original));}
+ finally{if(inherited===undefined)delete process.env[SCRIPT_PROCESS_INVOCATION_ENV];else process.env[SCRIPT_PROCESS_INVOCATION_ENV]=inherited;}
 }
 
 if (import.meta.main) {

@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Value
 /// 🪜️ Resolved elevations of one storey, in metres.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct StoreyLevel {
     pub elevation: f64,
     pub top_elevation: f64,

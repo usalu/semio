@@ -74,6 +74,7 @@ mod wire_format_guard;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
+use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
 use crate::Puzzle3dSnapshot;

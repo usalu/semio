@@ -9,7 +9,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::{
     kit::schema::snapshot::{SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitSnapshot, SemioKitType},
 };
 use std::{mem::ManuallyDrop, sync::Arc};
-use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, RetirementStep, SharedValueRetirementFactory};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor, RetirementStep};
 
 struct KindIdentity(BlockKindIdentity);
 impl RetireOwned for KindIdentity {
@@ -258,12 +258,3 @@ impl RetireOwned for Block3dMutation {
     }
 }
 
-/// 🗃️ Installs Block3d's exact document root and retained mutation retirement authorities.
-pub fn document_store_owners() -> store::DocumentStoreOwners<Block3dSnapshot, Block3dMutation> {
-    store::DocumentStoreOwners::new(
-        Arc::new(SharedValueRetirementFactory::<Block3dSnapshot>::default()),
-        Arc::new(OwnedValueRetirementFactory::<Block3dSnapshot>::default()),
-        Arc::new(OwnedValueRetirementFactory::<Block3dMutation>::default()),
-        Box::new(store::ArtifactStoreCursorDisposer::<Block3dSnapshot, Block3dMutation>::new()),
-    )
-}

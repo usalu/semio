@@ -1,0 +1,3798 @@
+{
+  "schema": "semio.cargo.provenance-receipt.fixture/v1",
+  "depInfo": [
+    {
+      "text": "/b/debug/lib.d: /w/lib.rs /w/sp\\ ace/🧫️x.rs\n\n/w/lib.rs:\n# checksum:blake3=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa file_len:12 /w/lib.rs\n# checksum:blake3=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb file_len:7 /w/sp ace/🧫️x.rs\n",
+      "sources": [
+        "/w/lib.rs",
+        "/w/sp ace/🧫️x.rs"
+      ],
+      "checksums": [
+        {
+          "path": "/w/lib.rs",
+          "blake3": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "length": 12
+        },
+        {
+          "path": "/w/sp ace/🧫️x.rs",
+          "blake3": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "length": 7
+        }
+      ]
+    },
+    {
+      "text": "/b/debug/macro.d: macro/lib.rs\n# checksum:blake3=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc file_len:3 macro/lib.rs\n",
+      "sources": [
+        "macro/lib.rs"
+      ],
+      "checksums": [
+        {
+          "path": "macro/lib.rs",
+          "blake3": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "length": 3
+        }
+      ]
+    },
+    {
+      "text": "",
+      "sources": [],
+      "checksums": []
+    },
+    {
+      "text": "/b/x.d: a.rs\n# checksum: structural witness without a digest\n",
+      "sources": [
+        "a.rs"
+      ],
+      "checksums": []
+    },
+    {
+      "text": "C:\\r\\t\\x.exe: C:\\r\\a.rs C:\\r\\b.rs\n",
+      "sources": [
+        "C:\\r\\a.rs",
+        "C:\\r\\b.rs"
+      ],
+      "checksums": []
+    }
+  ],
+  "cases": [
+    {
+      "name": "minimal",
+      "observation": {
+        "version": 1,
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "observedAtMs": 2000,
+        "buildScripts": [],
+        "invocationInputs": [],
+        "units": [],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": []
+      },
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [],
+        "buildScripts": [],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [],
+        "observedAtMs": 2000,
+        "strings": [],
+        "inputs": [],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "units-share-paths-inputs-and-checksums",
+      "observation": {
+        "version": 1,
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "observedAtMs": 2000,
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "invocationInputs": [
+          {
+            "path": "/w/Cargo.lock",
+            "sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+          },
+          {
+            "path": "/w/.cargo/config.toml",
+            "sha256": null
+          }
+        ],
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": "/b/debug/lib.d",
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": "/w",
+                "sources": [
+                  "/w/lib.rs",
+                  "/w/sp ace/🧫️x.rs"
+                ],
+                "checksums": [
+                  {
+                    "path": "/w/lib.rs",
+                    "blake3": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "length": 12
+                  },
+                  {
+                    "path": "/w/sp ace/🧫️x.rs",
+                    "blake3": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    "length": 7
+                  }
+                ]
+              }
+            ],
+            "inputs": [
+              {
+                "path": "/w/lib.rs",
+                "kind": "file",
+                "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "path": "/w/sp ace/🧫️x.rs",
+                "kind": "file",
+                "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+              },
+              {
+                "path": "/w/assets",
+                "kind": "directory",
+                "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+              },
+              {
+                "path": "/w/gen.rs",
+                "kind": null,
+                "sha256": null
+              }
+            ],
+            "artifacts": [
+              {
+                "path": "/b/debug/liblib.rlib",
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": "/w/dist/liblib.rlib",
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": "/b/debug/macro.d",
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": "/w",
+                "sources": [
+                  "macro/lib.rs"
+                ],
+                "checksums": [
+                  {
+                    "path": "macro/lib.rs",
+                    "blake3": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    "length": 3
+                  }
+                ]
+              }
+            ],
+            "inputs": [
+              {
+                "path": "/w/macro/lib.rs",
+                "kind": "file",
+                "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+              },
+              {
+                "path": "/w/lib.rs",
+                "kind": "file",
+                "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+              }
+            ],
+            "artifacts": [
+              {
+                "path": "/b/debug/libmacro.dylib",
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": []
+      },
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "artifacts": [
+              {
+                "path": 4,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/liblib.rlib",
+          "/w/dist/liblib.rlib",
+          "/w/assets",
+          "/w/gen.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/b/debug/libmacro.dylib",
+          "/w/macro/lib.rs",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "file",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "resource-witnesses-deduplicate-and-bind-units",
+      "observation": {
+        "version": 1,
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "observedAtMs": 2000,
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "invocationInputs": [
+          {
+            "path": "/w/Cargo.lock",
+            "sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+          },
+          {
+            "path": "/w/.cargo/config.toml",
+            "sha256": null
+          }
+        ],
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": "/b/debug/lib.d",
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": "/w",
+                "sources": [
+                  "/w/lib.rs",
+                  "/w/sp ace/🧫️x.rs"
+                ],
+                "checksums": [
+                  {
+                    "path": "/w/lib.rs",
+                    "blake3": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "length": 12
+                  },
+                  {
+                    "path": "/w/sp ace/🧫️x.rs",
+                    "blake3": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    "length": 7
+                  }
+                ]
+              }
+            ],
+            "inputs": [
+              {
+                "path": "/w/lib.rs",
+                "kind": "file",
+                "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+              }
+            ],
+            "artifacts": []
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": "/b/debug/macro.d",
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": null,
+                "sources": [
+                  "macro/lib.rs"
+                ],
+                "checksums": [
+                  {
+                    "path": "macro/lib.rs",
+                    "blake3": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    "length": 3
+                  }
+                ]
+              }
+            ],
+            "inputs": [
+              {
+                "path": "/w/macro/lib.rs",
+                "kind": "file",
+                "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+              }
+            ],
+            "artifacts": []
+          }
+        ],
+        "buildResources": [
+          {
+            "package_id": "path+file:///w#lib@0.1.0",
+            "out_dir": "/b/out",
+            "path": "/b/out/semio-runtime-resource-inputs.jsonl",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "observedAtMs": 1700,
+            "resources": [
+              {
+                "input": {
+                  "kind": "read",
+                  "path": "/w/assets/a.txt",
+                  "bytes": 5,
+                  "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                  "operation": {
+                    "source": "/w/macro/lib.rs",
+                    "line": 7,
+                    "name": "read"
+                  },
+                  "callsite": {
+                    "source": "/w/lib.rs",
+                    "line": 2
+                  }
+                },
+                "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 5,
+                "sourceExact": true,
+                "schemaErrors": []
+              },
+              {
+                "input": {
+                  "kind": "directory",
+                  "path": "/w/assets",
+                  "entries": [
+                    {
+                      "path": "/w/assets/a.txt",
+                      "kind": "file",
+                      "symlinkTarget": null
+                    },
+                    {
+                      "path": "/w/assets/l",
+                      "kind": "symlink",
+                      "symlinkTarget": "/w/assets/a.txt"
+                    }
+                  ],
+                  "operation": {
+                    "source": "/w/macro/lib.rs",
+                    "line": 9,
+                    "name": "read_dir"
+                  },
+                  "callsite": {
+                    "source": "/w/lib.rs",
+                    "line": 3
+                  }
+                },
+                "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "observedEntries": [
+                  {
+                    "path": "/w/assets/a.txt",
+                    "kind": "file",
+                    "symlinkTarget": null
+                  },
+                  {
+                    "path": "/w/assets/l",
+                    "kind": "symlink",
+                    "symlinkTarget": "/w/assets/a.txt"
+                  }
+                ]
+              },
+              {
+                "input": {
+                  "kind": "copy",
+                  "path": "/w/assets/a.txt",
+                  "output": "/b/out/a.txt"
+                },
+                "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "outputSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+              },
+              {
+                "input": {
+                  "kind": "failed",
+                  "path": "/w/missing.txt",
+                  "operation": {
+                    "source": "/w/build.rs",
+                    "line": 4,
+                    "name": "read"
+                  }
+                },
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "compilerResourceRoot": "/b/semio-compiler-resources",
+        "compilerResources": [
+          {
+            "path": "/b/semio-compiler-resources/0/observation.json",
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "observedAtMs": 1800,
+            "producer": {
+              "manifest": "/w/macro/Cargo.toml",
+              "source": "/w/macro/lib.rs"
+            },
+            "caller": {
+              "manifest": "/w/Cargo.toml",
+              "crate": "lib",
+              "source": "/w/lib.rs"
+            },
+            "producerUnit": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "callerUnit": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "resources": [
+              {
+                "input": {
+                  "kind": "read",
+                  "path": "/w/assets/a.txt",
+                  "bytes": 5,
+                  "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                  "operation": {
+                    "source": "/w/macro/lib.rs",
+                    "line": 7,
+                    "name": "read"
+                  },
+                  "callsite": {
+                    "source": "/w/lib.rs",
+                    "line": 2
+                  }
+                },
+                "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 5,
+                "sourceExact": true,
+                "schemaErrors": []
+              },
+              {
+                "input": {
+                  "kind": "directory",
+                  "path": "/w/assets",
+                  "entries": [
+                    {
+                      "path": "/w/assets/a.txt",
+                      "kind": "file",
+                      "symlinkTarget": null
+                    },
+                    {
+                      "path": "/w/assets/l",
+                      "kind": "symlink",
+                      "symlinkTarget": "/w/assets/a.txt"
+                    }
+                  ],
+                  "operation": {
+                    "source": "/w/macro/lib.rs",
+                    "line": 9,
+                    "name": "read_dir"
+                  },
+                  "callsite": {
+                    "source": "/w/lib.rs",
+                    "line": 3
+                  }
+                },
+                "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "observedEntries": [
+                  {
+                    "path": "/w/assets/a.txt",
+                    "kind": "file",
+                    "symlinkTarget": null
+                  },
+                  {
+                    "path": "/w/assets/l",
+                    "kind": "symlink",
+                    "symlinkTarget": "/w/assets/a.txt"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "path": "/b/semio-compiler-resources/1/observation.json",
+            "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "observedAtMs": 1850,
+            "producer": {
+              "manifest": "/w/macro/Cargo.toml",
+              "source": "/w/macro/lib.rs"
+            },
+            "caller": {
+              "manifest": "/w/Cargo.toml",
+              "crate": "lib",
+              "source": "/w/lib.rs"
+            },
+            "producerUnit": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "callerUnit": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "resources": [
+              {
+                "input": {
+                  "kind": "read",
+                  "path": "/w/assets/a.txt",
+                  "bytes": 5,
+                  "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                  "operation": {
+                    "source": "/w/macro/lib.rs",
+                    "line": 7,
+                    "name": "read"
+                  },
+                  "callsite": {
+                    "source": "/w/lib.rs",
+                    "line": 2
+                  }
+                },
+                "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 5,
+                "sourceExact": true,
+                "schemaErrors": []
+              },
+              {
+                "input": {
+                  "kind": "directory",
+                  "path": "/w/assets",
+                  "entries": [
+                    {
+                      "path": "/w/assets/a.txt",
+                      "kind": "file",
+                      "symlinkTarget": null
+                    },
+                    {
+                      "path": "/w/assets/l",
+                      "kind": "symlink",
+                      "symlinkTarget": "/w/assets/a.txt"
+                    }
+                  ],
+                  "operation": {
+                    "source": "/w/macro/lib.rs",
+                    "line": 9,
+                    "name": "read_dir"
+                  },
+                  "callsite": {
+                    "source": "/w/lib.rs",
+                    "line": 3
+                  }
+                },
+                "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+                "observedEntries": [
+                  {
+                    "path": "/w/assets/a.txt",
+                    "kind": "file",
+                    "symlinkTarget": null
+                  },
+                  {
+                    "path": "/w/assets/l",
+                    "kind": "symlink",
+                    "symlinkTarget": "/w/assets/a.txt"
+                  }
+                ]
+              },
+              {
+                "input": {
+                  "kind": "read",
+                  "path": "/w/assets/a.txt",
+                  "bytes": 5,
+                  "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                  "operation": {
+                    "source": "/w/macro/lib.rs",
+                    "line": 7,
+                    "name": "read"
+                  },
+                  "callsite": {
+                    "source": "/w/lib.rs",
+                    "line": 2
+                  }
+                },
+                "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+                "bytes": 5,
+                "sourceExact": true,
+                "schemaErrors": []
+              }
+            ]
+          },
+          {
+            "path": "/b/semio-compiler-resources/2/observation.json",
+            "sha256": null,
+            "observedAtMs": 1900,
+            "producer": null,
+            "caller": null,
+            "producerUnit": null,
+            "callerUnit": null,
+            "resources": []
+          }
+        ]
+      },
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              0
+            ],
+            "artifacts": []
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 4,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": null,
+                "sources": [
+                  5
+                ],
+                "checksums": [
+                  [
+                    5,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              1
+            ],
+            "artifacts": []
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [
+          {
+            "package_id": "path+file:///w#lib@0.1.0",
+            "out_dir": "/b/out",
+            "path": "/b/out/semio-runtime-resource-inputs.jsonl",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "observedAtMs": 1700,
+            "resources": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        ],
+        "compilerResourceRoot": "/b/semio-compiler-resources",
+        "compilerResources": [
+          {
+            "path": 13,
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "observedAtMs": 1800,
+            "producer": {
+              "manifest": 14,
+              "source": 6
+            },
+            "caller": {
+              "manifest": 15,
+              "crate": "lib",
+              "source": 2
+            },
+            "producerUnit": 1,
+            "callerUnit": 0,
+            "resources": [
+              0,
+              1
+            ]
+          },
+          {
+            "path": 16,
+            "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "observedAtMs": 1850,
+            "producer": {
+              "manifest": 14,
+              "source": 6
+            },
+            "caller": {
+              "manifest": 15,
+              "crate": "lib",
+              "source": 2
+            },
+            "producerUnit": 1,
+            "callerUnit": 0,
+            "resources": [
+              0,
+              1,
+              0
+            ]
+          },
+          {
+            "path": 17,
+            "sha256": null,
+            "observedAtMs": 1900,
+            "producer": null,
+            "caller": null,
+            "producerUnit": null,
+            "callerUnit": null,
+            "resources": []
+          }
+        ],
+        "invocationInputs": [
+          [
+            18,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            19,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/w/macro/lib.rs",
+          "/w/assets/a.txt",
+          "/w/assets",
+          "/w/assets/l",
+          "/b/out/a.txt",
+          "/w/missing.txt",
+          "/w/build.rs",
+          "/b/semio-compiler-resources/0/observation.json",
+          "/w/macro/Cargo.toml",
+          "/w/Cargo.toml",
+          "/b/semio-compiler-resources/1/observation.json",
+          "/b/semio-compiler-resources/2/observation.json",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "file",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            6,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": [
+          {
+            "input": {
+              "kind": "read",
+              "path": 7,
+              "bytes": 5,
+              "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+              "operation": {
+                "source": 6,
+                "line": 7,
+                "name": "read"
+              },
+              "callsite": {
+                "source": 2,
+                "line": 2
+              }
+            },
+            "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+            "bytes": 5,
+            "sourceExact": true,
+            "schemaErrors": []
+          },
+          {
+            "input": {
+              "kind": "directory",
+              "path": 8,
+              "entries": [
+                {
+                  "path": 7,
+                  "kind": "file",
+                  "symlinkTarget": null
+                },
+                {
+                  "path": 9,
+                  "kind": "symlink",
+                  "symlinkTarget": 7
+                }
+              ],
+              "operation": {
+                "source": 6,
+                "line": 9,
+                "name": "read_dir"
+              },
+              "callsite": {
+                "source": 2,
+                "line": 3
+              }
+            },
+            "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+            "observedEntries": [
+              {
+                "path": 7,
+                "kind": "file",
+                "symlinkTarget": null
+              },
+              {
+                "path": 9,
+                "kind": "symlink",
+                "symlinkTarget": 7
+              }
+            ]
+          },
+          {
+            "input": {
+              "kind": "copy",
+              "path": 7,
+              "output": 10
+            },
+            "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+            "outputSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          {
+            "input": {
+              "kind": "failed",
+              "path": 11,
+              "operation": {
+                "source": 12,
+                "line": 4,
+                "name": "read"
+              }
+            },
+            "sha256": null
+          }
+        ]
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "name": "unknown-schema",
+      "schemaAdmits": false,
+      "document": {
+        "schema": "semio.cargo.provenance/v0",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "artifacts": [
+              {
+                "path": 4,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/liblib.rlib",
+          "/w/dist/liblib.rlib",
+          "/w/assets",
+          "/w/gen.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/b/debug/libmacro.dylib",
+          "/w/macro/lib.rs",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "file",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "string-reference-out-of-range",
+      "schemaAdmits": true,
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 14,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "artifacts": [
+              {
+                "path": 4,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/liblib.rlib",
+          "/w/dist/liblib.rlib",
+          "/w/assets",
+          "/w/gen.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/b/debug/libmacro.dylib",
+          "/w/macro/lib.rs",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "file",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "input-reference-out-of-range",
+      "schemaAdmits": true,
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              5,
+              1,
+              2,
+              3
+            ],
+            "artifacts": [
+              {
+                "path": 4,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/liblib.rlib",
+          "/w/dist/liblib.rlib",
+          "/w/assets",
+          "/w/gen.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/b/debug/libmacro.dylib",
+          "/w/macro/lib.rs",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "file",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "negative-reference",
+      "schemaAdmits": false,
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "artifacts": [
+              {
+                "path": -1,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/liblib.rlib",
+          "/w/dist/liblib.rlib",
+          "/w/assets",
+          "/w/gen.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/b/debug/libmacro.dylib",
+          "/w/macro/lib.rs",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "file",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "dep-info-text-copy",
+      "schemaAdmits": false,
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ],
+                "text": "x: y"
+              }
+            ],
+            "inputs": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "artifacts": [
+              {
+                "path": 4,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/liblib.rlib",
+          "/w/dist/liblib.rlib",
+          "/w/assets",
+          "/w/gen.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/b/debug/libmacro.dylib",
+          "/w/macro/lib.rs",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "file",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "dep-info-digest-malformed",
+      "schemaAdmits": false,
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "abc",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "artifacts": [
+              {
+                "path": 4,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/liblib.rlib",
+          "/w/dist/liblib.rlib",
+          "/w/assets",
+          "/w/gen.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/b/debug/libmacro.dylib",
+          "/w/macro/lib.rs",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "file",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "input-row-lost-digest",
+      "schemaAdmits": false,
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "artifacts": [
+              {
+                "path": 4,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/liblib.rlib",
+          "/w/dist/liblib.rlib",
+          "/w/assets",
+          "/w/gen.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/b/debug/libmacro.dylib",
+          "/w/macro/lib.rs",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "file"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "input-kind-unknown",
+      "schemaAdmits": false,
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "artifacts": [
+              {
+                "path": 4,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/liblib.rlib",
+          "/w/dist/liblib.rlib",
+          "/w/assets",
+          "/w/gen.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/b/debug/libmacro.dylib",
+          "/w/macro/lib.rs",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "socket",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "unit-lost-inputs",
+      "schemaAdmits": false,
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "artifacts": [
+              {
+                "path": 4,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/liblib.rlib",
+          "/w/dist/liblib.rlib",
+          "/w/assets",
+          "/w/gen.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/b/debug/libmacro.dylib",
+          "/w/macro/lib.rs",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "file",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "table-lost",
+      "schemaAdmits": false,
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    12
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "artifacts": [
+              {
+                "path": 4,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "inputs": [
+          [
+            2,
+            "file",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    },
+    {
+      "name": "checksum-length-negative",
+      "schemaAdmits": false,
+      "document": {
+        "schema": "semio.cargo.provenance-receipt/v1",
+        "manifest": "/w/Cargo.toml",
+        "cwd": "/w",
+        "command": "cargo",
+        "args": [
+          "build",
+          "--locked",
+          "--message-format=json"
+        ],
+        "buildDirectory": "/b",
+        "builtAtMs": 1000,
+        "status": 0,
+        "cancelled": false,
+        "units": [
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#lib@0.1.0",
+              "manifest_path": "/w/Cargo.toml",
+              "target": {
+                "kind": [
+                  "lib"
+                ],
+                "crate_types": [
+                  "lib"
+                ],
+                "name": "lib",
+                "src_path": "/w/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/liblib.rlib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1500,
+            "depInfo": [
+              {
+                "path": 0,
+                "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+                "baseDirectory": 1,
+                "sources": [
+                  2,
+                  3
+                ],
+                "checksums": [
+                  [
+                    2,
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    -1
+                  ],
+                  [
+                    3,
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                    7
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "artifacts": [
+              {
+                "path": 4,
+                "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+                "stagedPath": 5,
+                "stagedSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+              }
+            ]
+          },
+          {
+            "message": {
+              "reason": "compiler-artifact",
+              "package_id": "path+file:///w#macro@0.1.0",
+              "manifest_path": "/w/macro/Cargo.toml",
+              "target": {
+                "kind": [
+                  "proc-macro"
+                ],
+                "crate_types": [
+                  "proc-macro"
+                ],
+                "name": "macro",
+                "src_path": "/w/macro/lib.rs"
+              },
+              "profile": {
+                "test": false
+              },
+              "features": [
+                "default"
+              ],
+              "filenames": [
+                "/b/debug/libmacro.dylib"
+              ],
+              "executable": null,
+              "fresh": false
+            },
+            "observedAtMs": 1600,
+            "depInfo": [
+              {
+                "path": 8,
+                "sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+                "baseDirectory": 1,
+                "sources": [
+                  9
+                ],
+                "checksums": [
+                  [
+                    9,
+                    "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                    3
+                  ]
+                ]
+              }
+            ],
+            "inputs": [
+              4,
+              0
+            ],
+            "artifacts": [
+              {
+                "path": 10,
+                "sha256": null
+              }
+            ]
+          }
+        ],
+        "buildScripts": [
+          {
+            "reason": "build-script-executed",
+            "package_id": "path+file:///w#lib@0.1.0",
+            "linked_libs": [],
+            "linked_paths": [],
+            "cfgs": [
+              "owned"
+            ],
+            "env": [
+              [
+                "OWNED",
+                "yes"
+              ]
+            ],
+            "out_dir": "/b/out"
+          }
+        ],
+        "buildResources": [],
+        "compilerResourceRoot": null,
+        "compilerResources": [],
+        "invocationInputs": [
+          [
+            12,
+            "6666666666666666666666666666666666666666666666666666666666666666"
+          ],
+          [
+            13,
+            null
+          ]
+        ],
+        "observedAtMs": 2000,
+        "strings": [
+          "/b/debug/lib.d",
+          "/w",
+          "/w/lib.rs",
+          "/w/sp ace/🧫️x.rs",
+          "/b/debug/liblib.rlib",
+          "/w/dist/liblib.rlib",
+          "/w/assets",
+          "/w/gen.rs",
+          "/b/debug/macro.d",
+          "macro/lib.rs",
+          "/b/debug/libmacro.dylib",
+          "/w/macro/lib.rs",
+          "/w/Cargo.lock",
+          "/w/.cargo/config.toml"
+        ],
+        "inputs": [
+          [
+            2,
+            "file",
+            "1111111111111111111111111111111111111111111111111111111111111111"
+          ],
+          [
+            3,
+            "file",
+            "2222222222222222222222222222222222222222222222222222222222222222"
+          ],
+          [
+            6,
+            "directory",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          [
+            7,
+            null,
+            null
+          ],
+          [
+            11,
+            "file",
+            "3333333333333333333333333333333333333333333333333333333333333333"
+          ]
+        ],
+        "witnesses": []
+      }
+    }
+  ]
+}

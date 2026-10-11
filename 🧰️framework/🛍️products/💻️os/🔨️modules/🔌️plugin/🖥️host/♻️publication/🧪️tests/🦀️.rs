@@ -8,7 +8,7 @@ fn original_host_publication_source_preserves_native_capacity_and_all_physical_r
  let(_,selfcheck)=observe(||drop(vec![0_u8;37]));assert_eq!(selfcheck,(37,37));
  for(length,capacity)in[(0,0),(1,8192),(8193,65536)]{
   let mut original=Vec::with_capacity(capacity);original.resize(length,7_u8);let pointer=original.as_ptr();let actual_capacity=original.capacity();
-  let mut owner=GuestRelayPublication{kind:GuestRelayPublicationKind::Commit,source:std::mem::ManuallyDrop::new(original),cursor:0,copied:true,retired:false,oversized:false,writer:None};
+  let mut owner=GuestRelayPublication{kind:GuestRelayPublicationKind::Commit,source:std::mem::ManuallyDrop::new(original),cursor:0,copied:true,retired:false,oversized:false,delivered:false,writer:None};
   let mut total=RetainedCloneProgress::default();let mut turns=0;
   loop{
    let demand=owner.original_source_demand();

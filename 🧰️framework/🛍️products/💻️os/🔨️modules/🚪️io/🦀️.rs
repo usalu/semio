@@ -2039,6 +2039,8 @@ pub mod io_mechanism {
     pub trait Serializer<S> {
         const INTO: Dialect;
         const FIDELITY: IoFidelity;
+        /// 🏭️ Declares the native retained-owner factory a serializer registers, or none when it only serializes through the borrowed path.
+        const OWNED_FACTORY: Option<OwnedSerializerFactory> = None;
         fn serialize(from: &S, children: &ArchiveChildren, control: &mut IoRunControl<'_ , '_>) -> impl std::future::Future<Output = IoResult<IoPayload>>;
     }
 
@@ -2133,6 +2135,7 @@ pub mod io_mechanism {
     /// 🧾️ Type-erased io vtable row: one directed hop `from -> into` at a declared `fidelity`, its native side `direction`, an
     /// optional `sniff` (carrier-dialect identification), and the erased `run` this hop executes.
     pub struct IoEntry {
+        pub owned_serializer: Option<OwnedSerializerFactory>,
         pub from: Dialect,
         pub into: Dialect,
         pub fidelity: IoFidelity,

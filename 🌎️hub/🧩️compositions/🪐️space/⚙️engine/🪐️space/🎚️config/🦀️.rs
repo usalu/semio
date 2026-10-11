@@ -12,7 +12,8 @@ use std::collections::BTreeMap;
 /// per-window options keyed by window-instance id" rule). Distinct from `semio_framework_os::OsWorkflowCamera`
 /// (a plain, non-`dsl`-field data type this crate can't blanket-impl `dsl::DslField` for under the
 /// orphan rule) — converts to/from it 1:1 at the render boundary.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceWindowCamera {
     pub x: f64,
@@ -47,7 +48,7 @@ impl From<SpaceWindowCamera> for OsWorkflowCamera {
 /// _>`, per the Configured Node Apps recipe) — today that's always
 /// `crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW`, since split-pane
 /// window *instances* aren't a thing anywhere in this codebase yet.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(id = "s.spacecfg")]
 #[dsl(layout = "lines")]
@@ -162,38 +163,146 @@ store::config_diff! {
 //#region 🔖️ConfigOperations
 /// 🧮️ `SpaceConfig`'s operation enum — one variant per settled interaction, each setting only the slots (or keyed camera rows) of
 /// the fields it owns, with the same variant carrying the base values as its inverse. There is no whole-config variant.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SpaceConfigMutation {
     #[dsl(key = "active-node")]
-    SetActiveNode { node_id: Option<String> },
+    SetActiveNode(ActiveNodeSetting),
     #[dsl(key = "focused-node")]
-    SetFocusedNode { node_id: Option<String> },
+    SetFocusedNode(FocusedNodeSetting),
     #[dsl(key = "clipboard")]
-    SetClipboard { node_ids: Vec<String> },
+    SetClipboard(ClipboardSetting),
     #[dsl(key = "collapsed")]
-    SetCollapsed { node_ids: Vec<String> },
+    SetCollapsed(CollapsedSetting),
     #[dsl(key = "preview-off")]
-    SetPreviewOff { node_ids: Vec<String> },
+    SetPreviewOff(PreviewOffSetting),
     /// 🎥️ Sets one window's workflow camera — window-instance-keyed.
     #[dsl(key = "camera")]
-    SetCamera {
-        window_id: String,
-        #[dsl(block)]
-        camera: SpaceWindowCamera,
-    },
+    SetCamera(CameraSetting),
     /// 🎥️ Removes one window's workflow camera row — the inverse of the first `SetCamera` of a window.
     #[dsl(key = "remove-camera")]
-    RemoveCamera { window_id: String },
+    RemoveCamera(CameraRemoval),
     #[dsl(key = "workflow-engagement-input")]
-    SetWorkflowEngagementInput { value: String },
+    SetWorkflowEngagementInput(WorkflowEngagementInputSetting),
     #[dsl(key = "compiled-dag-engagement-input")]
-    SetCompiledDagEngagementInput { value: String },
+    SetCompiledDagEngagementInput(CompiledDagEngagementInputSetting),
     #[dsl(key = "pending-import")]
-    SetPendingImport { node_id: Option<String>, format: Option<String> },
+    SetPendingImport(PendingImportSetting),
     #[dsl(key = "space-id")]
-    SetSpaceId { space_id: Option<String> },
+    SetSpaceId(SpaceIdSetting),
     #[dsl(key = "active-panel-tab")]
-    SetActivePanelTab { tab_id: String },
+    SetActivePanelTab(ActivePanelTabSetting),
+}
+
+/// 🎯️ The active node a setting installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "active-node")]
+pub struct ActiveNodeSetting {
+    pub node_id: Option<String>,
+}
+
+/// 🎯️ The focused node a setting installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "focused-node")]
+pub struct FocusedNodeSetting {
+    pub node_id: Option<String>,
+}
+
+/// 📋️ The clipboard a setting installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "clipboard")]
+pub struct ClipboardSetting {
+    pub node_ids: Vec<String>,
+}
+
+/// 🗂️ The collapsed nodes a setting installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "collapsed")]
+pub struct CollapsedSetting {
+    pub node_ids: Vec<String>,
+}
+
+/// 🖼️ The preview-off nodes a setting installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "preview-off")]
+pub struct PreviewOffSetting {
+    pub node_ids: Vec<String>,
+}
+
+/// 🎥️ The window camera a setting installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "camera")]
+pub struct CameraSetting {
+    pub window_id: String,
+    #[dsl(block)]
+    pub camera: SpaceWindowCamera,
+}
+
+/// 🎥️ The window whose camera row a removal drops; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "remove-camera")]
+pub struct CameraRemoval {
+    pub window_id: String,
+}
+
+/// ⌨️ The workflow engagement input a setting installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "workflow-engagement-input")]
+pub struct WorkflowEngagementInputSetting {
+    pub value: String,
+}
+
+/// ⌨️ The compiled DAG engagement input a setting installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "compiled-dag-engagement-input")]
+pub struct CompiledDagEngagementInputSetting {
+    pub value: String,
+}
+
+/// 📥️ The in-flight media-import target a setting installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "pending-import")]
+pub struct PendingImportSetting {
+    pub node_id: Option<String>,
+    pub format: Option<String>,
+}
+
+/// 🌱️ The open studio's catalog id a setting installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "space-id")]
+pub struct SpaceIdSetting {
+    pub space_id: Option<String>,
+}
+
+/// 👁️ The active panel tab a setting installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "active-panel-tab")]
+pub struct ActivePanelTabSetting {
+    pub tab_id: String,
 }
 
 //#region 🔖️OpCodec
@@ -452,18 +561,18 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            SpaceConfigMutation::SetActiveNode { .. } => &Self::DESCRIPTORS[0],
-            SpaceConfigMutation::SetFocusedNode { .. } => &Self::DESCRIPTORS[1],
-            SpaceConfigMutation::SetClipboard { .. } => &Self::DESCRIPTORS[2],
-            SpaceConfigMutation::SetCollapsed { .. } => &Self::DESCRIPTORS[3],
-            SpaceConfigMutation::SetPreviewOff { .. } => &Self::DESCRIPTORS[4],
-            SpaceConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[5],
-            SpaceConfigMutation::RemoveCamera { .. } => &Self::DESCRIPTORS[6],
-            SpaceConfigMutation::SetWorkflowEngagementInput { .. } => &Self::DESCRIPTORS[7],
-            SpaceConfigMutation::SetCompiledDagEngagementInput { .. } => &Self::DESCRIPTORS[8],
-            SpaceConfigMutation::SetPendingImport { .. } => &Self::DESCRIPTORS[9],
-            SpaceConfigMutation::SetSpaceId { .. } => &Self::DESCRIPTORS[10],
-            SpaceConfigMutation::SetActivePanelTab { .. } => &Self::DESCRIPTORS[11],
+            SpaceConfigMutation::SetActiveNode(_) => &Self::DESCRIPTORS[0],
+            SpaceConfigMutation::SetFocusedNode(_) => &Self::DESCRIPTORS[1],
+            SpaceConfigMutation::SetClipboard(_) => &Self::DESCRIPTORS[2],
+            SpaceConfigMutation::SetCollapsed(_) => &Self::DESCRIPTORS[3],
+            SpaceConfigMutation::SetPreviewOff(_) => &Self::DESCRIPTORS[4],
+            SpaceConfigMutation::SetCamera(_) => &Self::DESCRIPTORS[5],
+            SpaceConfigMutation::RemoveCamera(_) => &Self::DESCRIPTORS[6],
+            SpaceConfigMutation::SetWorkflowEngagementInput(_) => &Self::DESCRIPTORS[7],
+            SpaceConfigMutation::SetCompiledDagEngagementInput(_) => &Self::DESCRIPTORS[8],
+            SpaceConfigMutation::SetPendingImport(_) => &Self::DESCRIPTORS[9],
+            SpaceConfigMutation::SetSpaceId(_) => &Self::DESCRIPTORS[10],
+            SpaceConfigMutation::SetActivePanelTab(_) => &Self::DESCRIPTORS[11],
         }
     }
 
@@ -471,54 +580,54 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
 
     fn diff(&self, base: &SpaceConfig) -> protocol::MutationOutcome<SpaceConfigDiff> {
         protocol::MutationOutcome::new(match self {
-            SpaceConfigMutation::SetActiveNode { node_id } => SpaceConfigDiff { active_node_id: (base.active_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
-            SpaceConfigMutation::SetFocusedNode { node_id } => SpaceConfigDiff { focused_node_id: (base.focused_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
-            SpaceConfigMutation::SetClipboard { node_ids } => SpaceConfigDiff { clipboard_node_ids: (base.clipboard_node_ids != *node_ids).then(|| node_ids.clone()), ..Default::default() },
-            SpaceConfigMutation::SetCollapsed { node_ids } => SpaceConfigDiff { collapsed_node_ids: (base.collapsed_node_ids != *node_ids).then(|| node_ids.clone()), ..Default::default() },
-            SpaceConfigMutation::SetPreviewOff { node_ids } => SpaceConfigDiff { preview_off_node_ids: (base.preview_off_node_ids != *node_ids).then(|| node_ids.clone()), ..Default::default() },
-            SpaceConfigMutation::SetCamera { window_id, camera } => match base.camera.get(window_id) {
+            SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id }) => SpaceConfigDiff { active_node_id: (base.active_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id }) => SpaceConfigDiff { focused_node_id: (base.focused_node_id != *node_id).then(|| node_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids }) => SpaceConfigDiff { clipboard_node_ids: (base.clipboard_node_ids != *node_ids).then(|| node_ids.clone()), ..Default::default() },
+            SpaceConfigMutation::SetCollapsed(CollapsedSetting { node_ids }) => SpaceConfigDiff { collapsed_node_ids: (base.collapsed_node_ids != *node_ids).then(|| node_ids.clone()), ..Default::default() },
+            SpaceConfigMutation::SetPreviewOff(PreviewOffSetting { node_ids }) => SpaceConfigDiff { preview_off_node_ids: (base.preview_off_node_ids != *node_ids).then(|| node_ids.clone()), ..Default::default() },
+            SpaceConfigMutation::SetCamera(CameraSetting { window_id, camera }) => match base.camera.get(window_id) {
                 Some(prior) if prior == camera => SpaceConfigDiff::default(),
                 Some(_) => SpaceConfigDiff { camera: [(window_id.clone(), protocol::KeyedRow::Replace(*camera))].into(), ..Default::default() },
                 None => SpaceConfigDiff { camera: [(window_id.clone(), protocol::KeyedRow::Insert(*camera))].into(), ..Default::default() },
             },
-            SpaceConfigMutation::RemoveCamera { window_id } => {
+            SpaceConfigMutation::RemoveCamera(CameraRemoval { window_id }) => {
                 if !base.camera.contains_key(window_id) {
                     return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMissing, "the window has no camera row", ["camera", window_id.as_str()]);
                 }
                 SpaceConfigDiff { camera: [(window_id.clone(), protocol::KeyedRow::Remove)].into(), ..Default::default() }
             }
-            SpaceConfigMutation::SetWorkflowEngagementInput { value } => SpaceConfigDiff { workflow_engagement_input: (base.workflow_engagement_input != *value).then(|| value.clone()), ..Default::default() },
-            SpaceConfigMutation::SetCompiledDagEngagementInput { value } => SpaceConfigDiff { compiled_dag_engagement_input: (base.compiled_dag_engagement_input != *value).then(|| value.clone()), ..Default::default() },
-            SpaceConfigMutation::SetPendingImport { node_id, format } => SpaceConfigDiff {
+            SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value }) => SpaceConfigDiff { workflow_engagement_input: (base.workflow_engagement_input != *value).then(|| value.clone()), ..Default::default() },
+            SpaceConfigMutation::SetCompiledDagEngagementInput(CompiledDagEngagementInputSetting { value }) => SpaceConfigDiff { compiled_dag_engagement_input: (base.compiled_dag_engagement_input != *value).then(|| value.clone()), ..Default::default() },
+            SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id, format }) => SpaceConfigDiff {
                 pending_import_node_id: (base.pending_import_node_id != *node_id).then(|| node_id.clone()),
                 pending_import_format: (base.pending_import_format != *format).then(|| format.clone()),
                 ..Default::default()
             },
-            SpaceConfigMutation::SetSpaceId { space_id } => SpaceConfigDiff { space_id: (base.space_id != *space_id).then(|| space_id.clone()), ..Default::default() },
-            SpaceConfigMutation::SetActivePanelTab { tab_id } => SpaceConfigDiff { active_panel_tab: (base.active_panel_tab != *tab_id).then(|| tab_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id }) => SpaceConfigDiff { space_id: (base.space_id != *space_id).then(|| space_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id }) => SpaceConfigDiff { active_panel_tab: (base.active_panel_tab != *tab_id).then(|| tab_id.clone()), ..Default::default() },
         })
     }
 
     fn inverse(&self, base: &SpaceConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            SpaceConfigMutation::SetActiveNode { .. } => SpaceConfigMutation::SetActiveNode { node_id: base.active_node_id.clone() },
-            SpaceConfigMutation::SetFocusedNode { .. } => SpaceConfigMutation::SetFocusedNode { node_id: base.focused_node_id.clone() },
-            SpaceConfigMutation::SetClipboard { .. } => SpaceConfigMutation::SetClipboard { node_ids: base.clipboard_node_ids.clone() },
-            SpaceConfigMutation::SetCollapsed { .. } => SpaceConfigMutation::SetCollapsed { node_ids: base.collapsed_node_ids.clone() },
-            SpaceConfigMutation::SetPreviewOff { .. } => SpaceConfigMutation::SetPreviewOff { node_ids: base.preview_off_node_ids.clone() },
-            SpaceConfigMutation::SetCamera { window_id, .. } => match base.camera.get(window_id) {
-                Some(camera) => SpaceConfigMutation::SetCamera { window_id: window_id.clone(), camera: *camera },
-                None => SpaceConfigMutation::RemoveCamera { window_id: window_id.clone() },
+            SpaceConfigMutation::SetActiveNode(_) => SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: base.active_node_id.clone() }),
+            SpaceConfigMutation::SetFocusedNode(_) => SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: base.focused_node_id.clone() }),
+            SpaceConfigMutation::SetClipboard(_) => SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: base.clipboard_node_ids.clone() }),
+            SpaceConfigMutation::SetCollapsed(_) => SpaceConfigMutation::SetCollapsed(CollapsedSetting { node_ids: base.collapsed_node_ids.clone() }),
+            SpaceConfigMutation::SetPreviewOff(_) => SpaceConfigMutation::SetPreviewOff(PreviewOffSetting { node_ids: base.preview_off_node_ids.clone() }),
+            SpaceConfigMutation::SetCamera(CameraSetting { window_id, .. }) => match base.camera.get(window_id) {
+                Some(camera) => SpaceConfigMutation::SetCamera(CameraSetting { window_id: window_id.clone(), camera: *camera }),
+                None => SpaceConfigMutation::RemoveCamera(CameraRemoval { window_id: window_id.clone() }),
             },
-            SpaceConfigMutation::RemoveCamera { window_id } => match base.camera.get(window_id) {
-                Some(camera) => SpaceConfigMutation::SetCamera { window_id: window_id.clone(), camera: *camera },
+            SpaceConfigMutation::RemoveCamera(CameraRemoval { window_id }) => match base.camera.get(window_id) {
+                Some(camera) => SpaceConfigMutation::SetCamera(CameraSetting { window_id: window_id.clone(), camera: *camera }),
                 None => return Ok(Vec::new()),
             },
-            SpaceConfigMutation::SetWorkflowEngagementInput { .. } => SpaceConfigMutation::SetWorkflowEngagementInput { value: base.workflow_engagement_input.clone() },
-            SpaceConfigMutation::SetCompiledDagEngagementInput { .. } => SpaceConfigMutation::SetCompiledDagEngagementInput { value: base.compiled_dag_engagement_input.clone() },
-            SpaceConfigMutation::SetPendingImport { .. } => SpaceConfigMutation::SetPendingImport { node_id: base.pending_import_node_id.clone(), format: base.pending_import_format.clone() },
-            SpaceConfigMutation::SetSpaceId { .. } => SpaceConfigMutation::SetSpaceId { space_id: base.space_id.clone() },
-            SpaceConfigMutation::SetActivePanelTab { .. } => SpaceConfigMutation::SetActivePanelTab { tab_id: base.active_panel_tab.clone() },
+            SpaceConfigMutation::SetWorkflowEngagementInput(_) => SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: base.workflow_engagement_input.clone() }),
+            SpaceConfigMutation::SetCompiledDagEngagementInput(_) => SpaceConfigMutation::SetCompiledDagEngagementInput(CompiledDagEngagementInputSetting { value: base.compiled_dag_engagement_input.clone() }),
+            SpaceConfigMutation::SetPendingImport(_) => SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: base.pending_import_node_id.clone(), format: base.pending_import_format.clone() }),
+            SpaceConfigMutation::SetSpaceId(_) => SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: base.space_id.clone() }),
+            SpaceConfigMutation::SetActivePanelTab(_) => SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id: base.active_panel_tab.clone() }),
         }])
     }
 }

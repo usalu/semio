@@ -93047,6 +93047,28 @@
       }
     },
     {
+      "name": "⚖️test-original-bulk-vec-retained-native🌱️🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/value-rs:test --skip-nx-cache --excludeTaskDependencies -- long --offline -E 'test(bulk_vec_tests)' --success-output immediate",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_CACHE_PROJECT_GRAPH": "true",
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_NET_OFFLINE": "true",
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"geometry-original-bulk-vec-retained-native\",\"maximumElapsedMilliseconds\":3600000}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/geometry-2026-10-10/snapshot-native",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"nx\",\"run\",\"@semio-tech/value-rs:test\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--\",\"long\",\"--offline\",\"-E\",\"test(bulk_vec_tests)\",\"--success-output\",\"immediate\"],\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.\\ud83e\\uddecsemio/\\ud83e\\udd91\\ufe0frepo/\\u26a1\\ufe0fcache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":3600000},\"network\":{\"offline\":true}},\"selection\":[\"nx\",\"run\",\"@semio-tech/value-rs:test\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--\",\"long\",\"--offline\",\"-E\",\"test(bulk_vec_tests)\",\"--success-output\",\"immediate\"]}"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058606496
+      }
+    },
+    {
       "name": "⚖️test-original-modeling-fullgrant-native🧊️🦀️",
       "type": "node-terminal",
       "request": "launch",
@@ -93191,6 +93213,25 @@
       "presentation": {
         "group": "4_gate",
         "order": 900.058606495
+      }
+    },
+    {
+      "name": "⚖️test-original-bulk-vec-retained-oracle🌱️🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-value:test-bulk-vec-retained-source --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_CACHE_PROJECT_GRAPH": "true",
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "CARGO_BUILD_JOBS": "2",
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"geometry-original-bulk-vec-retained-oracle\",\"maximumElapsedMilliseconds\":1800000}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/geometry-2026-10-10/snapshot-native"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058606497
       }
     },
     {

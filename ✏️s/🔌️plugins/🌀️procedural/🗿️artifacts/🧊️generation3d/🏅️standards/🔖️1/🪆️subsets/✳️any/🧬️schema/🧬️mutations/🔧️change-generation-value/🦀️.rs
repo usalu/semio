@@ -7,7 +7,8 @@ use crate::Generation3dSnapshot;
 
 //#region 🔖️ChangeGenerationValue
 /// 🔧 Nested address: outermost `id` (the generation) then `question_id` (the form field).
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeGenerationValue {
     pub id: String,

@@ -14,10 +14,10 @@
         "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
-          "moduleId": "aec-building-energy",
-          "label": "AEC Building Energy",
+          "computersJson": "{\"modelDefinitionIds\":[\"aec.building.energy\"],\"statComputers\":[\"energy.demand\"],\"propertyComputers\":[\"energy.heatedvolume\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building.energy\",\"layerTypology\":{\"baseplate\":\"energy.energy.baseplate\",\"hull\":\"energy.energy.hull\",\"roof\":\"energy.energy.roof\",\"slab\":\"energy.energy.baseplate\",\"wall\":\"energy.energy.externalwall\",\"walls\":\"energy.energy.externalwall\",\"window\":\"energy.energy.windows\",\"windows\":\"energy.energy.windows\"},\"fallbackTypology\":\"energy.energy.hull\",\"preferPresentationLayers\":true,\"presentationGeometry\":\"wireframe\",\"namespacedDomain\":\"energy\"}],\"transformationAppliers\":[]}",
           "iconId": "zap",
-          "computersJson": "{\"modelDefinitionIds\":[\"aec.building.energy\"],\"statComputers\":[\"energy.demand\"],\"propertyComputers\":[\"energy.heatedvolume\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building.energy\",\"layerTypology\":{\"baseplate\":\"energy.energy.baseplate\",\"hull\":\"energy.energy.hull\",\"roof\":\"energy.energy.roof\",\"slab\":\"energy.energy.baseplate\",\"wall\":\"energy.energy.externalwall\",\"walls\":\"energy.energy.externalwall\",\"window\":\"energy.energy.windows\",\"windows\":\"energy.energy.windows\"},\"fallbackTypology\":\"energy.energy.hull\",\"preferPresentationLayers\":true,\"presentationGeometry\":\"wireframe\",\"namespacedDomain\":\"energy\"}],\"transformationAppliers\":[]}"
+          "label": "AEC Building Energy",
+          "moduleId": "aec-building-energy"
         }
       }
     ],
@@ -41,17 +41,17 @@
         "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
-          "moduleId": "aec-building-energy",
-          "label": "AEC Building Energy",
+          "computersJson": "{\"modelDefinitionIds\":[\"aec.building.energy\"],\"statComputers\":[\"energy.demand\"],\"propertyComputers\":[\"energy.heatedvolume\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building.energy\",\"layerTypology\":{\"baseplate\":\"energy.energy.baseplate\",\"hull\":\"energy.energy.hull\",\"roof\":\"energy.energy.roof\",\"slab\":\"energy.energy.baseplate\",\"wall\":\"energy.energy.externalwall\",\"walls\":\"energy.energy.externalwall\",\"window\":\"energy.energy.windows\",\"windows\":\"energy.energy.windows\"},\"fallbackTypology\":\"energy.energy.hull\",\"preferPresentationLayers\":true,\"presentationGeometry\":\"wireframe\",\"namespacedDomain\":\"energy\"}],\"transformationAppliers\":[]}",
           "iconId": "zap",
-          "computersJson": "{\"modelDefinitionIds\":[\"aec.building.energy\"],\"statComputers\":[\"energy.demand\"],\"propertyComputers\":[\"energy.heatedvolume\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building.energy\",\"layerTypology\":{\"baseplate\":\"energy.energy.baseplate\",\"hull\":\"energy.energy.hull\",\"roof\":\"energy.energy.roof\",\"slab\":\"energy.energy.baseplate\",\"wall\":\"energy.energy.externalwall\",\"walls\":\"energy.energy.externalwall\",\"window\":\"energy.energy.windows\",\"windows\":\"energy.energy.windows\"},\"fallbackTypology\":\"energy.energy.hull\",\"preferPresentationLayers\":true,\"presentationGeometry\":\"wireframe\",\"namespacedDomain\":\"energy\"}],\"transformationAppliers\":[]}"
+          "label": "AEC Building Energy",
+          "moduleId": "aec-building-energy"
         }
       }
     ]
   },
   "hashes": {
-    "wasmSha256": "6e741f51950c7ece561b8a2abfde85660b03b4199b631a5f5b94b365994f6c0c",
-    "coreWasmSha256": "a53b0b565d47f75473f9bb1222e406578123dcc39431599df75ebc69f22f771f",
-    "descriptorSha256": "f56968b18006d44b59055358d984b97c8a9369fa9f37b4e5773750f0844961e4"
+    "wasmSha256": "65bc527cae47951531a8ade8aea60c70deed7edb9ff8e6d9c6f5560960cf27d0",
+    "coreWasmSha256": "544d093639a7978b8d17b72bec7b84ce5936fe8d8c7f15534e4b05a6d00e9a0f",
+    "descriptorSha256": "23d63e9d6e1cbb39d1f826fd86e9d451886a65e3196e9f44b619a35ad8e54aed"
   }
 }

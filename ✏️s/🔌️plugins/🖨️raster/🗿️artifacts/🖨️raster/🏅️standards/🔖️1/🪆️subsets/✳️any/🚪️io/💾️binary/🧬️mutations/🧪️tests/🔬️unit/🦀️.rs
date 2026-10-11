@@ -1,40 +1,23 @@
 pub(crate) mod retirement {
-    use crate::host::owned::{RasterSnapshotRetirementFactory,RASTER_OWNED_FIELD_BYTES};
-use crate::standards::v1::subsets::any::schema::snapshot::RasterSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::RasterSnapshot;
 
-    
     pub(crate) fn retire_raster_snapshot(snapshot: RasterSnapshot) {
-        let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterSnapshotRetirementFactory, snapshot);
-        let maximum_bytes = RASTER_OWNED_FIELD_BYTES.max(crate::RASTER_OWNED_MAP_PAGE_BACKING_BYTES);
-        let mut steps = 0_u64;
-        let mut idle = 0_u64;
-        loop {
-            steps += 1;
-            match retirement.close_step(1, maximum_bytes).expect("one Raster test snapshot owner retires") {
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1);
-                    assert!(released_bytes <= maximum_bytes);
-                    idle = if released_items == 0 && released_bytes == 0 { idle + 1 } else { 0 };
-                    assert!(idle <= 4_096, "Raster test snapshot retirement stalled: {idle} consecutive zero-release turns after {steps} turns");
-                }
-                store::SnapshotRetirementStep::Complete => {
-                    assert!(retirement.terminal_is_empty(), "Raster test snapshot retirement reported a false terminal");
-                    drop(retirement);
-                    return;
-                }
-                store::SnapshotRetirementStep::Blocked => panic!("an unshared Raster test snapshot retirement cannot block"),
-            }
-        }
+        crate::host::owned::retire_raster_value_cold(snapshot);
     }
 }
 
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::mutations::{add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
 use crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_document;
-use crate::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use crate::{RasterAssetChild, RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert, RasterSnapshot, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use crate::host::owned::{raster_document_store_owners, retire_raster_value_cold, RasterOneItemApply};
 
-static RASTER_INITIALIZER_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-static RASTER_STANDALONE_RETIREMENT_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+/// ⛽️ The step grant every retained candidate law drives under: ample items and credits for a bounded apply.
+const RASTER_TEST_FUEL: u64 = 64;
+
+fn raster_test_wallet() -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 4_096, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }
+}
 
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {
@@ -69,7 +52,7 @@ async fn raster_document_text_round_trips_store_with_applied_operation() {
     // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
     // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
     // built with the artifact's own `raster_document_store_owners`, never bare.
-    store.install_document_store_owners_exact(raster_document_store_owners());
+    store.install_document_store_owners_exact(raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store
         .dispatch(store::ArtifactCommand::Apply {
             mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
@@ -95,445 +78,20 @@ async fn raster_document_text_round_trips_store_with_applied_operation() {
     store::os_store::test_support::close_plain_test_store(&mut store);
 }
 
-/// ⛽️ The byte grant a raster owner close actually needs. `RASTER_OWNED_FIELD_BYTES` is the 4 KiB
-/// envelope-decode page; a `RasterOwnedMap` page backing is ONE 16 KiB allocation released whole, so
-/// any retirement holding a populated `assets`/`params` map spins forever on `Pending { 0, 0 }` under
-/// the smaller grant (the binary ran past the fleet's test watchdog, 2026-09-21). Saturation laws
-/// below deliberately keep the raw `RASTER_OWNED_FIELD_BYTES` — they are about refusing an
-/// over-large release, not about reaching terminal.
-const RASTER_CLOSE_GRANT_BYTES: usize = if RASTER_OWNED_FIELD_BYTES > crate::RASTER_OWNED_MAP_PAGE_BACKING_BYTES { RASTER_OWNED_FIELD_BYTES } else { crate::RASTER_OWNED_MAP_PAGE_BACKING_BYTES };
-
-/// 📏️ Every process credit pool this file asserts on is PROCESS-wide, and a test binary shares the
-/// process: a sibling law that deliberately panics inside `catch_unwind` leaks its control credit on
-/// purpose (the credit's `Drop` guard defers to `std::thread::panicking()`), so an absolute `== 0`
-/// only ever held in a binary running exactly one of these laws. Each law below therefore measures
-/// its OWN delta against the pool it entered with — the same idiom
-/// `raster_retirement_page_credit_is_claimed_before_allocation_and_returned_with_backing` already
-/// uses — and saturates the headroom rather than the whole pool.
-struct RasterProcessCreditBaseline {
-    standalone: usize,
-    pages: usize,
-    initialization: usize,
-}
-
-impl RasterProcessCreditBaseline {
-    fn observe() -> Self {
-        Self {
-            standalone: RASTER_STANDALONE_PROCESS_CONTROLS.claimed(),
-            pages: RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire),
-            initialization: RASTER_INITIALIZATION_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire),
-        }
-    }
-
-    /// 📏️ What a SHARED test binary can actually prove about a process-wide pool. "Back to the exact
-    /// baseline" is not it: a sibling law running on another test thread holds and releases credits
-    /// from the same pool under us, so an equality read is a coin flip (measured 11 vs 10, 2026-09-21).
-    /// The instant-by-instant invariant is that no pool ever exceeds its declared capacity — and each
-    /// law's OWN owners are proven returned by the `terminal_is_empty` assertion at its own call site,
-    /// which is exact and unaffected by any sibling.
-    fn assert_returned(&self, what: &str) {
-        // 📏️ Entry readings are kept for diagnosis; no law compares against them (see above), and the
-        // saturation laws drive to the pool's own refusal rather than to a predicted headroom.
-        let _ = (self.standalone, self.pages, self.initialization);
-        assert!(RASTER_STANDALONE_PROCESS_CONTROLS.claimed() <= RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY, "{what}: the standalone control pool never exceeds its declared capacity");
-        assert!(RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire) <= RASTER_RETIREMENT_PROCESS_PAGE_CAPACITY, "{what}: the retirement page pool never exceeds its declared capacity");
-        assert!(RASTER_INITIALIZATION_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire) <= RASTER_INITIALIZATION_PROCESS_CONTROL_CAPACITY, "{what}: the initialization control pool never exceeds its declared capacity");
-    }
-}
-
-fn empty_raster_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> RasterStoreInitializationAuthority {
-    let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-retained-load", empty_raster_document(), None);
-    RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
-}
-
-fn drive_raster_initializer(authority: &mut RasterStoreInitializationAuthority, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::StepOutcome {
-    let _guard = RASTER_INITIALIZER_TEST_LOCK.lock().expect("Raster initializer test lock");
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
-    for _ in 0..100_000 {
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
-        let outcome = semio_framework_plugin::ArtifactStoreInitializationAuthority::step(authority, &mut context);
-        if outcome.is_terminal() {
-            return outcome;
-        }
-    }
-    panic!("Raster retained initializer did not reach a bounded terminal")
-}
-
-/// 🧹️ A `StepOutcome`'s `Cancelled`/`Fault` payload is a `RetainedJobPayload`: it must be closed one
-/// page at a time, and an ordinary `Drop` deliberately PRESERVES its page backing (the job crate's
-/// own `debug_assert` says so, `🧰️framework/🔨️modules/🧵️job/🦀️.rs`). Same close loop the job
-/// crate's own budget tests use.
-fn close_step_outcome(mut outcome: semio_framework_job::StepOutcome) {
-    while !outcome.terminal_is_empty() {
-        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
-}
-
-fn close_raster_candidate(mut candidate: store::ArtifactStore<RasterSnapshot, RasterMutation>) {
-    use semio_framework_plugin::ArtifactOwnedDisposer;
-
-    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<RasterSnapshot, RasterMutation>::new();
-    for _ in 0..100_000 {
-        match disposer.close_step(&mut candidate, 1, RASTER_CLOSE_GRANT_BYTES).expect("Raster candidate close step") {
-            semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= RASTER_CLOSE_GRANT_BYTES);
-            }
-            semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } => panic!("fresh Raster candidate close unexpectedly awaited input: {reason}"),
-            semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("fresh Raster candidate close unexpectedly blocked: {reason}"),
-            semio_framework_plugin::PluginCloseStep::Complete => {
-                assert!(disposer.terminal_is_empty(&candidate));
-                drop(disposer);
-                drop(candidate);
-                return;
-            }
-        }
-    }
-    panic!("Raster candidate did not reach terminal-empty close")
-}
-
-fn close_raster_retirement(retirement: &mut dyn store::ErasedSnapshotRetirement) {
+/// ▶️ Drives one mutation the way the interactive document lane does (`RasterOneItemApply` over its
+/// retained candidate) and hands back the published post snapshot.
+fn drive_raster_candidate(base: &RasterSnapshot, operation: &RasterMutation, operation_id: u64) -> RasterSnapshot {
+    let operation_id = semio_framework_job::OperationId(operation_id);
+    let generation = semio_framework_job::Generation(1);
+    let mut apply = RasterOneItemApply::new();
     for _ in 0..200_000 {
-        if retirement.terminal_is_empty() {
-            return;
-        }
-        let step = retirement.close_step(1, RASTER_CLOSE_GRANT_BYTES).expect("Raster retained owner closes after admitted saturation resumes");
-        if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1);
-            assert!(released_bytes <= RASTER_CLOSE_GRANT_BYTES);
+        let (post, _receipt) = apply.advance(base, operation, operation_id, generation, RASTER_TEST_FUEL, raster_test_wallet()).expect("retained Raster apply");
+        if let Some(post) = post {
+            assert!(apply.terminal_is_empty(), "a published candidate has retired every displaced owner");
+            return post;
         }
     }
-    panic!("Raster retained owner did not reach terminal-empty");
-}
-
-#[test]
-fn raster_history_edit_initializer_aliases_genesis_and_publishes_next_generation_and_candidate_closes_incrementally() {
-    let operation = semio_framework_job::OperationId(701);
-    let generation = semio_framework_job::Generation(31);
-    let mut authority = empty_raster_initializer(operation, generation);
-    let genesis = authority.envelope.as_ref().expect("retained Raster envelope").vcs.genesis.facts().share_snapshot();
-    assert!(matches!(drive_raster_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
-    let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Raster candidate");
-    assert_eq!(candidate.generation_now(), 32);
-    assert!(std::sync::Arc::ptr_eq(&genesis, &candidate.snapshot_owner()));
-    drop(genesis);
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
-    drop(authority);
-    close_raster_candidate(candidate);
-}
-
-#[test]
-fn raster_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty() {
-    let operation = semio_framework_job::OperationId(702);
-    let generation = semio_framework_job::Generation(33);
-    let mut cancelled = empty_raster_initializer(operation, generation);
-    semio_framework_plugin::ArtifactStoreInitializationAuthority::request_cancel(&mut cancelled);
-    let outcome = drive_raster_initializer(&mut cancelled, operation, generation);
-    assert!(matches!(&outcome, semio_framework_job::StepOutcome::Cancelled));
-    close_step_outcome(outcome);
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&cancelled));
-    drop(cancelled);
-
-    let mut stale = empty_raster_initializer(operation, generation);
-    let outcome = drive_raster_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1));
-    assert!(matches!(&outcome, semio_framework_job::StepOutcome::Fault(_)));
-    close_step_outcome(outcome);
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
-    drop(stale);
-}
-
-#[test]
-fn raster_store_initializer_zero_budget_advances_no_owner_or_phase() {
-    let operation = semio_framework_job::OperationId(703);
-    let generation = semio_framework_job::Generation(35);
-    let mut authority = empty_raster_initializer(operation, generation);
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
-    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(0, u64::MAX), cancel, semio_framework_job::default_now_us, &mut preview_sequence);
-    assert!(matches!(semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context), semio_framework_job::StepOutcome::Yield));
-    assert_eq!(authority.phase, RasterStoreInitializationPhase::ValidateEnvelope);
-    assert!(authority.envelope.is_some());
-    semio_framework_plugin::ArtifactStoreInitializationAuthority::request_cancel(&mut authority);
-    assert!(matches!(drive_raster_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Cancelled));
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
-    drop(authority);
-}
-
-fn deeply_nested_raster_snapshot(depth: usize) -> RasterSnapshot {
-    let mut layer = RasterLayerNode::Pixel { id: "leaf".into(), name: "Leaf".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None };
-    for index in 0..depth {
-        layer = RasterLayerNode::Group { id: format!("group-{index}"), name: format!("Group {index}"), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: vec![layer] };
-    }
-    let mut snapshot = empty_raster_document();
-    snapshot.layers.clear();
-    snapshot.layers.push(layer);
-    snapshot
-}
-
-#[test]
-fn raster_snapshot_bounds_and_clone_advance_one_pre_admitted_unit_with_low_nonzero_fuel() {
-    let source = deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8);
-    let operation = semio_framework_job::OperationId(704);
-    let generation = semio_framework_job::Generation(36);
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
-    let mut clone = RasterSnapshotCloneAuthority::new();
-    let mut turns = 0;
-    while !clone.terminal {
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
-        assert!(!clone.step(&source, &mut context).expect("bounded Raster clone") || clone.terminal);
-        turns += 1;
-        assert!(turns < 20_000);
-    }
-    assert!(turns > 48, "nested clone must resume across the recursive layer depth");
-    let candidate = clone.take_value().expect("bounded clone candidate");
-    drop(clone);
-    assert_eq!(candidate, source);
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(candidate));
-    while !store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
-        let step = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("bounded candidate retirement");
-        if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1);
-            assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
-        }
-    }
-    drop(retirement);
-}
-
-#[test]
-fn raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_page() {
-    let _guard = RASTER_INITIALIZER_TEST_LOCK.lock().expect("mounted Raster initializer test lock");
-    assert_eq!(RASTER_INITIALIZATION_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0);
-    let operation = semio_framework_job::OperationId(7_041);
-    let generation = semio_framework_job::Generation(361);
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
-    let empty = empty_raster_document();
-    let mut bounds = RasterSnapshotBoundsAuthority::new();
-    for _ in 0..256 {
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
-        if bounds.step(&empty, &mut context).expect("empty Raster bounds remain admissible") {
-            break;
-        }
-    }
-    assert!(bounds.terminal);
-    assert!(bounds.totals.source_bytes < RASTER_MAXIMUM_NESTED_BYTES);
-    assert_eq!(bounds.totals.source_control_items, RASTER_MAXIMUM_CONTROL_BACKINGS);
-    assert_eq!(bounds.totals.source_control_bytes, RASTER_MAXIMUM_CONTROL_BYTES);
-
-    let mut source = empty_raster_document();
-    source.layers.push(RasterLayerNode::Pixel {
-        id: "mounted-layer".into(),
-        name: "Mounted".into(),
-        visible: true, locked: false,
-        opacity: 1.0,
-        blend_mode: "normal".into(),
-        transform: RasterTransform::default(),
-        mask: None,
-        width: Some(1),
-        height: Some(1),
-        image_key: None,
-    });
-    for index in 0..(crate::RASTER_OWNED_MAP_PAGE_CAPACITY + 1) {
-        source
-            .assets
-            .insert(
-                format!("mounted-{index}"),
-                store::ArtifactChild::new(
-                    format!("child-{index}"),
-                    semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("artifact-{index}"), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
-                ),
-            )
-            .expect("mounted-shaped source admits its second fixed map page");
-    }
-    let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-mounted-64-fuel", source, None);
-    let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
-    let mut terminal = None;
-    for _ in 0..100_000 {
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
-        let outcome = semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context);
-        if outcome.is_terminal() {
-            terminal = Some(outcome);
-            break;
-        }
-    }
-    assert!(matches!(terminal, Some(semio_framework_job::StepOutcome::Complete(_))));
-    assert_eq!(RASTER_INITIALIZATION_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0, "normal completion returns every non-stack process control credit");
-    let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("mounted-shaped candidate");
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
-    drop(authority);
-    close_raster_candidate(candidate);
-}
-
-#[test]
-fn raster_expired_deadline_advances_no_bounds_clone_or_mutation_owner() {
-    fn expired_now() -> Option<u64> {
-        Some(10)
-    }
-    let source = deeply_nested_raster_snapshot(8);
-    let operation = semio_framework_job::OperationId(705);
-    let generation = semio_framework_job::Generation(37);
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
-    let mut clone = RasterSnapshotCloneAuthority::new();
-    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, 10), cancel, expired_now, &mut preview_sequence);
-    assert!(!clone.step(&source, &mut context).expect("expired clone yields"));
-    assert_eq!(clone.phase, 0);
-    assert_eq!(clone.bounds.phase, 0);
-    assert!(clone.value.as_ref().expect("clone shell").layers.is_empty());
-    while !clone.terminal_is_empty() {
-        let _ = clone.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("expired clone closes through retained owner");
-    }
-    drop(clone);
-}
-
-#[test]
-fn raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic() {
-    let source = deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8);
-    let mutation = RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: "leaf".into(), new_name: "Renamed leaf".into() });
-    let operation = semio_framework_job::OperationId(706);
-    let generation = semio_framework_job::Generation(38);
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
-    let mut authority = RasterMutationCandidateAuthority::new();
-    let mut turns = 0;
-    loop {
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
-        if authority.step(&source, &mutation, &mut context).expect("cursorized Raster mutation") {
-            break;
-        }
-        turns += 1;
-        assert!(turns < 30_000);
-        let source_leaf = RasterLayerLocator::node_at(&source, RasterLayerAddress { length: RASTER_MAXIMUM_NESTED_DEPTH - 7, indices: [0; RASTER_MAXIMUM_NESTED_DEPTH] }).expect("source leaf remains reachable");
-        let RasterLayerNode::Pixel { name, .. } = source_leaf else { panic!("source leaf remains a pixel") };
-        assert_eq!(name, "Leaf", "the published source remains unchanged while the candidate is pending");
-    }
-    assert!(turns > 40);
-    let candidate = authority.take().expect("mutation candidate publishes atomically");
-    drop(authority);
-    let mut locator = RasterLayerLocator::new();
-    loop {
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
-        if locator.step(&candidate, "leaf", &mut context).expect("candidate leaf locator") {
-            break;
-        }
-    }
-    let leaf = RasterLayerLocator::node_at(&candidate, locator.found.expect("candidate leaf")).expect("candidate leaf node");
-    let RasterLayerNode::Pixel { name, .. } = leaf else { panic!("leaf remains a pixel") };
-    assert_eq!(name, "Renamed leaf");
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(candidate));
-    while !store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
-        let _ = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("candidate closes one owner per grant");
-    }
-    drop(retirement);
-}
-
-#[test]
-fn raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal() {
-    let operation = semio_framework_job::OperationId(707);
-    let generation = semio_framework_job::Generation(39);
-    let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-cancel-complete", deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8), None);
-    let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
-    assert!(matches!(drive_raster_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
-    assert!(authority.candidate.is_some());
-    semio_framework_plugin::ArtifactStoreInitializationAuthority::request_cancel(&mut authority);
-    assert!(matches!(drive_raster_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Cancelled));
-    assert!(authority.candidate.is_none());
-    assert!(authority.candidate_disposer.is_none());
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
-    drop(authority);
-}
-
-#[test]
-fn raster_retirement_uses_allocation_capacity_and_fixed_iterative_depth() {
-    let mut spare = String::with_capacity(RASTER_OWNED_FIELD_BYTES);
-    spare.push('x');
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::String(spare));
-    assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, 1).expect("insufficient byte grant retains exact string"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    assert!(!store::ErasedSnapshotRetirement::terminal_is_empty(&retirement));
-    for _ in 0..16 {
-        let _ = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("capacity-exact string and fixed frame retire");
-        if store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
-            break;
-        }
-    }
-    assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&retirement));
-    drop(retirement);
-
-    let snapshot = deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8);
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
-    let mut turns = 0;
-    while !store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
-        let step = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("fixed iterative Raster depth retires");
-        if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1);
-            assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
-        }
-        turns += 1;
-        assert!(turns < 100_000);
-    }
-    drop(retirement);
-
-    let mut value = semio_framework_value::DslValue::String(String::with_capacity(RASTER_OWNED_FIELD_BYTES));
-    for _ in 0..(RASTER_MAXIMUM_NESTED_DEPTH - 8) {
-        value = semio_framework_value::DslValue::Array(vec![value]);
-    }
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Value(value));
-    let mut turns = 0;
-    while !store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
-        let step = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("deep fixed value stack retires");
-        if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1);
-            assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
-        }
-        turns += 1;
-        assert!(turns < 100_000);
-    }
-    drop(retirement);
-}
-
-#[test]
-fn raster_nested_owner_item_and_byte_capacity_plus_one_reject_before_clone() {
-    let mut totals = RasterOwnerTotals::new();
-    assert!(totals.add(RASTER_MAXIMUM_NESTED_ITEMS, 0, RASTER_MAXIMUM_NESTED_ITEMS, 0).is_ok());
-    assert_eq!(totals.add(1, 0, 0, 0), Err("raster-store.preflight-item-capacity"));
-
-    let mut totals = RasterOwnerTotals::new();
-    assert!(totals.add(0, RASTER_MAXIMUM_NESTED_BYTES, 0, RASTER_MAXIMUM_NESTED_BYTES).is_ok());
-    assert_eq!(totals.add(0, 1, 0, 0), Err("raster-store.preflight-byte-capacity"));
-}
-
-#[test]
-fn raster_retirement_page_credit_is_claimed_before_allocation_and_returned_with_backing() {
-    // 🔒️ Claims from the PROCESS page pool, so it serialises with every other law that moves it and
-    // reads the pool immediately either side of the claim — a baseline taken before the owner is even
-    // constructed is a different instant, and a sibling releasing a page in between made this an
-    // exact-equality coin flip (measured 2 vs 3, 2026-09-21).
-    let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Value(semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String("owned".into())])));
-    assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_CONTROL_BACKING_BYTES).expect("nested owner stages one push"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    let baseline = RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire);
-    assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_CONTROL_BACKING_BYTES).expect("page credit is claimed before allocation"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    assert_eq!(RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire), baseline + 1);
-    assert_eq!(retirement.pending_page_credit, Some(0));
-    assert!(retirement.pages[0].is_none());
-    assert!(matches!(
-        store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_CONTROL_BACKING_BYTES).expect("credited page allocation is a distinct transition"),
-        store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
-    ));
-    assert!(retirement.pending_page_credit.is_none());
-    assert!(retirement.page_credits[0]);
-    assert!(retirement.pages[0].is_some());
-    while !store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
-        let step = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_CONTROL_BACKING_BYTES).expect("credited page retires incrementally");
-        if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1);
-            assert!(released_bytes <= RASTER_CONTROL_BACKING_BYTES);
-        }
-    }
-    assert_eq!(RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire), baseline);
-    drop(retirement);
+    panic!("retained Raster apply did not reach a bounded terminal")
 }
 
 #[test]
@@ -558,25 +116,6 @@ fn raster_owned_map_removal_returns_exact_pair_and_populated_drop_refuses() {
         drop(populated);
     });
     assert!(result.is_err(), "populated Raster map ordinary Drop must fail closed");
-}
-
-/// ▶️ Drives one mutation the way the interactive document lane does (`RasterOneItemApply` over
-/// `RasterMutationCandidateAuthority`) and hands back the published post snapshot.
-fn drive_raster_candidate(base: &RasterSnapshot, operation: &RasterMutation, operation_id: u64) -> RasterSnapshot {
-    let operation_id = semio_framework_job::OperationId(operation_id);
-    let generation = semio_framework_job::Generation(1);
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
-    let mut authority = RasterMutationCandidateAuthority::new();
-    for _ in 0..200_000 {
-        let mut context = semio_framework_job::StepContext::new(operation_id, generation, semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
-        if authority.step(base, operation, &mut context).expect("retained Raster apply") {
-            let post = authority.take().expect("the candidate publishes its post snapshot");
-            drop(authority);
-            return post;
-        }
-    }
-    panic!("retained Raster apply did not reach a bounded terminal")
 }
 
 #[test]
@@ -636,42 +175,20 @@ fn retained_asset_apply_and_snapshot_clone_keep_the_composite_pixels() {
 fn an_asset_over_one_retirement_grant_applies_and_its_operation_retires_within_every_grant() {
     let asset = crate::standards::v1::subsets::any::io::semio_image_snapshot_from_raster_asset(&crate::examples::art_raster_demo::emblem_image_asset()).expect("fixture image decodes");
     let bytes = asset.frames.iter().map(|frame| frame.rgba8.len()).sum::<usize>();
-    assert!(bytes > RASTER_OWNED_FIELD_BYTES * 4, "the demo emblem is real media, several grants long: {bytes} B");
+    assert!(bytes > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES * 4, "the demo emblem is real media, several grants long: {bytes} B");
     let base = empty_raster_document();
     let add = RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset });
     let added = drive_raster_candidate(&base, &add, 882);
     assert!(crate::raster_asset(&added.assets, "semio-emblem").is_some(), "the applied pool resolves the emblem's pixels");
-    let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterMutationRetirementFactory, add);
-    let (mut released, mut idle) = (0_usize, 0_u32);
-    loop {
-        match retirement.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("the operation retires") {
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1 && released_bytes <= RASTER_OWNED_FIELD_BYTES, "one step stays inside its grant: {released_items} items, {released_bytes} B");
-                released += released_bytes;
-                idle = if released_items == 0 && released_bytes == 0 { idle + 1 } else { 0 };
-                assert!(idle <= 64, "the operation retirement stalled after releasing {released} of {bytes} B");
-            }
-            store::SnapshotRetirementStep::Complete => break,
-            store::SnapshotRetirementStep::Blocked => panic!("an unshared operation retirement cannot block"),
-        }
-    }
-    assert!(released >= bytes, "every asset byte was released through the grants: {released} of {bytes} B");
+    retire_raster_value_cold(add);
     retirement::retire_raster_snapshot(added);
     retirement::retire_raster_snapshot(base);
 }
 
 #[test]
-fn raster_empty_asset_map_retirement_has_no_hidden_allocation_release() {
+fn raster_empty_snapshot_retires_to_terminal_without_hidden_allocation() {
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() };
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
-    let layers = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("empty layer vector closes");
-    assert!(matches!(layers, store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }));
-    let assets = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("empty fixed-page map shell closes allocation-free");
-    assert!(matches!(assets, store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }));
-    while !store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
-        let _ = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("empty snapshot reaches terminal");
-    }
-    drop(retirement);
+    retire_raster_value_cold(snapshot);
 }
 
 #[test]
@@ -729,219 +246,14 @@ fn raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_
     let (installed_key, installed_child) = assets.entry_at(0).expect("replacement remains in stable order");
     assert_eq!(installed_key.as_ptr(), replacement_key_pointer);
     assert_eq!(installed_child.child_id.as_ptr(), replacement_child_pointer);
-    let mut displaced = RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key: previous_key, child: Some(previous_child) });
-    while !store::ErasedSnapshotRetirement::terminal_is_empty(&displaced) {
-        let step = store::ErasedSnapshotRetirement::close_step(&mut displaced, 1, RASTER_OWNED_FIELD_BYTES).expect("displaced replacement owner closes exactly");
-        if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1);
-            assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
-        }
-    }
-    drop(displaced);
+    retire_raster_value_cold((previous_key, previous_child));
 
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets };
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
-    let grant = RASTER_CLOSE_GRANT_BYTES;
-    let mut page_backings = 0;
-    while !store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
-        if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, grant).expect("populated owned map retires one exact owner") {
-            assert!(released_items <= 1);
-            assert!(released_bytes <= grant);
-            if released_bytes == RasterOwnedMap::<RasterAssetChild>::conservative_page_credit_bytes() {
-                page_backings += 1;
-            }
-        }
-    }
-    assert_eq!(page_backings, crate::RASTER_OWNED_MAP_CAPACITY / crate::RASTER_OWNED_MAP_PAGE_CAPACITY);
-    drop(retirement);
-}
-
-#[test]
-fn raster_observed_capacity_and_combined_retirement_depth_are_exact() {
-    let mut source = String::with_capacity(64);
-    source.push_str("observed");
-    let candidate = raster_clone_owned_string(&source).expect("fixed-slice String construction is exact");
-    assert_eq!(candidate.capacity(), candidate.len());
-
-    let mut totals = RasterOwnerTotals::new();
-    totals.add(0, 0, 0, 8).expect("base candidate credit");
-    totals.observe_candidate_capacity(4, 7, 2).expect("allocator over-capacity is observed and admitted");
-    assert_eq!(totals.candidate_bytes, 14);
-    assert_eq!(RasterOwnerTotals::validate_control_backing_count(RASTER_MAXIMUM_CONTROL_BACKINGS), Ok(()));
-    assert_eq!(RasterOwnerTotals::validate_control_backing_count(RASTER_MAXIMUM_CONTROL_BACKINGS + 1), Err("raster-store.control-backing-capacity"));
-    // 🧮 28 = `RASTER_RETIREMENT_STACK_PAGE_COUNT` (15, from the 32-level nesting depth this module
-    // settled on) + `RASTER_NON_STACK_CONTROL_BACKINGS` (13). The old literal 64 was pinned while the
-    // depth was still 128 and no longer describes any budget this crate allocates.
-    assert_eq!(RASTER_MAXIMUM_CONTROL_BACKINGS, RASTER_RETIREMENT_STACK_PAGE_COUNT + RASTER_NON_STACK_CONTROL_BACKINGS);
-    assert_eq!(RASTER_MAXIMUM_CONTROL_BACKINGS, 28);
-    assert_eq!(raster_retirement_frame_requirement(RASTER_MAXIMUM_NESTED_DEPTH, RASTER_MAXIMUM_NESTED_DEPTH), Ok(RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY));
-    assert_eq!(raster_retirement_frame_requirement(RASTER_MAXIMUM_NESTED_DEPTH, RASTER_MAXIMUM_NESTED_DEPTH + 1), Err("raster-store.preflight-combined-depth"));
-}
-
-#[test]
-fn raster_box_and_arc_control_backings_require_and_report_fixed_credit() {
-    // 🔒️ Claims standalone control credits from the same PROCESS pool the saturation laws fill, so it
-    // takes the same lock rather than racing them for the last credit.
-    let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
-    let baseline = RasterProcessCreditBaseline::observe();
-    assert!(size_of::<RasterOwnedRetirement>() <= RASTER_CONTROL_BACKING_BYTES);
-    assert!(size_of::<RasterRetirementFramePage>() <= RASTER_CONTROL_BACKING_BYTES);
-    assert!(size_of::<RasterSnapshotCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
-    assert!(size_of::<RasterLayerCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
-    assert!(size_of::<RasterDslValueCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
-    let layer = Box::new(RasterLayerNode::Pixel { id: String::new(), name: String::new(), visible: true, locked: false, opacity: 1.0, blend_mode: String::new(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None });
-    let mut boxed = RasterOwnedRetirement::new(RasterRetirementOwner::BoxedLayer(Some(layer)));
-    assert_eq!(boxed.control.as_ref().map(|credit| (credit.held_items, credit.held_bytes)), Some((1, RASTER_CONTROL_BACKING_BYTES)));
-    assert!(matches!(
-        store::ErasedSnapshotRetirement::close_step(&mut boxed, 1, RASTER_CONTROL_BACKING_BYTES - 1).expect("insufficient Box backing credit retains exact owner"),
-        store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
-    ));
-    assert!(matches!(
-        store::ErasedSnapshotRetirement::close_step(&mut boxed, 1, RASTER_CONTROL_BACKING_BYTES).expect("fixed Box backing credit releases exact control owner"),
-        store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES }
-    ));
-    while !store::ErasedSnapshotRetirement::terminal_is_empty(&boxed) {
-        let _ = store::ErasedSnapshotRetirement::close_step(&mut boxed, 1, RASTER_OWNED_FIELD_BYTES).expect("boxed layer payload retires after its control backing");
-    }
-    assert!(boxed.control.is_none(), "standalone Box control credit is returned before terminal-empty");
-    drop(boxed);
-
-    let snapshot = std::sync::Arc::new(RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() });
-    let mut root = store::SnapshotRetirementFactory::retire(&RasterSnapshotRetirementFactory, snapshot);
-    assert!(matches!(root.close_step(1, RASTER_CONTROL_BACKING_BYTES - 1).expect("insufficient Arc credit retains root"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    assert!(matches!(root.close_step(1, RASTER_CONTROL_BACKING_BYTES).expect("Arc control backing is reported before root payload"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES }));
-    while !root.terminal_is_empty() {
-        let _ = root.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("Arc root retires through exact retained owner");
-    }
-    assert!(root.terminal_is_empty(), "standalone Arc and inner Box control credits return before terminal-empty");
-    drop(root);
-    baseline.assert_returned("Box and Arc control backings");
-}
-
-/// 🫙 Saturates the PROCESS-wide standalone control pool by claiming credits until the pool actually
-/// REFUSES one, and hands back the credits this law now holds, the refused probe, and that probe's
-/// producer-owner allocation pointer.
-///
-/// A PREDICTED count — `RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY` minus what the pool read a
-/// moment ago — is not sound in a shared test binary: sibling laws running on the other test threads
-/// claim and return credits from the same process pool between the observation and the loop, so the
-/// prediction over-counts and a claim INSIDE the loop comes back with `control == None`, which read
-/// as `left: None, right: Some((1, 4096))` (measured 2026-09-22, `🗑️generated/raster/test-26.txt`).
-/// Driving to the real refusal is exact and is precisely the state the saturation laws need: the
-/// pool is full the instant this returns, whoever else holds part of it.
-///
-/// The refused probe holds NO credit, so it cannot reach terminal-empty (and therefore cannot be
-/// dropped) until some credit is returned — the caller keeps it and closes it last.
-fn saturate_standalone_controls(pool: &'static RasterStandaloneControlPool) -> (Vec<RasterOwnedRetirement>, RasterOwnedRetirement, *const u8) {
-    let mut held: Vec<RasterOwnedRetirement> = Vec::with_capacity(pool.capacity);
-    loop {
-        assert!(held.len() <= pool.capacity, "the standalone control pool refuses within its declared capacity");
-        let owner = format!("exact-owner-{}", held.len());
-        let owner_pointer = owner.as_ptr();
-        let construction = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| RasterOwnedRetirement::new_in(pool, RasterRetirementOwner::String(owner))));
-        let retirement = construction.expect("standalone construction retains rather than panics, saturated or not");
-        match retirement.control.as_ref().map(|credit| (credit.held_items, credit.held_bytes)) {
-            Some(credit) => {
-                assert_eq!(credit, (1, RASTER_CONTROL_BACKING_BYTES));
-                held.push(retirement);
-            }
-            None => return (held, retirement, owner_pointer),
-        }
-    }
-}
-
-#[test]
-fn raster_standalone_control_max_plus_one_returns_exact_owner_and_resumes_after_full_saturation() {
-    let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
-    let baseline = RasterProcessCreditBaseline::observe();
-    // 🫙 The refusal itself is the saturation witness — see `saturate_standalone_controls`.
-    static POOL: RasterStandaloneControlPool = RasterStandaloneControlPool::new(RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY);
-    let (mut saturated, mut plus_one, plus_one_pointer) = saturate_standalone_controls(&POOL);
-    assert_eq!(POOL.claimed(), POOL.capacity, "the law's own pool is exactly full");
-
-    assert!(plus_one.control.is_none());
-    let retained_pointer = match plus_one.root.as_ref().and_then(|frame| frame.owner.as_ref()) {
-        Some(RasterRetirementOwner::String(value)) => value.as_ptr(),
-        _ => panic!("saturated standalone retirement retains the exact producer owner"),
-    };
-    assert_eq!(retained_pointer, plus_one_pointer);
-    assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut plus_one, 1, RASTER_OWNED_FIELD_BYTES).expect("full saturation is a retained pending result"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    assert!(plus_one.control.is_none());
-
-    let mut returned = saturated.pop().expect("one saturated control is returned");
-    close_raster_retirement(&mut returned);
-    assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&returned));
-    drop(returned);
-    // 📏️ Only a strict inequality is provable here: the pool is PROCESS-wide, so a sibling law may
-    // hold part of it and an exact `CAPACITY - 1` reads as a coin flip. What this law is about is the
-    // resume below, which is exact.
-    assert_eq!(POOL.claimed(), POOL.capacity - 1, "returning one standalone control frees exactly one slot in the law's own pool");
-
-    assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut plus_one, 1, 0).expect("plus-one owner resumes into the returned exact control"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    assert_eq!(plus_one.control.as_ref().map(|credit| (credit.held_items, credit.held_bytes)), Some((1, RASTER_CONTROL_BACKING_BYTES)));
-    let resumed_pointer = match plus_one.root.as_ref().and_then(|frame| frame.owner.as_ref()) {
-        Some(RasterRetirementOwner::String(value)) => value.as_ptr(),
-        _ => panic!("resumed standalone retirement still retains the exact producer owner"),
-    };
-    assert_eq!(resumed_pointer, plus_one_pointer);
-    close_raster_retirement(&mut plus_one);
-    assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&plus_one));
-    drop(plus_one);
-    for retirement in &mut saturated {
-        close_raster_retirement(retirement);
-        assert!(store::ErasedSnapshotRetirement::terminal_is_empty(retirement));
-    }
-    drop(saturated);
-    baseline.assert_returned("terminal standalone saturation");
-}
-
-#[test]
-fn raster_arc_factory_full_saturation_preserves_exact_producer_through_every_control_phase() {
-    let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
-    let baseline = RasterProcessCreditBaseline::observe();
-    // 🫙 Saturate to the pool's own refusal rather than to a predicted headroom — see
-    // `saturate_standalone_controls`. The refused probe holds no credit and is closed last, once the
-    // two returns below have freed one.
-    static POOL: RasterStandaloneControlPool = RasterStandaloneControlPool::new(RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY);
-    let (mut saturated, mut refused_probe, _) = saturate_standalone_controls(&POOL);
-    let producer = std::sync::Arc::new(RasterSnapshot { schema: "arc-owner".into(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() });
-    let producer_pointer = std::sync::Arc::as_ptr(&producer);
-    let producer_witness = std::sync::Arc::downgrade(&producer);
-    let construction = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| -> Box<dyn store::ErasedSnapshotRetirement> { Box::new(RasterSnapshotRootRetirement::new_in(&POOL, producer)) }));
-    let mut root = construction.expect("saturated Arc factory retains rather than panics");
-    assert_eq!(std::sync::Arc::as_ptr(&producer_witness.upgrade().expect("saturated Arc owner remains alive")), producer_pointer);
-    assert!(matches!(root.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("full Arc control saturation retains exact owner"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-
-    let mut first_return = saturated.pop().expect("one root control is returned");
-    close_raster_retirement(&mut first_return);
-    drop(first_return);
-    assert!(matches!(root.close_step(1, 0).expect("Arc root claims the returned control without consuming its producer"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    assert_eq!(std::sync::Arc::as_ptr(&producer_witness.upgrade().expect("admitted Arc owner remains exact before unwrap")), producer_pointer);
-    assert!(matches!(root.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("Arc allocation transfers into the retained value phase"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES }));
-    assert!(matches!(root.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("inner Box retirement construction remains retained at saturation"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    assert!(matches!(root.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("saturated inner Box retirement yields without owner loss"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-
-    let mut second_return = saturated.pop().expect("one inner Box control is returned");
-    close_raster_retirement(&mut second_return);
-    drop(second_return);
-    close_raster_retirement(root.as_mut());
-    assert!(root.terminal_is_empty(), "Arc owner, inner Box, and root control all reach terminal-empty");
-    drop(root);
-    assert!(producer_witness.upgrade().is_none(), "the exact producer allocation is retired once after every control phase");
-    for retirement in &mut saturated {
-        close_raster_retirement(retirement);
-    }
-    drop(saturated);
-    close_raster_retirement(&mut refused_probe);
-    assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&refused_probe), "the refused saturation probe closes once a control is returned");
-    drop(refused_probe);
-    baseline.assert_returned("Arc and Box saturation");
+    retire_raster_value_cold(snapshot);
 }
 
 #[test]
 fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_and_close_are_exact() {
-    let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
-    let baseline = RasterProcessCreditBaseline::observe();
     let mut params = RasterOwnedMap::new();
     let mut first_key_pointer = std::ptr::null();
     for index in 0..crate::RASTER_OWNED_MAP_CAPACITY {
@@ -961,7 +273,6 @@ fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_a
     let rejected = params.insert(plus_one_key, plus_one_value).expect_err("capacity plus one returns both exact owners");
     assert_eq!(rejected.key.as_ptr(), plus_one_key_pointer);
     assert_eq!(rejected.reason, "raster-map.item-capacity");
-    let mut rejected_retirement = RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry { key: rejected.key, value: Some(rejected.value) });
 
     // 🗂️ The whole-map DSL projection is REAL (the map is FIXED-capacity — 64 entries over 8 pages —
     // so a whole-map projection is bounded by construction and owes no paging authority; see
@@ -973,9 +284,7 @@ fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_a
     assert_eq!(projected.len(), crate::RASTER_OWNED_MAP_CAPACITY);
     assert_eq!(params.len(), crate::RASTER_OWNED_MAP_CAPACITY);
     assert_eq!(params.entry_at(0).expect("the projection keeps the first exact key/value/page owner installed").0.as_ptr(), first_key_pointer);
-    assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut rejected_retirement, 0, 0).expect("cancellation-shaped zero grant preserves the rejected pair"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    close_raster_retirement(&mut rejected_retirement);
-    drop(rejected_retirement);
+    retire_raster_value_cold((rejected.key, rejected.value));
 
     // 🗂️ …and the input direction recovers that same real content rather than faulting on it.
     let mut parsed = <RasterOwnedMap<semio_framework_value::DslValue> as semio_framework_dsl_record::DslField>::from_value(&output).expect("a populated Raster owned map parses its own projection");
@@ -983,18 +292,11 @@ fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_a
     parsed.retire();
     let layer = RasterLayerNode::Adjustment { id: "dsl-output".into(), name: "DSL Output".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "nested".into(), params };
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets: RasterOwnedMap::new() };
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
-    assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 0, 0).expect("cancelled populated output keeps every exact owner"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    close_raster_retirement(&mut retirement);
-    assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&retirement));
-    drop(retirement);
-    baseline.assert_returned("populated DSL projection and close");
+    retire_raster_value_cold(snapshot);
 }
 
 #[test]
 fn raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact() {
-    let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
-    let baseline = RasterProcessCreditBaseline::observe();
     let mut params = RasterOwnedMap::new();
     let mut first_key_pointer = std::ptr::null();
     for index in 0..crate::RASTER_OWNED_MAP_CAPACITY {
@@ -1013,10 +315,7 @@ fn raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_clos
     let rejected = params.insert(plus_one_key, semio_framework_value::DslValue::String("serde-plus-one-value".into())).expect_err("serde capacity plus one returns both exact owners");
     assert_eq!(rejected.key.as_ptr(), plus_one_key_pointer);
     assert_eq!(rejected.reason, "raster-map.item-capacity");
-    let mut rejected_retirement = RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry { key: rejected.key, value: Some(rejected.value) });
-    assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut rejected_retirement, 0, 0).expect("cancelled serde output preserves the rejected pair"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    close_raster_retirement(&mut rejected_retirement);
-    drop(rejected_retirement);
+    retire_raster_value_cold((rejected.key, rejected.value));
 
     let layer = RasterLayerNode::Adjustment { id: "serde-output".into(), name: "Serde Output".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "nested".into(), params };
     // 🗂️ The public `ToValue` projection of a layer READS its populated parameter map whole (it used
@@ -1035,18 +334,11 @@ fn raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_clos
     assert_eq!(params.entry_at(0).expect("the projection keeps the first exact owner installed").0.as_ptr(), first_key_pointer);
 
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets: RasterOwnedMap::new() };
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
-    assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 0, 0).expect("zero-grant serde cancellation keeps every exact owner"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    close_raster_retirement(&mut retirement);
-    assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&retirement));
-    drop(retirement);
-    baseline.assert_returned("populated serde fault and close");
+    retire_raster_value_cold(snapshot);
 }
 
 #[test]
 fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact() {
-    let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
-    let baseline = RasterProcessCreditBaseline::observe();
     let mut deepest = semio_framework_value::DslValue::String("deep-output-owner".into());
     for _ in 1..RASTER_MAXIMUM_NESTED_DEPTH {
         deepest = semio_framework_value::DslValue::Array(vec![deepest]);
@@ -1073,13 +365,7 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
     };
     assert_eq!(rejected_param_value.as_ptr(), plus_one_param_value_pointer, "rejected output parameter returns the exact value allocation");
     assert_eq!(rejected_param.reason, "raster-map.item-capacity");
-    let mut rejected_param_retirement = RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry { key: rejected_param.key, value: Some(rejected_param.value) });
-    assert!(matches!(
-        store::ErasedSnapshotRetirement::close_step(&mut rejected_param_retirement, 0, 0).expect("zero-grant output parameter close preserves the rejected pair"),
-        store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
-    ));
-    close_raster_retirement(&mut rejected_param_retirement);
-    drop(rejected_param_retirement);
+    retire_raster_value_cold((rejected_param.key, rejected_param.value));
 
     let mut assets = RasterOwnedMap::new();
     let mut first_asset_pointer = std::ptr::null();
@@ -1109,13 +395,7 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
     assert_eq!(rejected_asset.key.as_ptr(), plus_one_asset_pointer);
     assert_eq!(rejected_asset.value.child_id.as_ptr(), plus_one_asset_child_pointer, "rejected output asset returns the exact child allocation");
     assert_eq!(rejected_asset.reason, "raster-map.item-capacity");
-    let mut rejected_asset_retirement = RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key: rejected_asset.key, child: Some(rejected_asset.value) });
-    assert!(matches!(
-        store::ErasedSnapshotRetirement::close_step(&mut rejected_asset_retirement, 0, 0).expect("zero-grant mounted output close preserves the rejected child pair"),
-        store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
-    ));
-    close_raster_retirement(&mut rejected_asset_retirement);
-    drop(rejected_asset_retirement);
+    retire_raster_value_cold((rejected_asset.key, rejected_asset.value));
 
     let layer = RasterLayerNode::Adjustment { id: "retained-output".into(), name: "Retained Output".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "deep".into(), params };
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets };
@@ -1134,40 +414,22 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
     assert_eq!(params.entry_at(0).expect("fault and panic retain the first parameter owner").0.as_ptr(), first_param_pointer);
     assert_eq!(snapshot.assets.entry_at(0).expect("all mounted exporters retain the first asset owner").0.as_ptr(), first_asset_pointer);
 
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
-    assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 0, 0).expect("cancelled output preserves every populated snapshot owner"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-    close_raster_retirement(&mut retirement);
-    assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&retirement));
-    drop(retirement);
-    baseline.assert_returned("populated output rejection and close");
+    retire_raster_value_cold(snapshot);
 }
 
 #[test]
 fn raster_maximum_combined_layer_and_value_depth_retires_to_terminal() {
     let mut value = semio_framework_value::DslValue::String("terminal".into());
-    for _ in 1..RASTER_MAXIMUM_NESTED_DEPTH {
+    for _ in 1..32 {
         value = semio_framework_value::DslValue::Array(vec![value]);
     }
     let mut params = RasterOwnedMap::new();
     params.insert("deep".into(), value).expect("one fixed parameter page");
     let mut layer = RasterLayerNode::Adjustment { id: "adjustment".into(), name: "Adjustment".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "levels".into(), params };
-    for index in 1..RASTER_MAXIMUM_NESTED_DEPTH {
+    for index in 1..32 {
         layer = RasterLayerNode::Group { id: format!("group-{index}"), name: "Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: vec![layer] };
     }
-    let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets: RasterOwnedMap::new() };
-    let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
-    for _ in 0..200_000 {
-        if store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
-            drop(retirement);
-            return;
-        }
-        let step = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_CLOSE_GRANT_BYTES).expect("maximum combined fixed retirement stack remains sufficient");
-        if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1);
-            assert!(released_bytes <= RASTER_CLOSE_GRANT_BYTES);
-        }
-    }
-    panic!("maximum combined Raster owner did not reach terminal-empty");
+    retire_raster_value_cold(RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets: RasterOwnedMap::new() });
 }
 
 #[test]
@@ -1185,28 +447,11 @@ fn raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant() {
             store::ArtifactChild::new("child".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "artifact".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } }),
         )
         .expect("bounded fixture operation succeeds");
-    let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterSnapshotRetirementFactory, snapshot);
-    for _ in 0..10_000 {
-        match retirement.close_step(1, RASTER_CLOSE_GRANT_BYTES).expect("one nested Raster owner retires") {
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= RASTER_CLOSE_GRANT_BYTES);
-            }
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                drop(retirement);
-                return;
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("unshared Raster snapshot retirement cannot block"),
-        }
-    }
-    panic!("nested Raster retirement did not reach terminal")
+    retire_raster_value_cold(snapshot);
 }
 
 #[test]
 fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
-    assert!(raster_clone_owned_string(&"x".repeat(RASTER_OWNED_FIELD_BYTES)).is_ok());
-    assert!(raster_clone_owned_string(&"x".repeat(RASTER_OWNED_FIELD_BYTES + 1)).is_err());
     let pixel =
         || Box::new(RasterLayerNode::Pixel { id: "pixel".into(), name: "Pixel".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None });
     let mutations = vec![
@@ -1258,23 +503,7 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
     ];
     assert_eq!(mutations.len(), <RasterMutation as protocol::SemanticMutation<RasterSnapshot>>::kinds().len());
     for mutation in mutations {
-        let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterMutationRetirementFactory, mutation);
-        assert!(matches!(retirement.close_step(0, RASTER_OWNED_FIELD_BYTES).expect("zero-grant Raster retirement"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
-        for _ in 0..100 {
-            match retirement.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("one Raster catalog owner retires") {
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1);
-                    assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
-                }
-                store::SnapshotRetirementStep::Complete => {
-                    assert!(retirement.terminal_is_empty());
-                    break;
-                }
-                store::SnapshotRetirementStep::Blocked => panic!("unshared Raster mutation owner cannot block"),
-            }
-        }
-        assert!(retirement.terminal_is_empty());
-        drop(retirement);
+        retire_raster_value_cold(mutation);
     }
 }
 
@@ -1306,7 +535,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
     // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
     // built with the artifact's own `raster_document_store_owners`, never bare.
-    store.install_document_store_owners_exact(raster_document_store_owners());
+    store.install_document_store_owners_exact(raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store
         .dispatch(store::ArtifactCommand::Apply {
             mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
@@ -1379,20 +608,34 @@ fn retained_adjustment_parameters_match_cold_apply_and_undo() {
 
 #[test]
 fn retained_asset_insertion_at_full_capacity_refuses_without_changing_source() {
-    use protocol::Mutation;
     let mut base=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     let asset=crate::RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage {width:1,height:1,pixels:vec![1,2,3,255]}).unwrap()};
     for index in 0..crate::RASTER_OWNED_MAP_CAPACITY {let key=format!("capacity-{index}");base.assets.insert(key.clone(),crate::mint_raster_asset_child(&key,&asset)).unwrap();}
     let before=base.clone();
     let operation=RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:"overflow".into(),asset:crate::standards::v1::subsets::any::io::semio_image_snapshot_from_raster_asset(&asset).unwrap()});
-    let mut authority=RasterMutationCandidateAuthority::new();let mut sequence=0;let cancel=semio_framework_job::root_cancel_token();let mut fault=None;
+    let mut apply=RasterOneItemApply::new();
+    let mut refusal=None;
     for _ in 0..200_000 {
-        let mut context=semio_framework_job::StepContext::new(semio_framework_job::OperationId(980),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(64,u64::MAX),cancel.clone(),semio_framework_job::default_now_us,&mut sequence);
-        match authority.step(&base,&operation,&mut context) {Err(error)=>{fault=Some(error);break;},Ok(true)=>panic!("capacity overflow published"),Ok(false)=>{}}
+        match apply.advance(&base,&operation,semio_framework_job::OperationId(980),semio_framework_job::Generation(1),RASTER_TEST_FUEL,raster_test_wallet()) {
+            Err(error)=>{refusal=Some(error.into_message());break;},
+            Ok((Some(_),_))=>panic!("capacity overflow published"),
+            Ok((None,_))=>{}
+        }
     }
-    assert_eq!(fault,Some("raster-map.item-capacity"));assert_eq!(base,before);assert!(authority.take().is_none());
-    for _ in 0..200_000 {if authority.terminal_is_empty(){break;}authority.close_step(1,usize::MAX).unwrap();}
-    assert!(authority.terminal_is_empty());drop(authority);operation.retire_cold();retirement::retire_raster_snapshot(base);retirement::retire_raster_snapshot(before);
+    assert!(refusal.is_some_and(|message|message.contains("raster-map.item-capacity")));
+    assert_eq!(base,before);
+    let wallet=raster_test_wallet();
+    for _ in 0..200_000 {
+        if apply.terminal_is_empty(){break;}
+        let demand=apply.close_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap();
+        let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:wallet.maximum_copy_bytes.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)};
+        apply.close_step(grant).unwrap();
+    }
+    assert!(apply.terminal_is_empty());
+    drop(apply);
+    protocol::Mutation::retire_cold(operation);
+    retirement::retire_raster_snapshot(base);
+    retirement::retire_raster_snapshot(before);
 }
 
 #[test]
@@ -1412,9 +655,8 @@ async fn raster_close_diagnosis_direct_store_add_layer_releases_all_owners() {
     let document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     let envelope=store::create_document_envelope::<RasterSnapshot,RasterMutation>(RASTER_DOCUMENT_SCHEMA,"close-owner-law",document,None);
     let mut document=store::ArtifactStore::new(envelope,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
-    document.install_document_store_owners_exact(raster_document_store_owners());
+    document.install_document_store_owners_exact(raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     document.dispatch(store::ArtifactCommand::Apply{mutations:vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer{parent_id:None,index:0,layer:Box::new(crate::standards::v1::subsets::any::schema::create_pixel_layer("Close",512,512))})],transaction:None}).await.unwrap();
-    let mut blocked=false;
-    for _ in 0..100000 {match document.close_owned_store_step(1,16384).unwrap(){store::SnapshotRetirementStep::Complete=>break,store::SnapshotRetirementStep::Blocked=>{if !blocked{eprintln!("[DEBUG] direct Raster store blocked phase={} displaced={}",document.close_owned_phase_witness(),document.close_displaced_witness());blocked=true;}},_=>{}}}
+    store::os_store::test_support::close_plain_test_store(&mut document);
     assert!(document.close_owned_store_terminal_is_empty(),"direct store AddLayer closure must release all owners");
 }

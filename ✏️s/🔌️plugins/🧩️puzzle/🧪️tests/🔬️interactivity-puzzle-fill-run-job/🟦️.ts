@@ -20,8 +20,8 @@ pub(crate) struct FillRunJob {
     retirement: FillBuilderRetirementCursor,
 }
 
-impl semio_framework_job::InteractiveJob for FillRunJob {
-    fn step(&mut self, cx: &mut StepContext) -> StepOutcome {
+impl FillRunJob {
+    fn turn(&mut self, cx: &mut StepContext) -> JobTurn {
         while cx.consume_fuel(1) {
             let key = self.builder.next_key();
             self.writer.upsert(key, ToolRunVerdict::Testing, 0, ToolRunTraceSubject::Instance3d { mesh: 0, position: [0.0; 3], rotation: [0.0, 0.0, 0.0, 1.0], scale: 1.0 });
@@ -37,7 +37,7 @@ impl semio_framework_job::InteractiveJob for FillRunJob {
                 }
                 FillVerdict::Stalled => {
                     let _ = self.writer.step(ToolRunStepKind::Warning, 0, 4, None, &[]);
-                    return StepOutcome::Complete(self.builder.commit());
+                    return JobTurn::Complete;
                 }
             }
             if let Some(len) = self.builder.lowered_len() {
@@ -45,15 +45,26 @@ impl semio_framework_job::InteractiveJob for FillRunJob {
             }
         }
         if let Some(checkpoint) = self.builder.checkpoint() {
-            return StepOutcome::CheckpointReady(checkpoint);
+            return JobTurn::Checkpoint { applied_progress: 0, state: checkpoint };
         }
-        self.writer.finish().map_or(StepOutcome::Yield, |tick| StepOutcome::PreviewReady(self.builder.page(tick)))
+        self.writer.finish().map_or(JobTurn::Yield, |tick| JobTurn::Preview(self.builder.page(tick)))
+    }
+}
+
+impl semio_framework_job::InteractiveJob for FillRunJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        let turn = self.turn(cx);
+        self.outbox.settle(turn, cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        self.outbox.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {}
 
-    fn close_step(&mut self) -> InteractiveJobCloseStep {
-        self.retirement.retire_one()
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        self.retirement.retire_one(grant)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -175,15 +186,15 @@ const CASES: readonly (readonly [name: string, expect: "report" | "silent", edit
   ["missing-revalidate-job", "report", [["tool", "revalidate_job: Some(JobKindId::new(FILL_REVALIDATE_JOB_KIND)),", ""]]],
   ["no-danger-reason", "report", [["tool", "verdict: ToolRunVerdict::Danger", "verdict: ToolRunVerdict::Warning"]]],
   ["unlocalized-definition", "report", [["tool", 'LocalizedLabel::native("candidate", "Kandidat")', 'labels.fill_unit.clone()']]],
-  ["not-an-interactive-job", "report", [["fill", "impl semio_framework_job::InteractiveJob for FillRunJob", "impl FillRunJob"]]],
+  ["not-an-interactive-job", "report", [["fill", "impl semio_framework_job::InteractiveJob for FillRunJob", "impl FillRunJobPort for FillRunJob"]]],
   ["batched-fuel", "report", [["fill", "cx.consume_fuel(1)", "cx.consume_fuel(64)"]]],
-  ["no-checkpoint", "report", [["fill", "return StepOutcome::CheckpointReady(checkpoint);", "let _ = checkpoint;"]]],
+  ["no-checkpoint", "report", [["fill", "return JobTurn::Checkpoint { applied_progress: 0, state: checkpoint };", "let _ = checkpoint;"]]],
   ["hidden-collisions", "report", [["fill", "self.writer.upsert(key, ToolRunVerdict::Danger, 1, subject)", "()"]]],
   ["no-testing-record", "report", [["fill", "ToolRunVerdict::Testing", "ToolRunVerdict::Success"]]],
   ["committed-placements", "report", [["fill", "let _ = self.writer.append_op(op);", "self.document.apply(op);"]]],
   ["no-retraction", "report", [["fill", "self.writer.retract_to(len);", "let _ = len;"]]],
   ["silent-stall", "report", [["fill", "ToolRunStepKind::Warning", "ToolRunStepKind::Info"]]],
-  ["bulk-close", "report", [["fill", "fn close_step(&mut self) -> InteractiveJobCloseStep {", "fn close_all(&mut self) -> InteractiveJobCloseStep {"]]],
+  ["bulk-close", "report", [["fill", "fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {", "fn close_all(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {"]]],
   ["plugin-spawn", "report", [["precompute", "    pub fn fill_run_job", "    pub fn enqueue_fill_job(&mut self) {}\n\n    pub fn fill_run_job"]]],
   ["plugin-cancel-verb", "report", [["editor", '"setFillCount" => set_fill_count::apply(ctx, args),', '"setFillCount" => set_fill_count::apply(ctx, args),\n        "cancelFillBuild" => cancel(ctx, args),']]],
   ["lock-is-commit", "report", [["setFillCount", "pub(crate) fn parse_count", "pub(crate) fn take_locked_into_fixture() {}\n\npub(crate) fn parse_count"]]],

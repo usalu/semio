@@ -55,7 +55,7 @@ macro_rules! stdio_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue)]
+        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue, $crate::list_delta::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase")]
         $vis struct $removal {
             pub id: $key_ty,
@@ -63,7 +63,7 @@ macro_rules! stdio_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue)]
+        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue, $crate::list_delta::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase")]
         $vis struct $insertion {
             pub index: usize,
@@ -71,7 +71,7 @@ macro_rules! stdio_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue)]
+        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue, $crate::list_delta::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase")]
         $vis struct $relocation {
             pub id: $key_ty,
@@ -80,7 +80,7 @@ macro_rules! stdio_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue)]
+        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue, $crate::list_delta::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase")]
         $vis struct $modification {
             pub id: $key_ty,
@@ -88,7 +88,7 @@ macro_rules! stdio_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, Default, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue)]
+        #[derive(Clone, Debug, Default, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue, $crate::list_delta::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase")]
         $vis struct $delta {
             #[value(default, skip_serializing_if = "Vec::is_empty")]

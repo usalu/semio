@@ -265,6 +265,13 @@ impl<K:Ord+serde::Serialize> serde::Serialize for HistoryFoldSet<K>{fn serialize
 #[cfg(any(test,feature="history-index-serde"))]
 impl<'de,K:Ord+serde::Deserialize<'de>> serde::Deserialize<'de> for HistoryFoldSet<K>{fn deserialize<D:serde::Deserializer<'de>>(deserializer:D)->Result<Self,D::Error>{<Vec<K> as serde::Deserialize>::deserialize(deserializer).map(|keys|keys.into_iter().collect())}}
 
+/// 🌲️ String-keyed fold indexes render as JSON objects in sorted key order; ordinal access walks the live sorted ranks.
+impl<K:AsRef<str>+Ord+Sync+'static,V:semio_framework_pack_json::ArtifactCanonicalJsonTree> semio_framework_pack_json::ArtifactCanonicalJsonTree for HistoryFoldIndex<K,V> {
+    fn canonical_tree_node(&self)->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,ValueError>{Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(self.len()))}
+    fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree,ValueError>{self.iter().nth(ordinal).map(|(_,value)|value as&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"canonical fold index ordinal is absent"))}
+    fn canonical_tree_key(&self,ordinal:usize)->Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>,ValueError>{self.iter().nth(ordinal).map(|(key,_)|semio_framework_pack_json::ArtifactCanonicalJsonText::from(key.as_ref())).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"canonical fold index key is absent"))}
+}
+
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

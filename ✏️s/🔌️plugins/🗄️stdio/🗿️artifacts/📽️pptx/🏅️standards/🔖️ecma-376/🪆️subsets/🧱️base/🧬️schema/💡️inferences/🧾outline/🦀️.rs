@@ -4,7 +4,7 @@ use crate::PptxSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 
 /// 🧾 PresentationML document outline.
-#[derive(Clone,Debug,Default,PartialEq,value_derive::ToValue,value_derive::FromValue)]
+#[derive(Clone,Debug,Default,PartialEq,value_derive::ToValue,value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all="camelCase")]
 pub struct PptxOutline {pub slide_count:u32,pub shape_count:u32,pub word_count:u32}
 

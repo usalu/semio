@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 type Fem2dSnapshot = crate::Fem2dSnapshot;
 
 //#region 🔖️CanvasPointerUp
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "canvas-pointer-up")]
 pub struct CanvasPointerUp {
     pub x: f64,

@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, HashMap};
 /// numeric-index access `🧬️mutations::EpwMutation::SetRecordField` needs.
 macro_rules! epw_record_diff {
     ($($field:ident => $index:expr),+ $(,)?) => {
-        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
         #[value(rename_all = "camelCase")]
         pub struct EpwRecordDiff {
             $(
@@ -91,7 +91,7 @@ epw_record_diff! {
 
 //#region 🔖️RecordsDiff
 /// 🧩 One record apply_patch-in-place at a BASE index.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct EpwRecordModified {
     pub index: usize,
@@ -99,7 +99,7 @@ pub struct EpwRecordModified {
 }
 
 /// 🧩 One record inserted at a FINAL index.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct EpwRecordAdded {
     pub index: usize,
@@ -107,7 +107,7 @@ pub struct EpwRecordAdded {
 }
 
 /// 🔺️ Index-keyed removed/modified/added triple over `EpwSnapshot::records`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct EpwRecordsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -164,7 +164,7 @@ fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.epw`. No `snapshot: Option<EpwSnapshot>` full-replace slot — every diff is sparse.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw.diff")]
 pub struct EpwDiff {

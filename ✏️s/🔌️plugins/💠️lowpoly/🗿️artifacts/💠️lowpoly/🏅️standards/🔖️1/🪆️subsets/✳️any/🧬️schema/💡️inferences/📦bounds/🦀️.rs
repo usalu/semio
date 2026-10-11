@@ -9,7 +9,7 @@ use crate::{LowpolyObject, LowpolySnapshot};
 
 //#region 📦Bounds
 /// 📦 Axis-aligned 3d bounding box.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyBounds {
     pub min: [f32; 3],

@@ -14,7 +14,7 @@ mod math_values;
 #[path = "../🧊️brep-primitive/🦀️.rs"]
 mod brep_primitive;
 #[path = "../〰️brep-curve/🦀️.rs"]
-mod brep_curve;
+pub(crate) mod brep_curve;
 #[path = "../🏳️brep-surface/🦀️.rs"]
 mod brep_surface;
 #[path = "../🏗️brep-solid/🦀️.rs"]

@@ -44,7 +44,7 @@ fn patch_emit(doc: &ArtifactView<'_, CadSnapshot>, ids: &[String], field: &str, 
 pub mod add_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "add-object")]
     pub struct AddObject {
         pub typology: Option<String>,
@@ -67,7 +67,7 @@ pub mod add_object {
 pub mod patch_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "patch-object")]
     pub struct PatchObject {
         pub object_id: String,
@@ -92,7 +92,7 @@ pub mod patch_object {
 pub mod patch_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "patch-selection")]
     pub struct PatchSelection {
         pub object_ids: Vec<String>,
@@ -118,7 +118,7 @@ pub mod patch_selection {
 pub mod delete_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "delete-object")]
     pub struct DeleteObject {
         pub object_id: String,
@@ -136,7 +136,7 @@ pub mod delete_object {
 pub mod duplicate_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "duplicate-object")]
     pub struct DuplicateObject {
         pub object_id: String,

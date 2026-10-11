@@ -12,7 +12,7 @@ class CanonicalArchitectureScript extends BundleScript {
     const { TestScript } = await import("../../🧪️tests/🏃️execution/🟦️.ts");
     const artifacts = nextestArtifactLocation(this.repoRoot).directory;
     await proveDevLocalHubProviderContract(this.repoRoot, artifacts);
-    await new TestScript(this.root).run(["dev-contribution"]);
+    await new TestScript(this.root, this.repoRoot, this.invocation).run(["dev-contribution"]);
   }
 }
 
@@ -51,8 +51,8 @@ class PlaygroundSessionScript extends BundleScript {
     const { parsePlaygroundSessionPublicationRequestV1 } = await import("../../🎮️playground-session/🧬️schema/🟦️.ts");
     const { PlaygroundSessionGenerateScript, PlaygroundSessionPreviewScript } = await import("../../🎮️playground-session/🏃️execution/🟦️.ts");
     const request = parsePlaygroundSessionPublicationRequestV1(owning);
-    if (args[0] === "preview") await new PlaygroundSessionPreviewScript(this.root, request).run([]);
-    else await new PlaygroundSessionGenerateScript(this.root, request).run(args);
+    if (args[0] === "preview") await new PlaygroundSessionPreviewScript(this.root, this.repoRoot, this.invocation, request).run([]);
+    else await new PlaygroundSessionGenerateScript(this.root, this.repoRoot, this.invocation, request).run(args);
   }
 }
 const router = new ScriptRouter(import.meta.dir)
@@ -92,26 +92,26 @@ const router = new ScriptRouter(import.meta.dir)
     async run(segments: string[]): Promise<void> {
       if (segments.length) throw new Error("closed-browser-component-factory-check accepts no arguments");
       const { testClosedBrowserComponentFactory } = await import("../../../🔌️plugin/🌐️browser-bundle/📜️script.ts");
-      await testClosedBrowserComponentFactory(this.repoRoot);
+      await testClosedBrowserComponentFactory(this.repoRoot, this.invocation);
     }
   })
   .registerLazy("test", async () => (await import("../../🧪️tests/🏃️execution/🟦️.ts")).TestScript)
   .registerLazy("verify", async () => (await import("../../🧪️tests/✅️verification/🟦️.ts")).VerifyScript)
   .register("bench", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      if (segments[0] === "plugins") return new (await import("../../📊️benchmarks/🔌️plugins/🏃️execution/🟦️.ts")).BenchPluginsScript(this.root).run(segments.slice(1));
+      if (segments[0] === "plugins") return new (await import("../../📊️benchmarks/🔌️plugins/🏃️execution/🟦️.ts")).BenchPluginsScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
       throw new Error(`unknown bench subcommand: ${segments[0] ?? "<none>"} (expected plugins)`);
     }
   })
   .register("generate", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      if (segments[0] === "scale-fixture") return new (await import("../../../../🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureGenerateScript(this.root, this.repoRoot).run(segments.slice(1));
+      if (segments[0] === "scale-fixture") return new (await import("../../../../🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureGenerateScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
       throw new Error(`unknown generate subcommand: ${segments[0]} (expected scale-fixture)`);
     }
   })
   .register("scale-fixture", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      if (segments[0] === "check") return new (await import("../../../../🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureCheckScript(this.root, this.repoRoot).run();
+      if (segments[0] === "check") return new (await import("../../../../🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureCheckScript(this.root, this.repoRoot, this.invocation).run();
       throw new Error(`unknown scale-fixture subcommand: ${segments[0]} (expected check)`);
     }
   })
@@ -119,7 +119,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("distribution", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
       const { DistributionBundleScript } = await import("../../🚚️distribution/🏃️execution/🟦️.ts");
-      return new DistributionBundleScript(this.root).run(segments);
+      return new DistributionBundleScript(this.root, this.repoRoot, this.invocation).run(segments);
     }
   })
   .register("canonical-architecture", CanonicalArchitectureScript)
@@ -136,16 +136,16 @@ const router = new ScriptRouter(import.meta.dir)
       const routes = { smoke: ParitySmokeScript, triage: ParityTriageScript, probe: ParityProbeScript, verify: ParityVerifyScript, sweep: ParitySweepScript } as const;
       const Route = routes[segments[0] as keyof typeof routes];
       if (!Route) throw new Error(`unknown parity subcommand: ${segments[0]} (expected smoke|triage|probe|verify|sweep|journey)`);
-      return new Route(this.root).run(segments.slice(1));
+      return new Route(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
     }
   })
   .register("plugin", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      if (segments[0] === "watch") return new (await import("../../../🔌️plugin/🏗️build/👁️watch/🟦️.ts")).PluginWatchScript(this.root).run(segments.slice(1));
-      if (segments[0] === "lint") return new (await import("../../🧪️tests/🧹️capability-policy/🟦️.ts")).PluginCapabilityLintScript(this.root).run();
+      if (segments[0] === "watch") return new (await import("../../../🔌️plugin/🏗️build/👁️watch/🟦️.ts")).PluginWatchScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
+      if (segments[0] === "lint") return new (await import("../../🧪️tests/🧹️capability-policy/🟦️.ts")).PluginCapabilityLintScript(this.root, this.repoRoot, this.invocation).run();
       if (segments[0] === "registry") return (await import("../../../🔌️plugin/📇️registry/🔄️refresh/🟦️.ts")).ensurePluginRegistry(segments[1] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND);
-      if (segments[0] === "size") return new (await import("../../../🔌️plugin/📊️size/🟦️.ts")).PluginSizeScript(this.root).run(segments.slice(1));
-      return new (await import("../../../🔌️plugin/🏗️build/🏃️execution/🟦️.ts")).PluginBuildScript(this.root).run(segments);
+      if (segments[0] === "size") return new (await import("../../../🔌️plugin/📊️size/🟦️.ts")).PluginSizeScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
+      return new (await import("../../../🔌️plugin/🏗️build/🏃️execution/🟦️.ts")).PluginBuildScript(this.root, this.repoRoot, this.invocation).run(segments);
     }
   });
 

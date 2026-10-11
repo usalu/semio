@@ -10,7 +10,8 @@ use store::ArtifactPack;
 /// 👥️ Shareable live subset of gis3d view state — just the camera now; pin selection broadcasts
 /// automatically via the framework's typed `PresenceInteraction` (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no longer mirrored here.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, ToValue, FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -19,6 +20,8 @@ use store::ArtifactPack;
 pub struct Gis3dPresence {
     pub camera_json: String,
 }
+
+impl store::ArtifactPresenceSnapshot for Gis3dPresence {}
 
 impl Default for Gis3dPresence {
     fn default() -> Self {
@@ -112,7 +115,7 @@ impl ArtifactPack for Gis3dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]

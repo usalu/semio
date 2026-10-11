@@ -45,7 +45,7 @@ pub const DOCX_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx"
 /// ✏️ The editor's typed command channel — exactly the one edit `🪟️main`'s `editable_window_kind()`
 /// action (`set-page`, contract §2.6) can trigger. `page` addresses `DocxDocument.body` and `item`
 /// addresses the paragraph's original run ordinal.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum DocxEditorCommand {
     SetPage { address: DocxXmlAddress, text: String },
     SetRunFormatting { address: DocxXmlAddress, bold: bool, italic: bool, underline: bool },
@@ -166,6 +166,10 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
         }
     }
 
+    fn work_demands(&self, input: &ArtifactCommandInputs<'_, EditorApp<DocxEditor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        docx_work_demand(input.command)
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<DocxEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<DocxEditor>>, Fault> {
         if self.closing || self.complete {
             return Err(Fault::from("stdio.docx.set-page.work-closed"));
@@ -196,12 +200,54 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        self.copied_text.close_step(maximum_items, maximum_bytes)
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        self.copied_text.close_step(grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.copied_text.close_demands().copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.copied_text.close_demands().capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.copied_text.close_demands().release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.copied_text.close_demands().depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.copied_text.terminal_is_empty()
+    }
+}
+
+/// 📏️ The copy and capacity quote of the address strings one formatting mutation owns.
+pub(crate) fn docx_address_demand(address: &DocxXmlAddress) -> semio_framework_value::RetirementDemand {
+    let bytes = address.part_path.len().saturating_add(address.expected_name.len()).saturating_add(address.revision.len()).saturating_add(address.node_path.len().saturating_mul(std::mem::size_of::<usize>()));
+    semio_framework_value::RetirementDemand { copy_bytes: bytes, capacity_bytes: bytes.saturating_add(std::mem::size_of::<DocxMutation>()), release_bytes: 0, depth: 1 }
+}
+
+/// 📏️ The quote of one set-page turn: one admitted text page plus the address and mutation owners.
+pub(crate) fn docx_set_page_demand(address: &DocxXmlAddress, text: &str) -> semio_framework_value::RetirementDemand {
+    let mut demand = docx_address_demand(address);
+    let page = text.len().min(DOCX_TEXT_WORK_PAGE_BYTES);
+    demand.copy_bytes = demand.copy_bytes.max(page);
+    demand.capacity_bytes = demand.capacity_bytes.saturating_add(text.len());
+    demand
+}
+
+fn docx_work_demand(command: &<DocxEditor as ArtifactEditor>::Command) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    match command {
+        semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address, text }) => Ok(docx_set_page_demand(address, text)),
+        semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetRunFormatting { address, .. }) => Ok(docx_address_demand(address)),
+        _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "stdio.docx.command-mismatch")),
     }
 }
 
@@ -251,6 +297,14 @@ macro_rules! canonical_docx_set_page_work {
                 }
             }
 
+            fn work_demands(&self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<$editor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+                match input.command {
+                    semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($page_command { address, text }) => Ok(crate::editor::docx::standards::v_ecma_376::subsets::base::docx_set_page_demand(address, text)),
+                    semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($formatting_command { address, .. }) => Ok(crate::editor::docx::standards::v_ecma_376::subsets::base::docx_address_demand(address)),
+                    _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "stdio.docx.command-mismatch")),
+                }
+            }
+
             fn step(
                 &mut self,
                 input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<$editor>>,
@@ -292,8 +346,27 @@ macro_rules! canonical_docx_set_page_work {
                 self.closing = true;
             }
 
-            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-                self.copied_text.close_step(maximum_items, maximum_bytes)
+            fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+                if !self.closing {
+                    return semio_framework_job::InteractiveJobCloseStep::Blocked;
+                }
+                self.copied_text.close_step(grant)
+            }
+
+            fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+                Ok(self.copied_text.close_demands().copy_bytes)
+            }
+
+            fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+                Ok(self.copied_text.close_demands().capacity_bytes)
+            }
+
+            fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+                Ok(self.copied_text.close_demands().release_bytes)
+            }
+
+            fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+                Ok(self.copied_text.close_demands().depth)
             }
 
             fn terminal_is_empty(&self) -> bool {
@@ -357,7 +430,6 @@ impl ArtifactEditor for DocxEditor {
         controller: "s.stdio.docx@ecma-376/*#editor",
         artifact_schema: "stdio.docx",
         preparation: "stdio-docx-base-snapshot-edit",
-        document_store_owners: preparation::document_store_owners,
         bounded_native: true
     }
 

@@ -27,7 +27,7 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 /// same `classify_field` single-peel blocker `GifFrameDiff` hit (no `impl<T: DslField> DslField for
 /// Option<T>` exists anywhere in the `dsl` crate). `DiffCodec` is hand-rolled below
 /// (`#region 🔖️HandcraftedDiffCodec`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.md.diff")]
 pub struct MdDiff {
@@ -44,7 +44,7 @@ pub struct MdDiff {
 /// state (descending removal order on apply); `added` indices refer to FINAL state (ascending
 /// insert). Reused verbatim (same type) for `List.items[n]`'s content AND `BlockQuote.blocks` --
 /// both are `Vec<MdBlock>`, exactly what this type diffs.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct MdBlocksDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -55,14 +55,14 @@ pub struct MdBlocksDiff {
     pub added: Vec<MdBlockAdded>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct MdBlockModified {
     pub index: usize,
     pub diff: MdBlockDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct MdBlockAdded {
     pub index: usize,
@@ -72,7 +72,7 @@ pub struct MdBlockAdded {
 /// 🌳 Per-block diff, shaped like the `MdBlock` it targets. `Replace` is the fallback for a
 /// block-KIND change (e.g. `Paragraph` -> `Heading`) -- every other variant assumes the target
 /// keeps its kind.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum MdBlockDiff {
     Heading {
@@ -128,7 +128,7 @@ pub enum MdBlockDiff {
 /// diffed with the same recursive `MdBlocksDiff` used everywhere else (a list item's content IS a
 /// `Vec<MdBlock>`), so nested sub-lists/quotes inside an item fall out of the existing recursion
 /// for free.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct MdListItemsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -139,14 +139,14 @@ pub struct MdListItemsDiff {
     pub added: Vec<MdListItemAdded>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct MdListItemModified {
     pub index: usize,
     pub diff: MdBlocksDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct MdListItemAdded {
     pub index: usize,
@@ -161,7 +161,8 @@ pub struct MdListItemAdded {
 /// `crate::schema::mutations` for ergonomic access -- kept here, not in the
 /// mutations module, so this module never needs to depend on it (mutations already depends on
 /// diff).
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "step", rename_all = "camelCase")]
 pub enum MdPathStep {
     BlockQuote { index: usize },

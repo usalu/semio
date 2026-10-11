@@ -7,7 +7,7 @@ use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ puzzle2d document artifact state.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle2d")]
 pub struct Puzzle2dArtifact {

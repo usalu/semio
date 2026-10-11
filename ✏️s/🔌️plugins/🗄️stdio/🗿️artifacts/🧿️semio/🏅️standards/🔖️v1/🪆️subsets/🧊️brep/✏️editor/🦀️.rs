@@ -56,13 +56,13 @@ pub const SEMIO_BREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";
 /// by-INDEX addressing; `move-vertex` addresses by persistent-label id instead, which the
 /// selection channel already resolves). The action carries an explicit stable vertex id and target
 /// point, so keyboard and automation callers use the same validated address.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
 pub struct SemioBrepSetVertexArgs {
     pub vertex_id: String,
     pub point: [f64; 3],
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
 pub enum SemioBrepEditCommand {
     SetVertex(SemioBrepSetVertexArgs),
 }
@@ -155,6 +155,13 @@ impl ArtifactCommandWork<EditorApp<SemioBrepEditor>> for SemioBrepSetVertexWork 
     ) -> Option<usize> {
         let editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetVertex(args)) = command else { return None };
         (!args.vertex_id.is_empty() && args.point.iter().all(|value| value.is_finite())).then_some(2)
+    }
+
+    fn work_demands(&self, input: &ArtifactCommandInputs<'_, EditorApp<SemioBrepEditor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetVertex(args)) = input.command else {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "stdio.semio.brep.set-vertex.command-mismatch"));
+        };
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: args.vertex_id.len(), capacity_bytes: args.vertex_id.len().saturating_add(std::mem::size_of::<SemioBrepMutation>()), release_bytes: 0, depth: 1 })
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioBrepEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioBrepEditor>>, Fault> {
@@ -287,16 +294,6 @@ impl editing::SnapshotEditingEditor for SemioBrepEditor {
     fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
         edit_rules::special(event, snapshot)
     }
-}
-
-/// 🌱️ Prices the exact Brep wire, routed preparation and both original structural children.
-pub(crate) fn member_preparation_birth_bytes() -> usize {
-    store::operation_wire_preparation_factory_birth_bytes::<SemioBrepSnapshot, SemioBrepMutation>(
-        editing::routed_native_edit_preparation_factory_birth_bytes::<SemioBrepSnapshot, SemioBrepMutation>(
-            Some(preparation::route_birth_bytes()),
-            semio_framework_plugin::bounded_config_store_one_item_preparation_factory_birth_bytes::<SemioBrepSnapshot, SemioBrepMutation>(),
-        ),
-    )
 }
 
 semio_s_artifact_stdio_contract::bounded_native_editing_editor! {

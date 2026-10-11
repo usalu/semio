@@ -19,7 +19,7 @@ use std::collections::HashSet;
 ///
 /// 🧪️ F6: `dsl::DslRecord` — gives this `DslField` so `Vec<TxtLineAdded>` can sit inside a
 /// `#[derive(dsl::)]` struct's list field (`TxtLinesDiff::added` below).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct TxtLineAdded {
     pub index: usize,
@@ -29,7 +29,7 @@ pub struct TxtLineAdded {
 /// ✏️ Line at BASE index `index` whose text changed to `text`.
 ///
 /// 🧪️ F6: `dsl::DslRecord` — see [`TxtLineAdded`]'s doc comment, same reason.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct TxtLineModified {
     pub index: usize,
@@ -44,7 +44,7 @@ pub struct TxtLineModified {
 /// `TxtDiff` below (`Vec<usize>`/`Vec<TxtLineModified>`/`Vec<TxtLineAdded>` all bind via the
 /// `dsl` crate's blanket `Vec<T>` impl, `TxtLineModified`/`TxtLineAdded` via their own
 /// `DslRecord` derive just above).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct TxtLinesDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -224,7 +224,7 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
 /// nullable — `lines` composes VIA a triple, it does not itself carry removal-vs-absence), and
 /// the only enum in the walk (`LineEnding`) is unit-variant-only, so it binds via `DslScalar`
 /// (see the snapshot module) rather than blocking the derive like a data-carrying enum would.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.txt.diff")]
 pub struct TxtDiff {

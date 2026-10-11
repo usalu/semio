@@ -304,7 +304,8 @@ impl CadComposedPanes {
 }
 //#endregion 🔖️WorkingScene
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CadReference {
     pub id: String,
@@ -348,7 +349,8 @@ pub type CadReferenceList = Vec<CadReference>;
 /// field-for-field between this and the real `WorldProjectionConfig` around the shared projection
 /// helpers. See https://en.wikipedia.org/wiki/Axonometric_projection and
 /// https://en.wikipedia.org/wiki/Oblique_projection.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct CadProjectionDsl {
     pub kind: String,
@@ -390,7 +392,8 @@ impl Default for CadProjectionDsl {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CadCamera {
     #[value(default = "default_camera_position")]
@@ -430,7 +433,8 @@ fn one_f64() -> f64 {
     1.0
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CadNode {
     pub id: String,

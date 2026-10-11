@@ -20,7 +20,7 @@ pub use semio_s_artifact_stdio_zip::opc::diff::OpcDiff;
 
 //#region 🔖️XmlPartDiffTypes
 /// 🩹 The sparse patch of one XML part: its content type and its document diff.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PptxXmlPartDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -37,7 +37,7 @@ semio_s_artifact_stdio_contract::stdio_list_delta! {
 
 //#region 🔖️Diff
 /// 🔺️ Sparse diff over the canonical PPTX snapshot fields.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pptx.diff")]
 pub struct PptxDiff {

@@ -10,7 +10,7 @@ pub(crate) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSna
  let limits=control.limits();let length=match payload{store::io_schema::IoPayload::Binary(bytes)=>bytes.len(),store::io_schema::IoPayload::Text(text)=>text.len()};if length>limits.max_file_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Binary native input exceeds file limit"))}
  let native_before=native_owner.native().owned_bytes();
  control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-  let maximum=native_before.checked_add(remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?;
+  let Some(maximum)=native_before.checked_add(remaining) else{return(Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};
   let result=native_owner.scoped_native(maximum,&mut |event:NativeDecodeProgress|checkpoint(event.completed,event.total),|owner|{
    let carrier=body(match payload{store::io_schema::IoPayload::Binary(bytes)=>Carrier::Raw(bytes),store::io_schema::IoPayload::Text(text)=>Carrier::Hex(text)},owner.native())?;
    let count=count(carrier,owner.native())?;if count.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"Binary native row overflow"))?>limits.max_rows{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Binary native input exceeds row limit"))}
@@ -35,7 +35,7 @@ pub(crate) fn encode(snapshot:&BinarySnapshot,encoding:SnapshotEncoding,control:
  let length=match encoding{SnapshotEncoding::Binary=>snapshot.bytes.len(),SnapshotEncoding::Text=>snapshot.bytes.len().checked_mul(2).and_then(|value|value.checked_add(PREFIX.len())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Binary hex output size overflow"))?};
  let native_before=native_owner.native().owned_bytes();
  control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
-  let maximum=native_before.checked_add(remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?;
+  let Some(maximum)=native_before.checked_add(remaining) else{return(Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};
   let result=native_owner.scoped_native(maximum,&mut |event:NativeEncodeProgress|checkpoint(event.completed,event.total),|owner|owner.receive::<IoPayload,IoPayload>(|slot,native,body|{
    let header=std::mem::size_of::<IoPayload>();let vector_header=if encoding==SnapshotEncoding::Binary{std::mem::size_of::<Vec<u8>>()}else{0};let copy=header.checked_add(vector_header).and_then(|value|value.checked_add(length)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Binary output receiving extent overflow"))?;
    body.admit_frontier(RetainedCloneGrant{maximum_items:2,maximum_copy_bytes:copy,maximum_capacity_bytes:length,maximum_release_bytes:0,maximum_depth:1})?;native.checkpoint()?;body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:header,retained_capacity_bytes:0,released_bytes:0})?;

@@ -56,5 +56,5 @@ async fn a_world_gesture_emits_one_stamped_edit_and_moves_the_viewers_cursor() {
     let transaction = emit.transaction.as_ref().expect("the gesture is a tool transaction");
     assert_eq!(transaction.tool, "s.process.process3d@1/*#editor#worldFaceDragEnd");
     assert!(matches!(&emit.artifact_mutations[..], [Process3dMutation::CreateStep(create)] if create.index == 0), "the step lands at the viewer's cursor");
-    assert_eq!(emit.config_mutations, vec![Process3dConfigMutation::SetCursor { value: Some(1) }], "the cursor moves past the new step on the config lane");
+    assert_eq!(emit.config_mutations, vec![Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: Some(1) })], "the cursor moves past the new step on the config lane");
 }

@@ -1,10 +1,6 @@
 //! 🥅️ Render-independent framework kernel: declarative {@link UiNode}, {@link Platform}, {@link ActionBus}.
 
 #[cfg(test)]
-#[global_allocator]
-static FRAMEWORK_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
-
-#[cfg(test)]
 #[path="../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
 pub(crate) mod test_allocation;
 #[cfg(test)]

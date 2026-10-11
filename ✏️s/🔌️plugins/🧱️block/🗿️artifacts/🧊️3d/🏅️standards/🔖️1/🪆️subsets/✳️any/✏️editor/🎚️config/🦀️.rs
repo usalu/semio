@@ -13,7 +13,7 @@ use semio_s_plugin_block::{BlockOptionalText, BlockPatch};
 /// `Block3dPlayApp` `RefCell` runtime field (`selected_ids`/`active_representation_id`).
 /// `wanted_tags` is ready for whenever a later wave threads `cfg`
 /// into `export_media` (see that fn's doc for why it's currently unused there).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -107,11 +107,12 @@ semio_s_plugin_block::block_optional!(test; /// 🎥 The optional camera set to 
     Block3dOptionalCamera(BlockCamera3d));
 semio_s_plugin_block::block_patch!(test; /// 🪟 Field patch over one window view (its window id is the row identity).
     Block3dWindowViewPatch for Block3dWindowView { plain { representation_ids: Vec<String>, arrangement: String, spacing: f64 } optional { } });
+semio_framework_value::artifact_retire_struct!(Block3dWindowViewPatch { representation_ids, arrangement, spacing });
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the per-window views.
-    pub Block3dWindowsDelta { removal: Block3dWindowsRemoval, insertion: Block3dWindowsInsertion, relocation: Block3dWindowsRelocation, modification: Block3dWindowsPatchEntry, row: Block3dWindowView, patch: Block3dWindowViewPatch, key: window_id, values_only }
+    pub Block3dWindowsDelta { removal: Block3dWindowsRemoval, insertion: Block3dWindowsInsertion, relocation: Block3dWindowsRelocation, modification: Block3dWindowsPatchEntry, row: Block3dWindowView, patch: Block3dWindowViewPatch, key: window_id }
 }
 
 /// 🔺️ Field-sparse diff of [`Block3dConfig`]: each field is an optional absolute value, window views are id-keyed rows.
@@ -222,7 +223,9 @@ pub fn block3d_window_view(config: &Block3dConfig, window_id: &str) -> Block3dWi
 
 //#region 🔖️ConfigOperations
 /// 🧮️ `Block3dConfig`'s operation enum — one variant per settled interaction; each lowers to a field-sparse [`Block3dConfigDiff`].
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "kind", rename_all = "kebab-case")]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum Block3dConfigMutation {
     #[dsl(key = "active-representation")]

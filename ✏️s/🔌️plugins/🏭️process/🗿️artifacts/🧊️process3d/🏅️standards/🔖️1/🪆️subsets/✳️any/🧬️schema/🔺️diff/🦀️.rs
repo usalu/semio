@@ -12,7 +12,7 @@ type BrepChild = store::ArtifactChild<SemioBrepSnapshot>;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the process3d artifact.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.process.process3d")]
 pub struct Process3dDiff {
@@ -40,7 +40,7 @@ protocol::list_delta! {
 }
 
 /// 🩹 Field patch of one machine; every present slot is the new value of exactly that field.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Process3dMachinePatch {
     pub label: Option<String>,
@@ -53,14 +53,14 @@ protocol::list_delta! {
 }
 
 /// 🧱️ Carries the optional step origin as a present slot, so clearing it stays distinct from leaving it untouched on every wire.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Process3dOptionalOrigin {
     pub value: Option<StepOrigin>,
 }
 
 /// 🩹 Field patch of one step; every present slot is the new value of exactly that field.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Process3dStepPatch {
     pub label: Option<String>,
@@ -92,7 +92,6 @@ impl protocol::list_delta::RowPatch<WorkshopMachine> for Process3dMachinePatch {
         let later = &later;
         *self = {
         Process3dMachinePatch {
-            id: first.id.clone(),
             label: later.label.clone().or_else(|| first.label.clone()),
             icon_id: later.icon_id.clone().or_else(|| first.icon_id.clone()),
             capabilities: later.capabilities.clone().or_else(|| first.capabilities.clone()),
@@ -137,7 +136,6 @@ impl protocol::list_delta::RowPatch<ProcessStep> for Process3dStepPatch {
         let later = &later;
         *self = {
         Process3dStepPatch {
-            id: first.id.clone(),
             label: later.label.clone().or_else(|| first.label.clone()),
             enabled: later.enabled.or(first.enabled),
             measure: later.measure.clone().or_else(|| first.measure.clone()),

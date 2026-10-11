@@ -20,6 +20,7 @@ async fn neutral_activation_failures_retire_the_exact_kernel_and_guest_owners() 
             lane: Lane::Interactive,
             window: None,
             event: ActivationEvent::Manual,
+            retained: crate::test_native_authority::original_retained_turn(),
         };
         let reservation = kernel.reserve_activation(request).await.unwrap();
         let actor = reservation.actor();
@@ -30,8 +31,9 @@ async fn neutral_activation_failures_retire_the_exact_kernel_and_guest_owners() 
             kernel.deactivate(actor).await.unwrap();
         }
         if stage == "quarantine" {
-            let peer = kernel.activate(package.clone(), 0, ActorKind::PluginApp { plugin: package.clone(), app_id: "peer".into(), instance_id: 2 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+            let peer = kernel.activate(package.clone(), 0, ActorKind::PluginApp { plugin: package.clone(), app_id: "peer".into(), instance_id: 2 }, Lane::Interactive, None, ActivationEvent::Manual, crate::test_native_authority::original_retained_turn()).await;
             let fault = semio_framework_actor::TurnResult {
+                retained_receipt: crate::test_native_authority::idle_receipt(),
                 ui_patches: vec![],
                 effects: vec![],
                 command_ingress: vec![],
@@ -54,7 +56,7 @@ async fn neutral_activation_failures_retire_the_exact_kernel_and_guest_owners() 
         if stage == "register" {
             pool.shutdown().unwrap();
         }
-        let budget = Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+        let budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
         let result = install_actor(&mut kernel, &runtime, &shards, reservation, &compiled, &[], &budget).await;
         assert_eq!(result.is_ok(), row["admitted"].as_bool().unwrap(), "{}", row["id"]);
         assert_eq!(kernel.transport_key(actor).is_some(), result.is_ok());
@@ -106,6 +108,7 @@ async fn a_guest_refused_at_admission_reaches_the_host_as_its_fault() {
         lane: Lane::Interactive,
         window: None,
         event: ActivationEvent::Manual,
+        retained: crate::test_native_authority::original_retained_turn(),
     };
     let reservation = kernel.reserve_activation(request).await.unwrap();
     let actor = reservation.actor();
@@ -113,7 +116,7 @@ async fn a_guest_refused_at_admission_reaches_the_host_as_its_fault() {
     let shards = vec![ShardExecutor::new(Arc::clone(&pool), Arc::clone(&runtime), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await];
     let host = semio_framework_os_kernel::CHANNEL_VERSION;
     mock.script_instantiate_refusal(semio_framework_os_kernel::os_spr::admit_guest_channel_version(host - 1, host).unwrap_err()).await;
-    let budget = Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
     let refusal = install_actor(&mut kernel, &runtime, &shards, reservation, &compiled, &[], &budget).await.expect_err("a refused guest installs no actor");
     let fault = refusal.fault.expect("the admission fault travels with the refusal");
     assert_eq!(fault.code.0, semio_framework_os_kernel::os_spr::CHANNEL_MISMATCH_CODE);

@@ -14,7 +14,8 @@ pub(crate) fn native_codec()->store::ArtifactCodec {
 /// 📸️ Persisted puzzle5d document snapshot (persistent fields of the artifact).
 ///
 /// 🔣️ Artifact JSON uses the first-party value codec, including the composed kit child.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(id = "puzzle.puzzle5d", layout = "lines")]
 #[artifact_schema(id = "s.puzzle.puzzle5d")]

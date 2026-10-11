@@ -30,7 +30,8 @@ use super::resize_tile_crop;
 /// generic whole-collection `Tiles(...)`/`SetSource`/`SetTiles`/whole-document-replacement
 /// vocabulary — whole-document replacement is not expressible as an in-history mutation at all
 /// (goes through `ArtifactStore::reset`, an app-level concern outside this enum).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = PresentationSnapshot, diff = PresentationDiff, schema = "animate.presentation")]
 pub enum PresentationMutation {
     ResizeSourceFrame(resize_source_frame::ResizeSourceFrame),

@@ -28,6 +28,7 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl = { path = "../../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
@@ -84,14 +85,13 @@ tokio = { version = "1", features = ["sync"], default-features = false }
 # never compiled for wasm32, where the JS host already owns plugin execution off this crate.
 semio-framework-actor = { workspace = true }
 semio-framework-plugin-host = { path = "../../../🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
-semio-framework-async = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
+semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing", "protocol-laws"] }
 png = "0.17.16"
 semio-framework-async-macros = { path = "../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 
 [features]
 default = []
-space-guest = ["dep:semio-framework-artifact-space-space", "dep:semio-framework-artifact-space-collection"]
-os-host-full = ["space-guest", "dep:semio-framework-deflate", "semio-framework-os-kernel/sync"]
+space-guest = ["dep:semio-framework-artifact-space-space", "dep:semio-framework-artifact-space-collection", "dep:semio-framework-deflate", "semio-framework-os-kernel/sync"]
+os-host-full = ["space-guest"]

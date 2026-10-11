@@ -15,7 +15,8 @@ use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Wfc3dSnapshot, diff = Wfc3dDiff, schema = "wfc3d")]
 pub enum Wfc3dMutation {
     CreateSlot(super::create_slot::CreateSlot),

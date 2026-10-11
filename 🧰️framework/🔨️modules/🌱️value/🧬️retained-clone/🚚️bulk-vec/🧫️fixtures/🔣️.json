@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "pageBytes": 65536,
+  "elementBytes": 2,
+  "sample": {
+    "multiplier": 40503,
+    "offset": 12345,
+    "modulo": 65536
+  },
+  "sampleCounts": [
+    0,
+    1,
+    32767,
+    32768,
+    32769,
+    2097152
+  ],
+  "overheadTurns": 2,
+  "emptyCompletionTurns": 1,
+  "copyGrants": [
+    2,
+    1000,
+    65536,
+    1048576
+  ],
+  "elementwiseTurnsPerElement": 13,
+  "maximumTurnsForFourMebibytes": 66
+}

@@ -2,7 +2,7 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.forms.forms.try-window-config", extension = "formstrywindowcfg")]
@@ -82,6 +82,9 @@ impl semio_framework_plugin::WindowConfigOwner for FormsTryWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 4_096;
     type State = FormsTryWindowConfig;
     type Mutation = FormsTryWindowConfigMutation;
+    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<FormsTryWindowConfig, FormsTryWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }

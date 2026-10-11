@@ -56,7 +56,7 @@ pub(crate) fn render_xlsx_cell_value(value: &XlsxCellValue, shared_strings: &[St
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions, so its typed command channel has exactly one inert variant —
 /// mirrors `🔋️energy`'s own `EnergyModelViewCommand::Noop`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum XlsxViewCommand {
     #[default]
     Noop,

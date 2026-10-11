@@ -188,7 +188,7 @@ async fn edit_rows(app: &mut LabelReloadInstance) -> Vec<(String, String, String
 
 /// 🆕️ A fresh registered instance of the fixture app, opened by `actor`.
 async fn open(fixture: &Value, actor: &str) -> LabelReloadInstance {
-    let mut app = artifact_app_laws::new_registered_app::<LabelReloadApp, _>(manifest(fixture), protocol::ActorId(actor.into())).await;
+    let mut app = artifact_app_laws::new_registered_app::<LabelReloadApp, _>(manifest(fixture), protocol::ActorId(actor.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     assert_eq!(app.store.local_actor_id(), &protocol::ActorId(actor.to_string()));
     app
 }
@@ -206,19 +206,19 @@ async fn history_labels_survive_a_text_and_a_pack_reload_in_every_locale() {
         let (id, verb) = (text(&case["id"]), text(&case["verb"]));
         let artifact_mutations = authored(&command(case));
         let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta("author") };
-        live.dispatch_emit(verb, Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(artifact_mutations), &meta).await.unwrap_or_else(|fault| panic!("{id}: {fault:?}"));
+        live.dispatch_emit(verb, Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(artifact_mutations), &meta, &mut crate::app::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{id}: {fault:?}"));
     }
     let expected: Vec<(String, String, String)> = cases.iter().map(|case| (text(&case["verb"]).to_string(), text(&case["expected"]["en"]).to_string(), text(&case["expected"]["de"]).to_string())).collect();
     let verbs: Vec<Option<String>> = cases.iter().map(|case| Some(text(&case["verb"]).to_string())).collect();
     let mut reloaded = open(&fixture, "author").await;
-    artifact_app_laws::load_document_text(&mut reloaded, &live.document_text().await.expect("document text")).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &live.document_text().await.expect("document text"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("text reload");
     let mut repacked = open(&fixture, "reader").await;
-    artifact_app_laws::load_document(&mut repacked, &live.document_pack().await.expect("document pack")).await.expect("pack reload");
+    artifact_app_laws::load_document(&mut repacked, &live.document_pack().await.expect("document pack"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("pack reload");
     for (who, app) in [("live", &mut live), ("text reload", &mut reloaded), ("pack reload", &mut repacked)] {
         assert_eq!(edit_rows(app).await, expected, "{who}: every row keeps its verb and its English and German label");
         assert_eq!(app.store.envelope().vcs.edits.iter().map(|edit| edit.verb.clone()).collect::<Vec<_>>(), verbs, "{who}: every edit carries the verb that authored it");
     }
     for app in [&mut live, &mut reloaded, &mut repacked] {
-        artifact_app_laws::close_registered_fixture_app(app);
+        artifact_app_laws::close_registered_fixture_app(app, crate::app::artifact_app_laws::fixture_mounted_policy());
     }
 }

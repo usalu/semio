@@ -1,5 +1,14 @@
 use super::*;
-use semio_framework_job::InteractiveJob as _;
+use semio_framework_job::{InteractiveJob as _, InteractiveJobCloseStep};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+
+fn grant(items: usize, bytes: usize) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 32 }
+}
+
+fn released(items: usize, bytes: usize) -> InteractiveJobCloseStep {
+    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: items, released_bytes: bytes, ..Default::default() } }
+}
 
 #[test]
 fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch() {
@@ -23,22 +32,22 @@ fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch(
     };
     job.begin_close();
     // 🧾️ A zero-item grant releases nothing (`ChildEmit::close_one` short-circuits on `maximum_items == 0`).
-    assert_eq!(job.close_step(0, 1), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(job.close_step(grant(0, 1)), released(0, 0));
     assert!(job.pending_completion_rejection.is_some());
     assert!(job.decoder.is_some());
     for _ in 0..128 {
         if job.pending_completion_rejection.is_none() {
             break;
         }
-        let step = job.close_step(1, 4_096);
-        if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1 && released_bytes <= 4_096);
+        let step = job.close_step(grant(1, 4_096));
+        if let InteractiveJobCloseStep::Pending { progress } = step {
+            assert!(progress.copied_items <= 1 && progress.released_bytes <= 4_096);
         }
     }
     assert!(job.pending_completion_rejection.is_none());
     assert!(job.decoder.is_some(), "normal decoder owner stays retained until the rejected output is terminal");
-    assert_eq!(job.close_step(1, 4_096), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 });
-    assert_eq!(job.close_step(1, 4_096), semio_framework_job::InteractiveJobCloseStep::Complete);
+    assert_eq!(job.close_step(grant(1, 4_096)), released(1, 0));
+    assert_eq!(job.close_step(grant(1, 4_096)), InteractiveJobCloseStep::Complete { progress: Default::default() });
     assert!(job.terminal_is_empty());
 }
 
@@ -65,7 +74,7 @@ fn drain(registry: &mut semio_framework_job::FixedOperationRegistry<DrawingGestu
         if registry.is_empty() {
             return;
         }
-        let _ = registry.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
+        let _ = registry.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES));
     }
     assert!(registry.is_empty());
 }
@@ -87,7 +96,7 @@ fn drawing_gesture_maximum_plus_one_returns_the_exact_owner() {
     let mut owner = rejected.owner;
     owner.cancel();
     owner.begin_close();
-    assert_eq!(owner.close_step(1, DRAWING_GESTURE_RETAINED_BYTES), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: DRAWING_GESTURE_RETAINED_BYTES });
+    assert_eq!(owner.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES)), released(1, DRAWING_GESTURE_RETAINED_BYTES));
     assert!(owner.terminal_is_empty());
     drain(&mut registry);
 }
@@ -105,7 +114,7 @@ fn drawing_gesture_stale_generation_and_aba_are_exact() {
         if registry.is_empty() {
             break;
         }
-        let _ = registry.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
+        let _ = registry.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES));
     }
     assert!(registry.is_empty());
     assert!(registry.admit(key(7, 2), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok(), "the new generation owns the retired slot");
@@ -114,7 +123,7 @@ fn drawing_gesture_stale_generation_and_aba_are_exact() {
         if registry.is_empty() {
             break;
         }
-        let _ = registry.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
+        let _ = registry.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES));
     }
     assert!(registry.is_empty());
 }
@@ -124,10 +133,10 @@ fn drawing_gesture_interrupted_and_repeated_close_is_terminal_empty() {
     let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "");
     owner.cancel();
     owner.begin_close();
-    assert_eq!(owner.close_step(0, DRAWING_GESTURE_RETAINED_BYTES), semio_framework_job::InteractiveJobCloseStep::Blocked);
-    assert_eq!(owner.close_step(1, 0), semio_framework_job::InteractiveJobCloseStep::Blocked);
-    assert_eq!(owner.close_step(1, DRAWING_GESTURE_RETAINED_BYTES), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: DRAWING_GESTURE_RETAINED_BYTES });
-    assert_eq!(owner.close_step(1, DRAWING_GESTURE_RETAINED_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete);
+    assert_eq!(owner.close_step(grant(0, DRAWING_GESTURE_RETAINED_BYTES)), InteractiveJobCloseStep::Blocked);
+    assert_eq!(owner.close_step(RetainedCloneGrant { maximum_release_bytes: 0, ..grant(1, DRAWING_GESTURE_RETAINED_BYTES) }), InteractiveJobCloseStep::Blocked);
+    assert_eq!(owner.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES)), released(1, DRAWING_GESTURE_RETAINED_BYTES));
+    assert_eq!(owner.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES)), InteractiveJobCloseStep::Complete { progress: Default::default() });
     assert!(owner.terminal_is_empty());
 }
 
@@ -139,20 +148,20 @@ fn drawing_gesture_owner_closes_under_the_framework_page_grant() {
     let page = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "");
     owner.begin_close();
-    assert_eq!(owner.close_step(1, page), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: page });
+    assert_eq!(owner.close_step(grant(1, page)), released(1, page));
     assert!(owner.session.is_none(), "the session is dropped on the first granted page");
     let mut released = page;
     let mut steps = 1;
     loop {
-        match owner.close_step(1, page) {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                assert_eq!(released_items, 0);
-                assert!(released_bytes > 0 && released_bytes <= page);
-                released += released_bytes;
+        match owner.close_step(grant(1, page)) {
+            InteractiveJobCloseStep::Pending { progress } => {
+                assert_eq!(progress.copied_items, 0);
+                assert!(progress.released_bytes > 0 && progress.released_bytes <= page);
+                released += progress.released_bytes;
                 steps += 1;
                 assert!(steps <= DRAWING_GESTURE_RETAINED_BYTES / page + 1, "close terminates within the declared budget");
             }
-            semio_framework_job::InteractiveJobCloseStep::Complete => break,
+            InteractiveJobCloseStep::Complete { .. } => break,
             other => panic!("unexpected close step {other:?}"),
         }
     }
@@ -185,7 +194,7 @@ fn drawing_preview_rejects_a_stale_revision_and_cancels_the_owner() {
         if owner.operations.is_empty() {
             break;
         }
-        let _ = owner.operations.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
+        let _ = owner.operations.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES));
     }
     assert!(owner.operations.is_empty());
 }
@@ -239,7 +248,7 @@ fn drawing_gesture_admission_retires_the_retiring_owner_in_its_residue_class() {
         if owner.operations.can_admit(second, DRAWING_GESTURE_RETAINED_BYTES) {
             break;
         }
-        let _ = owner.operations.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
+        let _ = owner.operations.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES));
     }
     assert!(owner.operations.can_admit(second, DRAWING_GESTURE_RETAINED_BYTES), "one bounded sweep retires the predecessor");
     assert!(owner.operations.admit(second, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());

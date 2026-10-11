@@ -23,7 +23,7 @@ mod plugin_builder_contract_tests {
 
     /// 📨️ Funds the actual original child preparation quote within the fixture's declared per-axis ceiling.
     fn prepare_original_fixture_child(emit:&mut Emit<TestMutation,TestConfigMutation>,maximum_items:usize,maximum_bytes:usize)->Result<ChildEmitPreparationStep,Fault>{
-        let demand=emit.child_preparation_demands().expect("original child preparation quote");
+        let demand=emit.child_preparation_demands(maximum_bytes).expect("original child preparation quote");
         assert!(demand.copy_bytes<=maximum_bytes&&demand.capacity_bytes<=maximum_bytes&&demand.release_bytes<=maximum_bytes&&demand.depth<=128);
         let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items,..crate::app::plugin_demand_grant(demand)};
         emit.prepare_child_one(grant)
@@ -55,7 +55,7 @@ mod plugin_builder_contract_tests {
             let grant = job_close_grant(job);
             let step = job.close_step(grant);
             assert!(step.progress().fits(grant), "job close receipt {step:?} exceeds its exact grant {grant:?}");
-            assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused(_)), "job close was refused: {step:?}");
+            assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused{..}), "job close was refused: {step:?}");
         }
         panic!("job close did not reach its terminal-empty witness");
     }
@@ -234,108 +234,6 @@ mod plugin_builder_contract_tests {
     use crate::test_app_mutation_fixture::{SetSlotChildren, SetCount, SetLabel, TestMutation};
     //#endregion 🧬️TestDocumentMutationLeaves
 
-    #[derive(semio_framework_value::FactoryPayloadRetirement)]
-    struct TestCountOneItemPreparationFactory;
-
-    struct TestCountOneItemPreparation {
-        request: Option<store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation, TestMutation>>,
-        prepared: Option<store::ArtifactStoreOneItemPrepared<TestSnapshot, TestMutation>>,
-        authority_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
-        turn: u8,
-        closing: bool,
-    }
-
-    impl store::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation> for TestCountOneItemPreparationFactory {
-        fn begin_batch_digest(&self,edit:&mut Option<Box<protocol::Edit<TestMutation>>>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<TestMutation>>,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{store::admit_artifact_batch_digest(edit,grant)}
-        fn preflight(&self, mutation: &TestMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-            if !matches!(mutation, TestMutation::SetCount(SetCount { .. })) || lane != store::HistoryLane::Document {
-                return Err("test count accepts exactly one scalar mutation".into());
-            }
-            Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, 1_024))
-        }
-
-        fn begin(
-            &self,
-            request: store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation, TestMutation>,
-        ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<TestSnapshot, TestMutation>>, store::ArtifactStoreOneItemPreparationRequest<TestSnapshot, TestMutation, TestMutation>> {
-            if !request.base.get().label.is_empty() || request.authority.actor().len() > 32 || request.authority.group_id().is_some() {
-                return Err(request);
-            }
-            Ok(Box::new(TestCountOneItemPreparation { request: Some(request), prepared: None, authority_retirement: None, turn: 0, closing: false }))
-        }
-    }
-
-    impl store::ArtifactStoreOneItemPreparation<TestSnapshot, TestMutation> for TestCountOneItemPreparation {
-        fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-            if !grant.permits_one() || grant.maximum_bytes < 1_024 || self.closing {
-                return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-            }
-            if self.turn == 0 {
-                self.turn = 1;
-                return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint()));
-            }
-            if self.prepared.is_none() {
-                let request = self.request.as_ref().ok_or_else(|| "test count lost its exact request".to_string())?;
-                let TestMutation::SetCount(SetCount { value }) = &request.mutation else {
-                    return Err("test count requires scalar mutation".into());
-                };
-                let authority = &request.authority;
-                let edit = authority.next_edit(TestMutation::SetCount(SetCount { value: *value }), vec![TestMutation::SetCount(SetCount { value: request.base.get().count })]);
-                self.prepared = Some(authority.prepare_one_item(edit, std::sync::Arc::new(TestSnapshot { count: *value, label: String::new(), slot: Vec::new() }))?);
-                self.turn = 2;
-            }
-            Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint()))
-        }
-
-        fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-            store::ArtifactStoreOneItemCheckpoint {
-                cursor: u32::from(self.turn),
-                completed_items: u32::from(self.turn),
-                completed_bytes: u64::from(self.turn),
-                digest: self.prepared.as_ref().map_or([0; 32], store::ArtifactStoreOneItemPrepared::edit_digest),
-            }
-        }
-
-        fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<TestSnapshot, TestMutation>> {
-            self.prepared.as_ref()
-        }
-        fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<TestSnapshot, TestMutation>> {
-            self.prepared.take()
-        }
-        fn cancel(&mut self) {
-            self.closing = true;
-        }
-        fn begin_close(&mut self) {
-            self.closing = true;
-        }
-
-        fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-            if !self.closing || !grant.permits_one() || grant.maximum_bytes < 1_024 {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            if self.prepared.take().is_some() {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 1_024 });
-            }
-            if let Some(request) = self.request.take() {
-                assert!(request.base.return_to_registry());
-                self.authority_retirement = Some(request.authority.retire());
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            if let Some(owner) = self.authority_retirement.as_mut() {
-                let step = owner.close_step(grant.maximum_items.min(1), grant.maximum_bytes)?;
-                if step == store::SnapshotRetirementStep::Complete {
-                    assert!(owner.terminal_is_empty());
-                    self.authority_retirement = None;
-                }
-                return Ok(step);
-            }
-            Ok(store::SnapshotRetirementStep::Complete)
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            self.closing && self.prepared.is_none() && self.request.is_none() && self.authority_retirement.is_none()
-        }
-    }
     //#endregion 🧬️TestDocumentMutationFixture
 
     use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, TestConfig, TestConfigMutation};
@@ -539,10 +437,8 @@ mod plugin_builder_contract_tests {
             Ok(crate::retained_command::ArtifactCommandWorkStep::Complete(Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value: "resumed".into() })])))
         }
 
-        fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-            let Some(first) = target.first_mut() else { return Err(Fault::from("test-retained-command-checkpoint-capacity")) };
-            *first = self.cursor;
-            Ok(1)
+        fn checkpoint_byte(&self, index: usize) -> Option<u8> {
+            (index == 0).then_some(self.cursor)
         }
 
         fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
@@ -700,11 +596,6 @@ mod plugin_builder_contract_tests {
         (admission, input)
     }
 
-    fn test_close_retained_payload(payload: &mut semio_framework_job::RetainedJobPayload) {
-        while !payload.terminal_is_empty() {
-            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-        }
-    }
     //#endregion 🧵️RetainedCommandReplayFixture
 
     //#endregion 🧪️TestClipboardReservedJob
@@ -719,45 +610,6 @@ mod plugin_builder_contract_tests {
         }
     }
 
-    //#region 🧹️PublicationLaneFixtureOwners
-    struct TestPublicationPresenceStoreDisposer(Option<store::PresenceStoreRetirement<PublicationPresence>>);
-
-    impl ArtifactOwnedDisposer<store::PresenceStore<PublicationPresence, PublicationPresenceMutation>> for TestPublicationPresenceStoreDisposer {
-        fn close_step(&mut self, owner: &mut store::PresenceStore<PublicationPresence, PublicationPresenceMutation>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-            if maximum_items == 0 {
-                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            if let Some(active) = self.0.as_mut() {
-                return active.close_step(1, maximum_bytes).map_err(|error| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message())).map(|step| match step {
-                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-                    store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "presence fixture retains captured readers" },
-                    store::SnapshotRetirementStep::Complete => PluginCloseStep::Complete,
-                });
-            }
-            self.0 = Some(owner.begin_retirement(std::sync::Arc::new(PublicationPresence::default()), |_| true).map_err(|(reason, _)| Fault::from(reason))?);
-            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-        }
-
-        fn terminal_is_empty(&self, owner: &store::PresenceStore<PublicationPresence, PublicationPresenceMutation>) -> bool {
-            owner.retirement_started() && self.0.as_ref().is_some_and(store::PresenceStoreRetirement::terminal_is_empty) && owner.peers_root().is_empty()
-        }
-    }
-
-    struct TestPublicationTransientStoreDisposer;
-
-    impl ArtifactOwnedDisposer<store::TransientStore<PublicationTransient, PublicationTransientMutation>> for TestPublicationTransientStoreDisposer {
-        fn close_step(&mut self, _owner: &mut store::TransientStore<PublicationTransient, PublicationTransientMutation>, maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-            if maximum_items == 0 {
-                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            Ok(PluginCloseStep::Complete)
-        }
-
-        fn terminal_is_empty(&self, _owner: &store::TransientStore<PublicationTransient, PublicationTransientMutation>) -> bool {
-            true
-        }
-    }
-    //#endregion 🧹️PublicationLaneFixtureOwners
 
     /// 🌊️ The one tool transaction every `streamLabel` tick streams into and its `commit: true` tick closes (design §15).
     const TEST_STREAM_LABEL_TRANSACTION: &str = "tx-00000000000005ab";
@@ -855,7 +707,7 @@ mod plugin_builder_contract_tests {
     }
 
     fn test_document_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation>> {
-        store::operation_wire_preparation_factory(crate::app::bounded_config_store_one_item_preparation_factory::<TestSnapshot, TestMutation>("test-app-artifact-retained", 4_096), test_prepared_operation_wire_source, |operation| {
+        store::operation_wire_preparation_factory(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>(), test_prepared_operation_wire_source, |operation| {
             let semantics = protocol::SemanticMutation::semantics(operation);
             Some((semantics.entity, semantics.kind))
         })
@@ -881,13 +733,13 @@ mod plugin_builder_contract_tests {
 
         fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
             if RETAINED {
-                return Some(crate::app::bounded_config_store_one_item_preparation_factory::<TestSnapshot, TestMutation>("test-count", 1_024));
+                return Some(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>());
             }
             (TOOLS != TEST_APP_TOOLS_NONE).then(test_document_preparation_factory)
         }
 
         fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-            (TOOLS != TEST_APP_TOOLS_NONE).then(|| crate::app::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("test-app-config-retained", 4_096))
+            (TOOLS != TEST_APP_TOOLS_NONE).then(|| store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
         }
 
         fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
@@ -955,17 +807,8 @@ mod plugin_builder_contract_tests {
             Some(crate::bounded_presence_root_retirement_factory::<PublicationPresence>())
         }
 
-        fn build_document_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::ValueError>> {
-            Some(store::funded_bounded_artifact_store_owners::<Self::Snapshot, Self::Mutation>())
-        }
 
-        fn build_config_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>, semio_framework_value::ValueError>> {
-            Some(store::funded_bounded_artifact_store_owners::<Self::Config, Self::ConfigMutation>())
-        }
 
-        fn build_draft_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>, semio_framework_value::ValueError>> {
-            Some(store::funded_bounded_artifact_store_owners::<Self::Draft, Self::DraftMutation>())
-        }
 
         fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
             Some(bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
@@ -1299,22 +1142,22 @@ mod plugin_builder_contract_tests {
     }
 
     impl semio_framework_job::InteractiveJob for KeyedTestJob {
-        fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-            if self.admitted { return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput) }); }
-            if self.rejected.is_some() { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: crate::app::retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"keyed fixture original completion remains rejected") }); }
+        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+            if self.admitted { return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None); }
+            if self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "keyed fixture original completion remains rejected")); }
             if cx.is_cancelled() {
-                return semio_framework_job::StepOutcome::Cancelled;
+                return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
             }
             if cx.should_yield() {
-                return semio_framework_job::StepOutcome::Yield;
+                return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
             }
             let Some(now_us) = cx.now_us() else {
-                return semio_framework_job::StepOutcome::Yield;
+                return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
             };
             assert!(cx.deadline_us().saturating_sub(now_us) <= 500, "registered factory deadline must preserve its exact 500us contract");
             if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
                 self.page += 1;
-                return semio_framework_job::StepOutcome::Yield;
+                return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
             }
             let emit = match self.command.as_deref().unwrap() {
                 TestCommand::CompositeEdit { slot, child_id, child_value } => {
@@ -1327,16 +1170,17 @@ mod plugin_builder_contract_tests {
             };
             if let Err(original) = self.completion.as_ref().unwrap().complete(Ok(emit), EphemeralEmit::default()) {
                 self.rejected = Some(original);
-                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: crate::app::retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"keyed fixture retains original rejected completion") });
+                return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "keyed fixture retains original rejected completion"));
             }
             self.admitted = true;
-            semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-            })
+            semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
         }
 
-        fn begin_close(&mut self) {
+        fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        crate::app::artifact_app_laws::fixture_job_outcome(descriptor)
+    }
+
+    fn begin_close(&mut self) {
             self.closing = true;
         }
 
@@ -1345,8 +1189,8 @@ mod plugin_builder_contract_tests {
             use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
             if !self.closing { return InteractiveJobCloseStep::Blocked; }
             if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
-            let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return InteractiveJobCloseStep::Refused(error.kind) };
-            if grant.maximum_depth < demand.depth { return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit); }
+            let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()} };
+            if grant.maximum_depth < demand.depth { return InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Default::default()}; }
             if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
             if let Some(raw) = self.raw.as_mut() {
                 let step = raw.close_step(grant);
@@ -1360,7 +1204,7 @@ mod plugin_builder_contract_tests {
             match step {
                 Ok(step) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress: step.progress() },
                 Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                Err(error) => InteractiveJobCloseStep::Refused(error.kind),
+                Err(error) => InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()},
             }
         }
 
@@ -1459,16 +1303,7 @@ mod plugin_builder_contract_tests {
             Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
         }
         fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-            Some(crate::app::bounded_config_store_one_item_preparation_factory::<TestSnapshot, TestMutation>("test-count", 1_024))
-        }
-        fn build_document_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::ValueError>> {
-            TestApp::<false>::build_document_store_owners()
-        }
-        fn build_config_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>, semio_framework_value::ValueError>> {
-            TestApp::<false>::build_config_store_owners()
-        }
-        fn build_draft_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>, semio_framework_value::ValueError>> {
-            TestApp::<false>::build_draft_store_owners()
+            Some(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>())
         }
         fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
             TestApp::<false>::build_document_store_disposer()
@@ -1645,7 +1480,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit keyed fixture identity authority");
         test_retained_keyed_dispatch::<KeyedTestApp>(
             keyed_test_registry().await,
             |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value },
@@ -1667,7 +1502,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit keyed fixture identity authority");
         test_typed_operation_slot_preadmission::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
@@ -1680,7 +1515,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit keyed fixture identity authority");
         test_typed_operation_slot_retirement_under_storm::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
@@ -1693,7 +1528,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit keyed fixture identity authority");
         test_typed_operation_slot_release_on_every_outcome::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
@@ -1706,7 +1541,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit keyed fixture identity authority");
         test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
@@ -1719,7 +1554,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit keyed fixture identity authority");
         test_typed_operation_completes_under_a_status_only_host_call::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
@@ -1732,7 +1567,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit keyed fixture identity authority");
         test_typed_operation_lands_its_edit_inside_the_admitting_call::<KeyedTestApp>(keyed_test_registry().await, "compositeEdit", |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value }, mounted_policy, &mut identity).await;
     }
 
@@ -1745,7 +1580,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] keyed fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit keyed fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit keyed fixture identity authority");
         fn clock() -> Option<u64> {
             Some(1_000)
         }
@@ -1769,7 +1604,7 @@ mod plugin_builder_contract_tests {
     /// `🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts`'s `poll`, which stamps `maxFrames: 8` — so a law that
     /// drives the continuation reads the exact grant production does, not a generous test one.
     fn reactor_native_budget() -> semio_framework::kernel::Budget {
-        semio_framework::kernel::Budget { fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 }
+        semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 }
     }
 
     /// 📄️ LAW: k live operations each holding a presentable result page retire in ONE host crossing.
@@ -1794,7 +1629,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         const OPERATIONS: usize = 4;
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
@@ -1812,7 +1647,7 @@ mod plugin_builder_contract_tests {
         let (mut pages, mut crossings, mut widest) = (0usize, 0usize, 0usize);
         for _ in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() * OPERATIONS as u64 {
             super::plugin_step_live_cleanup(&runtime).unwrap();
-            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget())).await.unwrap();
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget()), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
             let more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
@@ -1867,7 +1702,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         const ROWS: i32 = 4_400;
         let id = 4_103;
@@ -1881,7 +1716,7 @@ mod plugin_builder_contract_tests {
         let mut faults: Vec<String> = Vec::new();
         let mut units = 0u64;
         for _ in 0..(ROWS as u64 * 8) {
-            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::UNIT).await.unwrap();
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::UNIT, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
             units += 1;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
@@ -1923,7 +1758,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let id = 4_101;
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
@@ -1984,7 +1819,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
         let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
@@ -2002,7 +1837,7 @@ mod plugin_builder_contract_tests {
         let mut turns: Vec<(bool, bool, bool)> = Vec::new();
         for turn in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() {
             super::plugin_step_live_cleanup(&runtime).unwrap();
-            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget())).await.unwrap();
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget()), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
             let more = scan.runnable || scan.contended;
             spent += u64::from(scan.runnable || !scan.contended);
             turns.push((scan.runnable, scan.contended, output.is_some()));
@@ -2072,7 +1907,7 @@ mod plugin_builder_contract_tests {
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
@@ -2082,7 +1917,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
         apply_test_mutations(app.test_store_mut().await, vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })]).await.expect("the actual parent declares the exact member before registration");
         let child = new_test_child("child-1").await.expect("construct child");
-        app.register_child("slot", "child-1", test_child_dialect().await, child).await.expect("register child");
+        app.register_child("slot", "child-1", test_child_dialect().await, child, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register child");
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("admit retained child gesture");
 
         let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
@@ -2100,7 +1935,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                     cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst),
                     cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed),
                     pump.session.is_some(),
-                    pump.outcome.is_some(),
+                    pump.outcome_pending,
                     pump.rejected.is_some(),
                     pump.terminal,
                     pump.pending_status,
@@ -2108,7 +1943,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                     pump.faulted
                 );
             }
-            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget())).await.expect("drive one production publication turn");
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget()), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("drive one production publication turn");
             let mut more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
@@ -2135,7 +1970,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                                 }
                             }
                             assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= expected_entries, "production maintenance callback must execute before counting one delayed ACK poll");
-                            let (output, _) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::UNIT).await.expect("delayed renderer ACK does not fault continuation");
+                            let (output, _) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::UNIT, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("delayed renderer ACK does not fault continuation");
                             assert!(output.as_ref().and_then(|(_, output)| output.typed_operation_results.first()).is_none(), "presented result page must not be republished before an explicit retry deadline");
                         }
                         assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= maintenance_entries_before + pre_ack_polls);
@@ -2182,7 +2017,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
             let admitted = active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("undo retained group");
             let undone = crate::app::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("undo reserved-job commit");
-            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id).await.expect("undo publication");
+            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("undo publication");
             let skipped: Vec<String> = undone.diagnostics.iter().map(|diagnostic| diagnostic.message.clone()).collect();
             assert!(skipped.is_empty(), "the group undo skips no member of its own gesture: {skipped:?}");
             assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0, "the parent's edit of the gesture is undone with its group (parent tail group {:?})", store::SpaceMember::tail_group_id(&active.app.store).await);
@@ -2191,7 +2026,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
             let admitted = active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("redo retained group");
             crate::app::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("redo reserved-job commit");
-            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id).await.expect("redo publication");
+            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("redo publication");
             assert_eq!(active.app.snapshot().expect("redone parent snapshot").count, 9);
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("redone child").member;
             assert_eq!(child.snapshot().expect("redone child snapshot").count, 9);
@@ -2494,7 +2329,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
             let mut admitted = self.0.dispatch_typed(command, meta, identity).await?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -2523,7 +2358,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let before_tail = self.0.test_edit_tail_lengths();
             let admitted = self.0.dispatch_action(action, args, meta, identity).await?;
             let mut admitted = crate::app::settle_framework_reserved_admission(&mut self.0, admitted).await?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -2549,7 +2384,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let before_edit_id = app.0.test_last_edit_id();
         let before_tail = app.0.test_edit_tail_lengths();
         let mut admitted = PluginApp::handle_intent_frame(&mut app.0, intent, meta, identity).await?;
-        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id).await?;
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await?;
         admitted.requested_effects.extend(receipt.effects);
         admitted.events.extend(receipt.events);
         if let Some(scope) = receipt.ui_scope {
@@ -2571,7 +2406,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// hands its reducer to a worker too, so a law that reads the store right after one observed the
     /// pre-dispatch revision.
     async fn settle_contract_app(app: &mut ContractApp) {
-        artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id).await.expect("registered fixture settles its addressed dispatch");
+        artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("registered fixture settles its addressed dispatch");
     }
 
     async fn contract_app_under_test(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
@@ -2668,7 +2503,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
             let mut admitted = self.0.dispatch_typed(command, meta, identity).await?;
-            let mut receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
+            let mut receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -2700,7 +2535,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let before_tail = self.0.test_edit_tail_lengths();
             let admitted = self.0.dispatch_action(action, args, meta, identity).await?;
             let mut admitted = crate::app::settle_framework_reserved_admission(&mut self.0, admitted).await?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -2748,7 +2583,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let platform = Platform::new(None).await;
         let registry = contract_registry().await;
@@ -2820,7 +2655,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let platform = Platform::new(None).await;
         let registry = contract_registry().await;
@@ -2876,30 +2711,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     #[test]
     fn shared_framework_job_is_cancellable_resumable_and_boundedly_closeable() {
         fn context<'a>(cancel: semio_framework_job::CancelToken, preview_sequence: &'a mut u64) -> semio_framework_job::StepContext<'a> {
-            semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(7), semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel, || Some(0), preview_sequence)
-        }
-
-        fn close_payload(mut payload: semio_framework_job::RetainedJobPayload) {
-            while !payload.terminal_is_empty() {
-                let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            }
+            semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(7), semio_framework_job::StepBudget::new(4_096, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), cancel, || Some(0), preview_sequence, crate::app::artifact_app_laws::fixture_progress())
         }
 
         let cancel_before = semio_framework_job::CancelToken::root_now();
         cancel_before.cancel_now();
         let mut cancelled_before = FrameworkSetSelectionModeJob::new(vec![1; 8_193], 1);
         let mut preview_sequence = 0;
-        assert!(matches!(semio_framework_job::InteractiveJob::step(&mut cancelled_before, &mut context(cancel_before, &mut preview_sequence)), semio_framework_job::StepOutcome::Cancelled));
+        assert!(matches!(crate::app::artifact_app_laws::fixture_step(&mut cancelled_before, &mut context(cancel_before, &mut preview_sequence)), crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled));
 
         let cancel_after = semio_framework_job::CancelToken::root_now();
         let mut cancelled_after = FrameworkSetSelectionModeJob::new(vec![1; 8_193], 1);
         let mut preview_sequence = 0;
-        match semio_framework_job::InteractiveJob::step(&mut cancelled_after, &mut context(cancel_after.clone(), &mut preview_sequence)) {
-            semio_framework_job::StepOutcome::PreviewReady(payload) => close_payload(payload),
+        match crate::app::artifact_app_laws::fixture_step(&mut cancelled_after, &mut context(cancel_after.clone(), &mut preview_sequence)) {
+            crate::app::artifact_app_laws::FixtureStepOutcome::Preview(_) => {}
             _ => panic!("first retained step must publish preview"),
         }
         cancel_after.cancel_now();
-        assert!(matches!(semio_framework_job::InteractiveJob::step(&mut cancelled_after, &mut context(cancel_after, &mut preview_sequence)), semio_framework_job::StepOutcome::Cancelled));
+        assert!(matches!(crate::app::artifact_app_laws::fixture_step(&mut cancelled_after, &mut context(cancel_after, &mut preview_sequence)), crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled));
 
         let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(11), semio_framework_job::Generation(3), 29);
         let mut retained = ArtifactReservedToolJob::new(FrameworkSetSelectionModeJob::new(vec![2; 8_193], 1));
@@ -2912,7 +2741,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         while !semio_framework_job::InteractiveJob::terminal_is_empty(&retained) {
             let grant = job_close_grant(&retained);
             let step = semio_framework_job::InteractiveJob::close_step(&mut retained, grant);
-            assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused(_) | semio_framework_job::InteractiveJobCloseStep::Blocked), "exact quoted close turn {turns} was not admitted: {step:?}");
+            assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused{..} | semio_framework_job::InteractiveJobCloseStep::Blocked), "exact quoted close turn {turns} was not admitted: {step:?}");
             assert!(step.progress().fits(grant), "close turn {turns} receipt exceeds its exact grant");
             released += step.progress().released_bytes;
             turns += 1;
@@ -2946,7 +2775,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close() {
-        test_retained_document_cancellation::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>(crate::app::bounded_config_store_one_item_preparation_factory::<TestSnapshot, TestMutation>("test-count", 1_024), || TestMutation::SetCount(SetCount { value: 42 }), |snapshot| snapshot.count).await;
+        test_retained_document_cancellation::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>(), || TestMutation::SetCount(SetCount { value: 42 }), |snapshot| snapshot.count).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3094,7 +2923,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let chunks = ArtifactOutputChunks::new(4);
@@ -3118,7 +2947,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let operation_id = semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, 0);
@@ -3163,7 +2992,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         struct ReturnedDecoder {
             terminal: bool,
@@ -3260,7 +3089,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         struct CompletedRecordSentinel {
             remaining: usize,
@@ -3367,7 +3196,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         app.close_started = true;
@@ -3405,7 +3234,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     #[semio_framework_async_macros::async_test]
     async fn artifact_close_final_destructor_is_constant_after_every_owned_field_is_drained() {
         let page = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
-        let mut app = contract_app_raw().await;
+        let mut app = contract_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
         let _ = app.test_history().await;
         let mut turns = 0;
         for _ in 0..4_096 {
@@ -3424,7 +3253,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert!(turns != 0, "the warmed projection cache and history view are retained fields the rung must release");
         assert!(app.retained_fields_own_terminal_is_empty());
         assert!(matches!(app.retained_fields_close_step(crate::app::plugin_page_grant(page)).expect("repeated terminal turn"), store::RetainedCloneStep::Complete(progress) if progress == store::RetainedCloneProgress::default()));
-        artifact_app_laws::close_registered_fixture_app(&mut app);
+        artifact_app_laws::close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
     }
 
     #[test]
@@ -3451,7 +3280,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn retained_command_download_seam_keeps_original_chunks_and_bounded_cancel_owner(){
-        use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,StepOutcome};
+        use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep};
         use crate::retained_command::{ArtifactCommandWork,ArtifactCommandWorkStep,ArtifactCommandInputs,ArtifactRetainedCommandJob};
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧵️retained-command/🔄️full-operation/🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["download"];
         struct DownloadWork{output:Option<ArtifactDownloadOutput>,first:bool,closing:bool,retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>}
@@ -3463,11 +3292,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             fn begin_close(&mut self){self.closing=true;}
             fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->InteractiveJobCloseStep{
                 if grant.maximum_items==0{return InteractiveJobCloseStep::Pending{progress:Default::default()}}
-                let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return InteractiveJobCloseStep::Refused(error.kind)};
-                if grant.maximum_depth<demand.depth{return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit)}
+                let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()}};
+                if grant.maximum_depth<demand.depth{return InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Default::default()}}
                 if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return InteractiveJobCloseStep::Pending{progress:Default::default()}}
                 let step=if self.retirement.is_some(){store::artifact_retirement_box_close_step(&mut self.retirement,grant)}else{store::artifact_retirement_admit_owned(&mut self.output,&mut self.retirement,grant)};
-                match step{Ok(step)if self.terminal_is_empty()=>InteractiveJobCloseStep::Complete{progress:step.progress()},Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>InteractiveJobCloseStep::Refused(error.kind)}
+                match step{Ok(step)if self.terminal_is_empty()=>InteractiveJobCloseStep::Complete{progress:step.progress()},Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()}}
             }
             fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
             fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
@@ -3478,8 +3307,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let make=||{let length=law["payloadBytes"].as_u64().unwrap()as usize;assert!(length>law["wireBytes"].as_u64().unwrap()as usize);let chunks=ArtifactOutputChunks::new(length);for index in 0..length.div_ceil(ArtifactOutputChunks::CHUNK_BYTES){let start=index*ArtifactOutputChunks::CHUNK_BYTES;let end=(start+ArtifactOutputChunks::CHUNK_BYTES).min(length);chunks.push((start..end).map(|index|(index%251)as u8).collect()).unwrap();}chunks.seal().unwrap();ArtifactDownloadOutput::new("original.txt","text/plain",None,chunks).unwrap()};
         for (busy,cancel) in [(false,false),(true,false),(false,true)]{
             let completion=ArtifactToolCompletion::<TestApp>::new();let consumer=completion.clone();let mut payload=test_retained_command_payload(completion.clone()).await;payload.work=Box::new(DownloadWork{output:Some(make()),first:true,closing:false,retirement:None});let mut job=ArtifactRetainedCommandJob::new(payload);let mut sequence=0;let mut yielded=false;let token=semio_framework_job::root_cancel_token();
-            for _ in 0..128{let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(41),semio_framework_job::Generation(3),semio_framework_job::StepBudget::new(1,u64::MAX),token.clone(),||Some(0),&mut sequence);let result=if busy{completion.with_busy_test_lock(||job.step(&mut cx))}else{job.step(&mut cx)};match result{StepOutcome::PreviewReady(mut reply)=>{yielded=true;test_close_retained_payload(&mut reply);if cancel{token.cancel_now()}},StepOutcome::CheckpointReady(mut reply)=>test_close_retained_payload(&mut reply.state),StepOutcome::Complete(mut commit)=>{test_close_retained_payload(&mut commit.state);test_close_retained_payload(&mut commit.output);break},StepOutcome::Fault(mut fault)=>{test_close_retained_payload(&mut fault.detail);break},StepOutcome::Cancelled=>{assert!(cancel);break},_=>{}}}
-            assert!(yielded);job.begin_close();for _ in 0..100000{if job.terminal_is_empty(){break}let grant=job_close_grant(&job);let before=job.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..grant});assert!(matches!(before,InteractiveJobCloseStep::Pending{progress}if progress==Default::default())||matches!(before,InteractiveJobCloseStep::Blocked));let step=job.close_step(grant);assert!(step.progress().fits(grant));assert!(!matches!(step,InteractiveJobCloseStep::Refused(_)))}assert!(job.terminal_is_empty());
+            for _ in 0..128{let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(41),semio_framework_job::Generation(3),semio_framework_job::StepBudget::new(1,u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance),token.clone(),||Some(0),&mut sequence, crate::app::artifact_app_laws::fixture_progress());let result=if busy{completion.with_busy_test_lock(||crate::app::artifact_app_laws::fixture_step(&mut job,&mut cx))}else{crate::app::artifact_app_laws::fixture_step(&mut job,&mut cx)};match result{crate::app::artifact_app_laws::FixtureStepOutcome::Preview(_)=>{yielded=true;if cancel{token.cancel_now()}},crate::app::artifact_app_laws::FixtureStepOutcome::Checkpoint{..}=>{},crate::app::artifact_app_laws::FixtureStepOutcome::Complete{..}=>break,crate::app::artifact_app_laws::FixtureStepOutcome::Fault(_)=>break,crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled=>{assert!(cancel);break},_=>{}}}
+            assert!(yielded);job.begin_close();for _ in 0..100000{if job.terminal_is_empty(){break}let grant=job_close_grant(&job);let before=job.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..grant});assert!(matches!(before,InteractiveJobCloseStep::Pending{progress}if progress==Default::default())||matches!(before,InteractiveJobCloseStep::Blocked));let step=job.close_step(grant);assert!(step.progress().fits(grant));assert!(!matches!(step,InteractiveJobCloseStep::Refused{..}))}assert!(job.terminal_is_empty());
             if busy||cancel{assert!(consumer.test_take_download().unwrap().is_none())}else{let (Ok(output),_)=consumer.test_take_download().unwrap().unwrap()else{panic!("original download completion")};let mut actual=Vec::new();while let Some(chunk)=output.chunks.take_chunk().unwrap(){assert!(chunk.len()<=law["chunkBytes"].as_u64().unwrap()as usize);actual.extend(chunk)}let expected:Vec<u8>=serde_json::from_value(serde_json::json!((0..law["payloadBytes"].as_u64().unwrap()).map(|index|(index%251)as u8).collect::<Vec<_>>())).unwrap();assert_eq!(actual,expected);}
             eprintln!("[DEBUG] original Work download busy={busy} canceled={cancel} yields; source chunks preserved; exact quoted retirement");
         }
@@ -3517,24 +3346,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut checkpoint_bytes = None;
         let mut sequence = 0;
         for _ in 0..64 {
-            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            match original.job.step(&mut context) {
-                semio_framework_job::StepOutcome::PreviewReady(mut payload) => test_close_retained_payload(&mut payload),
-                semio_framework_job::StepOutcome::CheckpointReady(mut checkpoint) => {
-                    let bytes = checkpoint.state.single_page().expect("single ARC1 checkpoint page");
+            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app::artifact_app_laws::fixture_progress());
+            match crate::app::artifact_app_laws::fixture_step(&mut original.job, &mut context) {
+                crate::app::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
+                crate::app::artifact_app_laws::FixtureStepOutcome::Checkpoint { state: bytes, .. } => {
                     if bytes.get(4) == Some(&3) && bytes.get(5) == Some(&1) && bytes.get(48) == Some(&1) {
-                        checkpoint_bytes = Some(bytes.to_vec());
+                        checkpoint_bytes = Some(bytes);
                     }
-                    test_close_retained_payload(&mut checkpoint.state);
                     if checkpoint_bytes.is_some() {
                         break;
                     }
                 }
-                semio_framework_job::StepOutcome::Yield => {}
-                semio_framework_job::StepOutcome::Cancelled => panic!("initial retained command cancelled"),
-                semio_framework_job::StepOutcome::Complete(_) => panic!("initial retained command completed before its work checkpoint"),
-                semio_framework_job::StepOutcome::Fault(mut fault) => {
-                    test_close_retained_payload(&mut fault.detail);
+                crate::app::artifact_app_laws::FixtureStepOutcome::Yield | crate::app::artifact_app_laws::FixtureStepOutcome::Idle => {}
+                crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled => panic!("initial retained command cancelled"),
+                crate::app::artifact_app_laws::FixtureStepOutcome::Complete { .. } => panic!("initial retained command completed before its work checkpoint"),
+                crate::app::artifact_app_laws::FixtureStepOutcome::Fault(_) => {
                     panic!("initial retained command faulted");
                 }
             }
@@ -3558,20 +3384,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         };
         let mut completed = false;
         for _ in 0..96 {
-            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            match resumed.job.step(&mut context) {
-                semio_framework_job::StepOutcome::PreviewReady(mut payload) => test_close_retained_payload(&mut payload),
-                semio_framework_job::StepOutcome::CheckpointReady(mut checkpoint) => test_close_retained_payload(&mut checkpoint.state),
-                semio_framework_job::StepOutcome::Yield => {}
-                semio_framework_job::StepOutcome::Complete(mut candidate) => {
-                    test_close_retained_payload(&mut candidate.state);
-                    test_close_retained_payload(&mut candidate.output);
+            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app::artifact_app_laws::fixture_progress());
+            match crate::app::artifact_app_laws::fixture_step(&mut resumed.job, &mut context) {
+                crate::app::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
+                crate::app::artifact_app_laws::FixtureStepOutcome::Checkpoint { .. } => {},
+                crate::app::artifact_app_laws::FixtureStepOutcome::Yield | crate::app::artifact_app_laws::FixtureStepOutcome::Idle => {}
+                crate::app::artifact_app_laws::FixtureStepOutcome::Complete { .. } => {
                     completed = true;
                     break;
                 }
-                semio_framework_job::StepOutcome::Cancelled => panic!("resumed retained command cancelled"),
-                semio_framework_job::StepOutcome::Fault(mut fault) => {
-                    test_close_retained_payload(&mut fault.detail);
+                crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled => panic!("resumed retained command cancelled"),
+                crate::app::artifact_app_laws::FixtureStepOutcome::Fault(_) => {
                     panic!("resumed retained command faulted");
                 }
             }
@@ -3595,8 +3418,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         };
         let cancel = semio_framework_job::root_cancel_token();
         cancel.cancel_now();
-        let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel, || Some(0), &mut sequence);
-        assert!(matches!(cancelled.job.step(&mut context), semio_framework_job::StepOutcome::Cancelled));
+        let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), cancel, || Some(0), &mut sequence, crate::app::artifact_app_laws::fixture_progress());
+        assert!(matches!(crate::app::artifact_app_laws::fixture_step(&mut cancelled.job, &mut context), crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled));
         cancelled.job.begin_close();
         drive_job_close(&mut cancelled.job);
         assert!(cancelled.job.terminal_is_empty(), "cancelled retained command retires every owner incrementally");
@@ -3625,9 +3448,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(42), semio_framework_job::RevisionId(2), semio_framework_job::Generation(3), 5);
         let drive_to_publish = |job: &mut crate::retained_command::ArtifactRetainedCommandJob<TestApp>, sequence: &mut u64| {
             for expected_stage in ["preflight", "work"] {
-                let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), sequence);
-                match job.step(&mut context) {
-                    semio_framework_job::StepOutcome::PreviewReady(mut payload) => test_close_retained_payload(&mut payload),
+                let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), sequence, crate::app::artifact_app_laws::fixture_progress());
+                match crate::app::artifact_app_laws::fixture_step(job, &mut context) {
+                    crate::app::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
                     _ => panic!("retained child job failed at {expected_stage}"),
                 }
             }
@@ -3689,9 +3512,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         duplicate_completion.complete(Ok(Emit::default()), EphemeralEmit::default()).expect("prefill completion once");
         let mut duplicate = crate::retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(duplicate_completion, build_emit()).await);
         drive_to_publish(&mut duplicate, &mut sequence);
-        let mut duplicate_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match duplicate.step(&mut duplicate_context) {
-            semio_framework_job::StepOutcome::Fault(mut fault) => test_close_retained_payload(&mut fault.detail),
+        let mut duplicate_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app::artifact_app_laws::fixture_progress());
+        match crate::app::artifact_app_laws::fixture_step(&mut duplicate, &mut duplicate_context) {
+            crate::app::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
             _ => panic!("duplicate completion must reject the handoff"),
         }
         assert!(duplicate.test_pending_emit_shape().is_some(), "duplicate rejection returns the exact emit owner");
@@ -3704,9 +3527,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut busy = crate::retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(busy_completion.clone(), build_emit()).await);
         drive_to_publish(&mut busy, &mut sequence);
         busy_completion.with_busy_test_lock(|| {
-            let mut busy_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            match busy.step(&mut busy_context) {
-                semio_framework_job::StepOutcome::Fault(mut fault) => test_close_retained_payload(&mut fault.detail),
+            let mut busy_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app::artifact_app_laws::fixture_progress());
+            match crate::app::artifact_app_laws::fixture_step(&mut busy, &mut busy_context) {
+                crate::app::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
                 _ => panic!("busy completion must reject the handoff"),
             }
         });
@@ -3724,7 +3547,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = unproved_contract_app(mounted_policy, &mut identity).await;
         assert!(!app.test_registered_tool_keys().iter().any(|key| key.1 == "watchdogOverrun"), "the unproved fixture registers no owned factory for this verb");
@@ -3856,7 +3679,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     const INGRESS_TURNS_PER_COMMAND: usize = 512;
     
     fn command_page_authority_budget() -> Budget {
-        Budget { fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }
+        Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }
     }
     
     /// 📤️ Encodes one `AppCommand` into the exact page and cursor a host hands the guest — the bytes and
@@ -3880,7 +3703,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut carried = Some(page);
         let mut turns = 0;
         loop {
-            let result = crate::reactor::poll_kernel(runtime, Vec::new(), carried.take(), None, command_page_authority_budget()).await.expect("one native ingress turn");
+            let result = crate::reactor::poll_kernel(runtime, Vec::new(), carried.take(), None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
             turns += 1;
             match result.command_ingress {
                 semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns),
@@ -3922,7 +3745,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut carried = driver.next_page().expect("the host owner produces its first page");
         loop {
             declared = declared.max(carried.as_ref().map_or(0, |(cursor, _)| cursor.page_count as usize));
-            let result = crate::reactor::poll_kernel(runtime, Vec::new(), carried.take(), None, command_page_authority_budget()).await.expect("one native ingress turn");
+            let result = crate::reactor::poll_kernel(runtime, Vec::new(), carried.take(), None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
             turns += 1;
             match result.command_ingress {
                 semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns, declared),
@@ -4121,7 +3944,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             assert_eq!(pages.len(), row.pages, "row {} must cut into {} pages", row.name, row.pages);
             for (delivery, page_index) in row.deliver.iter().copied().enumerate() {
                 let (cursor, page) = pages[page_index].clone();
-                let result = crate::reactor::poll_kernel(&runtime, Vec::new(), Some((cursor, page)), None, command_page_authority_budget()).await.expect("one native ingress turn");
+                let result = crate::reactor::poll_kernel(&runtime, Vec::new(), Some((cursor, page)), None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
                 match (&result.command_ingress, delivery == row.rejected_delivery) {
                     (semio_framework::kernel::CommandIngressStatus::Fault { fault, .. }, true) => {
                         assert_eq!(fault.as_slice(), b"plugin.command-page-order", "row {} delivery {delivery} must be refused by its order", row.name);
@@ -4169,7 +3992,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let line = "p".repeat(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES + 1);
         let mut abandoned = command_page_authority_driver(instance, abandoned_seq, &protocol::AppCommand::CommandText { seq: abandoned_seq, line }).await;
         let first = abandoned.next_page().expect("the abandoned owner produces its first page").expect("a two-page command has a first page");
-        let opened = crate::reactor::poll_kernel(&runtime, Vec::new(), Some(first), None, command_page_authority_budget()).await.expect("one native ingress turn");
+        let opened = crate::reactor::poll_kernel(&runtime, Vec::new(), Some(first), None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
         assert!(
             matches!(opened.command_ingress, semio_framework::kernel::CommandIngressStatus::PageAccepted(_)),
             "the guest accepts the first page of a two-page command: {:?}",
@@ -4183,7 +4006,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut completed = false;
         for turn in 0..INGRESS_TURNS_PER_COMMAND {
             let carried = driver.next_page().expect("the host owner produces its pages");
-            let result = crate::reactor::poll_kernel(&runtime, Vec::new(), carried, None, command_page_authority_budget()).await.expect("one native ingress turn");
+            let result = crate::reactor::poll_kernel(&runtime, Vec::new(), carried, None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
             let progress = driver.observe(&result.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).unwrap_or_else(|fault| {
                 panic!("turn {turn}: the guest answered {:?} for the command this host owns as seq {seq}: {}: {}", result.command_ingress, fault.code.0, fault.message)
             });
@@ -4201,7 +4024,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             if crate::reactor::retained_command_ingress_occupancy() == 0 {
                 break;
             }
-            crate::reactor::poll_kernel(&runtime, Vec::new(), None, None, command_page_authority_budget()).await.expect("one native ingress turn");
+            crate::reactor::poll_kernel(&runtime, Vec::new(), None, None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
         }
         assert_eq!(crate::reactor::retained_command_ingress_occupancy(), 0, "the superseded owner retires on its own budget instead of pinning the authority");
         reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
@@ -4284,7 +4107,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let bundle = __semio_plugin_bundle().await.expect("synthetic plugin assembly");
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🏪️store/🧫️fixtures/🧫️actor-genesis/🔣️.json")).expect("neutral actor/genesis fixture");
@@ -4314,7 +4137,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         let before_snapshot = app.test_snapshot().await;
@@ -4331,7 +4154,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(app.dispatch_report().await.policy, protocol::MergePolicy::Vigilant, "invalid policy never changes the active policy");
 
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("seed one durable edit");
-        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the seeded durable edit reaches its publication");
+        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the seeded durable edit reaches its publication");
         let (mut envelope, applied_edit_ids) = {
             let store = app.test_store().await;
             let files = store::print_document_pack(store.envelope()).await.expect("print retained test envelope");
@@ -4384,7 +4207,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
@@ -4410,7 +4233,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../🧵️retained-command/🧫️fixtures/🧬️request-context.json")).expect("neutral captured-context fixture");
         let vectors = &fixture["ephemeralPublication"];
@@ -4419,7 +4242,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(app.transient_store.generation().await, 0);
 
         let frame = meta();
-        let started = app.test_mount_typed_command(TestCommand::Increment, "increment", &frame).await.expect("mount increment");
+        let started = app.test_mount_typed_command(TestCommand::Increment, "increment", &frame, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("mount increment");
         assert!(started.mutations.is_empty(), "mounting does not publish a producer emission");
         assert_eq!(app.presence_store.generation().await, 0, "dispatch did not run an ephemeral prelude");
         assert_eq!(app.transient_store.generation().await, 0, "dispatch did not apply transient work before its worker completion");
@@ -4453,7 +4276,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "x".into() }, &meta(), &mut identity).await.expect("set label");
@@ -4478,7 +4301,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
@@ -4508,16 +4331,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     fn one_framework_reserved_route_fits_a_bounded_thread_stack() {
         let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
-        let identity_started = std::time::Instant::now();
-        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
-            eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
-            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
-        };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
-
         std::thread::Builder::new()
             .stack_size(2 * 1024 * 1024)
-            .spawn(|| {
+            .spawn(move || {
+                let identity_started = std::time::Instant::now();
+                let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+                    eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
+                    progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+                };
+                let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+
                 semio_framework_async::block_on(async {
                     let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
                     reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
@@ -4593,7 +4416,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let alice = sample_presence_peer("user:alice#s1", Some(3), true);
@@ -4631,7 +4454,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         let alice = sample_presence_peer("user:alice#s1", Some(3), true);
@@ -4686,7 +4509,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut saturated = contract_app_raw(mounted_policy, &mut identity).await;
         for seq in 0..ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
@@ -4817,7 +4640,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 🤝️ [`declare_test_child`], then the RUNTIME's half: a fresh [`new_test_child`] registered as that declared member.
     async fn register_test_child(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
         declare_test_child(app, child_id).await;
-        app.register_child("slot", child_id, test_child_dialect().await, new_test_child(child_id).await.expect("construct child")).await.expect("register the declared child");
+        app.register_child("slot", child_id, test_child_dialect().await, new_test_child(child_id).await.expect("construct child"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register the declared child");
     }
 
     /// 🧪️ A live child `ArtifactStore<TestSnapshot, TestMutation>`, wrapped as `TestMembers` —
@@ -4910,13 +4733,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
         fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
             let base = store::DocumentStoreOwners::<Self, TestMutation>::source_birth_bytes::<semio_framework_value::retirement::SharedValueRetirementFactory<Self>, semio_framework_value::retirement::OwnedValueRetirementFactory<Self>, semio_framework_value::retirement::OwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<Self, TestMutation>>()?;
-            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<Self, TestMutation>(crate::app::bounded_config_store_one_item_preparation_factory_source_birth_demand::<Self, TestMutation>())?;
+            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<Self, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<Self, TestMutation, store::MutationApplyEdit<Self, TestMutation>>(), depth: 1 })?;
             let capacity_bytes = base.checked_add(preparation.capacity_bytes).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "member original source tree capacity overflow"))?;
             Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: preparation.depth.max(1) })
         }
 
         fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<Self, TestMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self, TestMutation>> {
-            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<Self, TestMutation>(crate::app::bounded_config_store_one_item_preparation_factory_source_birth_demand::<Self, TestMutation>()).map_err(|error| store::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
+            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<Self, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<Self, TestMutation, store::MutationApplyEdit<Self, TestMutation>>(), depth: 1 }).map_err(|error| store::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
             store::DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (
                 semio_framework_value::retirement::SharedValueRetirementFactory::<TestSnapshot>::default(),
                 semio_framework_value::retirement::OwnedValueRetirementFactory::<Self>::default(),
@@ -4972,7 +4795,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 
     fn close_member_admission_app<A: ArtifactApp>(app: &mut VcsArtifactApp<A, TestMembers>) {
-        artifact_app_laws::close_registered_fixture_app(app);
+        artifact_app_laws::close_registered_fixture_app(app, crate::app::artifact_app_laws::fixture_mounted_policy());
     }
 
     include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧩️composition/🦀️.rs"));
@@ -4985,7 +4808,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         let dialect = test_child_dialect().await;
@@ -4993,14 +4816,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
         let parent = ArtifactRef { artifact_id: app.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() };
         assert_eq!(app.store.envelope().dialect.as_ref(), Some(&parent.dialect));
-        assert!(app.open_child("slot", "child-1", dialect.clone(), &[]).await.is_err());
+        assert!(app.open_child("slot", "child-1", dialect.clone(), &[], &mut crate::app::artifact_app_laws::fixture_identity()).await.is_err());
         assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).abort_empty);
         assert_eq!(app.test_child_admission_state(1).generation, 0);
         let mut persisted = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
         persisted.set_owner(Some(store::OwnerRef { parent, slot: "slot".into(), child_id: "child-1".into() })).await;
         let packed = persisted.envelope_pack_bytes().await.expect("persist exact owned child");
         close_member_admission_fixture(&mut persisted);
-        assert!(app.open_child("slot", "child-1", dialect, &packed).await.is_err());
+        assert!(app.open_child("slot", "child-1", dialect, &packed, &mut crate::app::artifact_app_laws::fixture_identity()).await.is_err());
         assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).roots_retiring_empty);
         assert_eq!(app.test_child_admission_state(1).generation, 0);
         assert_eq!(app.pending_child_pins.len(), 1);
@@ -5034,7 +4857,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         let dialect = test_child_dialect().await;
@@ -5043,7 +4866,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
         let before = member.envelope_pack_bytes().await.unwrap();
         declare_test_child(&mut app, "child-1").await;
-        let error = app.register_child("slot", "child-1", dialect, member).await.expect_err("direct transfer must not apply a deferred restore pin");
+        let error = app.register_child("slot", "child-1", dialect, member, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("direct transfer must not apply a deferred restore pin");
         let mut returned = error.member.expect("exact caller member returned");
         assert_eq!(returned.envelope_pack_bytes().await.unwrap(), before);
         assert_eq!(returned.artifact_ref().as_ref(), Some(&expected));
@@ -5062,19 +4885,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         let dialect = test_child_dialect().await;
         let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
-        app.register_child("slot", "child-1", dialect.clone(), member).await.expect("pure fresh member is adopted");
+        app.register_child("slot", "child-1", dialect.clone(), member, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("pure fresh member is adopted");
         assert_eq!(app.test_child_admission_state(1).generation, 1);
         let owner = store::OwnerRef { parent: ArtifactRef { artifact_id: app.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() }, slot: "slot".into(), child_id: "child-1".into() };
         let member = app.child_store("slot", "child-1").await.unwrap();
         assert_eq!(member.owner_ref(), Some(owner.clone()));
         let packed = member.envelope_pack_bytes().await.unwrap();
         let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-        restored.open_child("slot", "child-1", dialect, &packed).await.expect("fresh factory restores exact parent owner");
+        restored.open_child("slot", "child-1", dialect, &packed, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("fresh factory restores exact parent owner");
         assert_eq!(restored.test_child_admission_state(1).generation, 1);
         assert_eq!(restored.child_store("slot", "child-1").await.unwrap().owner_ref(), Some(owner.clone()));
         assert_eq!(restored.composition.graph_mut().await.owner_of("child-1").await, Some(owner.parent.artifact_id.as_str()));
@@ -5106,7 +4929,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
@@ -5155,7 +4978,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
@@ -5169,7 +4992,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let parent_op = <TestMutation as ::protocol::OpBinary>::encode_op(&TestMutation::SetLabel(SetLabel { value: "agent".into() })).expect("encode parent op");
         let outcome = app.transaction_prepare("txn-agent-1", "", &[], &[parent_op], &wire, Some(protocol::MutationOrigin::Owner)).await;
         assert!(outcome.rejection.is_none(), "prepare admits a held child: {:?}", outcome.rejection.as_ref().map(|fault| &fault.message));
-        let edit_id = app.transaction_commit("txn-agent-1", &meta()).await.expect("commit the composite transaction");
+        let edit_id = app.transaction_commit("txn-agent-1", &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("commit the composite transaction");
         assert!(!edit_id.is_empty());
         macro_rules! child_count {
             ($app:expr) => {{
@@ -5181,20 +5004,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(app.test_snapshot().await.label, "agent", "the parent applied the agent's op");
         assert_eq!(app.store.tail_group_id().await.as_deref(), Some("txn-agent-1"), "the group identity is the transaction id");
 
-        app.transaction_undo("txn-agent-1").await.expect("undo the whole group");
+        app.transaction_undo("txn-agent-1", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("undo the whole group");
         assert_eq!(child_count!(app), 0, "undo reverts the child");
         assert_ne!(app.test_snapshot().await.label, "agent", "undo reverts the parent");
-        app.transaction_redo("txn-agent-1").await.expect("redo the whole group");
+        app.transaction_redo("txn-agent-1", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("redo the whole group");
         assert_eq!(child_count!(app), 5, "redo reapplies the child");
         assert_eq!(app.test_snapshot().await.label, "agent", "redo reapplies the parent");
-        assert!(app.transaction_undo("txn-someone-else").await.is_err(), "a group no member carries is refused by name");
+        assert!(app.transaction_undo("txn-someone-else", &mut crate::app::artifact_app_laws::fixture_identity()).await.is_err(), "a group no member carries is refused by name");
 
         let only_child = ChildEmit::encode_groups(&[test_child_emit("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 8 })])]);
         let outcome = app.transaction_prepare("txn-agent-2", "", &[], &[], &only_child, Some(protocol::MutationOrigin::Owner)).await;
         assert!(outcome.rejection.is_none(), "a children-only transaction is a pre-planned transaction");
-        app.transaction_commit("txn-agent-2", &meta()).await.expect("commit the children-only transaction");
+        app.transaction_commit("txn-agent-2", &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("commit the children-only transaction");
         assert_eq!(child_count!(app), 8);
-        app.transaction_undo("txn-agent-2").await.expect("undo the children-only group");
+        app.transaction_undo("txn-agent-2", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("undo the children-only group");
         assert_eq!(child_count!(app), 5);
 
         let stray = ChildEmit::encode_groups(&[test_child_emit("slot", "ghost", &[TestMutation::SetCount(SetCount { value: 1 })])]);
@@ -5206,7 +5029,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>, operation: u64, archive: protocol::DocumentArchivePack) -> protocol::DocumentArchiveLoadStatus {
         PluginApp::begin_document_archive_load(app, operation, archive).expect("the runtime admits the archive");
         let status = loop {
-            let status = PluginApp::poll_document_archive_load(app, operation).await.expect("poll");
+            let status = PluginApp::poll_document_archive_load(app, operation, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("poll");
             if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
                 break status;
             }
@@ -5238,12 +5061,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
-        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the migrated composite gesture settles before it is persisted");
+        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the migrated composite gesture settles before it is persisted");
         assert_eq!(app.test_snapshot().await.slot.len(), 1, "the live parent declares exactly its one member");
 
         let archive = PluginApp::document_archive(&app).await.expect("the composed document archives its closure");
@@ -5289,14 +5112,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
-        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the composite gesture settles");
+        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the composite gesture settles");
 
         let heads = PluginApp::child_head_packs(&app).await.expect("child heads");
         assert_eq!(heads.iter().map(|entry| (entry.slot.as_str(), entry.child_id.as_str(), entry.dialect.clone())).collect::<Vec<_>>(), vec![("slot", "child-1", test_child_dialect().await.to_coordinate())]);
@@ -5319,16 +5142,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut source = contract_composed_app_raw(mounted_policy, &mut identity).await;
         source
             .test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 41 })], transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 41 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
             .await
             .expect("the source edits its document");
-        let media_fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎞️media/🧫️fixtures/🔣️.json")).unwrap();let media_grant=serde_json::from_value(media_fixture["grant"].clone()).unwrap();let mut media_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let original=identity.pause().expect("same original media admission receipt");assert_eq!(original.maximum_bytes(),media_fixture["originalNativeMaximumBytes"].as_u64().unwrap()as usize);let original=match original.with_retirement_recipient(&mut media_recipient){Ok(original)=>original,Err((error,_original))=>panic!("{error}")};let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume_retirement(original,&mut identity_progress);
+        let media_fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎞️media/🧫️fixtures/🔣️.json")).unwrap();let media_grant=serde_json::from_value(media_fixture["grant"].clone()).unwrap();let mut media_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let original=identity.pause().expect("same original media admission receipt");assert_eq!(original.maximum_bytes(),media_fixture["originalNativeMaximumBytes"].as_u64().unwrap()as usize);let original=match original.with_retirement_recipient(&mut media_recipient){Ok(original)=>original,Err((error,_original))=>panic!("{error}")};let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume_retirement(original,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
         let artifact = identity.encode(|native| { let mut owner=store::NativeSnapshotEncodeOwner::new(native,media_grant); ::semio_framework_async::poll::resolve_ready(PluginApp::produce_media(&mut source, "artifact:out", &mut owner)) }).expect("the source hands out its whole document through its original authority");
         let mut consumer = contract_composed_app_raw(mounted_policy, &mut identity).await;
         let before = consumer.test_snapshot().await;
@@ -5342,7 +5165,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(archive.members.is_empty() && !archive.parent_pack.is_empty() && !archive.parent_spr.is_empty());
         PluginApp::begin_document_archive_load(&mut consumer, 7, archive).expect("the runtime admits the archive");
         let status = loop {
-            let status = PluginApp::poll_document_archive_load(&mut consumer, 7).await.expect("poll");
+            let status = PluginApp::poll_document_archive_load(&mut consumer, 7, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("poll");
             if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
                 break status;
             }
@@ -5375,13 +5198,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut source = contract_composed_app_raw(mounted_policy, &mut identity).await;
         register_test_child(&mut source, "child-1").await;
         source.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
-        artifact_app_laws::settle_registered_typed_operation(&mut source, meta().instance_id).await.expect("the composite gesture settles");
-        let media_fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎞️media/🧫️fixtures/🔣️.json")).unwrap();let media_grant=serde_json::from_value(media_fixture["grant"].clone()).unwrap();let mut media_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let original=identity.pause().expect("same original composed media admission receipt");assert_eq!(original.maximum_bytes(),media_fixture["originalNativeMaximumBytes"].as_u64().unwrap()as usize);let original=match original.with_retirement_recipient(&mut media_recipient){Ok(original)=>original,Err((error,_original))=>panic!("{error}")};let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume_retirement(original,&mut identity_progress);
+        artifact_app_laws::settle_registered_typed_operation(&mut source, meta().instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the composite gesture settles");
+        let media_fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎞️media/🧫️fixtures/🔣️.json")).unwrap();let media_grant=serde_json::from_value(media_fixture["grant"].clone()).unwrap();let mut media_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let original=identity.pause().expect("same original composed media admission receipt");assert_eq!(original.maximum_bytes(),media_fixture["originalNativeMaximumBytes"].as_u64().unwrap()as usize);let original=match original.with_retirement_recipient(&mut media_recipient){Ok(original)=>original,Err((error,_original))=>panic!("{error}")};let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume_retirement(original,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
         let mut artifact = identity.encode(|native| { let mut owner=store::NativeSnapshotEncodeOwner::new(native,media_grant); ::semio_framework_async::poll::resolve_ready(PluginApp::produce_media(&mut source, "artifact:out", &mut owner)) }).expect("the composed source hands out its whole document through its original authority");
         artifact.data = String::from_utf8(artifact.data).expect("a text-only host edge carries the carrier").into_bytes();
 
@@ -5392,7 +5215,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(archive.members.iter().map(|entry| (entry.owner.slot.as_str(), entry.owner.child_id.as_str())).collect::<Vec<_>>(), vec![("slot", "child-1")]);
         PluginApp::begin_document_archive_load(&mut consumer, 9, archive).expect("admit");
         let status = loop {
-            let status = PluginApp::poll_document_archive_load(&mut consumer, 9).await.expect("poll");
+            let status = PluginApp::poll_document_archive_load(&mut consumer, 9, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("poll");
             if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
                 break status;
             }
@@ -5409,7 +5232,6 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧪️ Runs the reserved spawn-job the host would for `admitted` and answers the bytes its
     /// `JobCompleted` carries.
     async fn finish_reserved_spawn_job(admitted: &semio_framework::InvocationResult) -> (u64, Result<Vec<u8>, Fault>) {
-        crate::app::initialize_framework_reserved_jobs();
         let (job, input) = admitted
             .requested_effects
             .iter()
@@ -5418,15 +5240,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 _ => None,
             })
             .expect("a reserved route admits its spawn-job");
-        crate::reactor::jobs::start_job(job, crate::app::FRAMEWORK_RESERVED_JOB_KIND, &input).await;
-        for _ in 0..32 {
-            match crate::reactor::jobs::step_job(job, crate::reactor::jobs::JobBudget { fuel: 50_000_000, deadline_ms: 100 }).await {
-                crate::reactor::jobs::JobStep::Done(bytes) => return (job, Ok(bytes)),
-                crate::reactor::jobs::JobStep::Failed(bytes) => panic!("reserved spawn-job failed: {}", String::from_utf8_lossy(&bytes)),
-                crate::reactor::jobs::JobStep::Running(_) => {}
-            }
-        }
-        panic!("reserved spawn-job never reached a terminal step")
+        (job, crate::app::drive_framework_reserved_registry_job(job, input, crate::app::artifact_app_laws::fixture_mounted_policy().preparation))
     }
 
     /// 🧪️ One reactor-turn continuation unit, polled exactly the way the guest bridges it: ONCE, with
@@ -5435,7 +5249,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     fn continuation_unit_is_ready_on_first_poll(app: &mut VcsArtifactApp<TestApp, TestMembers>) {
         let waker = std::task::Waker::noop();
         let mut cx = std::task::Context::from_waker(waker);
-        let mut unit = Box::pin(PluginApp::advance_typed_operation_publication(app));
+        let mut identity = crate::app::artifact_app_laws::fixture_identity();
+        let mut unit = Box::pin(PluginApp::advance_typed_operation_publication(app, &mut identity, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance));
         match std::future::Future::poll(unit.as_mut(), &mut cx) {
             std::task::Poll::Ready(result) => result.expect("continuation unit"),
             std::task::Poll::Pending => panic!("a reserved commit unit suspended inside one turn"),
@@ -5455,14 +5270,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         for child in ["child-1", "child-2"] {
             register_test_child(&mut app, child).await;
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         }
-        let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("admit checkpoint");
+        let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("admit checkpoint");
         let (job, output) = finish_reserved_spawn_job(&admitted).await;
         assert!(PluginApp::admit_reserved_spawned_job(&mut *app, job, output).expect("JobCompleted queues the commit"));
         assert!(PluginApp::has_runnable_typed_operations(&*app), "a queued commit keeps the actor's turn armed");
@@ -5500,14 +5315,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         for child in ["child-1", "child-2"] {
             register_test_child(&mut app, child).await;
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         }
-        let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("admit checkpoint");
+        let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("admit checkpoint");
         let (job, output) = finish_reserved_spawn_job(&admitted).await;
         assert!(PluginApp::admit_reserved_spawned_job(&mut *app, job, output).expect("JobCompleted queues the commit"));
         continuation_unit_is_ready_on_first_poll(&mut app);
@@ -5536,7 +5351,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
@@ -5574,7 +5389,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-a").await;
@@ -5607,11 +5422,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register child-a");
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
         assert_maintenance_reports_block(&mut app, 4, "the rejected child snapshot transfer");
@@ -5654,11 +5469,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", true);
         {
             let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("exact child owner").member;
@@ -5711,11 +5526,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", false);
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
@@ -5746,11 +5561,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", false);
         let start = app.child_content_generation;
         for index in 1..=10_000u64 {
@@ -5781,7 +5596,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-maximum").await;
@@ -5812,7 +5627,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
@@ -5844,7 +5659,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-a").await;
@@ -5880,7 +5695,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "genesis-child").await;
@@ -5908,7 +5723,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta(), &mut identity).await.expect("select");
@@ -5943,7 +5758,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
@@ -5969,7 +5784,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta(), &mut identity).await.expect("select a");
@@ -5999,7 +5814,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } }))), &mut identity).await;
@@ -6026,7 +5841,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = app.dispatch_typed(TestCommand::Navigate, &meta(), &mut identity).await.expect("navigate");
@@ -6043,7 +5858,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta(), &mut identity).await.expect("setLabel");
@@ -6064,7 +5879,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = app.handle_action("copy", None, &meta(), &mut identity).await.expect("copy");
@@ -6082,7 +5897,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta(), &mut identity).await.expect("setLabel");
@@ -6103,7 +5918,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let fragment = ClipboardFragment {
@@ -6128,7 +5943,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let fragment = ClipboardFragment {
@@ -6153,7 +5968,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = app.handle_action("paste", None, &meta(), &mut identity).await.expect("paste");
@@ -6186,7 +6001,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         for value in ["a", "ab"] {
@@ -6209,7 +6024,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         for value in ["a", "ab", "abc"] {
@@ -6228,7 +6043,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("inc1");
@@ -6257,7 +6072,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         use semio_framework::manifest::{ActionAddress, ActionInvocation};
         let mut app = contract_app(mounted_policy, &mut identity).await;
@@ -6275,7 +6090,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let admitted = app.handle_action_invocation(&invocation, Some("edit"), &meta(), &mut identity).await.expect("reserved undo without window ownership");
         let result = settle_reserved(&mut app, admitted).await;
         assert!(result.mutations.is_empty());
-        artifact_app_laws::close_registered_fixture_app(&mut app.0);
+        artifact_app_laws::close_registered_fixture_app(&mut app.0, crate::app::artifact_app_laws::fixture_mounted_policy());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6287,13 +6102,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         use semio_framework::manifest::{ActionAddress, ActionInvocation, ViewWindowInstance};
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
             .await
             .expect("seed document edit");
         assert_eq!(app.test_snapshot().await.count, 1);
@@ -6325,7 +6140,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(result.mutations.is_empty());
         assert_eq!(app.test_snapshot().await.count, 0, "history order must regress through actor ingress");
         assert!(app.test_store().await.applied_edit_ids().len() < before);
-        artifact_app_laws::close_registered_fixture_app(&mut app.0);
+        artifact_app_laws::close_registered_fixture_app(&mut app.0, crate::app::artifact_app_laws::fixture_mounted_policy());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6337,12 +6152,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
             .await
             .expect("seed document edit");
         assert_eq!(app.test_snapshot().await.count, 1);
@@ -6353,7 +6168,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let settled = settle_reserved(&mut app, admitted).await;
         assert!(settled.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.test_snapshot().await.count, 0, "driving the spawned job must run commit_framework_history_route");
-        artifact_app_laws::close_registered_fixture_app(&mut app.0);
+        artifact_app_laws::close_registered_fixture_app(&mut app.0, crate::app::artifact_app_laws::fixture_mounted_policy());
     }
 
     /// 🧪 Browser #37 chrome: [Set Active Example, Resize Window] then spawn-admit undo.
@@ -6366,7 +6181,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         reserved_action(
@@ -6455,7 +6270,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         reserved_action(
@@ -6505,12 +6320,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
             .await
             .expect("document example");
         let _ = app.test_history().await;
@@ -6558,14 +6373,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         use semio_framework::manifest::ViewWindowInstance;
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         app.bind_instance_id(1).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
             .await
             .expect("seed document edit");
         let runtime = super::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
@@ -6582,7 +6397,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let context_json = serde_json::to_string(&json!({ "actor": "local", "viewState": view })).expect("context json");
-        let admitted = super::plugin_handle_action(&runtime, 1, &action_json, &context_json).await.expect("host JSON undo through plugin_handle_action");
+        let admitted = super::plugin_handle_action(&runtime, 1, &action_json, &context_json, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("host JSON undo through plugin_handle_action");
         assert!(
             admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
             "export first turn must admit Isolated framework.reserved.tool, got {:?}",
@@ -6591,7 +6406,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(admitted.output.get("operationId").and_then(semio_framework_value::DslValue::as_str).is_some(), "first-turn output names the spawn-job");
         let cell = runtime.instances.borrow().get(1).cloned().expect("live export instance");
         let mut instance = cell.instance.lock().expect("export instance");
-        artifact_app_laws::close_registered_fixture_app(&mut instance.app);
+        artifact_app_laws::close_registered_fixture_app(&mut instance.app, crate::app::artifact_app_laws::fixture_mounted_policy());
     }
 
 
@@ -6609,7 +6424,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/reserved-undo-browser-note.json")).expect("browser-note fixture");
         let mut app = contract_app(mounted_policy, &mut identity).await;
@@ -6663,12 +6478,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
             .await
             .expect("document edit");
         let _ = app.test_history().await;
@@ -6727,7 +6542,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
@@ -6752,7 +6567,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         for (value, commit) in [("a", false), ("ab", false), ("abc", true)] {
@@ -6775,7 +6590,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let mut value = String::new();
@@ -6803,7 +6618,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
@@ -6830,7 +6645,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("inc1");
@@ -6857,7 +6672,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut sender = contract_app(mounted_policy, &mut identity).await;
         let (near, mut far) = MemoryBackbone::pair("mem://doc-history-backfill", "mem://doc-history-backfill").await;
@@ -6873,7 +6688,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let operations = protocol::encode_envelopes(&envelopes);
 
         let mut receiver = contract_app(mounted_policy, &mut identity).await;
-        receiver.ingest_operations(&operations).await.expect("ingest");
+        receiver.ingest_operations(&operations, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("ingest");
         let history = receiver.test_history().await;
         assert_eq!(history.commands.len(), 1);
         assert!(history.commands[0].edit_id.is_some());
@@ -6889,7 +6704,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &mut identity).await;
@@ -7179,7 +6994,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta(), &mut identity).await.expect("select");
@@ -7196,7 +7011,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         for id in ["node-1", "node-2", "node-3"] {
@@ -7215,7 +7030,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta(), &mut identity).await.expect("select a");
@@ -7235,7 +7050,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let args = dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" }));
@@ -7269,7 +7084,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" }))), &mut identity).await;
@@ -7292,7 +7107,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = app.dispatch_typed(TestCommand::ViewNoScope, &meta(), &mut identity).await.expect("viewNoScope");
@@ -7310,7 +7125,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         take_test_host_events();
@@ -7335,7 +7150,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         take_test_host_events();
@@ -7364,7 +7179,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::ViewNoScope, &meta(), &mut identity).await.expect("viewNoScope");
@@ -7401,7 +7216,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = app.dispatch_typed(TestCommand::ViewPartialScope, &meta(), &mut identity).await.expect("viewPartialScope");
@@ -7419,7 +7234,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta(), &mut identity).await.expect("select");
@@ -7435,7 +7250,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let before_len = app.test_history().await.commands.len();
@@ -7454,7 +7269,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let before_len = app.test_history().await.commands.len();
@@ -7472,7 +7287,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render before");
@@ -7491,7 +7306,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::NoopMutation, &meta(), &mut identity).await.expect("noopMutation");
@@ -7514,7 +7329,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = reserved_action(&mut app, "undo", None, &mut identity).await;
@@ -7532,7 +7347,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("inc");
@@ -7553,7 +7368,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut sender = contract_app(mounted_policy, &mut identity).await;
         let (near, mut far) = MemoryBackbone::pair("mem://doc", "mem://doc").await;
@@ -7570,8 +7385,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let operations = protocol::encode_envelopes(&envelopes);
 
         let mut receiver = contract_app(mounted_policy, &mut identity).await;
-        receiver.ingest_operations(&operations).await.expect("ingest once");
-        receiver.ingest_operations(&operations).await.expect("ingest twice");
+        receiver.ingest_operations(&operations, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("ingest once");
+        receiver.ingest_operations(&operations, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("ingest twice");
         assert_eq!(receiver.test_snapshot().await.count, 1, "feeding the same operation twice must not double-apply");
     }
 
@@ -7584,7 +7399,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         assert!(app.backbone_ref().is_none(), "default is unattached");
@@ -7627,7 +7442,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
@@ -7716,7 +7531,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_with(flat_menu_registry().await, mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "flat-menu-test".into() }, &meta(), &mut identity).await.expect("set label");
@@ -7763,7 +7578,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
@@ -7800,7 +7615,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
@@ -7825,7 +7640,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let mut host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
@@ -8091,7 +7906,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
@@ -8128,7 +7943,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let error = app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity).await.expect_err("a View command emitting operations must be rejected");
@@ -8151,7 +7966,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let intent = UiIntent {
@@ -8185,7 +8000,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let intent = UiIntent {
@@ -8233,7 +8048,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let result = app.dispatch_typed(TestCommand::SetActiveUtility { utility_id: "brush".into() }, &meta(), &mut identity).await.expect("setActiveUtility is a valid View command");
@@ -8253,7 +8068,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         for (value, commit) in [("a", false), ("ab", false), ("abc", true)] {
@@ -8286,7 +8101,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::StreamLabel { value: "a".into(), commit: false }, &meta(), &mut identity).await.expect("streamLabel a");
@@ -8316,7 +8131,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let result = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta(), &mut identity).await.expect("incrementViaCommand");
@@ -8335,7 +8150,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
@@ -8357,7 +8172,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         use semio_framework::InteractiveJobClassification::{BatchOnlyPendingRewrite, Deleted, ForbiddenFromUi, Unclassified};
         use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
@@ -8394,7 +8209,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
         let invocation = CommandInvocation {
@@ -8418,7 +8233,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         use semio_framework::manifest::{ActionAddress, ActionInvocation};
         let invocation = ActionInvocation {
@@ -8472,7 +8287,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::IncrementViaCommand, &meta(), &mut identity).await.expect("inc");
@@ -8488,7 +8303,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>::new(TestApp::<false, TEST_APP_TOOLS_FACTORIES>::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         let error = app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity).await.expect_err("an empty registry must fail closed");
@@ -8508,7 +8323,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
@@ -8528,7 +8343,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
@@ -8555,7 +8370,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
@@ -8579,7 +8394,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         reserved_action(&mut app, SET_SELECTION_MODE_ACTION_ID, Some(&dv(json!({ "domainId": "items", "mode": "single" }))), &mut identity).await;
@@ -8602,7 +8417,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
@@ -8625,7 +8440,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
@@ -8648,7 +8463,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
@@ -8704,7 +8519,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity).await.expect("seed label");
@@ -8788,7 +8603,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let row = |key: &str, label: &str| {
@@ -8856,7 +8671,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
@@ -8881,7 +8696,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let settled = reserved_action(
@@ -8906,7 +8721,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let settled = reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
@@ -8932,7 +8747,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let settled = reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
@@ -8956,7 +8771,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let settled = reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
@@ -8991,7 +8806,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let settled = reserved_action(&mut app, SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" }))), &mut identity).await;
@@ -9042,13 +8857,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
         let clear = Emit { interaction_writes: vec![InteractionWrite::replace("items", "object", std::iter::empty::<String>())], ..Default::default() };
-        app.test_dispatch_emit("canvasPointerDown", clear, &meta()).await.expect("explicit selection clear lands");
+        app.test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("explicit selection clear lands");
         let snapshot = app.test_interaction_selection_snapshot();
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.ids.is_empty()));
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.anchor_id.is_none()));
@@ -9065,7 +8880,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
@@ -9101,7 +8916,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let emit = Emit {
@@ -9109,7 +8924,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             ui_scope: UiDirtyScope::None,
             ..Default::default()
         };
-        let result = app.test_dispatch_emit("canvasPointerUp", emit, &meta()).await.expect("the carrying command lands");
+        let result = app.test_dispatch_emit("canvasPointerUp", emit, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
         assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }], "the interaction verb never reaches the host; every other effect does, in order");
         assert!(result.diagnostics.is_empty(), "a well-formed verb applies without diagnostics: {:?}", result.diagnostics);
         let snapshot = app.test_interaction_selection_snapshot();
@@ -9137,16 +8952,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let pick = Emit { effects: vec![inline_interaction_select(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))], ui_scope: UiDirtyScope::None, ..Default::default() };
-        app.test_dispatch_emit("canvasPointerUp", pick, &meta()).await.expect("pick lands");
+        app.test_dispatch_emit("canvasPointerUp", pick, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("pick lands");
         assert_eq!(app.test_interaction_selection_snapshot().selection.get("items").map(|selection| selection.ids.len()), Some(1));
 
         let carrier_scope = UiDirtyScope::Partial { window_bodies: vec!["some.window".into()], panel_bodies: Vec::new(), utilities: true, tools: false, engagements: false, measures: false, labels: false };
         let clear = Emit { effects: vec![inline_interaction_select(interaction_empty_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" })))], ui_scope: carrier_scope, ..Default::default() };
-        let result = app.test_dispatch_emit("canvasPointerDown", clear, &meta()).await.expect("clear lands");
+        let result = app.test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("clear lands");
         assert!(result.requested_effects.is_empty(), "nothing is left for the host to replay: {:?}", result.requested_effects);
         assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
         let snapshot = app.test_interaction_selection_snapshot();
@@ -9173,11 +8988,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let bad = Emit { effects: vec![inline_interaction_select(interaction_target_args(json!({ "domainId": "ghosts", "merge": "replace", "method": "pick" }), "item-1"))], ui_scope: UiDirtyScope::Full, ..Default::default() };
-        let result = app.test_dispatch_emit("canvasPointerUp", bad, &meta()).await.expect("a refused inline verb never fails its carrier");
+        let result = app.test_dispatch_emit("canvasPointerUp", bad, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("a refused inline verb never fails its carrier");
         assert!(result.requested_effects.is_empty(), "the refused verb is consumed, not bounced to the host: {:?}", result.requested_effects);
         assert_eq!(result.diagnostics.len(), 1, "{:?}", result.diagnostics);
         assert_eq!(result.diagnostics[0].code.0, crate::app::INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE);
@@ -9199,11 +9014,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let relay = Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(semio_framework_value::DslValue::from(&json!({ "themeId": "light" }))) };
-        let result = app.test_dispatch_emit("relayTheme", Emit { effects: vec![relay.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta()).await.expect("relay lands");
+        let result = app.test_dispatch_emit("relayTheme", Emit { effects: vec![relay.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("relay lands");
         assert_eq!(result.requested_effects, vec![relay]);
         assert_eq!(result.ui_scope, UiDirtyScope::None, "no verb was folded, so no scope was widened");
         assert!(result.diagnostics.is_empty());
@@ -9226,12 +9041,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let verb = Effect::DispatchAction { req: RequestId(115), action: INTERACTION_SELECT_ACTION_ID.into(), args: Some(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), delay_ms: 0 };
         let emit = Emit { effects: vec![Effect::Navigate { uri: "semio://home".into() }, verb], ui_scope: UiDirtyScope::None, ..Default::default() };
-        let result = app.test_dispatch_emit("canvasPointerDown", emit, &meta()).await.expect("the carrying command lands");
+        let result = app.test_dispatch_emit("canvasPointerDown", emit, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
         assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }], "the DispatchAction interaction verb never reaches the host; every other effect does, in order");
         assert!(result.diagnostics.is_empty(), "a well-formed verb applies without diagnostics: {:?}", result.diagnostics);
         let snapshot = app.test_interaction_selection_snapshot();
@@ -9259,11 +9074,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let chain = Effect::DispatchAction { req: RequestId(91_002), action: "probeChildContinuation".into(), args: Some(semio_framework_value::DslValue::from(&json!({ "pass": 2 }))), delay_ms: 16 };
-        let result = app.test_dispatch_emit("stagedPass", Emit { effects: vec![chain.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta()).await.expect("chain lands");
+        let result = app.test_dispatch_emit("stagedPass", Emit { effects: vec![chain.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("chain lands");
         assert_eq!(result.requested_effects, vec![chain]);
         assert_eq!(result.ui_scope, UiDirtyScope::None, "no verb was folded, so no scope was widened");
         assert!(result.diagnostics.is_empty());
@@ -9301,7 +9116,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let id = 47u32;
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
@@ -9319,7 +9134,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     return Err(format!("the pick did not retire within 30 s: turns={turns} lanes={lanes:?}"));
                 }
                 app_maintenance_turn(&mut app).map_err(|error| format!("maintenance: {error:?}"))?;
-                app.advance_typed_operation_publication().await.map_err(|error| format!("turn {turns}: {error:?}"))?;
+                app.advance_typed_operation_publication(&mut crate::app::artifact_app_laws::fixture_identity(), crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await.map_err(|error| format!("turn {turns}: {error:?}"))?;
                 turns += 1;
                 while let Some(page) = app.take_typed_operation_result_page(id) {
                     if page.lane == TypedOperationResultLane::Fault {
@@ -9392,7 +9207,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Ok(())
         }
         .await;
-        crate::app::artifact_app_laws::close_registered_fixture_app(&mut app);
+        crate::app::artifact_app_laws::close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
         outcome.expect("typed-ladder per-turn fold law");
     }
 
@@ -9440,7 +9255,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🕹️selection-set.json")).expect("language-neutral selection-set fixture");
         let domain = fixture["domain"].as_str().expect("fixture domain");
@@ -9491,7 +9306,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🕹️interaction/🧫️fixtures/🎯️merge-modes.json")).expect("language-neutral merge-modes fixture");
         let words = |value: &Value| -> Vec<String> { value.as_array().expect("fixture word list").iter().map(|word| word.as_str().expect("fixture word").to_string()).collect() };
@@ -9573,7 +9388,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let instance = 501;
         let spawn_meta = ActionMeta { actor: "alice".into(), instance_id: instance, view_state: None };
@@ -9582,7 +9397,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let result = app.dispatch_typed(TestCommand::SpawnCountTask, &spawn_meta, &mut identity).await.expect("dispatching SpawnCountTask must succeed");
         assert!(result.mutations.is_empty(), "SpawnCountTask itself must emit no document mutation — only the LATER resume does");
-        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, instance).await.expect("the spawning operation's publication settles");
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, instance, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the spawning operation's publication settles");
         assert_eq!(
             receipt.lanes,
             vec![TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal],
@@ -9602,7 +9417,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let (resumed_instance, resumed_meta, resumed_input) = crate::reactor::reactor_driver::pop_task_resume().await.expect("the completed task must have queued exactly one resume");
         assert_eq!(resumed_instance, spawn_meta.instance_id);
-        assert_eq!(resumed_meta.actor, "alice", "the follow-up must carry the task's ORIGINATING actor, not whatever is 'current' at resume time");
+        assert_eq!(resumed_meta.actor.as_str(), "alice", "the follow-up must carry the task's ORIGINATING actor, not whatever is 'current' at resume time");
         assert_eq!(resumed_meta.instance_id, spawn_meta.instance_id);
         let crate::plugin_runtime::TaskResumeInput::Command(command_bytes) = resumed_input.expect("the task resolved Ok, not with a Fault") else {
             panic!("SpawnCountTask's task resolves TaskResolution::Command, not ::Emit");
@@ -9612,7 +9427,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::test_push_instance(&runtime, AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
-        let output = crate::plugin_runtime::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, crate::plugin_runtime::TaskResumeInput::Command(command_bytes)).await;
+        let output = crate::plugin_runtime::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, crate::plugin_runtime::TaskResumeInput::Command(command_bytes), &mut crate::app::artifact_app_laws::fixture_identity()).await;
         assert_eq!(output.frames.len(), 1, "a successful resume must frame exactly one AppFrame::Emit");
         let frame = protocol::decode_app_frame(&output.frames[0]).await.expect("must decode back to an AppFrame");
         assert!(
@@ -9622,7 +9437,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let cell = crate::plugin_runtime::runtime_instance_cell(&runtime, resumed_instance).expect("the resumed instance stays mounted");
         let mut active = cell.instance.try_lock().expect("no other owner holds the resumed instance");
-        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut active.app, resumed_instance).await.expect("the resumed follow-up publishes");
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut active.app, resumed_instance, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the resumed follow-up publishes");
         assert!(receipt.lanes.contains(&TypedOperationResultLane::Artifact), "the follow-up must have published on the ARTIFACT lane — it applies, it does not preview: {:?}", receipt.lanes);
         assert_eq!(receipt.completions, 1, "the follow-up is exactly one terminated operation");
 
@@ -9641,7 +9456,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let factory_calls = calls.clone();
         let instance = 510;
         let meta = ActionMeta { actor: "factory-owner".into(), instance_id: instance, view_state: None };
-        let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("deferred-factory", move |_ctx| {
+        let task = test_task("deferred-factory", move |_ctx| {
             factory_calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             async move { Ok(TaskResolution::Done) }
         });
@@ -9652,6 +9467,51 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), usize::from(expected("execution")));
         assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 0);
         eprintln!("[DEBUG] task admission factory-calls=0 actor-execution factory-calls=1");
+    }
+
+    /// 🧵️ Test-only typed task source: the closure is the whole captured state and retires as one leaf.
+    struct TestTaskSource<F>(F);
+
+    struct TestTaskDrop<F>(std::mem::ManuallyDrop<Option<F>>);
+
+    impl<F: Send + 'static> semio_framework_value::retirement::RetirementCursor for TestTaskDrop<F> {
+        fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
+            use semio_framework_value::retirement::RetirementStep;
+            if self.0.is_none() { return RetirementStep::Complete; }
+            if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
+            drop(self.0.take());
+            RetirementStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() })
+        }
+        fn terminal_is_empty(&self) -> bool { self.0.is_none() }
+        fn next_work_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+        fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
+        fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
+        fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(1) }
+        fn allows_admitted_narrow_work(&self) -> bool { true }
+        fn terminal_release_bytes(&self) -> Option<usize> { self.0.is_none().then_some(std::mem::size_of::<Self>()) }
+    }
+
+    impl<F: Send + 'static> semio_framework_value::retirement::RetireOwned for TestTaskSource<F> {
+        fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { Box::new(TestTaskDrop(std::mem::ManuallyDrop::new(Some(self.0)))) }
+        fn retirement_birth_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<TestTaskDrop<F>>()) }
+        fn controlled_retirement_supported() -> bool { true }
+    }
+
+    impl<F, Fut> AsyncTaskSource<TestMutation, TestConfigMutation, NoDraftMutation> for TestTaskSource<F>
+    where
+        F: FnOnce(TaskCtx) -> Fut + Send + 'static,
+        Fut: std::future::Future<Output = Result<TaskResolution<TestMutation, TestConfigMutation, NoDraftMutation>, Fault>> + 'static,
+    {
+        type Future = Fut;
+        fn run(self, context: TaskCtx) -> Fut { (self.0)(context) }
+    }
+
+    fn test_task<F, Fut>(label: &str, run: F) -> AsyncTask<TestMutation, TestConfigMutation, NoDraftMutation>
+    where
+        F: FnOnce(TaskCtx) -> Fut + Send + 'static,
+        Fut: std::future::Future<Output = Result<TaskResolution<TestMutation, TestConfigMutation, NoDraftMutation>, Fault>> + 'static,
+    {
+        AsyncTask::new(label.to_string(), TestTaskSource(run), crate::app::artifact_app_laws::fixture_mounted_policy().preparation).unwrap_or_else(|(error, _, _)| panic!("test task constructor refused: {error}")).0
     }
 
     /// 🚫️ The (quota+1)th task on one instance is refused with a typed `Fault` — never a
@@ -9665,19 +9525,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         crate::reactor::reactor_driver::set_instance_quota(instance, 2).await;
 
         for label in ["first", "second"] {
-            let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new(label, |_ctx| async move { Ok(TaskResolution::Done) });
+            let task = test_task(label, |_ctx| async move { Ok(TaskResolution::Done) });
             crate::reactor::spawn_task(instance, &meta, task).unwrap_or_else(|error| panic!("task '{label}' must be admitted under quota 2: {error:?}"));
         }
         assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 2);
 
-        let third = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("third", |_ctx| async move { Ok(TaskResolution::Done) });
+        let third = test_task("third", |_ctx| async move { Ok(TaskResolution::Done) });
         let error = crate::reactor::spawn_task(instance, &meta, third).expect_err("the 3rd task must be refused — quota is 2, not a silent drop");
         assert_eq!(error.code.0, "plugin.task.quota-exceeded");
         assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 2, "a refused spawn must not have added a 3rd record");
 
         let other_instance = 503;
         let other_meta = ActionMeta { actor: "local".into(), instance_id: other_instance, view_state: None };
-        let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("elsewhere", |_ctx| async move { Ok(TaskResolution::Done) });
+        let task = test_task("elsewhere", |_ctx| async move { Ok(TaskResolution::Done) });
         crate::reactor::spawn_task(other_instance, &other_meta, task).expect("a different instance must not be affected by 502's quota exhaustion");
     }
 
@@ -9690,7 +9550,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
         let first_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let first_ran_inner = first_ran.clone();
-        let first = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("first", move |_ctx| async move {
+        let first = test_task("first", move |_ctx| async move {
             first_ran_inner.store(true, std::sync::atomic::Ordering::SeqCst);
             Ok(TaskResolution::Done)
         })
@@ -9701,7 +9561,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let second_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let second_ran_inner = second_ran.clone();
-        let second = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("second", move |_ctx| async move {
+        let second = test_task("second", move |_ctx| async move {
             second_ran_inner.store(true, std::sync::atomic::Ordering::SeqCst);
             Ok(TaskResolution::Done)
         })
@@ -9734,14 +9594,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let dying_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let dying_ran_inner = dying_ran.clone();
-        let dying_task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("dying", move |ctx: TaskCtx| async move {
+        let dying_task = test_task("dying", move |ctx: TaskCtx| async move {
             let _ = ctx.host.storage_read("never-resolved").await;
             dying_ran_inner.store(true, std::sync::atomic::Ordering::SeqCst);
             Ok(TaskResolution::Done)
         });
         crate::reactor::spawn_task(dying, &dying_meta, dying_task).expect("dying instance's task must spawn");
 
-        let survivor_task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("survivor", move |ctx: TaskCtx| async move {
+        let survivor_task = test_task("survivor", move |ctx: TaskCtx| async move {
             let _ = ctx.host.storage_read("also-never-resolved").await;
             Ok(TaskResolution::Done)
         });
@@ -9786,7 +9646,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let restart_command = <TestCommand as ::protocol::OpBinary>::encode_op(&TestCommand::ApplyCountFromTask { value: 7 }).expect("must encode");
         let observed_completion = std::sync::Arc::new(std::sync::Mutex::new(None));
 
-        let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("checkpointed", {
+        let task = test_task("checkpointed", {
             let observed_completion = observed_completion.clone();
             move |ctx: TaskCtx| async move {
                 let result = ctx.host.storage_read("never-resolved-either").await;
@@ -9849,7 +9709,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
         crate::app::test_mounted_command_history_pages(&mut app);
@@ -9863,10 +9723,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
-        app.test_store_mut().await.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }).await.unwrap();
+        app.test_store_mut().await.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity()).await.unwrap();
         crate::app::test_mounted_command_history_replacement(&mut app);
     }
     #[semio_framework_async_macros::async_test]
@@ -9878,11 +9738,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             eprintln!("[DEBUG] fixture identity completed={} total={} owned={}", progress.completed, progress.total, progress.owned_bytes);
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress).expect("explicit original fixture identity authority");
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
         crate::app::test_mounted_private_child_frame(&mut app);
-        crate::app::artifact_app_laws::close_registered_fixture_app(&mut app);
+        crate::app::artifact_app_laws::close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
     }
     mod mounted_owned_child_laws { include!("🪟️mounted-owned-child/🦀️.rs"); }
     mod owned_child_dispatch_laws { include!("📨️owned-child-dispatch/🦀️.rs"); }

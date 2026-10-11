@@ -51,9 +51,9 @@ impl FailClosedOp {
         Self { operation, fault, live: true }
     }
 
-    fn refuse_encode(&self) -> Result<(), String> {
+    fn refuse_encode(&self) -> Result<(), semio_framework_value::ValueError> {
         if self.fault == Fault::Encode {
-            return Err("the fixture refuses to encode this operation".into());
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "the fixture refuses to encode this operation"));
         }
         Ok(())
     }
@@ -227,17 +227,17 @@ impl MemberStoreOwner<FailClosedOp> for DemoSnapshot {
 }
 
 impl ArtifactCanonicalJson for FailClosedOp {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
         self.refuse_encode()?;
         self.operation.canonical_json_node(path)
     }
 
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String> {
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
         self.refuse_encode()?;
         self.operation.canonical_json_key(path, index)
     }
 
-    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
         self.refuse_encode()?;
         self.operation.canonical_json_borrowed_root()
     }

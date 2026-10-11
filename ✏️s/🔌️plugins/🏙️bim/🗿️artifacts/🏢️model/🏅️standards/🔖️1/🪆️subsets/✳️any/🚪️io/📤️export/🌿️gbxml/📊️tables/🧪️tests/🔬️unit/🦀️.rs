@@ -1,12 +1,12 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const BOX: &str = include_str!("../../../../../../🧫️fixtures/💡️inferences/🌡️energy-envelope/🏠️box/📸️snapshot/🔣️.json");
 
 fn table() -> String {
     let model: ModelSnapshot = from_json_str(BOX, JsonMemberPolicy::Reject).expect("the box decodes");
-    let plan = registry::try_with_inference(None, &model, |inferred| super::super::plan_of(&model, inferred)).expect("infers").expect("a plan");
+    let plan = inference::try_with_inference(None, &model, |inferred| super::super::plan_of(&model, inferred)).expect("infers").expect("a plan");
     table_json(&plan, &model)
 }
 

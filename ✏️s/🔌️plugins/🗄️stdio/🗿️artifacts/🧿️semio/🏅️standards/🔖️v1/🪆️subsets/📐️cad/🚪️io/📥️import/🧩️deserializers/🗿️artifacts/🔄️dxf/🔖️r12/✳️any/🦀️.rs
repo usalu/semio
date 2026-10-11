@@ -23,7 +23,7 @@ use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_dxf::{
-    schema::snapshot::{DxfBlock, DxfEntity, DxfLayer, DxfValue, DxfVertex},
+    schema::snapshot::{DxfBlock, DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfLayer, DxfValue, DxfVertex},
     DxfSnapshot,
 };
 
@@ -79,33 +79,33 @@ fn dimension_from_other(group_codes: &[(i32, DxfValue)]) -> CadEntity {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn cad_entity_from_dxf(e: &DxfEntity) -> Option<CadEntity> {
     match e {
-        DxfEntity::Line { start, end, .. } => Some(CadEntity::Line { a: SemioPoint2 { x: start[0], y: start[1] }, b: SemioPoint2 { x: end[0], y: end[1] } }),
-        DxfEntity::Circle { center, radius, .. } => Some(CadEntity::Circle { center: SemioPoint2 { x: center[0], y: center[1] }, radius: *radius }),
-        DxfEntity::Arc { center, radius, start_angle, end_angle, .. } => Some(CadEntity::Arc { center: SemioPoint2 { x: center[0], y: center[1] }, radius: *radius, start_angle: *start_angle, end_angle: *end_angle }),
-        DxfEntity::Polyline { vertices, closed, .. } => Some(CadEntity::Polyline { vertices: vertices.iter().map(|v: &DxfVertex| SemioPoint2 { x: v.x, y: v.y }).collect(), closed: *closed }),
-        DxfEntity::Text { position, height, value, .. } => Some(CadEntity::Text { position: SemioPoint2 { x: position[0], y: position[1] }, height: *height, rotation: 0.0, content: value.clone() }),
-        DxfEntity::Solid { points, .. } => Some(CadEntity::Solid {
+        DxfEntity::Line(DxfLine { start, end, .. }) => Some(CadEntity::Line { a: SemioPoint2 { x: start[0], y: start[1] }, b: SemioPoint2 { x: end[0], y: end[1] } }),
+        DxfEntity::Circle(DxfCircle { center, radius, .. }) => Some(CadEntity::Circle { center: SemioPoint2 { x: center[0], y: center[1] }, radius: *radius }),
+        DxfEntity::Arc(DxfArc { center, radius, start_angle, end_angle, .. }) => Some(CadEntity::Arc { center: SemioPoint2 { x: center[0], y: center[1] }, radius: *radius, start_angle: *start_angle, end_angle: *end_angle }),
+        DxfEntity::Polyline(DxfPolyline { vertices, closed, .. }) => Some(CadEntity::Polyline { vertices: vertices.iter().map(|v: &DxfVertex| SemioPoint2 { x: v.x, y: v.y }).collect(), closed: *closed }),
+        DxfEntity::Text(DxfText { position, height, value, .. }) => Some(CadEntity::Text { position: SemioPoint2 { x: position[0], y: position[1] }, height: *height, rotation: 0.0, content: value.clone() }),
+        DxfEntity::Solid(DxfSolid { points, .. }) => Some(CadEntity::Solid {
             p1: SemioPoint2 { x: points[0][0], y: points[0][1] },
             p2: SemioPoint2 { x: points[1][0], y: points[1][1] },
             p3: SemioPoint2 { x: points[2][0], y: points[2][1] },
             p4: SemioPoint2 { x: points[3][0], y: points[3][1] },
         }),
-        DxfEntity::Insert { block_name, position, scale, rotation, .. } => {
+        DxfEntity::Insert(DxfInsert { block_name, position, scale, rotation, .. }) => {
             Some(CadEntity::Insert { block_name: block_name.clone(), insertion_point: SemioPoint2 { x: position[0], y: position[1] }, scale: SemioPoint2 { x: scale[0], y: scale[1] }, rotation: *rotation })
         }
-        DxfEntity::Other { kind, group_codes } if kind == "ELLIPSE" => Some(ellipse_from_other(group_codes)),
-        DxfEntity::Other { kind, group_codes } if kind == "DIMENSION" => Some(dimension_from_other(group_codes)),
-        DxfEntity::Other { .. } => None,
+        DxfEntity::Other(DxfOther { kind, group_codes }) if kind == "ELLIPSE" => Some(ellipse_from_other(group_codes)),
+        DxfEntity::Other(DxfOther { kind, group_codes }) if kind == "DIMENSION" => Some(dimension_from_other(group_codes)),
+        DxfEntity::Other(DxfOther { .. }) => None,
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dxf_entity_layer(e: &DxfEntity) -> String {
     match e {
-        DxfEntity::Line { layer, .. } | DxfEntity::Circle { layer, .. } | DxfEntity::Arc { layer, .. } | DxfEntity::Polyline { layer, .. } | DxfEntity::Text { layer, .. } | DxfEntity::Solid { layer, .. } | DxfEntity::Insert { layer, .. } => {
+        DxfEntity::Line(DxfLine { layer, .. }) | DxfEntity::Circle(DxfCircle { layer, .. }) | DxfEntity::Arc(DxfArc { layer, .. }) | DxfEntity::Polyline(DxfPolyline { layer, .. }) | DxfEntity::Text(DxfText { layer, .. }) | DxfEntity::Solid(DxfSolid { layer, .. }) | DxfEntity::Insert(DxfInsert { layer, .. }) => {
             layer.clone()
         }
-        DxfEntity::Other { .. } => String::new(),
+        DxfEntity::Other(DxfOther { .. }) => String::new(),
     }
 }
 

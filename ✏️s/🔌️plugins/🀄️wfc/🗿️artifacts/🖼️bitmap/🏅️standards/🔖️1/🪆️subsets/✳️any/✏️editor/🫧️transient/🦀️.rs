@@ -9,7 +9,7 @@
 /// bare `wfcbitmaptransient` made `print_dsl`'s own `expect` PANIC the guest the first time the solve
 /// was published on the transient lane, trapping every later dispatch in the shell
 /// (found live on the bitmap playground, 2026-09-18).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(id = "wfc.bitmaptransient")]
 #[artifact(extension = "wfcbitmaptransient")]
@@ -65,7 +65,7 @@ impl store::ArtifactPack for BitmapTransient {
 }
 
 /// 🖼️ The optional solved pixels set to a value or cleared.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct BitmapTransientText {
     pub value: Option<String>,
@@ -73,7 +73,7 @@ pub struct BitmapTransientText {
 
 
 /// 🔺️ Field-sparse diff of [`BitmapTransient`]: each field is an optional absolute value.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct BitmapTransientDiff {
     pub output_pixels: Option<BitmapTransientText>,

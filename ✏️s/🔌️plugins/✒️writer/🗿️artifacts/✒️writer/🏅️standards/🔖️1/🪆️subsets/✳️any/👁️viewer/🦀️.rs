@@ -26,7 +26,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant — a real per-command payload module the way `editor`'s `🎮️commands/*`
 /// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum WriterViewCommand {
     #[default]
     Noop,
@@ -75,12 +75,6 @@ impl ArtifactViewer for WriterViewer {
     
 })())
 }
-
-    /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
-    /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::owned::writer_document_store_owners())
-    }
 
     fn initial_snapshot() -> WriterSnapshot {
         schema::empty_writer_snapshot()

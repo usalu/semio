@@ -29,7 +29,8 @@ pub struct BlockKindIdentity {
 //#region 🔖️Metadata
 /// 🏷️ One free-form key/value attribute on a kind (optionally naming the attribute definition it
 /// instantiates).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -42,7 +43,8 @@ pub struct BlockAttribute {
 }
 
 /// 👤️ One author credited on a kind.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -56,7 +58,8 @@ pub struct BlockAuthor {
 
 /// 🔗️ One allowed (or, unidirectional, one-way-allowed) compatibility pair between two handle/vortex/
 /// grip kind ids — the `id` lets ops remove a specific row without re-keying on `(source, target)`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -70,7 +73,8 @@ pub struct BlockCompatibilityRule {
 }
 
 /// 🧱️ One representation (mesh at a LOD/tag combination) a kind ships with — semio_compose_rs's "Representation".
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -119,7 +123,8 @@ impl Default for BlockCamera2d {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
@@ -333,19 +338,19 @@ protocol::list_delta! {
     #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
     /// 📂 Positional row delta over the attributes of a kind.
-    pub BlockAttributesDelta { removal: BlockAttributesRemoval, insertion: BlockAttributesInsertion, relocation: BlockAttributesRelocation, modification: BlockAttributesPatchEntry, row: BlockAttribute, patch: BlockAttributePatch, key: key, values_only }
+    pub BlockAttributesDelta { removal: BlockAttributesRemoval, insertion: BlockAttributesInsertion, relocation: BlockAttributesRelocation, modification: BlockAttributesPatchEntry, row: BlockAttribute, patch: BlockAttributePatch, key: key }
 }
 protocol::list_delta! {
     #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
     /// 📂 Positional row delta over the credited authors of a kind.
-    pub BlockAuthorsDelta { removal: BlockAuthorsRemoval, insertion: BlockAuthorsInsertion, relocation: BlockAuthorsRelocation, modification: BlockAuthorsPatchEntry, row: BlockAuthor, patch: BlockAuthorPatch, key: id, values_only }
+    pub BlockAuthorsDelta { removal: BlockAuthorsRemoval, insertion: BlockAuthorsInsertion, relocation: BlockAuthorsRelocation, modification: BlockAuthorsPatchEntry, row: BlockAuthor, patch: BlockAuthorPatch, key: id }
 }
 protocol::list_delta! {
     #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
     /// 📂 Positional row delta over the compatibility rules of a kind.
-    pub BlockCompatibilityDelta { removal: BlockCompatibilityRemoval, insertion: BlockCompatibilityInsertion, relocation: BlockCompatibilityRelocation, modification: BlockCompatibilityPatchEntry, row: BlockCompatibilityRule, patch: BlockCompatibilityRulePatch, key: id, values_only }
+    pub BlockCompatibilityDelta { removal: BlockCompatibilityRemoval, insertion: BlockCompatibilityInsertion, relocation: BlockCompatibilityRelocation, modification: BlockCompatibilityPatchEntry, row: BlockCompatibilityRule, patch: BlockCompatibilityRulePatch, key: id }
 }
 
 /// 🏷️ Applies an ordered-set delta to `items`: removals by key first, then appended additions; both must fit.
@@ -479,6 +484,6 @@ protocol::list_delta! {
     #[cfg_attr(any(test, feature = "test-serde"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-serde"), serde(rename_all = "camelCase"))]
     /// 📂 Positional row delta over the representations of a kind.
-    pub BlockRepresentationsDelta { removal: BlockRepresentationsRemoval, insertion: BlockRepresentationsInsertion, relocation: BlockRepresentationsRelocation, modification: BlockRepresentationsPatchEntry, row: BlockRepresentation, patch: BlockRepresentationPatch, key: id, values_only }
+    pub BlockRepresentationsDelta { removal: BlockRepresentationsRemoval, insertion: BlockRepresentationsInsertion, relocation: BlockRepresentationsRelocation, modification: BlockRepresentationsPatchEntry, row: BlockRepresentation, patch: BlockRepresentationPatch, key: id }
 }
 //#endregion 🔖️Patches

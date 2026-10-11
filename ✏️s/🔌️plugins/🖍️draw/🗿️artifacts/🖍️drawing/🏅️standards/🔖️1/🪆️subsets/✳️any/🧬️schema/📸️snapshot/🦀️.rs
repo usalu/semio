@@ -50,13 +50,22 @@ impl Default for DrawingSnapshot {
 
 /// ♻️ Retires every decoded domain field through its incremental owned-value cursor.
 pub fn retire_decoded_drawing_snapshot(value: DrawingSnapshot) {
-    let mut cursor = semio_framework_value::retirement::owned_retirement(value);
+    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
+    let birth = RetainedCloneGrant::one_capacity_turn(semio_framework_value::retirement::owned_retirement_birth_bytes::<DrawingSnapshot>(), usize::MAX);
+    let mut cursor = match semio_framework_value::retirement::admit_owned_retirement(value, birth) {
+        Ok((cursor, _)) => cursor,
+        Err((error, _)) => panic!("Draw owner retirement refused its exact birth grant: {error:?}"),
+    };
     loop {
-        match cursor.close_step(256, 65536).expect("Draw owner retirement") {
-            semio_framework_value::SnapshotRetirementStep::Complete => break,
-            semio_framework_value::SnapshotRetirementStep::Pending { .. } => {},
-            semio_framework_value::SnapshotRetirementStep::Blocked => panic!("Draw owned retirement was blocked"),
-        }
+        let copy = cursor.next_copy_byte_demand().expect("Draw owner retirement copy demand");
+        let grant = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: copy,
+            maximum_capacity_bytes: cursor.next_capacity_byte_demand(copy).expect("Draw owner retirement capacity demand"),
+            maximum_release_bytes: cursor.next_release_byte_demand().expect("Draw owner retirement release demand"),
+            maximum_depth: cursor.next_depth_demand().expect("Draw owner retirement depth demand").max(1),
+        };
+        if matches!(cursor.close_step(grant).expect("Draw owner retirement"), RetainedCloneStep::Complete(_)) { break; }
     }
     assert!(cursor.terminal_is_empty());
 }

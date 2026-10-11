@@ -143,10 +143,13 @@ impl fixture_store::ArtifactStoreOneItemPreparationFactory<u8, u8> for ProbePrep
         }
     }
 
+    fn begin_batch_digest(&self,_edit:&mut Option<Box<fixture_store::Edit<u8>>>,_grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(Box<dyn fixture_store::ArtifactStoreBatchDigest<u8>>,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preflight-only fixture has no batch digest owner"))
+    }
     fn begin_demand(&self,_mutation:&u8,_lane:fixture_store::HistoryLane)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,semio_framework_value::ValueError>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preflight-only fixture has no preparation owner"))
     }
-    fn begin(&self, request:fixture_store::ArtifactStoreOneItemPreparationRequest<u8,u8>,_grant:fixture_store::ArtifactStoreOneItemGrant)->Result<(Box<dyn fixture_store::ArtifactStoreOneItemPreparation<u8,u8>>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,fixture_store::ArtifactStoreOneItemPreparationRequest<u8,u8>)>{
+    fn begin(&self, request:fixture_store::ArtifactStoreOneItemPreparationRequest<u8,u8,u8>,_grant:fixture_store::ArtifactStoreOneItemGrant)->Result<(Box<dyn fixture_store::ArtifactStoreOneItemPreparation<u8,u8>>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,fixture_store::ArtifactStoreOneItemPreparationRequest<u8,u8,u8>)>{
         Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preflight-only fixture has no preparation owner"),request))
     }
 }
@@ -159,7 +162,7 @@ struct ProbePreparation {
 }
 
 impl fixture_store::ArtifactStoreOneItemPreparation<u8, u8> for ProbePreparation {
-    fn advance(&mut self, grant: fixture_store::ArtifactStoreOneItemGrant) -> Result<fixture_store::ArtifactStoreOneItemPreparationStep, String> {
+    fn advance(&mut self, grant: fixture_store::ArtifactStoreOneItemGrant) -> Result<fixture_store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || self.cancelled || self.closing || self.remaining == 0 {
             return Ok(fixture_store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -167,7 +170,7 @@ impl fixture_store::ArtifactStoreOneItemPreparation<u8, u8> for ProbePreparation
         self.checkpoint.cursor += 1;
         self.checkpoint.completed_items += 1;
         self.checkpoint.completed_bytes += 1;
-        Ok(fixture_store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+        Ok(fixture_store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()))
     }
 
     fn checkpoint(&self) -> fixture_store::ArtifactStoreOneItemCheckpoint {
@@ -230,7 +233,7 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
     let grant = fixture_store::ArtifactStoreOneItemGrant { maximum_items:1,maximum_copy_bytes:std::mem::size_of::<usize>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1 };
     let mut progress = Vec::new();
     for _ in 0..cancel_after {
-        let fixture_store::ArtifactStoreOneItemPreparationStep::Progress(checkpoint) = fixture_store::ArtifactStoreOneItemPreparation::advance(&mut preparation, grant).expect("progress") else {
+        let fixture_store::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, _) = fixture_store::ArtifactStoreOneItemPreparation::advance(&mut preparation, grant).expect("progress") else {
             panic!("retained preparation did not progress");
         };
         progress.push(checkpoint.cursor as u64);

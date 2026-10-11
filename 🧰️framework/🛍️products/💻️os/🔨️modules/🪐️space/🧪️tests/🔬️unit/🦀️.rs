@@ -164,12 +164,12 @@ fn space_diff_print_parse_and_encode_decode_round_trip() {
     let diffs = vec![
         SpaceDiff { name: Some("Renamed".into()), ..Default::default() },
         SpaceDiff { users: Some(SpaceUsersDelta::insertion(1, demo_user("u2", SpaceRole::Author))), ..Default::default() },
-        SpaceDiff { users: Some(SpaceUsersDelta::modification("u1".into(), SpaceUserPatch { avatar: Some(SpaceOptionalAvatar { value: None }), role: Some(SpaceRole::Spectator), ..Default::default() })), ..Default::default() },
+        SpaceDiff { users: Some(SpaceUsersDelta::modification("u1".to_string(), SpaceUserPatch { avatar: Some(SpaceOptionalAvatar { value: None }), role: Some(SpaceRole::Spectator), ..Default::default() })), ..Default::default() },
         SpaceDiff { programs: Some(SpaceProgramsDelta::insertion(0, "cad".into())), ..Default::default() },
         SpaceDiff { programs: Some(SpaceProgramsDelta { removed: vec![SpaceProgramRemoval { id: "cad".into(), index: 0 }], ..Default::default() }), ..Default::default() },
         SpaceDiff { extensions: Some(SpaceExtensionsDelta::insertion(2, demo_extension("flow-math", true))), ..Default::default() },
         SpaceDiff { extensions: Some(SpaceExtensionsDelta { removed: vec![SpaceExtensionRemoval { id: "flow-math".into(), index: 1 }], ..Default::default() }), ..Default::default() },
-        SpaceDiff { extensions: Some(SpaceExtensionsDelta::modification("flow-math".into(), SpaceExtensionPatch { enabled: Some(false), ..Default::default() })), ..Default::default() },
+        SpaceDiff { extensions: Some(SpaceExtensionsDelta::modification("flow-math".to_string(), SpaceExtensionPatch { enabled: Some(false), ..Default::default() })), ..Default::default() },
         SpaceDiff::default(),
     ];
     for diff in diffs {
@@ -297,10 +297,10 @@ fn delete_folder_cascade_removes_and_restores_whole_subtree() {
     store::test_support::assert_operation_round_trip(&collection, CollectionMutation::DeleteFolder { folder_id: "root".into() });
 
     let diff = CollectionMutation::DeleteFolder { folder_id: "root".into() }.diff(&collection).into_parts().0;
-    let mut deleted_folders = diff.folders.clone().unwrap_or_default().removed;
+    let mut deleted_folders = diff.folders.clone().unwrap_or_default().removed.into_iter().map(|row| row.id).collect::<Vec<_>>();
     deleted_folders.sort();
     assert_eq!(deleted_folders, vec!["child".to_string(), "root".to_string()]);
-    let mut deleted_entries = diff.entries.clone().unwrap_or_default().removed;
+    let mut deleted_entries = diff.entries.clone().unwrap_or_default().removed.into_iter().map(|row| row.id).collect::<Vec<_>>();
     deleted_entries.sort();
     assert_eq!(deleted_entries, vec!["e-child".to_string(), "e-root".to_string()]);
 
@@ -329,17 +329,17 @@ async fn nested_folder_cascade_delete_inverse_restores_every_row_in_place() {
     let base = nested_collection();
     let mutation = CollectionMutation::DeleteFolder { folder_id: "root".into() };
     let diff = mutation.diff(&base).into_parts().0;
-    let mut removed_folders = diff.folders.clone().expect("folders delta").removed;
+    let mut removed_folders = diff.folders.clone().expect("folders delta").removed.into_iter().map(|row| row.id).collect::<Vec<_>>();
     removed_folders.sort();
     assert_eq!(removed_folders, vec!["child".to_string(), "grandchild".to_string(), "root".to_string()]);
-    let mut removed_entries = diff.entries.clone().expect("entries delta").removed;
+    let mut removed_entries = diff.entries.clone().expect("entries delta").removed.into_iter().map(|row| row.id).collect::<Vec<_>>();
     removed_entries.sort();
     assert_eq!(removed_entries, vec!["e-child".to_string(), "e-grandchild".to_string(), "e-root".to_string()]);
     let after = protocol::apply_diff(&diff, &base).expect("cascade delete applies");
     assert_eq!(after.folders.iter().map(|folder| folder.id.as_str()).collect::<Vec<_>>(), ["before", "after"]);
     let inverse = protocol::DiffAlgebra::inverse(&diff, &base);
-    assert_eq!(inverse.folders.as_ref().expect("restored folders").added.len(), 3);
-    assert_eq!(inverse.entries.as_ref().expect("restored entries").added.len(), 3);
+    assert_eq!(inverse.folders.as_ref().expect("restored folders").inserted.len(), 3);
+    assert_eq!(inverse.entries.as_ref().expect("restored entries").inserted.len(), 3);
     assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }
@@ -509,8 +509,7 @@ fn memory_draft_port() -> Arc<store::BackbonePorts> {
 
 #[test]
 fn draft_create_list_expire_lifecycle() {
-    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
+    test_identity!(identity, 44);
     let catalog = DraftCatalog::new();
     let port = memory_draft_port();
     let draft_a = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch-a", 1_000, Some(500), &mut identity).expect("observed draft fixture");
@@ -530,8 +529,7 @@ fn draft_create_list_expire_lifecycle() {
 
 #[test]
 fn list_drafts_sweeping_expired_removes_stale_entries_first() {
-    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
+    test_identity!(identity, 44);
     let catalog = DraftCatalog::new();
     let port = memory_draft_port();
     let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "stale", 0, Some(100), &mut identity).expect("observed draft fixture");
@@ -542,8 +540,7 @@ fn list_drafts_sweeping_expired_removes_stale_entries_first() {
 
 #[test]
 fn discard_draft_removes_bookkeeping_and_tombstones_bytes() {
-    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
+    test_identity!(identity, 44);
     let catalog = DraftCatalog::new();
     let port = memory_draft_port();
     let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "scratch", 0, None, &mut identity).expect("observed draft fixture");
@@ -562,8 +559,7 @@ fn discard_draft_removes_bookkeeping_and_tombstones_bytes() {
 /// decode/re-encode anywhere in the path.
 #[test]
 fn draft_promote_moves_envelope_bytes_byte_identical() {
-    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
+    test_identity!(identity, 44);
     let catalog = DraftCatalog::new();
     let port = memory_draft_port();
     let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch", 0, None, &mut identity).expect("observed draft fixture");
@@ -593,8 +589,7 @@ fn draft_promote_moves_envelope_bytes_byte_identical() {
 /// from the asset uri to the draft uri, byte-identical, and fresh draft bookkeeping reappears.
 #[test]
 fn demote_asset_moves_bytes_back_and_reregisters_draft_bookkeeping() {
-    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
+    test_identity!(identity, 44);
     let catalog = DraftCatalog::new();
     let port = memory_draft_port();
     let draft = catalog.create_draft("puzzle.2d", "test.puzzle2d", "sketch", 0, None, &mut identity).expect("observed draft fixture");
@@ -629,8 +624,7 @@ fn promote_unknown_draft_errors() {
 /// draft bookkeeping), while two DISTINCT port identities never share one.
 #[test]
 fn draft_catalog_for_is_keyed_by_port_identity() {
-    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-    let mut identity = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(44, &mut observer).expect("finite draft fixture admission");
+    test_identity!(identity, 44);
     let port_a = memory_draft_port();
     let port_b = memory_draft_port();
 
@@ -771,10 +765,11 @@ fn zip_export_import_round_trips_real_store_documents_and_blob() {
     // crate has no `#[async_test]` harness dependency) and bridges via
     // `crate::host::resolve_kernel_future`, same as this file's other async fallout fixes — every
     // op here is an in-memory fixture operation, never real I/O.
+    test_identity!(identity);
     let mut nested_space_store =
         crate::host::resolve_kernel_future(store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
-    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], transaction: None })).expect("apply");
-    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() })).expect("commit checkpoint");
+    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], transaction: None }, &mut identity)).expect("apply");
+    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }, &mut identity)).expect("commit checkpoint");
     let original_pack_files = crate::host::resolve_kernel_future(nested_space_store.snapshot_pack()).expect("snapshot pack");
 
     let blob_store = TestBlobStore::default();

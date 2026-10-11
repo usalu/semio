@@ -272,7 +272,16 @@ enum VcsEditPhase {
     Complete,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
+struct VcsEditRemnant {
+    next: Option<VcsSnapshot>,
+    current_tags: BTreeSet<String>,
+    next_tags: BTreeSet<String>,
+    mutations: Vec<VcsDemoMutation>,
+}
+
 struct VcsEditCommandWork {
+    remnant: Option<semio_framework_value::retirement::controlled::ControlledRetirement<VcsEditRemnant>>,
     tool_id: &'static str,
     phase: VcsEditPhase,
     cursor: usize,
@@ -289,7 +298,11 @@ struct VcsEditCommandWork {
 
 impl VcsEditCommandWork {
     fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, phase: VcsEditPhase::Decode, cursor: 0, next: None, current_tags: BTreeSet::new(), next_tags: BTreeSet::new(), mutations: Vec::new(), output_bytes: 0, steps: 0, replay_target: 0, complete: false, closing: false }
+        Self { remnant: None, tool_id, phase: VcsEditPhase::Decode, cursor: 0, next: None, current_tags: BTreeSet::new(), next_tags: BTreeSet::new(), mutations: Vec::new(), output_bytes: 0, steps: 0, replay_target: 0, complete: false, closing: false }
+    }
+
+    fn workspace_is_empty(&self) -> bool {
+        self.next.is_none() && self.current_tags.is_empty() && self.next_tags.is_empty() && self.mutations.is_empty()
     }
 
     fn charge_output(&mut self, bytes: usize) -> Result<(), Fault> {
@@ -406,17 +419,6 @@ impl VcsEditCommandWork {
         }
         Ok(None)
     }
-
-    fn mutation_bytes(mutation: &VcsDemoMutation) -> usize {
-        match mutation {
-            VcsDemoMutation::RenameVcs(payload) => payload.new_title.len(),
-            VcsDemoMutation::ChangeCounter(_) => 0,
-            VcsDemoMutation::ChangeNotes(payload) => payload.new_notes.len(),
-            VcsDemoMutation::ChangeStatus(payload) => payload.new_status.len(),
-            VcsDemoMutation::AddTag(payload) => payload.tag.len(),
-            VcsDemoMutation::RemoveTag(payload) => payload.tag.len(),
-        }
-    }
 }
 
 impl ArtifactCommandWork<EditorApp<VcsPlayApp>> for VcsEditCommandWork {
@@ -448,14 +450,11 @@ impl ArtifactCommandWork<EditorApp<VcsPlayApp>> for VcsEditCommandWork {
         }
     }
 
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < 16 {
-            return Err(Fault::from("vcs-edit-checkpoint-capacity"));
-        }
-        target[..16].fill(0);
-        target[..4].copy_from_slice(b"VEC1");
-        target[8..16].copy_from_slice(&self.steps.max(self.replay_target).to_le_bytes());
-        Ok(16)
+    fn checkpoint_byte(&self, index: usize) -> Option<u8> {
+        let mut checkpoint = [0_u8; 16];
+        checkpoint[..4].copy_from_slice(b"VEC1");
+        checkpoint[8..16].copy_from_slice(&self.steps.max(self.replay_target).to_le_bytes());
+        checkpoint.get(index).copied()
     }
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
@@ -482,59 +481,64 @@ impl ArtifactCommandWork<EditorApp<VcsPlayApp>> for VcsEditCommandWork {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         use semio_framework_job::InteractiveJobCloseStep;
+        use semio_framework_value::retained_clone::RetainedCloneStep;
         if !self.closing {
             return InteractiveJobCloseStep::Blocked;
         }
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if let Some(mutation) = self.mutations.last() {
-            let bytes = Self::mutation_bytes(mutation);
-            if bytes > maximum_bytes {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        if let Some(owner) = self.remnant.as_mut() {
+            let step = owner.step(grant);
+            if owner.terminal_is_empty() {
+                self.remnant = None;
             }
-            self.mutations.pop();
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            return match step {
+                Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Complete { progress },
+                Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            };
         }
-        if let Some(tag) = self.current_tags.first() {
-            let bytes = tag.len();
-            if bytes > maximum_bytes {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.current_tags.pop_first();
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        if self.workspace_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: Default::default() };
         }
-        if let Some(tag) = self.next_tags.first() {
-            let bytes = tag.len();
-            if bytes > maximum_bytes {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.next_tags.pop_first();
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return InteractiveJobCloseStep::Pending { progress: Default::default() };
         }
-        if let Some(next) = self.next.as_mut() {
-            if let Some(tag) = next.tags.last() {
-                let bytes = tag.len();
-                if bytes > maximum_bytes {
-                    return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                next.tags.pop();
-                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        let remnant = VcsEditRemnant { next: self.next.take(), current_tags: std::mem::take(&mut self.current_tags), next_tags: std::mem::take(&mut self.next_tags), mutations: std::mem::take(&mut self.mutations) };
+        match semio_framework_value::retirement::controlled::ControlledRetirement::new(remnant) {
+            Ok(owner) => {
+                self.remnant = Some(owner);
+                InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } }
             }
-            let bytes = next.schema.len().saturating_add(next.title.len()).saturating_add(next.notes.len()).saturating_add(next.status.len());
-            if bytes > maximum_bytes {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            Err((error, remnant)) => {
+                self.next = remnant.next;
+                self.current_tags = remnant.current_tags;
+                self.next_tags = remnant.next_tags;
+                self.mutations = remnant.mutations;
+                InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() }
             }
-            self.next = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
         }
-        InteractiveJobCloseStep::Complete
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.remnant.as_ref().map_or(Ok(0), |owner| owner.next_copy_byte_demand())
+    }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        self.remnant.as_ref().map_or(Ok(0), |owner| owner.next_capacity_byte_demand(maximum_copy_bytes))
+    }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.remnant.as_ref().map_or(Ok(0), |owner| owner.next_release_byte_demand())
+    }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.remnant.as_ref().map_or(Ok(usize::from(!self.workspace_is_empty())), |owner| owner.next_depth_demand())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.next.is_none() && self.current_tags.is_empty() && self.next_tags.is_empty() && self.mutations.is_empty()
+        self.closing && self.remnant.is_none() && self.workspace_is_empty()
     }
 }
 
@@ -665,51 +669,20 @@ impl<P, M> VcsOneItemPreparationFactory<P, M> {
     }
 }
 
-struct VcsOneItemPreparation<P, M> {
-    base: std::mem::ManuallyDrop<Option<store::SnapshotRead<P>>>,
-
-    mutation: std::mem::ManuallyDrop<Option<M>>,
-
-    inverse: std::mem::ManuallyDrop<Option<Vec<M>>>,
-    refused: std::mem::ManuallyDrop<Option<(protocol::Edit<M>, std::sync::Arc<P>)>>,
-    apply_refusal: std::mem::ManuallyDrop<Option<protocol::MutationApplyError>>,
-    authority: std::mem::ManuallyDrop<Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>>,
-
-    prepared: std::mem::ManuallyDrop<Option<store::ArtifactStoreOneItemPrepared<P, M>>>,
-
-    mutation_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<M>>>>,
-    snapshot_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<P>>>>,
+struct VcsOneItemPreparation<P: 'static, M: 'static> {
+    owners: store::OneItemOwners<P, M>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
-    closing: bool,
-    active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    factories: std::mem::ManuallyDrop<[Option<semio_framework_value::FactoryAuthority>; 2]>,
-}
-
-impl<P, M> VcsOneItemPreparation<P, M>
-where P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static, M: semio_framework_value::retirement::RetireOwned + Send + 'static,
-{
-    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        let nested = |mut demand: semio_framework_value::RetirementDemand| -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "preparation close depth overflow"))?; Ok(demand) };
-        if let Some(active) = self.active.as_ref() { return nested(store::artifact_retirement_box_demands(active, body)?); }
-        if self.prepared.is_some() { let birth = store::ArtifactStoreOneItemPrepared::<P, M>::retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }
-        if self.mutation.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.mutation)?); }
-        if self.inverse.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.inverse)?); }
-        if self.refused.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.refused)?); }
-        if self.apply_refusal.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.apply_refusal)?); }
-        if self.base.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.base)?); }
-        if let Some(authority) = self.authority.as_ref() { let birth = authority.retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }
-        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
-        self.factories.iter().find_map(Option::as_ref).map_or(Ok(Default::default()), |factory| nested(factory.demands(body)?))
-    }
 }
 
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for VcsOneItemPreparationFactory<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<M>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::admit_artifact_batch_digest(edit, grant) }
+
     fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != self.lane {
             return Err("VCS one-item preparation rejected its lane".into());
@@ -718,140 +691,77 @@ where
     }
 
     fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand {capacity_bytes:std::mem::size_of::<VcsOneItemPreparation<P,M>>(),depth:1})
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<VcsOneItemPreparation<P, M>>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
-        let demand=match self.begin_demand(&request.mutation,request.lane){Ok(demand)=>demand,Err(error)=>return Err((error,request))};
-        let progress=match demand.admit(grant.retained_grant()){Ok(progress)=>progress,Err(error)=>return Err((error,request))};
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+
         if request.lane != self.lane
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
         {
-            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preparation rejected original publication authority"),request));
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "preparation rejected original publication authority"), request));
         }
         Ok((Box::new(VcsOneItemPreparation {
-            base: std::mem::ManuallyDrop::new(Some(request.base)),
-            mutation: std::mem::ManuallyDrop::new(Some(request.mutation)),
-            inverse: std::mem::ManuallyDrop::new(None),
-            refused: std::mem::ManuallyDrop::new(None),
-            apply_refusal: std::mem::ManuallyDrop::new(None),
-            authority: std::mem::ManuallyDrop::new(Some(request.authority)),
-            prepared: std::mem::ManuallyDrop::new(None),
-            mutation_retirement: std::mem::ManuallyDrop::new(Some(request.mutation_retirement)),
-            snapshot_retirement: std::mem::ManuallyDrop::new(Some(request.snapshot_retirement)),
-            active: std::mem::ManuallyDrop::new(None),
-            factories: std::mem::ManuallyDrop::new(Default::default()),
+            owners: store::OneItemOwners::from_request(request),
+
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
-            closing: false,
-        }),progress))
+        }), progress))
     }
 }
 
 impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for VcsOneItemPreparation<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + Send + 'static,
+    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        if !grant.permits_one() || self.cancelled {
+        use protocol::Mutation as _;
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.refused.is_some() || self.apply_refusal.is_some() {
+        if self.owners.refused.is_some() {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
-        let authority = self.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "VCS one-item preparation lost its Store authority"))?;
-                let base = self.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "VCS one-item preparation lost its exact base root"))?;
-        let mutation = self.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "VCS one-item preparation lost its mutation owner"))?;
-        let inverse = match mutation.inverse(base.get()) {
-                    Ok(inverse) => inverse,
-                    Err(error) => { *self.mutation = Some(mutation); return Err(error); }
-                };
-        let post = match protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()) {
-                    Ok(post) => post,
-                    Err(error) => {
-                        *self.mutation = Some(mutation);
-                        *self.inverse = Some(inverse);
-                        *self.apply_refusal = Some(error);
-                        return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retained the original mutation application refusal"));
-                    }
-                };
-
-        let prepared = match authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post)) {
-                    Ok(prepared) => prepared,
-                    Err((error, edit, post)) => { *self.refused = Some((edit, post)); return Err(error); }
-                };
+        let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "VCS one-item preparation lost its exact base root"))?;
+        let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "VCS one-item preparation lost its mutation owner"))?;
+        let inverse = mutation.inverse(base.get())?;
+        let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "VCS one-item preparation lost its Store authority"))?;
+        let forward = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "VCS one-item preparation lost its mutation owner"))?;
+        let edit = authority.next_edit(forward, inverse);
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => {
+                *self.owners.refused = Some((edit, post));
+                return Err(error);
+            }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        *self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.owners.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: 0, ..Default::default() }))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.as_ref()
-    }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.take()
-    }
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
-        use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-        let empty = RetainedCloneProgress::default(); let grant = grant.retained_grant();
-        if !self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
-        let demand = self.close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "preparation close exceeds original depth")); }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() { return store::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if self.prepared.is_some() {
-            if self.mutation_retirement.is_none() || self.snapshot_retirement.is_none() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation retains its original installed issuers")); }
-            let original = self.prepared.take().expect("observed original prepared candidate");
-            let mutations = self.mutation_retirement.take().expect("original mutation issuer");
-            let snapshots = self.snapshot_retirement.take().expect("original snapshot issuer");
-            return match original.admit_retirement(mutations, snapshots, child) {
-                Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "original prepared close birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation child changed its actual admitted birth")); } Ok(RetainedCloneStep::Progress(progress)) },
-                Err((error, original, mutations, snapshots)) => { *self.prepared = Some(original); *self.mutation_retirement = Some(mutations); *self.snapshot_retirement = Some(snapshots); Err(error) },
-            };
-        }
-        if self.mutation.is_some() { return store::artifact_retirement_admit_owned(&mut self.mutation, &mut self.active, child); }
-        if self.inverse.is_some() { return store::artifact_retirement_admit_owned(&mut self.inverse, &mut self.active, child); }
-        if self.refused.is_some() { return store::artifact_retirement_admit_owned(&mut self.refused, &mut self.active, child); }
-        if self.apply_refusal.is_some() { return store::artifact_retirement_admit_owned(&mut self.apply_refusal, &mut self.active, child); }
-        if self.base.is_some() { return store::artifact_retirement_admit_owned(&mut self.base, &mut self.active, child); }
-        if let Some(authority) = self.authority.take() { return match authority.retire(child) { Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "original preparation authority close birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation authority changed admitted birth")); } Ok(RetainedCloneStep::Progress(progress)) }, Err((error, original)) => { *self.authority = Some(original); Err(error) } }; }
-        if let Some(factory) = self.mutation_retirement.take() { let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factories[0] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
-        if let Some(factory) = self.snapshot_retirement.take() { let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factories[1] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
-        if let Some(slot) = self.factories.iter_mut().find(|slot| slot.is_some()) { let factory = slot.as_mut().expect("original preparation factory alias"); let step = factory.step(child)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original preparation factory close")?; if factory.terminal_is_empty() { *slot = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
-        Ok(RetainedCloneStep::Complete(empty))
-    }
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
-    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(body)?.capacity_bytes) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.release_bytes) }
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.depth) }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.active.is_none() && self.factories.iter().all(Option::is_none) && self.mutation_retirement.is_none() && self.snapshot_retirement.is_none() && self.inverse.is_none() && self.refused.is_none() && self.apply_refusal.is_none() && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
-}
-
-impl<P, M> Drop for VcsOneItemPreparation<P, M> {
-    fn drop(&mut self) { assert!(std::thread::panicking() || (self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none() && self.inverse.is_none() && self.refused.is_none() && self.apply_refusal.is_none() && self.mutation_retirement.is_none() && self.snapshot_retirement.is_none() && self.active.is_none() && self.factories.iter().all(Option::is_none)), "preparation must retain original owners until supplied-grant terminal closure"); }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> { self.owners.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.owners.begin_close(); }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
+    fn terminal_is_empty(&self) -> bool { self.owners.terminal_is_empty() }
 }
 //#endregion 📬️StorePreparation
 
@@ -926,16 +836,8 @@ impl ArtifactEditor for VcsPlayApp {
     /// instance, every later dispatch fails with `plugin.internal.prior-outcome`. Measured against
     /// the live React playground: all nine of this app's Actions-pane verbs were refused, the first
     /// on the missing factory and the other eight on the prior outcome.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
     }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
@@ -945,10 +847,6 @@ impl ArtifactEditor for VcsPlayApp {
     /// 📝️ Vcs keeps no draft lane, but the framework's close ladder still demands the lane's exact
     /// bounded disposer — without it every close faults `app owner did not provide the required
     /// bounded disposer for draft-store` and the app can never retire.
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
-
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(semio_framework_plugin::no_draft_store_disposer())
     }
@@ -984,7 +882,7 @@ impl ArtifactEditor for VcsPlayApp {
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(std::sync::Arc::new(VcsOneItemPreparationFactory::new(store::HistoryLane::Document)))
+        None
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
@@ -1018,6 +916,7 @@ impl ArtifactEditor for VcsPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

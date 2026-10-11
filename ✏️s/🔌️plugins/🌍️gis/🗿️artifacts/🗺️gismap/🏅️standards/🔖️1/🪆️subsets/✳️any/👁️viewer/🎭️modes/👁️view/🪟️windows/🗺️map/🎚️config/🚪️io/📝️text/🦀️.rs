@@ -2,7 +2,7 @@
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 
-use super::super::super::GisMapViewerCamera;
+use super::super::GisMapViewerCamera;
 impl GisMapViewerCamera {
     /// 🎬️ The exact `TiledMapScene::camera_json` string this camera stands for.
     pub fn scene_camera_json(&self) -> String {

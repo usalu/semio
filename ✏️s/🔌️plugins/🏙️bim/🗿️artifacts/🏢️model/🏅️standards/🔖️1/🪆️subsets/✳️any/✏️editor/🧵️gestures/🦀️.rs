@@ -415,7 +415,7 @@ fn settle_taken(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>,
     let seed = operation.map_or("", |operation| operation.authoring_seed.as_str());
     let labels = ctx.labels();
     let instance = Some(&owner);
-    let (taken, step, preview) = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(instance, snapshot, |inference| {
+    let (taken, step, preview) = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, snapshot, |inference| {
         let mut tool = ToolContext::new(snapshot, inference, surface, seed);
         tool.instance = instance;
         tool.selected = &ctx.selected;

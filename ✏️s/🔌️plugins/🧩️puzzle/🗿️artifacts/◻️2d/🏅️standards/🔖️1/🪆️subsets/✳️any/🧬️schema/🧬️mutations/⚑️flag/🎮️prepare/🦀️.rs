@@ -85,7 +85,7 @@ impl<T:Puzzle2dFlagIntent> Puzzle2dFlagPreparationCursor<T>{
  pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,T>,grant:RetainedCloneGrant)->Result<Puzzle2dFlagPreparationStep,ValueError>{
   if self.closing||self.spent{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"flag preparation is closing or spent"))}
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(Puzzle2dFlagPreparationStep::Pending(Default::default()))}
-  source.bind(&mut self.source)?;mutation.bind(&mut self.mutation)?;
+  if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(Puzzle2dFlagPreparationStep::Pending(progress))}if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(Puzzle2dFlagPreparationStep::Pending(progress))}
   if let Some(plan)=self.output{return Ok(Puzzle2dFlagPreparationStep::Complete{plan,progress:Default::default()})}
   if self.phase==0{return match self.lookup.advance(source,mutation.project(1,T::identifier),grant)?{Puzzle2dLookupStep::Pending(progress)=>Ok(Puzzle2dFlagPreparationStep::Pending(progress)),Puzzle2dLookupStep::Complete{location,progress}=>{self.index=location.map(|value|value.outer);self.lookup.take();self.phase=1;Ok(Puzzle2dFlagPreparationStep::Pending(progress))}}}
   let bytes=2*std::mem::size_of::<Option<bool>>();if grant.maximum_copy_bytes<bytes{return Ok(Puzzle2dFlagPreparationStep::Pending(Default::default()))}

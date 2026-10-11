@@ -9,7 +9,7 @@ use semio_framework_plugin::WorldSunConfig;
 /// helpers `ArtifactDsl`/`ArtifactPack` below are written against; `id`/`extension` are stated
 /// explicitly so the derived `__DSL_ENVELOPE_ID`/`__DSL_EXTENSION` reproduce the envelope identity
 /// this window kind already carried.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.puzzle.puzzle3d.windowconfig", extension = "puzzle3dwindowcfg")]
@@ -70,9 +70,80 @@ impl Puzzle3dWindowConfig {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 🧩️ Payload of [`Puzzle3dWindowConfigMutation::Set`]: the absolute value of exactly the diff's named fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle3dWindowConfigMutationSet {
+    pub patch: Puzzle3dWindowConfigDiff,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Puzzle3dWindowConfigMutation {
-    Set { patch: Puzzle3dWindowConfigDiff },
+    Set(Puzzle3dWindowConfigMutationSet),
+}
+
+impl semio_framework_plugin::WindowConfigApplyMutation<Puzzle3dWindowConfig> for Puzzle3dWindowConfigMutation {
+    fn exchange(self, post: &mut Puzzle3dWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        let Self::Set(Puzzle3dWindowConfigMutationSet { mut patch }) = self;
+        if let Some(value) = patch.lod_automatic.as_mut() {
+            std::mem::swap(value, &mut post.lod_automatic);
+        }
+        if let Some(value) = patch.lod_depth_variable.as_mut() {
+            std::mem::swap(value, &mut post.lod_depth_variable);
+        }
+        if let Some(value) = patch.grid_visible.as_mut() {
+            std::mem::swap(value, &mut post.grid_visible);
+        }
+        if let Some(value) = patch.lod_manual.as_mut() {
+            std::mem::swap(value, &mut post.lod_manual);
+        }
+        if let Some(value) = patch.grid_snap_enabled.as_mut() {
+            std::mem::swap(value, &mut post.grid_snap_enabled);
+        }
+        if let Some(value) = patch.grid_spacing.as_mut() {
+            std::mem::swap(value, &mut post.grid_spacing);
+        }
+        if let Some(value) = patch.selectable_kinds.as_mut() {
+            std::mem::swap(value, &mut post.selectable_kinds);
+        }
+        if let Some(value) = patch.proximity_radius.as_mut() {
+            std::mem::swap(value, &mut post.proximity_radius);
+        }
+        if let Some(value) = patch.chunk_size.as_mut() {
+            std::mem::swap(value, &mut post.chunk_size);
+        }
+        if let Some(value) = patch.voxel_dims.as_mut() {
+            std::mem::swap(value, &mut post.voxel_dims);
+        }
+        if let Some(value) = patch.transform_move.as_mut() {
+            std::mem::swap(value, &mut post.transform_move);
+        }
+        if let Some(value) = patch.transform_rotate.as_mut() {
+            std::mem::swap(value, &mut post.transform_rotate);
+        }
+        if let Some(value) = patch.vortex_show.as_mut() {
+            std::mem::swap(value, &mut post.vortex_show);
+        }
+        if let Some(value) = patch.vortex_direction.as_mut() {
+            std::mem::swap(value, &mut post.vortex_direction);
+        }
+        if let Some(value) = patch.selection_method.as_mut() {
+            std::mem::swap(value, &mut post.selection_method);
+        }
+        if let Some(value) = patch.sun.as_mut() {
+            std::mem::swap(value, &mut post.sun);
+        }
+        if let Some(value) = patch.camera.as_mut() {
+            std::mem::swap(value, &mut post.camera);
+        }
+        Ok(Self::Set(Puzzle3dWindowConfigMutationSet { patch }))
+    }
+
+    fn payload_bytes(&self) -> usize {
+        let Self::Set(Puzzle3dWindowConfigMutationSet { patch }) = self;
+        0 + patch.vortex_show.as_ref().map_or(0, String::len) + patch.vortex_direction.as_ref().map_or(0, String::len) + patch.selection_method.as_ref().map_or(0, String::len)
+    }
 }
 
 impl protocol::Mutation<Puzzle3dWindowConfig> for Puzzle3dWindowConfigMutation {
@@ -84,7 +155,7 @@ impl protocol::Mutation<Puzzle3dWindowConfig> for Puzzle3dWindowConfigMutation {
         &Self::DESCRIPTORS[0]
     }
     fn diff(&self, base: &Puzzle3dWindowConfig) -> protocol::MutationOutcome<Puzzle3dWindowConfigDiff> {
-        let Self::Set { patch } = self;
+        let Self::Set(Puzzle3dWindowConfigMutationSet { patch }) = self;
         let diff = patch.changed(base);
         if protocol::DiffAlgebra::<Puzzle3dWindowConfig>::is_empty(&diff) {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window configuration already holds these values.");
@@ -92,8 +163,8 @@ impl protocol::Mutation<Puzzle3dWindowConfig> for Puzzle3dWindowConfigMutation {
         protocol::MutationOutcome::new(diff)
     }
     fn inverse(&self, base: &Puzzle3dWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        let Self::Set { patch } = self;
-        Ok(vec![Self::Set { patch: patch.restoring(base) }])
+        let Self::Set(Puzzle3dWindowConfigMutationSet { patch }) = self;
+        Ok(vec![Self::Set(Puzzle3dWindowConfigMutationSet { patch: patch.restoring(base) })])
     }
 }
 
@@ -218,7 +289,8 @@ impl store::ArtifactPack for Puzzle3dWindowConfig {
 impl store::ConfigRecord for Puzzle3dWindowConfig {}
 
 /// 🔺️ Sparse typed delta of one Puzzle 3D window instance's persisted-local options: names only the fields a mutation changes.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dWindowConfigDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -472,7 +544,6 @@ impl protocol::DiffAlgebra<Puzzle3dWindowTransient> for Puzzle3dWindowTransientD
     }
 }
 
-semio_framework_value::artifact_retire_struct!(Puzzle3dSuggestionMenu { x, y, window_id, vortex_full_id, submenu });
 semio_framework_value::artifact_retire_struct!(Puzzle3dWindowTransient { suggestion_menu, engagement_input, brush_candidate_index, activation });
 
 impl semio_framework_value::retirement::RetireOwned for Puzzle3dWindowTransientMutation {
@@ -510,6 +581,9 @@ impl semio_framework_plugin::WindowConfigOwner for Puzzle3dWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = Puzzle3dWindowConfig;
     type Mutation = Puzzle3dWindowConfigMutation;
+    type Edit = semio_framework_plugin::WindowConfigApplyEdit<Puzzle3dWindowConfig, Puzzle3dWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new()) }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
@@ -601,7 +675,7 @@ pub fn transient_from_view(view: &semio_framework_plugin::TransientView<'_, semi
 pub fn transient_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowTransientSnapshot>) -> Puzzle3dWindowTransient { snapshot.and_then(|value| value.get::<Puzzle3dWindowTransientOwner>()).cloned().unwrap_or_default() }
 
 pub fn addressed_config_for(window_id: &str, config: Puzzle3dWindowConfig) -> semio_framework_plugin::WindowConfigMutation {
-    semio_framework_plugin::WindowConfigMutation::of::<Puzzle3dWindowConfigOwner>(window_id, Puzzle3dWindowConfigMutation::Set { patch: Puzzle3dWindowConfigDiff::of(&config) })
+    semio_framework_plugin::WindowConfigMutation::of::<Puzzle3dWindowConfigOwner>(window_id, Puzzle3dWindowConfigMutation::Set(Puzzle3dWindowConfigMutationSet { patch: Puzzle3dWindowConfigDiff::of(&config) }))
 }
 
 pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle3dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {

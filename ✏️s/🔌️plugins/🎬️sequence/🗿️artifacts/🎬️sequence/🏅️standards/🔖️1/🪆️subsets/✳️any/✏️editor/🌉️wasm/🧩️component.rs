@@ -25,7 +25,11 @@ impl SequenceDomain for SequenceDomainAdapter {
         match operation {
             SEQUENCE_OPERATION_LOAD_SNAPSHOT => {
                 let snapshot: SequenceHostSnapshot = semio_framework_pack_json::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(domain_error)?;
-                self.host.replace_snapshot(snapshot).map(|_| Vec::new()).map_err(domain_error)
+                if snapshot.schema != "sequence.sequence" {
+                    return Err(domain_error(format!("unsupported sequence schema {}", snapshot.schema)));
+                }
+                self.host = SequenceHost::from_host_snapshot(snapshot);
+                Ok(Vec::new())
             }
             SEQUENCE_OPERATION_SNAPSHOT => {
                 self.host.sync_from_dag();
@@ -86,7 +90,10 @@ impl SequenceDomain for SequenceDomainAdapter {
             SEQUENCE_OPERATION_DRAW_LOD => Ok(self.host.dag.draw_lod_label().to_string().into_bytes()),
             SEQUENCE_OPERATION_SET_THEME => {
                 let json = std::str::from_utf8(payload).map_err(|_| abi_failure(AbiErrorCode::InvalidUtf8))?;
-                self.host.dag.set_canvas_theme_from_json(json).map_err(domain_error)?;
+                let mut accepted = |_| true;
+                let mut control = semio_framework_value::NativeDecodeControl::new(64 * 1024, &mut accepted);
+                let overlay = semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control).map_err(domain_error)?;
+                self.host.dag.set_canvas_palette(&overlay);
                 Ok(Vec::new())
             }
             SEQUENCE_OPERATION_SELECTED_NODES => Ok(semio_framework_pack_json::to_json_string(&self.host.dag.selected_node_ids()).into_bytes()),
@@ -183,8 +190,8 @@ impl SequenceDomainAdapter {
     }
 
     fn world_from_screen(&self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
-        use infinite_canvas::camera::{screen_to_world, Camera, Viewport};
-        use infinite_canvas::Point;
+        use semio_framework_canvas::camera::{screen_to_world, Camera, Viewport};
+        use semio_framework_canvas::Point;
         let (sx, sy) = point(payload)?;
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
         let camera = Camera { x: self.host.dag.host_snapshot.camera.x, y: self.host.dag.host_snapshot.camera.y, zoom: self.host.dag.host_snapshot.camera.zoom };
@@ -232,7 +239,7 @@ impl SequenceDomainAdapter {
     }
 
     fn wheel(&mut self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
-        use infinite_canvas::camera::{wheel_screen, Camera, Viewport};
+        use semio_framework_canvas::camera::{wheel_screen, Camera, Viewport};
         let mut reader = SequencePayloadReader::new(payload);
         let sx = reader.f64().map_err(abi_failure)?;
         let sy = reader.f64().map_err(abi_failure)?;

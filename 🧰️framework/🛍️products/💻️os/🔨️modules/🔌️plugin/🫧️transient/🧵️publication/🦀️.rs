@@ -77,21 +77,23 @@ where
     /// `Blocked` forever, with no fault and no progress, so the typed operation never retired —
     /// measured on lowpoly, whose transient carries the live mesh workspace (ticket
     /// 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, 2026-09-17).
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, ValueError> {
         if self.cancelled || !grant.permits_one() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
+        let mut progress = RetainedCloneProgress::default();
         if self.prepared.is_none() {
-            let request = self.request.take().ok_or_else(|| "transient preparation lost its request".to_string())?;
+            progress.copied_items = 1;
+            let request = self.request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "transient preparation lost its request"))?;
             let outcome = protocol::Mutation::diff(&request.mutation, request.base.as_ref());
             if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
-                return Err("transient mutation was rejected against its captured base".into());
+                return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "transient mutation was rejected against its captured base"));
             }
-            let next_root = protocol::apply_diff(outcome.diff(), request.base.as_ref()).map_err(|error| error.to_string())?;
+            let next_root = protocol::apply_diff(outcome.diff(), request.base.as_ref()).map_err(|error| ValueError::new(ValueRefusalKind::InvalidValue, error.to_string()))?;
             self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: Arc::new(next_root) });
             self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: [0; 32] };
         }
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, progress))
     }
 
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {

@@ -17,6 +17,10 @@ pub use admission::ArtifactRetainedAdmissionRefusal;
 #[path="📸️checkpoint/👣️cursor/🦀️.rs"]
 mod checkpoint_cursor;
 pub use checkpoint_cursor::ArtifactCommandCheckpointCursor;
+#[path="🧬️context/🦀️.rs"]
+mod context;
+pub use context::ArtifactOwnedContextHandle;
+pub(crate) use context::{ContextOriginalResidual,ContextOwnedFields,ContextRetirementParts,ContextToolRunMetadata,ContextToolRunSources};
 
 //#region 🔖️Work
 pub const ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES: usize = 512;
@@ -223,6 +227,14 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedArtifactCommandWork<A> {
 
     fn extent(&self, command: &A::Command, snapshot: &A::Snapshot, interaction: &protocol::InteractionState, _context: Option<&ArtifactOwnedToolJobContext<A>>) -> Option<usize> {
         (self.extent)(command, snapshot, interaction)
+    }
+
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, A>, _maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand { depth: 1, ..Default::default() })
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {

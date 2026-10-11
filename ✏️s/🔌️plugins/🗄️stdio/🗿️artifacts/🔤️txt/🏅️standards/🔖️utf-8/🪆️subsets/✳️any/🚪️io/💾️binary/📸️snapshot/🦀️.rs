@@ -48,6 +48,7 @@ impl store::ArtifactPack for TxtSnapshot {
 }
 }
 pub use snapshot_codec::*;
+use crate::standards::v_utf_8::subsets::any::schema::snapshot::TxtSnapshot;
 
 impl store::ArtifactPackReceiving for TxtSnapshot {
     /// 🫴️ Keeps original line storage and typed publication in the supplied native receiving owner.

@@ -1,6 +1,6 @@
 //! 🎬️ Sequence artifact — the document entity this plugin's app edits (constitutional: general).
 
-extern crate infinite_canvas as infinite_board_port_directed_dag;
+extern crate semio_framework_os_infinite as infinite_board_port_directed_dag;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -50,6 +50,15 @@ pub const SEQUENCE_DIALECT: semio_framework_artifact_reference::Dialect = semio_
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(transparent, retire_with="std::mem::drop")]
 pub struct StepParams(pub Dictionary);
+
+impl semio_framework_value::retirement::RetireOwned for StepParams {
+    fn retirement(mut self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::RetireOwned::retirement(std::mem::take(&mut self.0))
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)
+    }
+}
 
 /// 🧊️ The same fail-closed boundary `imperative_engine::Step` declares for its own `params`
 /// (`✏️s/🔨️modules/📜️imperative/⚙️engine/🦀️.rs:53`): a `StepParams` is cloned into host snapshots,
@@ -126,7 +135,8 @@ impl semio_framework_dsl_record::DslField for StepParams {
 /// would require this file to depend on the DAG layout kernel just to move a camera in and out,
 /// which would pull graph-layout machinery into the plain entity component for no reason a data
 /// schema needs — an artifact must never depend on an app either way.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -145,7 +155,7 @@ impl Default for SequenceCamera {
 /// 🎯️ Only ever embedded `#[dsl(block)]`-wrapped (on `SequenceStep::slot`), so it carries no
 /// `#[dsl(keyword = "...")]` of its own — the embedding field already supplies the bare `slot`
 /// leading keyword.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -155,7 +165,7 @@ pub struct SlotRef {
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SequenceStep {
     #[dsl(defines = "step")]
@@ -179,7 +189,7 @@ pub struct SequenceStep {
 /// `🗣️dsl`) instead of deriving `dsl::DslRecord` here directly, so this struct (and every consumer
 /// matching on `.from`/`.to` — `connect_steps`, `sync_edges_from_dag`, ...) stays untouched by the
 /// unified `dsl::Wire` connection syntax.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

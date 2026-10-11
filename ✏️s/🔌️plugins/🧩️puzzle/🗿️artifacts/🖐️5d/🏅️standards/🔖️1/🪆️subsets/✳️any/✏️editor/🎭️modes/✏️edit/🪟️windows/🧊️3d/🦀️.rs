@@ -236,17 +236,17 @@ pub fn world_selection_json_ex(envelope: &Puzzle5dScene) -> String {
     let hovered_id = interaction.hovered_part_id(&envelope.document).map(str::to_string);
     let mut value: Value = semio_framework_pack_json::parse(&world3d_selection_json("pick", part_ids, hovered_id.as_deref()), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned world selection admits");
     if let Some(object) = value.as_object_mut() {
-        object.insert("granularity".into(), json!("mesh"));
-        object.insert("selectionMode".into(), json!("mesh"));
-        object.insert("targets".into(), json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
-        object.insert("targetVolumeIds".into(), json!(interaction.selected_target_volume_ids()));
+        object.insert("granularity", json!("mesh"));
+        object.insert("selectionMode", json!("mesh"));
+        object.insert("targets", json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
+        object.insert("targetVolumeIds", json!(interaction.selected_target_volume_ids()));
         if let Some(id) = part_ids.first() {
-            object.insert("activeObjectId".into(), json!(id));
+            object.insert("activeObjectId", json!(id));
         }
         if let Some(transform_mode) = puzzle5d_transform_handle(&envelope.active_utility) {
-            object.insert("transformMode".into(), json!(transform_mode));
+            object.insert("transformMode", json!(transform_mode));
             object.insert(
-                "gumballConfig".into(),
+                "gumballConfig",
                 json!({
                     "moveAxes": runtime.transform_move,
                     "movePlanes": runtime.transform_move,
@@ -257,7 +257,7 @@ pub fn world_selection_json_ex(envelope: &Puzzle5dScene) -> String {
                 }),
             );
         }
-        object.insert("gumballActive".into(), json!(puzzle5d_gumball_active(runtime, &envelope.active_utility, interaction)));
+        object.insert("gumballActive", json!(puzzle5d_gumball_active(runtime, &envelope.active_utility, interaction)));
     }
     value.to_string()
 }
@@ -347,7 +347,7 @@ pub fn world_interaction_json(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels,
         "suggestionMenu": suggestion_menu_json(envelope, labels, suggestions),
     });
     if let (Some(object), Some(hovered)) = (value.as_object_mut(), envelope.interaction.hovered_grip_full_id(&envelope.document)) {
-        object.insert("hoveredVortexFullId".into(), json!(hovered));
+        object.insert("hoveredVortexFullId", json!(hovered));
     }
     value.to_string()
 }

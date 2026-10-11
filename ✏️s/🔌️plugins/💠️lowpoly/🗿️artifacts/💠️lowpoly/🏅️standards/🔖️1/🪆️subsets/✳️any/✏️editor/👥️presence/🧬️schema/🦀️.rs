@@ -1,7 +1,7 @@
 //! 🧬️ schema leaf
 use framework_schema::ArtifactSchema;
 
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.lowpoly.lowpoly.presence")]
 pub struct LowpolyPresence {

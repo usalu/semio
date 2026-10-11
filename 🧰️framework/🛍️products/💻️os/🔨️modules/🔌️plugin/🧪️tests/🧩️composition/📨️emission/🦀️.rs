@@ -7,7 +7,11 @@ fn child_page_grant() -> store::RetainedCloneGrant {
 
 /// 🎟️ One item that funds only the release axis, as the physical backing of one original allocation.
 fn child_release_grant(bytes: usize) -> store::RetainedCloneGrant {
-    store::RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: bytes, maximum_depth: 1, ..Default::default() }
+    store::RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: bytes, maximum_depth: 64, ..Default::default() }
+}
+
+fn preparation_grant(items: usize, bytes: usize) -> store::RetainedCloneGrant {
+    store::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 64 }
 }
 
 /// 🎟️ One item with no byte axis funded: every positive demand must yield.
@@ -52,7 +56,7 @@ fn child_emission_owned_preview_preserves_exact_wire_prefix() {
     let mut emit=Emit::<TestMutation>::default();
     emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot,_>("fixture","child",operations));
     let mut ready=false;
-    for _ in 0..1000{if matches!(emit.prepare_child_preview_one(1,4096).unwrap(),ChildEmitPreparationStep::Ready(_)){ready=true;break;}}
+    for _ in 0..1000{if matches!(emit.prepare_child_preview_one(preparation_grant(1, 4096)).unwrap(),ChildEmitPreparationStep::Ready(_)){ready=true;break;}}
     assert!(ready&&emit.owned_child_emits.is_empty());
     assert_eq!(emit.child_emits.len(),1);
     assert_eq!(emit.child_emits[0].ops,expected);
@@ -113,10 +117,10 @@ fn child_emission_owned_ready_transfers_original_typed_vector_without_wire_decod
     let pointer = operations.as_ptr();
     let mut preparation = ChildEmitPreparation::of_owned::<TestSnapshot, _>("fixture", "child", operations);
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
-    assert!(matches!(preparation.step(0, 4096).unwrap(), ChildEmitPreparationStep::Pending(_)));
+    assert!(matches!(preparation.step(preparation_grant(0, 4096)).unwrap(), ChildEmitPreparationStep::Pending(_)));
     let mut ready = false;
     for _ in 0..100 {
-        if matches!(preparation.step(1, 4096).unwrap(), ChildEmitPreparationStep::Ready(_)) { ready = true; break; }
+        if matches!(preparation.step(preparation_grant(1, 4096)).unwrap(), ChildEmitPreparationStep::Ready(_)) { ready = true; break; }
     }
     assert!(ready);
     assert_eq!(preparation.retained_operation_count(), 3);
@@ -139,10 +143,10 @@ fn child_emission_owned_ready_transfers_original_typed_vector_without_wire_decod
     }
     assert!(batch.terminal_is_empty());
     for _ in 0..1000 {
-        let bytes = wire.next_close_byte_demand();
-        if matches!(wire.close_one(child_release_grant(bytes)), store::RetainedCloneStep::Complete(_)) { break; }
+        let bytes = wire.retirement_demands().unwrap().release_bytes;
+        if matches!(wire.close_one(child_release_grant(bytes)).unwrap(), store::RetainedCloneStep::Complete(_)) { break; }
     }
-    assert_eq!(wire.next_close_byte_demand(), 0);
+    assert_eq!(wire.retirement_demands().unwrap().release_bytes, 0);
     println!("[DEBUG] Child emission Ready retained original typed vector, exact order and separate funded batch owner; operations=3");
 }
 
@@ -156,7 +160,7 @@ fn child_emission_preview_retains_exact_encoded_operations_and_semantic_labels()
     let mut preparation = ChildEmitPreparation::of::<TestSnapshot, _>("fixture", "child", operations);
     let mut ready = false;
     for _ in 0..1000 {
-        if matches!(preparation.step(1, 4096).unwrap(), ChildEmitPreparationStep::Ready(_)) { ready = true; break; }
+        if matches!(preparation.step(preparation_grant(1, 4096)).unwrap(), ChildEmitPreparationStep::Ready(_)) { ready = true; break; }
     }
     assert!(ready);
     let mut wire = preparation.take_ready().unwrap();
@@ -165,10 +169,10 @@ fn child_emission_preview_retains_exact_encoded_operations_and_semantic_labels()
     assert_eq!(Value::from(semio_framework_value::ToValue::to_value(&wire)), serde_json::to_value(&wire).unwrap());
     assert!(preparation.terminal_is_empty());
     for _ in 0..1000 {
-        let demand = wire.next_close_byte_demand();
-        if matches!(wire.close_one(child_release_grant(demand)), store::RetainedCloneStep::Complete(_)) { break; }
+        let demand = wire.retirement_demands().unwrap().release_bytes;
+        if matches!(wire.close_one(child_release_grant(demand)).unwrap(), store::RetainedCloneStep::Complete(_)) { break; }
     }
-    assert_eq!(wire.next_close_byte_demand(), 0);
+    assert_eq!(wire.retirement_demands().unwrap().release_bytes, 0);
     println!("[DEBUG] preview wire preserves all3 exact encoded operations and semantic labels with independent serde projection and terminal close");
 }
 
@@ -188,7 +192,7 @@ fn child_emission_owned_apply_admits_typed_source_without_requesting_wire_codec(
     let mut preparation = ChildEmitPreparation::of_owned::<TestSnapshot, _>("fixture", "child", operations);
     let mut ready = false;
     for _ in 0..100 {
-        match preparation.step(1, 4096).unwrap() {
+        match preparation.step(preparation_grant(1, 4096)).unwrap() {
             ChildEmitPreparationStep::Ready(_) => { ready = true; break; },
             ChildEmitPreparationStep::Pending(_) => {},
             ChildEmitPreparationStep::Refused(fault,_) => panic!("applying typed admission must never request unused wire codec: {}", fault.message),
@@ -210,10 +214,10 @@ fn child_emission_owned_apply_admits_typed_source_without_requesting_wire_codec(
     }
     assert!(batch.terminal_is_empty() && preparation.terminal_is_empty());
     for _ in 0..1000 {
-        let demand = metadata.next_close_byte_demand();
-        if matches!(metadata.close_one(child_release_grant(demand)), store::RetainedCloneStep::Complete(_)) { break; }
+        let demand = metadata.retirement_demands().unwrap().release_bytes;
+        if matches!(metadata.close_one(child_release_grant(demand)).unwrap(), store::RetainedCloneStep::Complete(_)) { break; }
     }
-    assert_eq!(metadata.next_close_byte_demand(), 0);
+    assert_eq!(metadata.retirement_demands().unwrap().release_bytes, 0);
     println!("[DEBUG] owned apply source retains all3 ordered typed operations without calling a refusing wire codec; separate metadata/typed owners close exactly");
 }
 
@@ -346,13 +350,13 @@ fn child_emission_owned_refusal_keeps_prefix_rejected_and_remaining_until_actual
     let count=operations.len();
     let factory:std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation>>=std::sync::Arc::new(TrackedChildRetirementFactory);
     let mut preparation=ChildEmitPreparation::with_factory::<TestSnapshot,_>(fixture["slot"].as_str().unwrap().to_owned(),fixture["childId"].as_str().unwrap().to_owned(),operations,std::sync::Arc::clone(&factory));
-    assert!(matches!(preparation.step(1,0).expect("zero-byte retained step"),ChildEmitPreparationStep::Pending(_)));
+    assert!(matches!(preparation.step(preparation_grant(1, 0)).expect("zero-byte retained step"),ChildEmitPreparationStep::Pending(_)));
     assert_eq!(preparation.retained_operation_count(),count);
     assert_eq!(returned.load(std::sync::atomic::Ordering::SeqCst),0);
     let maximum=demand["maximumAllocationGrant"].as_u64().unwrap() as usize;
     let mut refused=false;
     for _ in 0..demand["maximumPumpSteps"].as_u64().unwrap(){
-        match preparation.step(1,maximum).expect("actual owned producer"){
+        match preparation.step(preparation_grant(1, maximum)).expect("actual owned producer"){
             ChildEmitPreparationStep::Pending(_)=>{},
             ChildEmitPreparationStep::Refused(fault,_)=>{assert_eq!(fault.code.0,"module.protocol");refused=true;break;},
             ChildEmitPreparationStep::Ready(_)=>panic!("closed second encoder refusal cannot issue a complete group"),
@@ -408,7 +412,7 @@ fn child_emission_accepted_owner_retirement_refusal_retains_exact_prefix_and_pro
     let maximum=demand["maximumAllocationGrant"].as_u64().unwrap() as usize;
     let mut refused=false;
     for _ in 0..demand["maximumPumpSteps"].as_u64().unwrap(){
-        match preparation.step(1,maximum){Ok(ChildEmitPreparationStep::Pending(_))=>{},Err(fault)=>{assert_eq!(fault.code.0,"interactive-job.child-emission-retirement-refused");refused=true;break},_=>panic!("accepted owner retirement refusal cannot produce a complete group")}
+        match preparation.step(preparation_grant(1, maximum)){Ok(ChildEmitPreparationStep::Pending(_))=>{},Err(fault)=>{assert_eq!(fault.code.0,"interactive-job.child-emission-retirement-refused");refused=true;break},_=>panic!("accepted owner retirement refusal cannot produce a complete group")}
     }
     assert!(refused);
     let error=preparation.retirement_refusal().expect("original typed retirement error");
@@ -463,7 +467,7 @@ fn child_emit_original_full_grant_preserves_denied_pointers_and_system_release_r
     let policy=&fixture["closeGrant"];let axis=|name:&str|policy[name].as_u64().unwrap() as usize;
     let grant=RetainedCloneGrant{maximum_items:axis("maximumItems"),maximum_copy_bytes:axis("maximumCopyBytes"),maximum_capacity_bytes:axis("maximumCapacityBytes"),maximum_release_bytes:axis("maximumReleaseBytes"),maximum_depth:axis("maximumDepth")};
     for row in fixture["children"].as_array().unwrap(){
-        let(mut child,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::app::ChildEmit{genesis:None,owner:row["id"].as_str().unwrap().into(),slot:row["slot"].as_str().unwrap().into(),child_id:row["childId"].as_str().unwrap().into(),ops:vec![row["value"].as_str().unwrap().as_bytes().to_vec()],op_schema:semio_framework::kernel::SchemaId("child.current".into()),labels:vec![crate::LocalizedLabel::data(row["value"].as_str().unwrap().to_owned())]});
+        let(mut child,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::app::ChildEmit{genesis:None,owner:row["id"].as_str().unwrap().into(),slot:row["slot"].as_str().unwrap().into(),child_id:row["childId"].as_str().unwrap().into(),ops:vec![row["value"].as_str().unwrap().as_bytes().to_vec()],op_schema:semio_framework::kernel::SchemaId("child.current".into()),labels:vec![semio_framework_ui_locale::LocalizedLabel::data(row["value"].as_str().unwrap().to_owned())]});
         let owner=child.owner.as_ptr();let operations=child.ops.as_ptr();let first=child.ops[0].as_ptr();
         let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||child.close_one(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());
         assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!((child.owner.as_ptr(),child.ops.as_ptr(),child.ops[0].as_ptr()),(owner,operations,first));

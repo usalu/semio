@@ -176,6 +176,10 @@ pub(crate) mod test_serial;
 #[path = "🧪️tests/🔬️store-fixture/🦀️.rs"]
 pub(crate) mod store_fixture;
 
+#[cfg(test)]
+#[path = "🧪️tests/🔬️retirement-driver/🦀️.rs"]
+pub(crate) mod retirement_driver;
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️publication-authority/🦀️.rs"]

@@ -52,7 +52,7 @@ pub(crate) const PARENT_PREVIEW_TIME_INTERVAL_MS: u64 = 16;
 
 /// 🏁️ One solved cell. Masked cells never appear, so the row count IS the number of cells the grid
 /// had to fill.
-#[derive(Clone, Debug, Default, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dAssignment {
     pub x: u32,
@@ -66,7 +66,7 @@ pub struct Grid3dAssignment {
 /// an inference failure: the engine publishes `wfc-unsatisfiable` as a job FAULT
 /// (`⚙️engine/💼️job/🦀️.rs`, `PublicationKind::Fault`), and this job intercepts exactly that detail and
 /// turns it back into a verdict.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dInferenceCommit {
     pub satisfiable: bool,
@@ -102,16 +102,6 @@ pub(crate) fn boundary(periodic: bool) -> engine::grid2d::Boundary {
     }
 }
 
-/// 🚪️ Runs one owned job through the engine's close ladder and drops it. A `WfcJob` (or a
-/// `WfcRestore`) holds retained payload pages, and an ordinary `Drop` on one of those ABORTS the
-/// process ("RetainedJobPayload requires one-page close to terminal-empty") — so no child of this
-/// parent is ever released any other way.
-pub(crate) fn retire(payload: &mut semio_framework_job::RetainedJobPayload) {
-    while !payload.terminal_is_empty() {
-        payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
-}
-
 /// 🧾️ One retained payload's bytes, concatenated across its pages.
 pub(crate) fn payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
     (0..payload.page_count()).flat_map(|index| payload.page(index).map(<[u8]>::to_vec).unwrap_or_default()).collect()
@@ -142,7 +132,7 @@ pub(crate) fn payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -
 //#region 🔖️Solve
 /// 🏁️ The solved assignment, or `Unsolved` for every non-solved outcome (contradiction, budget,
 /// cancellation) — see `Grid3dContradiction` for the dedicated satisfiability verdict.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum Grid3dSolveResult {
     #[default]

@@ -8,7 +8,8 @@ use crate::standards::v_commonmark::subsets::any::io::export::serializers::rende
 //#region 🔖️Payload
 /// ✂️ One range of the edited source: `delete` Unicode scalars at `offset` of the document's CommonMark source (its blocks rendered,
 /// blank-line separated) are replaced by `insert`.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SourceSplice {
     pub offset: u32,
@@ -17,7 +18,8 @@ pub struct SourceSplice {
 }
 
 /// ✂️ The ranges of one edit, ascending and disjoint, in the coordinates of the source they were taken from.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SpliceSource {
     pub(crate) splices: Vec<SourceSplice>,
@@ -148,7 +150,7 @@ impl SpliceSource {
 }
 
 impl protocol::MutationKind<MdSnapshot, MdMutation> for SpliceSource {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "splice", entity: "source", kind: "splice-source", record: "SpliceSource" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "source", kind: "splice-source", record: "SpliceSource" };
 
     fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
         match self.plan(base) {

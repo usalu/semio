@@ -16,7 +16,8 @@ pub const STDIO_SEMIOVALUE_DOCUMENT_SCHEMA: &str = "stdio.semio.value";
 /// (f6-final-summary.md §4.3, las/jpg-confirmed gap), and every other id-shaped type this program
 /// introduces (`SemioQuaternion` in the shared `🧮️geometry` engine) follows the same named-field
 /// convention rather than risk the same class of bug.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct ValueId {
     pub value: String,
@@ -36,7 +37,8 @@ impl ValueId {
 /// `Default` (never constructed as a "real" empty entry — required by the shared
 /// `engine::triples::NamedTripleDiff<K,D,T>`'s `Deserialize` derive, which needs `T: Default` due
 /// to a `#[value(default)]`-triggered bound-inference quirk on ITS generic fields).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioValueEntry {
     pub key: String,
@@ -58,7 +60,8 @@ pub struct SemioValueEntry {
 /// (identical citation in `json`'s own `JsonValue` doc comment).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
-#[derive(Default)]
+#[derive(Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SemioValue {
     #[default]
     Null,
@@ -114,7 +117,8 @@ pub fn semio_value_scalar_label(value: &SemioValue) -> Option<(String, String)> 
 /// values resolve against. Real per-node diffability (see `🔺️diff`) makes this the format's
 /// "keyed repeating structure" per the recipe, not just a scalar container. Derives `Default` for
 /// the same `NamedTripleDiff<K,D,T>: Deserialize` bound-inference reason as `SemioValueEntry`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioValueNode {
     pub id: ValueId,
@@ -123,7 +127,8 @@ pub struct SemioValueNode {
 //#endregion 🔖️ValueGraph
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.value")]
 pub struct SemioValueSnapshot {

@@ -16,6 +16,9 @@ extern crate semio_framework_value_derive as value_derive;
 #[path = "♻️retirement/🦀️.rs"]
 mod retirement;
 
+#[path = "🌲️canonical/🦀️.rs"]
+mod canonical;
+
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -23,7 +26,8 @@ use std::collections::{HashMap, HashSet};
 pub const S_COLLECTION_SCHEMA: &str = "os.collection";
 
 /// 📁️ One parent-linked folder in a collection's flat tree. `parent_id: None` means root.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct CollectionFolder {
     pub id: String,
     pub parent_id: Option<String>,
@@ -40,7 +44,8 @@ pub struct CollectionFolder {
 /// `workflow::MediaContract`'s hand-crafted `dsl::DslField` impl for its own foreign sub-values. Since
 /// `ArtifactBody` itself IS local, hand-writing `DslVariants` bridges `BlobRef`'s three fields
 /// (`hash`/`size`/`media_type`) directly to scalar `dsl::FieldValue`s right here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum ArtifactBody {
@@ -61,6 +66,8 @@ fn artifact_body_blob_borrowed()->semio_framework_dsl_record::BorrowedRecordSpec
 impl semio_framework_dsl_record::BorrowedDslVariants for ArtifactBody{
  const VARIANTS:&'static[(&'static str,fn()->semio_framework_dsl_record::BorrowedRecordSpec)]=&[("document",artifact_body_document_borrowed),("blob",artifact_body_blob_borrowed)];
  fn projected_borrowed_variant_identity(&self)->(&'static str,usize,semio_framework_dsl_record::BorrowedRecordSpec){match self{Self::Document{..}=>("document",0,artifact_body_document_borrowed()),Self::Blob{..}=>("blob",1,artifact_body_blob_borrowed())}}
+
+ fn projected_borrowed_variant_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,semio_framework_value::ValueError>{<Self as semio_framework_dsl_record::DslVariants>::projected_variant_view(self,path)}
 }
 
 fn artifact_body_document_spec() -> semio_framework_dsl_record::RecordSpec {
@@ -224,7 +231,8 @@ impl semio_framework_dsl_record::DslVariants for ArtifactBody {
 
 /// 🧾️ One addressable artifact placed in a collection folder tree. `id == artifact id ==
 /// ArtifactEnvelope.id` for document bodies (see `🔖️Addressing`). `folder_id: None` means root-level.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct CollectionEntry {
     pub id: String,
     pub folder_id: Option<String>,
@@ -235,7 +243,8 @@ pub struct CollectionEntry {
 }
 
 /// 🗂️ A collection's flat parent-linked folder tree plus its artifact entries.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[artifact(id = "os.collection")]
 pub struct CollectionSnapshot {
     pub schema: String,
@@ -343,14 +352,14 @@ pub struct CollectionDiff {
 }
 
 /// 🧱️ Carries an optional container link (`parent_id`/`folder_id`) as a present slot, so moving to root stays distinct from leaving the link untouched on every wire.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct CollectionOptionalLink {
     pub value: Option<String>,
 }
 
 /// 🩹 Field patch of one folder; every present slot is the new value of exactly that field.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct CollectionFolderPatch {
     pub parent_id: Option<CollectionOptionalLink>,
@@ -358,7 +367,7 @@ pub struct CollectionFolderPatch {
 }
 
 /// 🩹 Field patch of one entry; every present slot is the new value of exactly that field.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct CollectionEntryPatch {
     pub folder_id: Option<CollectionOptionalLink>,

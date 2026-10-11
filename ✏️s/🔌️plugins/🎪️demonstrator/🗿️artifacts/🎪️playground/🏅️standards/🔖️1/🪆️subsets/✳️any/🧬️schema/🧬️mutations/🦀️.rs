@@ -7,7 +7,8 @@ pub use super::change_schema::{ChangeSchema, KINDS};
 
 //#region 🔖️Aggregate
 /// 🧬️ Closed semantic mutation vocabulary for a playground document.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = PlaygroundSnapshot, diff = PlaygroundDiff, schema = "s.demonstrator.playground")]
 pub enum PlaygroundMutation {
     ChangeSchema(ChangeSchema),

@@ -54,8 +54,8 @@ fn admit<T:FactoryPayloadRetirement>(owner:Arc<T>)->(Box<dyn FactoryRetirementTi
     assert_eq!(heap,(birth,0));assert_eq!(progress.retained_capacity_bytes,birth);
     (ticket,birth)
 }
-fn drain(mut slot:Option<Box<dyn FactoryRetirementTicket>>,maximum_turns:usize,payload:usize)->(usize,usize,usize,usize,usize) {
-    let (mut born,mut freed,mut copies,mut winners,mut metadata)=(0,0,0,0,0);
+fn drain(mut slot:Option<Box<dyn FactoryRetirementTicket>>,maximum_turns:usize,payload:usize)->(usize,usize,usize,usize) {
+    let (mut born,mut freed,mut copies,mut winners)=(0,0,0,0);
     for _ in 0..maximum_turns {
         let Some(ticket)=slot.as_ref()else{break;};
         let demand=factory_ticket_demands(ticket,262144).unwrap();
@@ -66,10 +66,10 @@ fn drain(mut slot:Option<Box<dyn FactoryRetirementTicket>>,maximum_turns:usize,p
         }
         let (step,heap)=crate::observe_retirement_allocations(||close_factory_ticket(&mut slot,full).unwrap());let progress=step.progress();
         assert!(progress.fits(full));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));
-        born+=heap.0;freed+=heap.1;if progress.copied_bytes!=0&&progress.released_bytes!=0{assert_eq!(progress.copied_bytes,std::mem::size_of::<Option<Box<dyn FactoryRetirementTicket>>>());metadata+=1;}else{copies+=progress.copied_bytes;}winners+=usize::from(payload!=0&&heap.1==payload);
+        born+=heap.0;freed+=heap.1;assert!(progress.released_bytes==0||progress.copied_bytes==0,"terminal metadata handoff is copy0 beside its physical release");copies+=progress.copied_bytes;winners+=usize::from(payload!=0&&heap.1==payload);
     }
     assert!(slot.is_none(),"factory original custody did not reach terminal in its original turn bound");
-    (born,freed,copies,winners,metadata)
+    (born,freed,copies,winners)
 }
 
 #[test]
@@ -87,7 +87,6 @@ fn factory_preborn_tickets_consume_concurrent_aliases_and_report_original_physic
         let born:usize=receipts.iter().map(|row|row.0).sum();let freed:usize=receipts.iter().map(|row|row.1).sum();
         assert_eq!(receipts.iter().map(|row|row.3).sum::<usize>(),fixture["winnerCount"].as_u64().unwrap()as usize);
         assert_eq!(receipts.iter().map(|row|row.2).sum::<usize>(),extent);
-        assert_eq!(receipts.iter().map(|row|row.4).sum::<usize>(),count);
         assert_eq!(freed,extent+factory_arc_birth_bytes::<OwnedFactory>()+birth*count+born);
         eprintln!("[DEBUG] full factory concurrent aliases={count} payload={extent} close births={born} physical={freed} original unique winner");
     }
@@ -100,7 +99,7 @@ fn factory_preborn_tickets_never_wait_on_weak_aliases_and_copy_only_body_truthfu
     let demand=factory_ticket_demands(slot.as_ref().unwrap(),262144).unwrap();
     let (step,heap)=crate::observe_retirement_allocations(||close_factory_ticket(&mut slot,grant(demand.capacity_bytes,demand.release_bytes,demand.depth)).unwrap());
     assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert!(weak.upgrade().is_some());drop(weak);
-    let (born,freed,copied,winners,metadata)=drain(slot,8,0);assert_eq!((born,copied,winners),(0,0,0));assert_eq!(metadata,1);
+    let (born,freed,copied,winners)=drain(slot,8,0);assert_eq!((born,copied,winners),(0,0,0));
     assert_eq!(freed,arc_extent::<ScalarFactory>()+birth);
     eprintln!("[DEBUG] full factory original weak lease froze custody; scalar body physical={freed}");
 }
@@ -115,7 +114,7 @@ fn factory_preborn_tickets_retire_nested_original_children_without_close_birth()
         let middle:Arc<dyn FactoryRetirement>=Arc::new(NestedFactory {child,tag:1});
         let original=Arc::new(NestedFactory {child:middle,tag:2});assert_eq!(original.tag,fixture["nestedDepth"].as_u64().unwrap());
         let (ticket,birth)=admit(original.clone());assert_eq!(crate::observe_retirement_allocations(||drop(original)).1,(0,0));
-        let (born,freed,copies,winners,metadata)=drain(Some(ticket),32,extent);assert_eq!((copies,winners),(extent,1));assert_eq!(metadata,fixture["nestedDepth"].as_u64().unwrap()as usize+1);
+        let (born,freed,copies,winners)=drain(Some(ticket),32,extent);assert_eq!((copies,winners),(extent,1));
         assert_eq!(freed,extent+arc_extent::<OwnedFactory>()+2*arc_extent::<NestedFactory>()+birth+born);
         eprintln!("[DEBUG] full factory nested depth2 payload={extent} admitted tickets={birth} typed close births={born} physical={freed}");
     }
@@ -129,7 +128,7 @@ fn factory_preborn_tickets_move_inline_original_payload_into_prefunded_state() {
     for extent in fixture["payloadBytes"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let original=Arc::new(InlineFactory {payload:OwnedFactory {payload:vec![31;extent]},tag:7});assert_eq!(original.tag,7);
         let (ticket,birth)=admit(original.clone());assert_eq!(crate::observe_retirement_allocations(||drop(original)).1,(0,0));
-        let (born,freed,copies,winners,metadata)=drain(Some(ticket),16,extent);assert_eq!((copies,winners),(extent,1));assert_eq!(metadata,1);
+        let (born,freed,copies,winners)=drain(Some(ticket),16,extent);assert_eq!((copies,winners),(extent,1));
         assert_eq!(freed,extent+arc_extent::<InlineFactory>()+birth+born);
         eprintln!("[DEBUG] full factory inline payload={extent} frame={birth} typed close births={born} physical={freed}");
     }

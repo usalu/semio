@@ -7,7 +7,8 @@ use crate::{FromValue, ToValue};
 /// (e.g. an `ArtifactKind::ContentAddressedBlob` field) to reference it durably.
 /// 🌱️ serde is carried UNCONDITIONALLY here, not `#[cfg_attr(test, …)]`: `🪐️space/🦀️.rs` serializes a
 /// `BlobRef` through `workflow_kernel` at runtime, so gating it breaks the `s` plugin's wasip2 build.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, serde::Serialize, serde::Deserialize)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct BlobRef {

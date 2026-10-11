@@ -73,7 +73,8 @@ pub mod set_worksheet_content_type;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = XlsxSnapshot, diff = XlsxDiff, schema = "XlsxStrictMutation")]
 pub enum XlsxStrictMutation {
     SetMainNamespace(set_main_namespace::SetMainNamespace),

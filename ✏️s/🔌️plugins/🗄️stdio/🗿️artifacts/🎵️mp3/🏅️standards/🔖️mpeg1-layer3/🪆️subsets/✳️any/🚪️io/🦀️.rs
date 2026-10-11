@@ -401,9 +401,10 @@ impl Mp3EncodeCursor {
 pub mod playback {
     use super::{Mp3EncodeAdvance, Mp3EncodeCursor, Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
     use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-    use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
-    use semio_framework_plugin::app::{ArtifactMediaExportResult, ArtifactOutputChunks};
-    use semio_framework_plugin::{ArtifactApp, ArtifactMediaExportJobRequest, ArtifactOwnedToolJobFactory, ArtifactReservedJob, ArtifactReservedToolJob, ArtifactSnapshotDisposer, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity};
+    use semio_framework_job::Operation;
+    use semio_framework_plugin::app::ArtifactOutputChunks;
+    use semio_framework_plugin::{ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactReservedToolJob, ArtifactSnapshotDisposer, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity};
+    use semio_s_artifact_stdio_contract::media_export::{IncrementalMediaAdvance, IncrementalMediaExportJob, IncrementalMediaExportSpec};
     use std::marker::PhantomData;
     use std::sync::Arc;
 
@@ -434,118 +435,30 @@ pub mod playback {
         }
     }
 
-    pub struct Mp3PlaybackExportJob<A: ArtifactApp<Snapshot = Mp3Snapshot>> {
-        operation: Operation,
-        request: std::mem::ManuallyDrop<Option<ArtifactMediaExportJobRequest<A>>>,
-
-        cursor: std::mem::ManuallyDrop<Option<Mp3EncodeCursor>>,
-        page: std::mem::ManuallyDrop<Vec<u8>>,
-
-
-
-        progress: u64,
-        completed: bool,
-        closing: bool,
-    }
-
-    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> Mp3PlaybackExportJob<A> {
-        pub fn new(request: ArtifactMediaExportJobRequest<A>) -> Self {
-            let cursor = Mp3EncodeCursor::new(&request.snapshot);
-            Self { operation: request.operation, request: std::mem::ManuallyDrop::new(Some(request)), cursor: std::mem::ManuallyDrop::new(Some(cursor)), page: std::mem::ManuallyDrop::new(Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES)), progress: 0, completed: false, closing: false }
-        }
-        fn fault(context: &mut StepContext<'_>, message: &str) -> StepOutcome {
-            let bytes = message.as_bytes();
-            let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
-            let detail = context.payload_from_bytes(JobPayloadStream::Fault, bounded).unwrap_or_else(|rejected| {
-                drop(rejected.into_source());
-                RetainedJobPayload::empty(JobPayloadStream::Fault)
-            });
-            StepOutcome::Fault(JobFault { detail })
-        }
-
-        fn advance(&mut self) -> Result<bool, Fault> {
-            let request = self.request.as_ref().ok_or_else(|| Fault::from("mp3.export.request-missing"))?;
-            let snapshot = request.snapshot.as_ref();
-            if self.page.len() == ArtifactOutputChunks::CHUNK_BYTES {
-                let page = std::mem::replace(&mut *self.page, Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES));
-                request.output_credit.credit(page.len())?;
-                request.output_chunks.push(page)?;
-                self.progress = self.progress.checked_add(1).ok_or_else(|| Fault::from("mp3.export.progress-overflow"))?;
-                return Ok(false);
-            }
-            let maximum_bytes = ArtifactOutputChunks::CHUNK_BYTES - self.page.len();
-            let advance = self.cursor.as_mut().ok_or_else(|| Fault::from("mp3.export.cursor-missing"))?.advance(snapshot, maximum_bytes).map_err(Fault::from)?;
-            self.progress = self.progress.checked_add(1).ok_or_else(|| Fault::from("mp3.export.progress-overflow"))?;
-            match advance {
-                Mp3EncodeAdvance::Progress => Ok(false),
-                Mp3EncodeAdvance::Chunk(chunk) => {
-                    self.page.extend_from_slice(&chunk);
-                    Ok(false)
-                }
-                Mp3EncodeAdvance::Complete => {
-                    if !self.page.is_empty() {
-                        let page = std::mem::replace(&mut *self.page, Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES));
-                        request.output_credit.credit(page.len())?;
-                        request.output_chunks.push(page)?;
-                        return Ok(false);
-                    }
-                    let chunks = request.output_chunks.clone();
-                    chunks.seal()?;
-                    request.output_credit.credit(MEDIA_SCHEMA.len())?;
-                    let result = ArtifactMediaExportResult::structured(MEDIA_TYPE, MEDIA_SCHEMA, MIME_TYPE, chunks)?;
-                    request.completion.complete(Ok(result))?;
-                    self.completed = true;
-                    Ok(true)
-                }
-            }
+    pub struct Mp3PlaybackExport;
+    impl IncrementalMediaExportSpec for Mp3PlaybackExport {
+        type Snapshot = Mp3Snapshot;
+        type Cursor = Mp3EncodeCursor;
+        const DOCUMENT_SCHEMA: &'static str = STDIO_MP3_DOCUMENT_SCHEMA;
+        const MEDIA_SCHEMA: &'static str = MEDIA_SCHEMA;
+        const MIME_TYPE: &'static str = MIME_TYPE;
+        const PAYLOAD_SCHEMA: &'static str = PAYLOAD_SCHEMA;
+        const STAGE: &'static str = "encode-mp3";
+        const KIND_ID: &'static str = "s.stdio.mp3";
+        const ARTIFACT_ID: &'static str = "stdio.mp3";
+        const ARTIFACT_NAME: &'static str = "MP3 Audio";
+        const COMPONENT_KIND: &'static str = "audio";
+        fn cursor(snapshot: &Mp3Snapshot) -> Result<Mp3EncodeCursor, Fault> { Ok(Mp3EncodeCursor::new(snapshot)) }
+        fn advance(cursor: &mut Mp3EncodeCursor, snapshot: &Mp3Snapshot, maximum_bytes: usize) -> Result<IncrementalMediaAdvance, Fault> {
+            cursor.advance(snapshot, maximum_bytes).map(|advance| match advance {
+                Mp3EncodeAdvance::Progress => IncrementalMediaAdvance::Progress,
+                Mp3EncodeAdvance::Chunk(bytes) => IncrementalMediaAdvance::Chunk(bytes),
+                Mp3EncodeAdvance::Complete => IncrementalMediaAdvance::Complete,
+            }).map_err(Fault::from)
         }
     }
+    pub type Mp3PlaybackExportJob = IncrementalMediaExportJob<Mp3PlaybackExport>;
 
-    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> InteractiveJob for Mp3PlaybackExportJob<A> {
-        fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-            if self.closing || context.is_cancelled() {
-                return StepOutcome::Cancelled;
-            }
-            if context.should_yield() {
-                return StepOutcome::Yield;
-            }
-            if context.operation() != self.operation.operation || context.generation() != self.operation.generation || self.completed {
-                return Self::fault(context, "mp3.export.operation-authority-invalid");
-            }
-            context.set_stage("encode-mp3");
-            context.consume_fuel(1);
-            match self.advance() {
-                Err(error) => Self::fault(context, &format!("{}: {}", error.code.0, error.message)),
-                Ok(true) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) }),
-                Ok(false) => StepOutcome::CheckpointReady(Checkpoint { state: RetainedJobPayload::empty(JobPayloadStream::CheckpointState), applied_progress: self.progress }),
-            }
-        }
-
-        fn begin_close(&mut self) {
-            self.closing = true;
-        }
-
-        fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep { self.begin_close(); InteractiveJobCloseStep::Blocked }
-        fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.original_request_retirement_demand() }
-        fn next_close_capacity_byte_demand(&self, _body: usize) -> Result<usize, semio_framework_value::ValueError> { self.original_request_retirement_demand() }
-        fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.original_request_retirement_demand() }
-        fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.original_request_retirement_demand() }
-        fn terminal_is_empty(&self) -> bool { self.request.is_none() && self.cursor.is_none() && self.page.capacity() == 0 }
-    }
-
-    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> Mp3PlaybackExportJob<A> {
-        fn original_request_retirement_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-            Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "MP3 original media request completion, credit and snapshot lease require issuer retirement authority"))
-        }
-    }
-    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> ArtifactReservedJob for Mp3PlaybackExportJob<A> {}
-    impl<A: ArtifactApp<Snapshot = Mp3Snapshot>> Drop for Mp3PlaybackExportJob<A> {
-        fn drop(&mut self) {
-            let empty = InteractiveJob::terminal_is_empty(self);
-            assert!(std::thread::panicking() || empty, "MP3 media producer abandoned original request ownership");
-            if empty { unsafe { std::mem::ManuallyDrop::drop(&mut self.request); std::mem::ManuallyDrop::drop(&mut self.cursor); std::mem::ManuallyDrop::drop(&mut self.page); } }
-        }
-    }
     pub struct Mp3MediaExportJobFactory<A: ArtifactApp<Snapshot = Mp3Snapshot>> {
         keys: [ToolFactoryKey; 1],
         owner: PhantomData<fn() -> A>,
@@ -702,7 +615,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<Mp3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_mutation(&mut self.snapshot, &mutation);
+            let diff = crate::apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

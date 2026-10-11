@@ -10,7 +10,7 @@ use std::f64::consts::FRAC_PI_4;
 use value_derive::{FromValue, ToValue};
 
 /// 🧲️ What a snapped point sits on, ranked from the strongest to the weakest.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, semio_framework_value::RetainedClone)]
 pub enum SnapKind {
     Endpoint,
     Intersection,

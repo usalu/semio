@@ -8,7 +8,8 @@ pub use set_camera::SetCamera;
 mod set_lod_mode;
 pub use set_lod_mode::SetLodMode;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 #[mutations(snapshot = JackGraphWindowConfig, diff = JackGraphWindowConfigDiff, schema = "trinity.jackgraphwindowcfg")]
 pub enum JackGraphWindowConfigMutation {

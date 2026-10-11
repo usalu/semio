@@ -18,7 +18,8 @@ pub mod set_archive_comment;
 pub mod set_entry_data;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, semio_framework_value::RetireOwned, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = ZipSnapshot, diff = ZipDiff, schema = "ZipMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum ZipMutation {

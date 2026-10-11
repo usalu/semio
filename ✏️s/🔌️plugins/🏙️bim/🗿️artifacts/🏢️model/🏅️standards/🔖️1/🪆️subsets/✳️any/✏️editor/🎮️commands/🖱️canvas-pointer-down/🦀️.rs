@@ -38,7 +38,7 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, ModelSnapshot>
     let at = plan::pixel_to_model(&ctx.plan.viewport, payload.x, payload.y, payload.width, payload.height);
     let tolerance = PICK_TOLERANCE_PIXELS / ctx.plan.viewport.zoom.max(0.01);
     let instance = ctx.gestures.as_ref();
-    let hit = storey.and_then(|storey| crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(instance, snapshot, |inference| inference.plan_linework.get(&storey).and_then(|linework| plan::pick(linework, at, tolerance))));
+    let hit = storey.and_then(|storey| crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, snapshot, |inference| inference.plan_linework.get(&storey).and_then(|linework| plan::pick(linework, at, tolerance))));
     let merge = merge_mode(payload.shift, payload.ctrl, payload.meta);
     let mut emit = Emit::default();
     match hit.and_then(|id| kind_holding(snapshot, &id).map(|row| (row.kind.to_string(), id))) {

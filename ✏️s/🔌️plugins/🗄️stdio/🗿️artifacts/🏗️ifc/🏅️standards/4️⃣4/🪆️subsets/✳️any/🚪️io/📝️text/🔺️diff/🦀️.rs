@@ -15,7 +15,7 @@ use super::*;
 use crate::standards::v4::subsets::any::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
+use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcTypedValue, IfcValue};
 use crate::IfcSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -117,7 +117,7 @@ pub(crate) fn enc_ifc_value(v: &IfcValue) -> String {
         IfcValue::Enum(s) => format!("E[{}]", enc_str(s)),
         IfcValue::Reference(id) => format!("F[{id}]"),
         IfcValue::Aggregate(items) => format!("A[{}]", items.iter().map(enc_ifc_value).collect::<Vec<_>>().join(",")),
-        IfcValue::TypedValue { name, items } => {
+        IfcValue::TypedValue(IfcTypedValue { name, items }) => {
             format!("T[{},[{}]]", enc_str(name), items.iter().map(enc_ifc_value).collect::<Vec<_>>().join(","))
         }
     }
@@ -150,7 +150,7 @@ pub(crate) fn dec_ifc_value(s: &str) -> Result<IfcValue, String> {
             let parts = split_top_level(inner, ',');
             let [name, items_s] = parts.as_slice() else { return Err(format!("typed value: expected 2 fields, got {}", parts.len())) };
             let items = split_top_level(strip_brackets(items_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ifc_value).collect::<Result<Vec<_>, String>>()?;
-            Ok(IfcValue::TypedValue { name: dec_str(name)?, items })
+            Ok(IfcValue::TypedValue(IfcTypedValue { name: dec_str(name)?, items }))
         }
         other => Err(format!("ifc value: unknown tag {other:?}")),
     }

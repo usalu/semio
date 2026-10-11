@@ -1,0 +1,14 @@
+{
+  "schema": "framework.value.retained-clone.std-collections.v1",
+  "cases": [
+    { "name": "empty-hash-map", "kind": "hash-map", "value": {} },
+    { "name": "single-hash-map", "kind": "hash-map", "value": { "a": "alpha" } },
+    { "name": "many-hash-map", "kind": "hash-map", "value": { "a": "alpha", "b": "", "c": "γ中🐚", "d": "delta", "e": "epsilon", "f": "zeta", "g": "eta", "h": "theta", "i": "iota" } },
+    { "name": "empty-btree-map", "kind": "btree-map", "value": {} },
+    { "name": "nested-btree-map", "kind": "btree-map", "value": { "x": [], "y": ["one"], "z": ["one", "two", "three"] } },
+    { "name": "empty-hash-set", "kind": "hash-set", "value": [] },
+    { "name": "many-hash-set", "kind": "hash-set", "value": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] },
+    { "name": "empty-btree-set", "kind": "btree-set", "value": [] },
+    { "name": "many-btree-set", "kind": "btree-set", "value": [1, 2, 3, 5, 8, 13, 21, 34] }
+  ]
+}

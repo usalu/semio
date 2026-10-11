@@ -1,0 +1,667 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/native-build/provenance-receipt/v1",
+  "title": "Completed Cargo invocation provenance receipt",
+  "description": "One JSON document per completed Cargo invocation. Repeated paths, input digests and resource witnesses are interned once in the trailing tables `strings`, `inputs` and `witnesses`; every other record names them by index. Dep-info and resource captures are kept as their digest, never as a copy of their text.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "manifest",
+    "cwd",
+    "command",
+    "args",
+    "buildDirectory",
+    "builtAtMs",
+    "status",
+    "cancelled",
+    "units",
+    "buildScripts",
+    "buildResources",
+    "compilerResourceRoot",
+    "compilerResources",
+    "invocationInputs",
+    "observedAtMs",
+    "strings",
+    "inputs",
+    "witnesses"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.cargo.provenance-receipt/v1"
+    },
+    "manifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cwd": {
+      "type": "string",
+      "minLength": 1
+    },
+    "command": {
+      "type": "string",
+      "minLength": 1
+    },
+    "args": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "buildDirectory": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "builtAtMs": {
+      "type": "number",
+      "minimum": 0
+    },
+    "status": {
+      "type": "integer"
+    },
+    "cancelled": {
+      "type": "boolean"
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Unit"
+      }
+    },
+    "buildScripts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "buildResources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/BuildResources"
+      }
+    },
+    "compilerResourceRoot": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "compilerResources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/CompilerResources"
+      }
+    },
+    "invocationInputs": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": [
+          {
+            "$ref": "#/definitions/StringRef"
+          },
+          {
+            "$ref": "#/definitions/NullableSha256"
+          }
+        ],
+        "additionalItems": false
+      }
+    },
+    "observedAtMs": {
+      "type": "number",
+      "minimum": 0
+    },
+    "strings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": [
+          {
+            "$ref": "#/definitions/StringRef"
+          },
+          {
+            "enum": [
+              "file",
+              "directory",
+              null
+            ]
+          },
+          {
+            "$ref": "#/definitions/NullableSha256"
+          }
+        ],
+        "additionalItems": false
+      }
+    },
+    "witnesses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Witness"
+      }
+    }
+  },
+  "definitions": {
+    "StringRef": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "InputRef": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "WitnessRef": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "NullableSha256": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Sha256"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message",
+        "observedAtMs",
+        "depInfo",
+        "inputs",
+        "artifacts"
+      ],
+      "properties": {
+        "message": {
+          "type": "object"
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "depInfo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DepInfo"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InputRef"
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Artifact"
+          }
+        }
+      }
+    },
+    "DepInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "baseDirectory",
+        "sources",
+        "checksums"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/definitions/StringRef"
+        },
+        "sha256": {
+          "$ref": "#/definitions/Sha256"
+        },
+        "baseDirectory": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/StringRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StringRef"
+          }
+        },
+        "checksums": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": [
+              {
+                "$ref": "#/definitions/StringRef"
+              },
+              {
+                "$ref": "#/definitions/Sha256"
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "additionalItems": false
+          }
+        }
+      }
+    },
+    "Artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/definitions/StringRef"
+        },
+        "sha256": {
+          "$ref": "#/definitions/NullableSha256"
+        },
+        "stagedPath": {
+          "$ref": "#/definitions/StringRef"
+        },
+        "stagedSha256": {
+          "$ref": "#/definitions/NullableSha256"
+        }
+      }
+    },
+    "BuildResources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package_id",
+        "out_dir",
+        "path",
+        "sha256",
+        "observedAtMs",
+        "resources"
+      ],
+      "properties": {
+        "package_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "out_dir": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/definitions/Sha256"
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WitnessRef"
+          }
+        }
+      }
+    },
+    "CompilerResources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "observedAtMs",
+        "producer",
+        "caller",
+        "producerUnit",
+        "callerUnit",
+        "resources"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/definitions/StringRef"
+        },
+        "sha256": {
+          "$ref": "#/definitions/NullableSha256"
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "producer": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "manifest",
+                "source"
+              ],
+              "properties": {
+                "manifest": {
+                  "$ref": "#/definitions/StringRef"
+                },
+                "source": {
+                  "$ref": "#/definitions/StringRef"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "caller": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "manifest",
+                "crate",
+                "source"
+              ],
+              "properties": {
+                "manifest": {
+                  "$ref": "#/definitions/StringRef"
+                },
+                "crate": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source": {
+                  "$ref": "#/definitions/StringRef"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "producerUnit": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "callerUnit": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WitnessRef"
+          }
+        }
+      }
+    },
+    "Operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "line",
+        "name"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/StringRef"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "enum": [
+            "read",
+            "read_dir"
+          ]
+        }
+      }
+    },
+    "Callsite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "line"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/StringRef"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "symlinkTarget"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/definitions/StringRef"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "symlink",
+            "other"
+          ]
+        },
+        "symlinkTarget": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/StringRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ResourceInput": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "bytes",
+            "sha256",
+            "operation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "read"
+            },
+            "path": {
+              "$ref": "#/definitions/StringRef"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sha256": {
+              "$ref": "#/definitions/Sha256"
+            },
+            "operation": {
+              "$ref": "#/definitions/Operation"
+            },
+            "callsite": {
+              "$ref": "#/definitions/Callsite"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "entries",
+            "operation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "directory"
+            },
+            "path": {
+              "$ref": "#/definitions/StringRef"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Entry"
+              }
+            },
+            "operation": {
+              "$ref": "#/definitions/Operation"
+            },
+            "callsite": {
+              "$ref": "#/definitions/Callsite"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "output"
+          ],
+          "properties": {
+            "kind": {
+              "const": "copy"
+            },
+            "path": {
+              "$ref": "#/definitions/StringRef"
+            },
+            "output": {
+              "$ref": "#/definitions/StringRef"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "operation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "failed"
+            },
+            "path": {
+              "$ref": "#/definitions/StringRef"
+            },
+            "operation": {
+              "$ref": "#/definitions/Operation"
+            }
+          }
+        }
+      ]
+    },
+    "Witness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "sha256"
+      ],
+      "properties": {
+        "input": {
+          "$ref": "#/definitions/ResourceInput"
+        },
+        "sha256": {
+          "$ref": "#/definitions/NullableSha256"
+        },
+        "outputSha256": {
+          "$ref": "#/definitions/NullableSha256"
+        },
+        "bytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sourceExact": {
+          "type": "boolean"
+        },
+        "schemaErrors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "observedEntries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Entry"
+          }
+        }
+      }
+    }
+  }
+}

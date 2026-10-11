@@ -4,7 +4,7 @@ use semio_framework_os_kernel::Viewport2d;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🪟️ Owns the shared two-dimensional viewport of one concrete Graph window.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.architect.program.graph-window.config", extension = "architectgraphwindowcfg")]
@@ -46,11 +46,20 @@ impl protocol::DiffAlgebra<ArchitectGraphWindowConfig> for ArchitectGraphWindowC
     }
 }
 
+/// 📦️ Payload of `SetViewport`; its field names are the wire names of the former named variant.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SetViewport {
+    pub viewport: Viewport2d,
+}
+
 /// 🔁️ Changes the shared viewport of one addressed Graph window.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum ArchitectGraphWindowConfigMutation {
-    SetViewport { viewport: Viewport2d },
+    SetViewport(SetViewport),
 }
 
 impl protocol::Mutation<ArchitectGraphWindowConfig> for ArchitectGraphWindowConfigMutation {
@@ -83,7 +92,7 @@ impl protocol::Mutation<ArchitectGraphWindowConfig> for ArchitectGraphWindowConf
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
 
     fn diff(&self, base: &ArchitectGraphWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        let Self::SetViewport { viewport } = self;
+        let Self::SetViewport(SetViewport { viewport }) = self;
         if base.viewport == *viewport {
             return protocol::MutationOutcome::new(ArchitectGraphWindowConfigDiff::default()).warning("mutation.no-op", "Graph viewport is unchanged.");
         }
@@ -92,8 +101,8 @@ impl protocol::Mutation<ArchitectGraphWindowConfig> for ArchitectGraphWindowConf
 
     fn inverse(&self, base: &ArchitectGraphWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
-        let Self::SetViewport { viewport } = self;
-        (base.viewport != *viewport).then(|| Self::SetViewport { viewport: base.viewport.clone() }).into_iter().collect()
+        let Self::SetViewport(SetViewport { viewport }) = self;
+        (base.viewport != *viewport).then(|| Self::SetViewport(SetViewport { viewport: base.viewport.clone() })).into_iter().collect()
     
     })())
 }
@@ -155,6 +164,14 @@ impl protocol::OpBinary for ArchitectGraphWindowConfigMutation {
     }
 }
 
+impl store::snapshot_clone_preparation::ConfigApplyMutation<ArchitectGraphWindowConfig> for ArchitectGraphWindowConfigMutation {
+    fn exchange(self, post: &mut ArchitectGraphWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetViewport(SetViewport { viewport }) => Self::SetViewport(SetViewport { viewport: std::mem::replace(&mut post.viewport, viewport) }),
+        })
+    }
+}
+
 pub struct ArchitectGraphWindowConfigOwner;
 
 impl semio_framework_plugin::WindowConfigOwner for ArchitectGraphWindowConfigOwner {
@@ -163,6 +180,9 @@ impl semio_framework_plugin::WindowConfigOwner for ArchitectGraphWindowConfigOwn
     const MAXIMUM_PUBLICATION_BYTES: usize = 1_024;
     type State = ArchitectGraphWindowConfig;
     type Mutation = ArchitectGraphWindowConfigMutation;
+    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
@@ -182,6 +202,6 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, viewport: Viewport2d)
     }
     Ok(semio_framework_plugin::WindowConfigMutation::of::<ArchitectGraphWindowConfigOwner>(
         id,
-        ArchitectGraphWindowConfigMutation::SetViewport { viewport },
+        ArchitectGraphWindowConfigMutation::SetViewport(SetViewport { viewport }),
     ))
 }

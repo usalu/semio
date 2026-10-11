@@ -49,7 +49,7 @@ async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners
         let actor = ActorId(717);
         let package = PackageRef { package: PackageId("registration-owner".into()), hash: PackageHash([0; 32]) };
         let compiled = mock.compile(&package, &[]).await.unwrap();
-        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
         if stage == "wrong-actor" {
             let RegistrationAdmission::Refused(owner) = executor.register(ActorId(718), instance).await else { panic!("mismatched guest identity must return its exact owner") };
             assert_eq!(owner.actor, ActorId(718));
@@ -123,7 +123,7 @@ async fn terminal_registration_reply_wakes_outside_the_state_lock() {
     let actor = ActorId(718);
     let package = PackageRef { package: PackageId("registration-wake".into()), hash: PackageHash([0; 32]) };
     let compiled = mock.compile(&package, &[]).await.unwrap();
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
     let probe = Arc::new(Probe { executor: Arc::downgrade(&executor), lockable: AtomicBool::new(false), woke: AtomicBool::new(false) });
     let waker = std::task::Waker::from(Arc::clone(&probe));
     let mut context = std::task::Context::from_waker(&waker);
@@ -161,7 +161,7 @@ async fn admitted_registration_reply_wakes_outside_the_state_lock() {
     let actor = ActorId(718);
     let package = PackageRef { package: PackageId("registration-wake".into()), hash: PackageHash([0; 32]) };
     let compiled = mock.compile(&package, &[]).await.unwrap();
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.unwrap();
     let probe = Arc::new(Probe { executor: Arc::downgrade(&executor), lockable: AtomicBool::new(false), woke: AtomicBool::new(false) });
     let waker = std::task::Waker::from(Arc::clone(&probe));
     let mut context = std::task::Context::from_waker(&waker);
@@ -197,8 +197,8 @@ async fn shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool
     let actor = ActorId(101);
     let package = PackageRef { package: PackageId("executor-smoke".to_string()), hash: PackageHash([30u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
-    let mut scripted = MockGuestRuntime::idle_turn().await;
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+    let mut scripted = MockGuestRuntime::idle_turn(original_retained_turn()).await;
     scripted.fuel_used = 77;
     mock.script_turn(actor, scripted).await;
 
@@ -216,7 +216,7 @@ async fn shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool
         cancel_of: None,
         payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
     };
-    let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
+    let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive, original_retained_turn());
     let bytes = encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![envelope] }).await;
     executor.send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
 
@@ -247,13 +247,13 @@ async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbo
     let interactive = ActorId::new(0, 0, actor_number(1), 0).await;
     let package = PackageRef { package: PackageId("executor-lane-priority".to_string()), hash: PackageHash([31u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instantiate_budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let instantiate_budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
     let background_instance = mock.instantiate(&compiled, background, &[], &instantiate_budget).await.expect("background instance");
     let interactive_instance = mock.instantiate(&compiled, interactive, &[], &instantiate_budget).await.expect("interactive instance");
-    let mut background_turn = MockGuestRuntime::idle_turn().await;
+    let mut background_turn = MockGuestRuntime::idle_turn(original_retained_turn()).await;
     background_turn.fuel_used = frames[0]["fuel"].as_u64().expect("background fuel");
     mock.script_turn(background, background_turn).await;
-    let mut interactive_turn = MockGuestRuntime::idle_turn().await;
+    let mut interactive_turn = MockGuestRuntime::idle_turn(original_retained_turn()).await;
     interactive_turn.fuel_used = frames[1]["fuel"].as_u64().expect("interactive fuel");
     mock.script_turn(interactive, interactive_turn).await;
 
@@ -284,12 +284,14 @@ async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbo
     let background_lane = lane(0);
     let interactive_lane = lane(1);
     let background_frame = encode_frame(super::super::ShardFrame::Grant {         actor: background,
-        budget: semio_framework_actor::lane_defaults::budget_for(background_lane),
+        retained: original_retained_turn(),
+        budget: semio_framework_actor::lane_defaults::budget_for(background_lane, original_retained_turn()),
         envelopes: vec![envelope(background, background_lane, frames[0]["sequence"].as_u64().expect("background sequence"))],
     })
     .await;
     let interactive_frame = encode_frame(super::super::ShardFrame::Grant {         actor: interactive,
-        budget: semio_framework_actor::lane_defaults::budget_for(interactive_lane),
+        retained: original_retained_turn(),
+        budget: semio_framework_actor::lane_defaults::budget_for(interactive_lane, original_retained_turn()),
         envelopes: vec![envelope(interactive, interactive_lane, frames[1]["sequence"].as_u64().expect("interactive sequence"))],
     })
     .await;
@@ -319,15 +321,15 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
         let request = JobReplayRequest::from_spawn(&kind, &input);
         let package = PackageRef { package: PackageId(format!("replay-workers-{worker_count}")), hash: PackageHash([worker_count as u8; 32]) };
         let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
-        let mut scripted = MockGuestRuntime::idle_turn().await;
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        let mut scripted = MockGuestRuntime::idle_turn(original_retained_turn()).await;
         scripted.effects.push(Effect::SpawnJob { job, kind, input, placement: JobPlacement::Inline });
         mock.script_turn(actor, scripted).await;
 
         let pool = Arc::new(WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, worker_count)));
         let outcomes = OutcomeSink::new();
         let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone(),crate::shard::test_identity_issuer()).await;
-        let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
+        let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive, original_retained_turn());
         let event = Envelope {
             to: actor,
             from: semio_framework_actor::Origin::Kernel,
@@ -374,7 +376,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
         executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![replay] }).await, semio_framework_actor::Lane::Interactive).await;
         assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Resumed { actor: reported, operation: observed } if reported == actor.0 && observed == operation));
         mock.script_job_step(actor, JobStep::Done { output: vec![11, 13] }).await;
-        mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
+        mock.script_turn(actor, MockGuestRuntime::idle_turn(original_retained_turn()).await).await;
         let replay_step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 4, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
         executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, retained: original_retained_turn(), budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
         let replayed = outcomes.wait_for(2, Duration::from_secs(2));
@@ -421,14 +423,14 @@ async fn every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_sha
     let mut shards = ShardTable::new(ShardKind::Native, SHARDS, 0).await;
     let package = PackageRef { package: PackageId("grant-routing-property".to_string()), hash: PackageHash([55u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instantiate_budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-    let grant_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
+    let instantiate_budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let grant_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive, original_retained_turn());
 
     for i in 0..ACTORS {
         let actor = ActorId::new(0, 0, i as u32, 0).await;
         let shard_id = shards.pin(actor).await;
         let instance = mock.instantiate(&compiled, actor, &[], &instantiate_budget).await.expect("mock instantiate");
-        mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
+        mock.script_turn(actor, MockGuestRuntime::idle_turn(original_retained_turn()).await).await;
         executors[shard_id.0 as usize].register(actor, instance).await;
         let envelope = Envelope {
             to: actor,
@@ -471,7 +473,7 @@ async fn suspend_then_resume_round_trip_lands_on_a_shard_where_the_actor_is_regi
     let mut shards = ShardTable::new(ShardKind::Native, SHARDS, 0).await;
     let package = PackageRef { package: PackageId("suspend-resume-property".to_string()), hash: PackageHash([77u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instantiate_budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let instantiate_budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
 
     for i in 0..ACTORS {
         let actor = ActorId::new(0, 0, i as u32, 0).await;
@@ -531,18 +533,18 @@ async fn concurrent_send_frame_bursts_never_drop_an_outcome() {
     let outcomes = OutcomeSink::new();
     let package = PackageRef { package: PackageId("burst-property".to_string()), hash: PackageHash([9u8; 32]) };
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-    let instantiate_budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+    let instantiate_budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
     let mut initial = Vec::new();
     let mut actors = Vec::new();
     for i in 0..ACTORS {
         let actor = ActorId::new(0, 0, i as u32, 0).await;
         let instance = mock.instantiate(&compiled, actor, &[], &instantiate_budget).await.expect("mock instantiate");
-        mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
+        mock.script_turn(actor, MockGuestRuntime::idle_turn(original_retained_turn()).await).await;
         initial.push((actor, instance));
         actors.push(actor);
     }
     let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), initial, outcomes.clone(),crate::shard::test_identity_issuer()).await;
-    let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
+    let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive, original_retained_turn());
 
     let mut handles = Vec::new();
     for (i, actor) in actors.into_iter().enumerate() {

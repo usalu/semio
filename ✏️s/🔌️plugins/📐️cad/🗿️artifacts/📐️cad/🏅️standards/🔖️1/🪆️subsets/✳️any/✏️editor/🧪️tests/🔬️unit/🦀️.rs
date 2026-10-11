@@ -505,7 +505,7 @@ fn an_unknown_example_is_refused_by_name() {
 #[test]
 fn host_contributions_resolve_to_the_event_sourced_config_lane() {
     let mutation = <CadPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&semio_framework_pack_json::to_dsl_value(&json!({ "json": "[{\"id\":\"cad\"}]" })))).expect("host configuration").expect("CAD contribution mutation");
-    assert_eq!(mutation, CadConfigMutation::SetContributions { json: "[{\"id\":\"cad\"}]".into() });
+    assert_eq!(mutation, CadConfigMutation::SetContributions(SetContributionsEdit { json: "[{\"id\":\"cad\"}]".into() }));
     assert_eq!(<CadPlayApp as ArtifactEditor>::host_configuration_mutation("setActiveExample", None).expect("non-host action"), None);
     assert!(<CadPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some());
     assert!(<CadPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some());
@@ -591,15 +591,15 @@ fn retained_config_store_preparation_is_bounded_exact_and_reversible() {
     let base = CadConfig::default();
     let mut next = base.clone();
     next.selected_node_ids.push("node-retained".into());
-    let mutation = CadConfigMutation::Set { config: Box::new(next.clone()) };
+    let mutation = CadConfigMutation::Set(SetEdit { config: Box::new(next.clone()) });
     let footprint = admit_cad_config_mutation(&mutation).expect("bounded CAD config mutation");
     let (post, inverse, forward) = prepare_cad_config(&base, mutation.clone()).expect("exact CAD config preparation");
     assert_eq!(post, next);
     assert_eq!(forward, mutation);
-    assert_eq!(inverse, vec![CadConfigMutation::Set { config: Box::new(base.clone()) }]);
+    assert_eq!(inverse, vec![CadConfigMutation::Set(SetEdit { config: Box::new(base.clone()) })]);
     assert_eq!(footprint.work_items, 1 + inverse.len(), "config footprint must cover forward + inverse rows");
     assert_eq!(footprint, store::ArtifactStoreOneItemFootprint::for_leaf(&mutation, footprint.retained_bytes));
-    let oversized = CadConfigMutation::SetContributions { json: "x".repeat(CAD_CONFIG_STORE_MAXIMUM_BYTES + 1) };
+    let oversized = CadConfigMutation::SetContributions(SetContributionsEdit { json: "x".repeat(CAD_CONFIG_STORE_MAXIMUM_BYTES + 1) });
     assert!(admit_cad_config_mutation(&oversized).is_err());
 }
 
@@ -2133,7 +2133,7 @@ async fn the_shipped_cad_computer_pack_is_admitted_by_the_retained_config_envelo
     let contributions = shipped_cad_computer_contributions();
     assert!(contributions.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES, "the real pack is {} bytes against a {}-byte config lane", contributions.len(), CAD_CONFIG_STORE_MAXIMUM_BYTES);
 
-    let mutation = CadConfigMutation::SetContributions { json: contributions.clone() };
+    let mutation = CadConfigMutation::SetContributions(SetContributionsEdit { json: contributions.clone() });
     assert!(admit_cad_config_mutation(&mutation).is_ok(), "the retained config store must admit the real host pack");
     assert!(prepare_cad_config(&CadConfig::default(), mutation).is_ok(), "the whole preparation must admit the real host pack");
     let app = CadPlayApp::default();
@@ -2210,7 +2210,7 @@ async fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_
     assert!(pack.len() > CAD_RETAINED_RAW_BYTES, "the real pack is past the gesture envelope — that is why the app declares its own contributions wire");
     assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
     assert!(pack.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES, "the real pack ({} B) must fit the retained config lane", pack.len());
-    let mutation = CadConfigMutation::SetContributions { json: pack.clone() };
+    let mutation = CadConfigMutation::SetContributions(SetContributionsEdit { json: pack.clone() });
     assert!(admit_cad_config_mutation(&mutation).is_ok());
     assert!(prepare_cad_config(&CadConfig::default(), mutation).is_ok());
     let accepted = crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&pack);

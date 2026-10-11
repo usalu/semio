@@ -1,5 +1,5 @@
 //! 🏗️ IFC4 headers, ordered value ownership and exact entity references.
-use crate::standards::v4::subsets::any::schema::snapshot::{IfcSnapshot,IfcHeader,IfcEntity,IfcComplexType,IfcValue};
+use crate::standards::v4::subsets::any::schema::snapshot::{IfcSnapshot,IfcHeader,IfcEntity,IfcComplexType,IfcTypedValue, IfcValue};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,FloatColumn},*}};
 #[path="📏️encoding/💰️backing/🦀️.rs"]
 mod native_backing;
@@ -25,11 +25,11 @@ enum Owner{Header(&'static str,usize),Argument(Option<i64>,Option<i64>,usize),Ag
 fn project_value(value:&IfcValue,owner:Owner,entities:&[(u64,i64)],projection:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  let mut pending=projection.allocate_frontier(1)?;pending.push((value,owner));
  while let Some((value,owner))=pending.pop(){projection.checkpoint()?;let mut cells=[Cell::Null;8];let reference;
- cells[0]=Cell::Text(match value{IfcValue::Unset=>"unset",IfcValue::Derived=>"derived",IfcValue::Integer(_)=>"integer",IfcValue::Real(_)=>"real",IfcValue::String(_)=>"string",IfcValue::Enum(_)=>"enum",IfcValue::Reference(_)=>"reference",IfcValue::Aggregate(_)=>"aggregate",IfcValue::TypedValue{..}=>"typedValue"});
- match value{IfcValue::Integer(v)=>cells[1]=Cell::Integer(*v),IfcValue::Real(v)=>cells[2]=Cell::Real(*v),IfcValue::String(v)=>cells[3]=Cell::Text(v),IfcValue::Enum(v)=>cells[4]=Cell::Text(v),IfcValue::Reference(v)=>{reference=UnsignedWord::new(*v);cells[5]=Cell::Text(reference.text());cells[6]=entities.binary_search_by_key(v,|entry|entry.0).ok().map(|index|entities[index].1).map_or(Cell::Null,Cell::Integer);},IfcValue::TypedValue{name,..}=>cells[7]=Cell::Text(name),_=>{}}
+ cells[0]=Cell::Text(match value{IfcValue::Unset=>"unset",IfcValue::Derived=>"derived",IfcValue::Integer(_)=>"integer",IfcValue::Real(_)=>"real",IfcValue::String(_)=>"string",IfcValue::Enum(_)=>"enum",IfcValue::Reference(_)=>"reference",IfcValue::Aggregate(_)=>"aggregate",IfcValue::TypedValue(IfcTypedValue {..})=>"typedValue"});
+ match value{IfcValue::Integer(v)=>cells[1]=Cell::Integer(*v),IfcValue::Real(v)=>cells[2]=Cell::Real(*v),IfcValue::String(v)=>cells[3]=Cell::Text(v),IfcValue::Enum(v)=>cells[4]=Cell::Text(v),IfcValue::Reference(v)=>{reference=UnsignedWord::new(*v);cells[5]=Cell::Text(reference.text());cells[6]=entities.binary_search_by_key(v,|entry|entry.0).ok().map(|index|entities[index].1).map_or(Cell::Null,Cell::Integer);},IfcValue::TypedValue(IfcTypedValue {name,..})=>cells[7]=Cell::Text(name),_=>{}}
  let id=projection.insert_float("ifc_value",&cells,REAL)?;
  match owner{Owner::Header(table,index)=>{projection.insert(table,&[Cell::Integer(1),Cell::Integer(ordinal(index)?),Cell::Integer(id)])?;},Owner::Argument(entity,complex,index)=>{projection.insert("ifc_argument",&[entity.map_or(Cell::Null,Cell::Integer),complex.map_or(Cell::Null,Cell::Integer),Cell::Integer(ordinal(index)?),Cell::Integer(id)])?;},Owner::Aggregate(parent,index)=>{projection.insert("ifc_aggregate_element",&[Cell::Integer(parent),Cell::Integer(ordinal(index)?),Cell::Integer(id)])?;},Owner::Typed(parent,index)=>{projection.insert("ifc_typed_argument",&[Cell::Integer(parent),Cell::Integer(ordinal(index)?),Cell::Integer(id)])?;}}
- if let IfcValue::Aggregate(items)|IfcValue::TypedValue{items,..}=value{projection.check_rows(pending.len().checked_add(items.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"IFC4 pending count overflow"))?)?;for(index,item)in items.iter().enumerate().rev(){projection.push_frontier(&mut pending,(item,if matches!(value,IfcValue::Aggregate(_)){Owner::Aggregate(id,index)}else{Owner::Typed(id,index)}))?;if index%256==0{projection.checkpoint()?;}}}
+ if let IfcValue::Aggregate(items)|IfcValue::TypedValue(IfcTypedValue {items,..})=value{projection.check_rows(pending.len().checked_add(items.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"IFC4 pending count overflow"))?)?;for(index,item)in items.iter().enumerate().rev(){projection.push_frontier(&mut pending,(item,if matches!(value,IfcValue::Aggregate(_)){Owner::Aggregate(id,index)}else{Owner::Typed(id,index)}))?;if index%256==0{projection.checkpoint()?;}}}
  }Ok(())
 }
 fn visit_rows(snapshot:&IfcSnapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{

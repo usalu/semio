@@ -13,7 +13,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `step_payloads` timeline. `index` is FINAL-state, clamped to the timeline length (same
 /// insert-at-index convention `📥️insert-array-element`/`🔀reorder-steps` already use) — steps are
 /// order-meaningful, unlike the unordered `workshop.machines` set.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct CreateStep {

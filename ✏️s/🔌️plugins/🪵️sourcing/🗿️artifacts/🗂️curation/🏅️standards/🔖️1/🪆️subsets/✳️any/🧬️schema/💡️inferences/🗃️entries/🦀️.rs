@@ -9,7 +9,7 @@ use crate::CurationSnapshot;
 
 //#region 🔖️Entries
 /// 🗃️ Real census over `stock`/`curated`.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct CurationEntries {
     pub stock_count: u32,

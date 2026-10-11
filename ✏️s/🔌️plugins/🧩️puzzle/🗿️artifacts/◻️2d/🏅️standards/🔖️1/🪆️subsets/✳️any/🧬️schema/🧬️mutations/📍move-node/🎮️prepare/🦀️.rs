@@ -43,8 +43,8 @@ impl Puzzle2dMoveNodePreparationCursor {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, MoveNode>, grant: RetainedCloneGrant) -> Result<Puzzle2dMoveNodePreparationStep, ValueError> {
         if self.closing || self.spent { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "move preparation is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Puzzle2dMoveNodePreparationStep::Pending(Default::default())); }
-        source.bind(&mut self.source)?;
-        mutation.bind(&mut self.mutation)?;
+        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(Puzzle2dMoveNodePreparationStep::Pending(progress))}
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(Puzzle2dMoveNodePreparationStep::Pending(progress))}
         if let Some(plan) = self.output { return Ok(Puzzle2dMoveNodePreparationStep::Complete { plan, progress: Default::default() }); }
         if self.phase == 0 {
             return match self.lookup.advance(source, mutation.project(1, |payload| &payload.id), grant)? {

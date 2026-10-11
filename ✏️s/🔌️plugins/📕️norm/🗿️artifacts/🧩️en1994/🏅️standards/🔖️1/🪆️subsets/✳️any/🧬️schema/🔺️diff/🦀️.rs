@@ -4,6 +4,8 @@
 //! `absorb` coalesces same-key entries (patch∘patch, create∘delete, delete∘create) and `DiffAlgebra::inverse` returns the negative
 //! diff, read row by row from the base.
 
+use crate::En1994Snapshot;
+
 fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError {
     protocol::MutationApplyError::new("mutation.apply.missing-target", format!("{what} does not exist"))
 }

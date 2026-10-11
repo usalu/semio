@@ -203,7 +203,7 @@ impl semio_framework_job::InteractiveJob for ClipboardIoJob {
 
     fn borrow_outcome<'a>(&'a self, descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError>{
         match descriptor.kind(){
-            semio_framework_job::JobOutcomeKind::Cancelled if self.cancelled=>descriptor.cancelled(),
+            semio_framework_job::JobOutcomeKind::Cancelled=>descriptor.cancelled(),
             semio_framework_job::JobOutcomeKind::Complete if self.completed=>descriptor.complete(None,None),
             semio_framework_job::JobOutcomeKind::Yield=>descriptor.yielded(),
             semio_framework_job::JobOutcomeKind::Fault=>descriptor.fault(self.fault.published().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original clipboard fault absent"))?),
@@ -226,8 +226,7 @@ impl semio_framework_job::InteractiveJob for ClipboardIoJob {
         }
         if self.operation.is_none(){return Close::Complete{progress:Progress::default()}}
         let bytes=match self.operation.as_ref(){Some(ClipboardIoOperation::Write(text))=>text.capacity(),_=>0};
-        if grant.maximum_items==0||bytes>grant.maximum_release_bytes{return Close::Pending{progress:Progress::default()}}
-        if bytes!=0&&grant.maximum_depth==0{return Close::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Progress::default()}}
+        if grant.maximum_items==0||bytes>grant.maximum_release_bytes||(bytes!=0&&grant.maximum_depth==0){return Close::Pending{progress:Progress::default()}}
         *self.operation=None;
         Close::Complete{progress:Progress{copied_items:1,released_bytes:bytes,..Progress::default()}}
     }

@@ -3,7 +3,8 @@ use crate::schema::diff::{diff_at_path, SvgChildAdded, SvgChildrenDiff, SvgDiff,
 use crate::schema::snapshot::{NodePath, SvgNode};
 use crate::SvgSnapshot;
 
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct InsertElementPayload {

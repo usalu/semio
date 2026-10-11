@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️ComfortInput
 /// 🧍️ Inputs for comfort evaluation per ISO 7730 / ASHRAE 55.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ComfortInput {
     pub air_temp_c: f64,
     pub mean_radiant_temp_c: f64,
@@ -20,7 +20,7 @@ pub struct ComfortInput {
 
 // #region 🔖️AdaptiveComfort
 /// 🌿️ Adaptive comfort standard.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum AdaptiveStandard {
     Ashrae55,
     Cen15251,

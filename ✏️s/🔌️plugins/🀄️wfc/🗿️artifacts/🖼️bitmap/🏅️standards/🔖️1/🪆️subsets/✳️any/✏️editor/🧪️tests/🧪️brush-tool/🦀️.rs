@@ -251,7 +251,9 @@ fn close(app: &mut BitmapApp) {
         if app.close_terminal_is_empty() {
             return;
         }
-        if PluginApp::close_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("bitmap app close") == semio_framework_plugin::PluginCloseStep::Complete {
+        let demand = PluginApp::close_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("bitmap app close quote");
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        if matches!(PluginApp::close_step(app, grant).expect("bitmap app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
@@ -363,7 +365,7 @@ fn a_stroke_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     block_on(async {
         let mut store = store::ArtifactStore::<BitmapSnapshot, BitmapMutation>::new(store::create_document_envelope::<BitmapSnapshot, BitmapMutation>(WFC_BITMAP_DOCUMENT_SCHEMA, "brush-time-travel", base(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-        store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<BitmapSnapshot, BitmapMutation>());
+        store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::funded_bounded_artifact_store_owners::<BitmapSnapshot, BitmapMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
         let log = [paint_input_stroke(vec![point(0, 0), point(3, 2)], 1), set_input_pixels(0, 0, 1, 1, ([0]).to_vec())];
         for mutation in &log {
             store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
@@ -391,7 +393,9 @@ fn a_stroke_edited_in_history_replays_its_downstream() {
             if disposer.terminal_is_empty(&store) {
                 break;
             }
-            disposer.close_step(&mut store, 1, 64 * 1024).expect("the store retires");
+            let demand = disposer.retirement_demands(&store, 64 * 1024).expect("the store quotes its next retirement turn");
+            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(64 * 1024), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            disposer.close_step(&mut store, grant).expect("the store retires");
         }
         assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
     });

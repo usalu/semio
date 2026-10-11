@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️AirTerminal
 /// 🌬️ Zone air terminal unit types.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum AirTerminal {
     Cav { max_flow_m3_s: f64 },
     Vav { min_flow_m3_s: f64, max_flow_m3_s: f64, reheat: Option<HeatingCoil> },
@@ -18,7 +18,7 @@ pub enum AirTerminal {
 }
 
 /// 📥️ Terminal inlet air and zone load request.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct TerminalRequest {
     pub supply_temperature_c: f64,
     pub supply_humidity_ratio: f64,
@@ -33,7 +33,7 @@ pub struct TerminalRequest {
 }
 
 /// 📤️ Terminal outlet air delivered to zone.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct TerminalOutput {
     pub discharge_temperature_c: f64,
     pub discharge_humidity_ratio: f64,

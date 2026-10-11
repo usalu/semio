@@ -22,7 +22,7 @@ async fn codec_round_trip() {
 /// the SECOND generation onward decode/encode is a true fixed point.
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
-    use crate::schema::snapshot::{DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
+    use crate::schema::snapshot::{DxfEntity, DxfCircle, DxfLine, DxfOther, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
     use crate::standards::v_r12::subsets::any::io::text::snapshot::{print_dxf_document};
     use crate::standards::v_r12::subsets::any::io::text::snapshot::{parse_dxf_document};
     let snap1 = DxfSnapshot {
@@ -37,11 +37,11 @@ async fn codec_retention_law() {
             linetypes: vec![DxfLinetype { name: "CONTINUOUS".into(), flags: 0, description: "Solid".into(), unknown_group_codes: vec![] }],
         },
         other_tables: vec![DxfOtherTable { name: "VPORT".into(), tags: vec![DxfTag { code: 2, value: "*ACTIVE".into() }] }],
-        blocks: vec![DxfBlock { name: "MYBLOCK".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] }],
+        blocks: vec![DxfBlock { name: "MYBLOCK".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] })], unknown_group_codes: vec![] }],
         entities: vec![
-            DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
-            DxfEntity::Circle { center: [1.0, 1.0, 0.0], radius: 2.0, layer: "0".into(), unknown_group_codes: vec![] },
-            DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![(10, DxfValue::Double { value: 0.0 })] },
+            DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }),
+            DxfEntity::Circle(DxfCircle { center: [1.0, 1.0, 0.0], radius: 2.0, layer: "0".into(), unknown_group_codes: vec![] }),
+            DxfEntity::Other(DxfOther { kind: "3DFACE".into(), group_codes: vec![(10, DxfValue::Double { value: 0.0 })] }),
         ],
     };
     let text2 = print_dxf_document(&snap1);
@@ -148,3 +148,21 @@ mod conformance_laws {
 }
 //#endregion 🔖️ConformanceLaws
 
+
+//#region 🔖️EntityWire
+/// 🧾️ The newtype-variant entity enum keeps the exact externally tagged wire of the former named-field variants.
+#[test]
+fn dxf_entity_wire_is_byte_identical_to_the_neutral_fixture() {
+    use crate::schema::snapshot::DxfEntity;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️entity-wire/🔣️.json")).expect("neutral entity wire fixture");
+    for case in fixture["cases"].as_array().expect("entity wire cases") {
+        let wire = case["wire"].as_str().expect("wire text");
+        let entity: DxfEntity = semio_framework_pack_json::from_json_str(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{} decodes: {error:?}", case["id"]));
+        let printed = semio_framework_pack_json::to_json_string(&entity);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&printed).expect("printed wire parses"), serde_json::from_str::<serde_json::Value>(wire).expect("fixture wire parses"), "{}", case["id"]);
+        assert_eq!(printed, wire, "{} prints byte-identically", case["id"]);
+        let decoded: DxfEntity = semio_framework_pack_json::from_json_str(&printed, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("printed wire decodes");
+        assert_eq!(decoded, entity, "{} round-trips", case["id"]);
+    }
+}
+//#endregion 🔖️EntityWire

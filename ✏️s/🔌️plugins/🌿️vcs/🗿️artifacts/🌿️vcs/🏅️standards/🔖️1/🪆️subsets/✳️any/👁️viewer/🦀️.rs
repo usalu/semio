@@ -31,7 +31,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// `✏️editor/🎮️commands/*` carries them would be pure ceremony for a surface that never dispatches
 /// anything through `handle`. `Default` is required by `artifact_app_laws::assert_viewer_never_mutates::<V>()`
 /// (contract §2.5) to synthesize a representative command with no caller-supplied value.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum VcsViewCommand {
     #[default]
     Noop,

@@ -1,5 +1,17 @@
 use super::*;
 
+macro_rules! drain_children {
+    ($emit:expr, $steps:expr, $body:expr) => {{
+        let mut empty = false;
+        for _ in 0..$steps {
+            let Some(demand) = $emit.child_close_demands($body).expect("quoted child close demand") else { empty = true; break; };
+            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max($body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            if $emit.close_child_one(grant).expect("granted child close").is_none() { empty = true; break; }
+        }
+        empty
+    }};
+}
+
 #[test]
 fn connection_keeps_the_original_typed_owner_until_publication() {
     use semio_framework_plugin::app::ChildEmitPreparationStep;
@@ -32,19 +44,13 @@ fn connection_keeps_the_original_typed_owner_until_publication() {
             let packed = semio_framework_plugin::app::ChildEmit::encode_groups(&emit.child_emits);
             let decoded = semio_framework_plugin::app::ChildEmit::decode_groups(&packed).unwrap();
             assert_eq!(serde_json::to_value(&decoded[0]).unwrap(), oracle);
-            let mut empty = false;
-            for _ in 0..fixture["closeSteps"].as_u64().unwrap() {
-                if emit.close_child_one(1, fixture["closeGrant"].as_u64().unwrap() as usize).is_none() { empty = true; break; }
-            }
+            let empty = drain_children!(emit, fixture["closeSteps"].as_u64().unwrap(), fixture["closeGrant"].as_u64().unwrap() as usize);
             assert!(empty, "published wire prefix closes within the neutral grant census");
         } else {
             let fault = match result {
                 Err(fault) => fault,
                 Ok(mut emit) => {
-                    let mut empty = false;
-                    for _ in 0..fixture["closeSteps"].as_u64().unwrap() {
-                        if emit.close_child_one(1, fixture["closeGrant"].as_u64().unwrap() as usize).is_none() { empty = true; break; }
-                    }
+                    let empty = drain_children!(emit, fixture["closeSteps"].as_u64().unwrap(), fixture["closeGrant"].as_u64().unwrap() as usize);
                     assert!(empty, "unexpected accepted owner closes before the refusal assertion");
                     panic!("incompatible port must refuse before publication");
                 },

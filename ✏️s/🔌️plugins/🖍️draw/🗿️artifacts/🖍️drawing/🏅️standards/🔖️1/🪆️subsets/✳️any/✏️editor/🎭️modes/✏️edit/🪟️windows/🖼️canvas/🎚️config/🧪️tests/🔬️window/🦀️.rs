@@ -152,3 +152,13 @@ async fn config_inverse_sums_to_the_negative_diff() {
     let config_mutation: DrawingCanvasWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["configMutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&config_mutation, &base_config).await;
 }
+
+/// 🧾️ The newtype payload keeps the externally visible `{"kind":"set","viewport":..,"framed":..}` wire byte-identical.
+#[test]
+fn set_mutation_wire_is_the_flat_tagged_record() {
+    use semio_framework_value::{FromValue, ToValue};
+    let mutation = DrawingCanvasWindowConfigMutation::Set(DrawingCanvasWindowConfigSet { viewport: store::Viewport2d { x: 1.5, y: -2.0, zoom: 3.0 }, framed: true });
+    let expected: semio_framework_value::DslValue = serde_json::json!({ "kind": "set", "viewport": { "x": 1.5, "y": -2.0, "zoom": 3.0 }, "framed": true }).into();
+    assert_eq!(mutation.to_value(), expected);
+    assert_eq!(DrawingCanvasWindowConfigMutation::from_value(expected).expect("flat tagged set decodes"), mutation);
+}

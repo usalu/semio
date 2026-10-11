@@ -144,6 +144,6 @@ pub(crate) fn parse_text(text:&str)->Result<Ifc2x3Snapshot,TextError>{
 }
 
 pub(crate) fn print_text(value:&Ifc2x3Snapshot)->String{
- let limits=store::sqlite_snapshot::SqliteDatabaseLimits::default();let mut progress=|_|true;
- match encode(value,SnapshotEncoding::Text,&mut SqliteSnapshotControl::new(&mut progress,limits)).expect("IFC2x3 complete native text within default limits"){IoPayload::Text(text)=>text,IoPayload::Binary(_)=>unreachable!()}
+ let limits=store::sqlite_snapshot::SqliteDatabaseLimits::default();let mut progress=|_|true;let mut native_progress=|_|true;let mut native=NativeEncodeControl::new(limits.max_allocation_bytes,&mut native_progress);let mut owner=semio_framework_os_kernel::NativeSnapshotEncodeOwner::new(&mut native,semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:u32::MAX as usize,maximum_copy_bytes:u32::MAX as usize,maximum_capacity_bytes:u32::MAX as usize,maximum_release_bytes:u32::MAX as usize,maximum_depth:1<<16});
+ match encode(value,SnapshotEncoding::Text,&mut SqliteSnapshotControl::new(&mut progress,limits),&mut owner).expect("IFC2x3 complete native text within default limits"){IoPayload::Text(text)=>text,IoPayload::Binary(_)=>unreachable!()}
 }

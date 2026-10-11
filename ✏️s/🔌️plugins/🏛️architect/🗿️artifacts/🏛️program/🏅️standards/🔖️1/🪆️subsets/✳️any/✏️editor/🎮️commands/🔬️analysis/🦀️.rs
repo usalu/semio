@@ -9,7 +9,7 @@ pub mod run_validation {
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use semio_framework_value_derive::{FromValue, ToValue};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "run-validation")]
     pub struct RunValidation {}
 
@@ -32,7 +32,7 @@ pub mod run_analysis {
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
     use semio_framework_value_derive::{FromValue, ToValue};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "run-analysis")]
     pub struct RunAnalysis {
         pub analysis_kind: String,
@@ -43,11 +43,12 @@ pub mod run_analysis {
         let kind = analysis_kind_from_str(&payload.analysis_kind).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("architect.analysis-kind-unknown"), format!("runAnalysis has no analysis kind \"{}\"", payload.analysis_kind)))?;
         let result = run_analysis(program, kind);
         let record = analysis_record_from(program, kind, &result);
-        let mut next = cfg.snapshot.clone();
+        let base_config = cfg.snapshot;
+        let mut next = base_config.clone();
         let result_json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&result)));
         next.last_analysis_json = result_json.clone();
         next.last_result_json = result_json;
-        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::CreateAnalysisRecord { analysis_record: record, index: None })], config_mutations: snapshot(next), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::CreateAnalysisRecord { analysis_record: record, index: None })], config_mutations: snapshot(base_config, next), ..Default::default() })
     }
 }
 
@@ -62,7 +63,7 @@ pub mod run_report {
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, ViewModel};
     use semio_framework_value_derive::{FromValue, ToValue};
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "run-report")]
     pub struct RunReport {
         pub report_kind: String,

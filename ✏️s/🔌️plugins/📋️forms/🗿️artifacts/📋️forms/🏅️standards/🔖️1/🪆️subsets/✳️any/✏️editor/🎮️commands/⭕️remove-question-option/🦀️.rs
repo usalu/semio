@@ -14,7 +14,7 @@ fn remove_question_option(spec: &FormsSnapshot, question_id: &str, option_value:
 }
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "remove-question-option")]
 pub struct RemoveQuestionOption {
     pub question_id: String,

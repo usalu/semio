@@ -406,15 +406,7 @@ pub(crate) fn validate(value: &JackSnapshot) -> Result<(), ValueError> {
     Ok(())
 }
 pub(crate) fn retire_snapshot(value: JackSnapshot) {
-    let mut cursor = store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::JackSnapshotRetirementFactory, value);
-    loop {
-        match cursor.close_step(256, usize::MAX).expect("Jack explicit retirement") {
-            store::SnapshotRetirementStep::Complete => break,
-            store::SnapshotRetirementStep::Pending { .. } => {}
-            store::SnapshotRetirementStep::Blocked => panic!("Jack retirement blocked"),
-        }
-    }
-    assert!(cursor.terminal_is_empty());
+    crate::retire_owned_to_terminal(value).expect("Jack explicit retirement");
 }
 impl store::ArtifactSqliteSnapshot for JackSnapshot {
     const SQLITE_SCHEMA: &'static str = SQL;

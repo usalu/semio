@@ -151,6 +151,7 @@ pub use mutations_wire_codec::*;
 
 mod json_orchestration {
 use super::{bridge_decode_pair,bridge_render};
+use crate::RemodelingSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::{bridge_step,RemodelingMutation};
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers

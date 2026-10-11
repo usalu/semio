@@ -7,10 +7,10 @@ use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "generate")]
 pub struct Generate {}
 
 pub fn handle(_payload: &Generate, _doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    Ok(Emit::config(vec![Generation2dConfigMutation::SetShowMode { value: "generate".into() }]))
+    Ok(Emit::config(vec![Generation2dConfigMutation::SetShowMode(crate::editor::generation2d::config::SetShowModeSetting { value: "generate".into() })]))
 }

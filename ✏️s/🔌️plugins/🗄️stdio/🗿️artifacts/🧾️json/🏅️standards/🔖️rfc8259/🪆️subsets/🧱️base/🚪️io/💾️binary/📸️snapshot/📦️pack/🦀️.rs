@@ -110,7 +110,7 @@ pub(crate) fn preflight(snapshot:&JsonSnapshot,control:&mut store::sqlite_snapsh
 
 pub(crate) fn retire(snapshot:JsonSnapshot){decoding::retire_value(snapshot.value)}
 
-pub(crate) fn encode(snapshot:&JsonSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{encoding::encode(snapshot,encoding,control)}
+pub(crate) fn encode(snapshot:&JsonSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{encoding::encode(snapshot,encoding,control,native_owner)}
 
 pub(crate) fn reconstruct_record(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize)->Result<JsonSnapshot,semio_framework_value::ValueError>{
  let snapshot=decoding::bind(record,control,maximum_rows)?;decoding::reconstruct(snapshot,control)

@@ -3,7 +3,7 @@
 use crate::{ModelSnapshot, Opening, OpeningKind};
 
 /// 📐️ Size and sill of an opening after the override-else-type rule.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct Resolved {
     pub width: f64,
     pub height: f64,

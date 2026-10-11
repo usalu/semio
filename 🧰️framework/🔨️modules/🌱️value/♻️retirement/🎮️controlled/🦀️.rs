@@ -114,13 +114,13 @@ impl<T: RetireOwned> ControlledRetirement<T> {
         else { cursor.next_close_byte_demand().ok_or_else(||refusal("retirement owner has no controlled physical release demand")) }
     }
 
-    /// 🪆️ Borrows the current frontier and nested owner depth before any capacity is admitted.
+    /// 🪆️ Borrows the per-turn nesting depth of the top cursor; the explicit paged frontier is heap-iterative and never counts as call depth.
     pub fn next_depth_demand(&self) -> Result<usize, ValueError> {
         if self.terminal_is_empty() { return Ok(0); }
         if self.value.is_some() || self.cursors.is_empty() { return Ok(1); }
         let cursor = self.cursors.get(self.cursors.len() - 1).unwrap();
         let nested = if cursor.terminal_is_empty() { 0 } else { cursor.next_depth_demand()? };
-        self.cursors.len().checked_add(nested).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "retirement frontier depth overflow"))
+        1usize.checked_add(nested).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "retirement frontier depth overflow"))
     }
 
     pub fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -185,7 +185,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
         let birth = self.cursors.get(index).and_then(|cursor| cursor.next_birth_bytes(body_bytes)).ok_or_else(|| refusal("retirement child has no controlled birth authority"))?;
         if work && body_bytes < minimum_work_bytes && (birth==0 || !self.cursors.get(index).unwrap().allows_admitted_narrow_work()) { return Ok(RetainedCloneStep::Progress(empty)); }
         if birth > grant.maximum_capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        let cursor_grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth, maximum_depth: grant.maximum_depth - self.cursors.len(), ..grant };
+        let cursor_grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth, maximum_depth: grant.maximum_depth - 1, ..grant };
         let (processed, bytes, progressed) = match self.cursors.get_mut(index).unwrap().close_step(cursor_grant) {
             RetirementStep::Progress(progress) => {
                 self.step_progress = progress;

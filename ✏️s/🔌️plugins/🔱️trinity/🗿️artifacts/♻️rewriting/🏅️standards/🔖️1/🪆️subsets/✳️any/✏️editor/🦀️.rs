@@ -194,7 +194,7 @@ fn build_rule_from_state(state: &RewritingSnapshot) -> schema::Rule {
     schema::Rule { name: TRINITY_REWRITING_PLAY_RULE_NAME.into(), lhs: state.lhs.clone(), rhs: state.rhs.clone() }
 }
 pub(crate) fn compiled_jack_query(state: &RewritingSnapshot) -> String {
-    schema::build_rule_query(&build_rule_from_state(state), &state.parameter_bindings)
+    crate::standards::v1::subsets::any::io::text::snapshot::build_rule_query(&build_rule_from_state(state), &state.parameter_bindings)
 }
 /// ♻️ The checked query projection produces a new typed graph without changing the retained source child.
 pub(crate) fn rewritten_graph(state: &RewritingSnapshot) -> Result<JackSnapshot, String> {
@@ -348,7 +348,7 @@ pub(crate) fn render_graph_snapshot(surface_id: &str, snapshot: &JackSnapshot, c
 /// its JSON-array `operations` shape (rather than a typed sub-enum) — the same
 /// node-graph record rows (`connect`/`disconnect`/`move`/`setSlider`/`insertPort`/`delete`) `commands::node_graph_edit`
 /// already parses, carried as an opaque string field.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum TrinityRewritingCommand {
     // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
     #[dsl(key = "node-graph-edit")]
@@ -529,9 +529,6 @@ mod args_bridge {
 const REWRITING_DOCUMENT_TOOL_IDS: &[&str] = &["addRuleClause", "resetRule", "setActiveExample", "setParameter", "patchNodes", "nodeGraphEdit", "setLhsJson", "setRhsJson", "reorganize", "addWorkingNode"];
 const REWRITING_DOCUMENT_PAYLOAD_SCHEMA: &str = "trinity.rewriting.document-command.v1";
 const REWRITING_DOCUMENT_RAW_BYTES: usize = 32_768;
-/// 📬️ One retained rule mutation: `edit-working-graph` carries the whole working graph JSON (the Nakagin
-/// snapshot is the largest), every other body replace or map upsert stays far below one page.
-const REWRITING_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 60_000;
 
 fn rewriting_document_contract() -> semio_framework::ToolExecutionContract {
     semio_framework::ToolExecutionContract::bounded_first_step(REWRITING_DOCUMENT_RAW_BYTES, 64, 1, 262_144, 7_500)
@@ -657,6 +654,7 @@ fn rewriting_build_document_tool_job(request: semio_framework_plugin::app::Artif
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        retained: request.retained,
         authoring_seed: request.authoring_seed.clone(),
     };
     let payload = ArtifactRetainedCommandPayload::new(
@@ -708,22 +706,8 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     }
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(schema::retirement::document_store_owners())
-    }
-
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::no_config_store_disposer())
-    }
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
     }
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(semio_framework_plugin::no_draft_store_disposer())
@@ -789,7 +773,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     /// 🧾️ Store publication authority for the `Artifact` lane — without it the host refuses every document
     /// verb at dispatch (`declares the unsupported artifact publication lane`).
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("trinity-rewriting-artifact-retained", REWRITING_ARTIFACT_MUTATION_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     /// 🎯️ Host-action bridge into the closed `TrinityRewritingCommand` enum — see `args_bridge`.

@@ -158,7 +158,6 @@ export const ruleQueryJson = wasmJson;
 export const boardComputeEdgeBezier = wasmJson;
 export const boardHandlePositionCircle = wasmJson;
 export const boardHandlePositionRectangle = wasmJson;
-export const boardRedrawHandlesSnapshotJson = wasmJson;
 export const boardRedrawLayoutSnapshotJson = wasmJson;
 `;
 

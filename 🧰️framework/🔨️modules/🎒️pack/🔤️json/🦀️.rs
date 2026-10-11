@@ -31,7 +31,7 @@ mod native_scalar;
 pub use native_scalar::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonScalarBytes};
 #[path = "🛫️encode/🧭️tree/🦀️.rs"]
 mod native_tree;
-pub use native_tree::{ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep};
+pub use native_tree::{ArtifactCanonicalDecimalI64, ArtifactCanonicalDecimalU64, ArtifactCanonicalHexWordArray, ArtifactCanonicalHexWordF32, ArtifactCanonicalHexWordList, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep};
 
 #[cfg(test)]
 #[path = "../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]

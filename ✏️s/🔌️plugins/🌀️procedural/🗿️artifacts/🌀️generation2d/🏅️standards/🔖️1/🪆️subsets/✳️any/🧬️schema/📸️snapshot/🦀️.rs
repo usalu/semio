@@ -6,7 +6,7 @@ use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Generation2dSnapshot
 /// 🧬️ Generation2dSnapshot facet type.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, Default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, Default, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.generation2d")]
 pub struct Generation2dSnapshot {

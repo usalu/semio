@@ -11,7 +11,7 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
+use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcTypedValue, IfcValue};
 use crate::IfcSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -677,7 +677,7 @@ pub(crate) fn demo_diff_cases() -> Vec<IfcDiff> {
     vec![
         IfcDiff::default(),
         IfcDiff { file_name: Some(vec![IfcValue::String("changed.ifc".into())]), entities: Some(entities), ..Default::default() },
-        IfcDiff { file_description: Some(vec![IfcValue::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] }]), ..Default::default() },
+        IfcDiff { file_description: Some(vec![IfcValue::TypedValue(IfcTypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] })]), ..Default::default() },
     ]
 }
 //#endregion 🔖️DemoCases

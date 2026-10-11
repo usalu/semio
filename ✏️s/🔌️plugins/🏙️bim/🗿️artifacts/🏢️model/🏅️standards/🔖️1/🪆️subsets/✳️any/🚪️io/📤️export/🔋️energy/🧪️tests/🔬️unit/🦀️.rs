@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::house;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use std::collections::BTreeSet;
 use target::{OutsideBoundary, SurfaceClass};
@@ -150,7 +150,7 @@ fn a_model_without_a_thermal_envelope_is_refused() {
 fn the_staged_export_runs_one_stage_per_step_and_equals_the_one_shot() {
     let snapshot = decoded(STACK);
     let direct = written(&snapshot);
-    let staged = registry::try_with_inference(None, &snapshot, |inferred| {
+    let staged = inference::try_with_inference(None, &snapshot, |inferred| {
         let mut job = StagedEnergy::new();
         let mut seen = Vec::new();
         loop {
@@ -199,7 +199,7 @@ fn futures_lite_block<T>(future: impl std::future::Future<Output = T>) -> T {
 #[test]
 fn the_table_of_the_export_adds_up_to_the_inferred_totals_of_the_project() {
     for (case, snapshot) in cases() {
-        registry::try_with_inference(None, &snapshot, |inferred| {
+        inference::try_with_inference(None, &snapshot, |inferred| {
             let table = table::table_of(&snapshot, inferred).expect("the table");
             let (ours, theirs) = (&table.totals["project"], &inferred.energy_totals["project"]);
             assert_eq!(ours.spaces, theirs.spaces, "{case}");

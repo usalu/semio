@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned plan-view bounding box in meters (empty snapshot: both corners at the origin).
-#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dBoundingBox {
     pub min: [f64; 2],
@@ -16,7 +16,7 @@ pub struct Fem2dBoundingBox {
 }
 
 /// 📦️ `bounds` — plan-view extent plus node/element counts.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dBounds {
     pub bounding_box: Fem2dBoundingBox,

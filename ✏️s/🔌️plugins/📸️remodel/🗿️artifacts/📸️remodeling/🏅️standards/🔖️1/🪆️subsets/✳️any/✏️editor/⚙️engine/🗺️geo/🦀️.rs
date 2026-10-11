@@ -243,7 +243,8 @@ pub fn utm_to_geodetic(coord: &UtmCoord) -> (f64, f64) {
 // #region 🔖️Gcp
 /// 📍️ A ground control point: a known world/geodetic-or-local survey position plus the pixel
 /// observations (indexed by position into the caller's camera list) that pin it into the SfM frame.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct GroundControlPoint {
     pub id: String,
     pub world_position_enu_or_local: [f64; 3],
@@ -351,7 +352,8 @@ pub fn gcp_checkpoint_rmse(sim3: &Sim3, refined_scene_points: &[[f64; 3]], gcps:
 /// cell, to keep `values` a dense contiguous buffer usable directly as image/heightfield data); `origin`
 /// is the world `(x, y)` coordinate of cell `(0, 0)`'s lower-left corner, and elevation/DSM-style
 /// consumers treat the world frame as Z-up. Shared by DSM/DTM, orthomosaic-support rasters, contours and volumes.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Raster {
     pub width: u32,
     pub height: u32,

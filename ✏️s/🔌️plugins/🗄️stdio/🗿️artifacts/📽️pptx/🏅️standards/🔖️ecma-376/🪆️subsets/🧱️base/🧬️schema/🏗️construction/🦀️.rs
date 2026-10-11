@@ -372,7 +372,8 @@ pub(crate) fn append_slide(snapshot: &mut PptxSnapshot) -> Result<(), String> {
         attrs: vec![attr("id", &slide_id.to_string()), attr(&qname(&entry_names.relationship_prefix, "id"), &relationship_id)],
         children: Vec::new(),
     };
-    xml_address::insert_slide(snapshot, &vacancy, entry)?;
+    let plan = xml_address::insert_slide_plan(snapshot, &vacancy, &entry)?;
+    *snapshot = crate::protocol::apply_diff(&plan.diff, &*snapshot).map_err(|error| format!("PPTX slide insertion refused: {error:?}"))?;
     snapshot.xml_parts.push(PptxXmlPart { path: path.clone(), content_type: SLIDE_CONTENT_TYPE.into(), document: blank_slide(&slide_names) });
     snapshot.opc.content_types.set_override(&path, SLIDE_CONTENT_TYPE);
     snapshot.opc.add_relationship(&presentation_path, &relationship_id, &slide_type, &presentation_target(&presentation_path, &path));

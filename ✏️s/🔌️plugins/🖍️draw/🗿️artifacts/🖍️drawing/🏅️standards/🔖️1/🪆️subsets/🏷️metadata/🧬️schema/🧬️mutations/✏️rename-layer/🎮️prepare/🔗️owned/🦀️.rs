@@ -4,7 +4,7 @@ use super::DrawingRenameDisposition;
 use super::super::mutation::RenameLayer;
 use crate::{DrawingLayerNode, DrawingSnapshot};
 use crate::standards::v1::subsets::any::schema::snapshot::lookup::owned::{DrawingOwnedLayerLookupCursor, DrawingOwnedLayerLookupStep};
-use semio_framework_value::{list::PagedList, paged::PagedUtf8, SnapshotRetirementStep, ValueError, ValueRefusalKind};
+use semio_framework_value::{list::PagedList, paged::PagedUtf8, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedOwnedProjection, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}};
 
 /// 🧾️ Keeps the actual original old name through the native immutable layer projection.
@@ -20,7 +20,8 @@ impl DrawingOwnedRenamePlan {
     /// 🧷️ Checks that later inverse or candidate assembly reborrows the exact original payload.
     pub fn check_original(&mut self, payload: RetainedCloneRef<'_, RenameLayer>) -> Result<(), ValueError> {
         if self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "owned Drawing rename plan is closing")); }
-        payload.bind(&mut self.payload)
+        if payload.bind(&mut self.payload, RetainedCloneGrant::default())?.is_some() { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "owned Drawing rename plan lost its original payload binding")); }
+        Ok(())
     }
 
     /// ↩️ Borrows the original old name without copying native text or retaining an original payload.
@@ -43,13 +44,15 @@ impl DrawingOwnedRenamePlan {
         if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "owned Drawing rename plan closure was not started")); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(node) = &mut self.node {
-            let step = node.close_step(1)?;
-            if step == SnapshotRetirementStep::Complete { self.node = None; }
-            return Ok(RetainedCloneStep::Progress(close_progress(step)));
+            let step = node.close_step(grant)?;
+            if node.terminal_is_empty() { self.node = None; }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if !self.path.terminal_is_empty() { return close_path(&mut self.path, grant); }
-        let step = RetainedCloneBinding::close_one(&mut self.payload, 1)?;
-        if step != SnapshotRetirementStep::Complete { return Ok(RetainedCloneStep::Progress(close_progress(step))); }
+        if self.payload.is_some() {
+            let step = RetainedCloneBinding::close_one(&mut self.payload, grant)?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
 
@@ -81,8 +84,8 @@ pub struct DrawingOwnedRenamePreparationCursor {
 
 impl DrawingOwnedRenamePreparationCursor {
     /// 🌳️ Takes only an actual native root projection and allocates no cursor scaffold.
-    pub fn new(source: RetainedOwnedProjection<DrawingSnapshot>) -> Result<Self, ValueError> {
-        Ok(Self { payload: None, lookup: Some(DrawingOwnedLayerLookupCursor::new(source)?), node: None, path: Default::default(), comparison: Default::default(), disposition: None, output: None, phase: 0, spent: false, closing: false })
+    pub fn new(source: RetainedOwnedProjection<DrawingSnapshot>) -> Self {
+        Self { payload: None, lookup: Some(DrawingOwnedLayerLookupCursor::new(source)), node: None, path: Default::default(), comparison: Default::default(), disposition: None, output: None, phase: 0, spent: false, closing: false }
     }
 
     /// 🔁️ Checks the original payload lease and advances one bounded semantic or ownership unit.
@@ -93,9 +96,7 @@ impl DrawingOwnedRenamePreparationCursor {
             plan.check_original(payload)?;
             return Ok(DrawingOwnedRenamePreparationStep::Complete { disposition: plan.disposition, progress: Default::default() });
         }
-        let first = self.payload.is_none();
-        payload.bind(&mut self.payload)?;
-        if first { return Ok(pending(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+        if let Some(progress) = payload.bind(&mut self.payload, grant)? { return Ok(pending(progress)); }
         if self.phase == 0 {
             let lookup = self.lookup.as_mut().expect("owned native Drawing rename lookup");
             return match lookup.advance(payload.project(1, |payload| &payload.layer_id), grant)? {
@@ -138,8 +139,12 @@ impl DrawingOwnedRenamePreparationCursor {
         if self.phase == 2 {
             let old_name = self.node.as_ref().expect("owned found Drawing rename layer").borrow()?.project(2, |node| &crate::schema::layer_base(node).name);
             let new_name = payload.project(2, |payload| &payload.new_name);
-            let step = self.comparison.compare(old_name, new_name, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes })?;
-            let (ordering, progress) = match step { BoundedOrdStep::Progress(progress) => (None, progress), BoundedOrdStep::Complete { ordering, progress } => (Some(ordering), progress) };
+            let step = self.comparison.compare(old_name, new_name, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)?;
+            let (ordering, progress) = match step {
+                BoundedOrdStep::Authority(progress) => return Ok(pending(progress)),
+                BoundedOrdStep::Progress(progress) => (None, progress),
+                BoundedOrdStep::Complete { ordering, progress } => (Some(ordering), progress),
+            };
             if let Some(ordering) = ordering {
                 self.disposition = Some(if ordering == std::cmp::Ordering::Equal { DrawingRenameDisposition::NoOp } else { DrawingRenameDisposition::Changed });
                 self.comparison.begin_close();
@@ -148,9 +153,9 @@ impl DrawingOwnedRenamePreparationCursor {
             return Ok(pending(RetainedCloneProgress { copied_items: progress.compared_items, copied_bytes: progress.compared_bytes, ..Default::default() }));
         }
         if self.phase == 3 {
-            let step = self.comparison.close_step(1, grant.maximum_release_bytes)?;
-            if step == SnapshotRetirementStep::Complete { self.phase = 4; }
-            return Ok(pending(close_progress(step)));
+            let step = self.comparison.close_step(grant)?;
+            if self.comparison.terminal_is_empty() { self.phase = 4; }
+            return Ok(pending(step.progress()));
         }
         if grant.maximum_copy_bytes < std::mem::size_of::<DrawingOwnedRenamePlan>() { return Ok(pending(Default::default())); }
         let disposition = self.disposition.expect("settled owned Drawing rename disposition");
@@ -178,8 +183,8 @@ impl DrawingOwnedRenamePreparationCursor {
             if matches!(step, RetainedCloneStep::Complete(_)) { self.lookup = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = self.comparison.close_step(1, grant.maximum_release_bytes)?;
-        if step != SnapshotRetirementStep::Complete { return Ok(RetainedCloneStep::Progress(close_progress(step))); }
+        let step = self.comparison.close_step(grant)?;
+        if !self.comparison.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(step.progress())); }
         if let Some(plan) = &mut self.output {
             let step = plan.close_granted(grant)?;
             if matches!(step, RetainedCloneStep::Complete(_)) { self.output = None; }
@@ -187,12 +192,14 @@ impl DrawingOwnedRenamePreparationCursor {
         }
         if !self.path.terminal_is_empty() { return close_path(&mut self.path, grant); }
         if let Some(node) = &mut self.node {
-            let step = node.close_step(1)?;
-            if step == SnapshotRetirementStep::Complete { self.node = None; }
-            return Ok(RetainedCloneStep::Progress(close_progress(step)));
+            let step = node.close_step(grant)?;
+            if node.terminal_is_empty() { self.node = None; }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = RetainedCloneBinding::close_one(&mut self.payload, 1)?;
-        if step != SnapshotRetirementStep::Complete { return Ok(RetainedCloneStep::Progress(close_progress(step))); }
+        if self.payload.is_some() {
+            let step = RetainedCloneBinding::close_one(&mut self.payload, grant)?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
 
@@ -214,8 +221,6 @@ fn close_path(path: &mut PagedList<usize, {usize::MAX}>, grant: RetainedCloneGra
 }
 
 fn pending(progress: RetainedCloneProgress) -> DrawingOwnedRenamePreparationStep { DrawingOwnedRenamePreparationStep::Pending(progress) }
-fn close_progress(step: SnapshotRetirementStep) -> RetainedCloneProgress { match step { SnapshotRetirementStep::Pending { released_items, released_bytes } => RetainedCloneProgress { copied_items: released_items, released_bytes, ..Default::default() }, SnapshotRetirementStep::Complete => RetainedCloneProgress { copied_items: 1, ..Default::default() }, SnapshotRetirementStep::Blocked => Default::default() } }
-
 impl Drop for DrawingOwnedRenamePreparationCursor {
     fn drop(&mut self) { assert!(self.terminal_is_empty() || std::thread::panicking(), "owned Drawing rename preparation reached Drop before exact closure"); }
 }

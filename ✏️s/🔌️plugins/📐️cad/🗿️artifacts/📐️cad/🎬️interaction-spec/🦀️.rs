@@ -360,7 +360,7 @@ pub struct GuardSpec {
     pub expr: Expr,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct LengthEntrySpec {
     pub state: String,
@@ -382,7 +382,7 @@ pub struct LengthEntrySpec {
     pub default: Option<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct ScalarEntrySpec {
     pub state: String,
@@ -410,7 +410,7 @@ pub struct ScalarEntrySpec {
     pub default: Option<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct SpatialInteractionConfig {
     #[value(default)]

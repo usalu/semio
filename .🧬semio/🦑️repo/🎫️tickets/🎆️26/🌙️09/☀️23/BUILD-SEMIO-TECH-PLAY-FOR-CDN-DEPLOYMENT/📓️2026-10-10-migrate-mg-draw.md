@@ -1,0 +1,120 @@
+# 2026-10-10 mg-draw: source migration partly done, uncompiled, one design blocker
+
+Executor `mg-draw`, scope `✏️s/🔌️plugins/🖍️draw/**`. Resumed after the exemplar guide. Nothing below is compiler-verified: `semio-framework-plugin` is still red, so the drawing crate cannot be checked. The only checks run were `rustfmt --check` parse passes over all 50 changed files (no syntax errors). No tests were run, so there are no counts.
+
+## Done (source level)
+
+Leaf cursors, ported to the new comparator / projection / grant API:
+- `🧬️schema/📸️snapshot/🔎️lookup/🦀️.rs`, `🔎️lookup/🔗️owned/🦀️.rs`: `BoundedOrdCursor::compare(.., retirement_grant)` with `BoundedOrdStep::Authority`, comparator close via `close_step(grant)` + `terminal_is_empty`. The owned lookup projects its first frame, child frames and nodes under a funded turn (`RetainedOwnedProjection::project(.., grant)`), binds the target with `bind(&mut, grant)` and closes through `RetainedCloneBinding::close_one(.., grant)`. `new` is now infallible (first frame is projected on the first funded turn, phase 7).
+- `rename-layer/🎮️prepare/🦀️.rs`, `🔗️owned/🦀️.rs`, `↩️inverse/🦀️.rs`: same API changes, `check_original` binds with a default grant and refuses an unbound payload, `new` is infallible, inverse closes its paged cursors with `close_step`.
+- `📸️snapshot/🦀️.rs`: `retire_decoded_drawing_snapshot` drains `admit_owned_retirement` through its own quoted demands (it is the `retire_with` target of the snapshot derive).
+
+Host owned (`🔨️modules/🏠️host/🧰️owned`):
+- Factories: `DrawingSnapshotRetirementFactory` / `DrawingMutationRetirementFactory` are now type aliases of the framework `OwnedValueRetirementFactory<T>` (decision C). The old bespoke `DrawingOwnedRetirement` wrapper is deleted; `DrawingRetirementOwner` stays as the typed pending owner.
+- Envelope field authorities (`drawing_owned_field_authority!`): four demand methods, `close_step(RetainedCloneGrant)`, hex-box release of 4096 bytes, retirement through `store::artifact_retirement_{box_demands,box_close_step,owned_birth_demands,admit_owned}`; `OwnedSchemaDecodeDiagnostic` built with `::before(..)` / `.with_native(..)`. Conflict authority and `DrawingEnvelopeOwnedFieldCatalog` (now `FactoryPayloadRetirement`) updated.
+- Arena builder/bootstrap, digest authority, duplicate-rewrite and layout of `close_granted` -> `close_step(grant)` renames; internal drains return `RetainedCloneStep`.
+- Mutation candidate: new `retire_pending` slot plus `pump_retirement(cx)` (admits through `cx.retained_grant()` / `consume_retained`), `close_demands`, grant-based `close_step(source, grant)` and `coarse_demand()` for the rewrite/rebuild turns (over-approximation, 4096 per axis, depth 4).
+- Initializer: `close_demands`, `close_original(grant)`, `retirement_demands`, `begin_close`, `close_step(grant)` implemented on `ArtifactStoreInitializationAuthority`; catalog close wrapper uses `ArtifactStoreInitializationOwnerCatalog::{close_demands, close_step}`; new `AdmitOwners` phase builds `store::bounded_artifact_store_owners` (the removed `drawing_document_store_owners()`), the envelope is retired through `owners.retire_envelope_uninstalled`.
+
+Editor / viewer:
+- One-item preparation rewritten to the template shape (ManuallyDrop owner slots, `begin_batch_digest` via `store::admit_artifact_batch_digest`, `begin_demand`, three-generic request, `begin(request, grant)`, `advance -> (checkpoint, progress)`, `close_step(grant)`, four demand methods, terminal `Drop`).
+- `FixedOperationRegistry::close_step(grant)` callers, `Refused { kind, .. }`, owner hooks `build_{document,config,draft}_store_owners` deleted in editor and viewer (decision A).
+- `CanonicalJsonTree` (`owner = semio_framework_pack_json`) derived on 69 schema/mutation types (all payloads reachable from `DrawingMutation`) and on the two canvas window-config mutation enums; `RetireOwned` added to the viewer config types.
+- Tests migrated: gesture-operation-owner (grant helper, new `InteractiveJobCloseStep` shapes), editor unit fixture envelope retirement.
+
+## Not done / blocked
+
+1. Clone authorities and the initial snapshot clone (design blocker). `DrawingNativeCloneAuthority<T>`, the candidate's layer/fill/stroke/text/asset/segments clones and the initializer's `initial_snapshot_clone` call `cursor.advance(authority.borrow(&T), ..)` on a plain `&T` through `RetainedCloneBorrowAuthority::new(())`. That constructor no longer exists: a `RetainedCloneRef` only comes from a sealed `RetainedCloneSource`. The sources are (a) the genesis snapshot (an `Arc<DrawingSnapshot>`: workable with `RetainedCloneSource::admit_borrowed(arc, |a| &**a, grant)`), (b) payload parts of the replayed `&DrawingMutation` inside the envelope history ledger (no sealed custody exists), (c) a layer of the live snapshot for `DuplicateLayer` (the candidate mutates the same snapshot in place, which needs the alias returned before Apply). Options for main: seal each replayed mutation (move it into `RetainedCloneSource::admit_owned` when the edit is read), or accept bounded `Clone` of the preflighted payloads with fuel accounting, or route replay through `store::snapshot_clone_preparation`. I did not pick one. Until then the clone call sites in the host file do not compile.
+2. Plugin-level APIs still moving under rn-os: `ArtifactStoreInitializationAuthority::step` (still `StepOutcome` in the plugin trait), `ArtifactInstanceOperationOwner::{maintenance_step,close_step}` (`PluginCloseStep`, editor lines around 855 and 876 and the instance-owner test), `PluginApp::close_step(1, 4096)` in the archive-load test, `ArtifactApp::build_document_store_initialization_job`.
+3. Remaining tests, to be done with a compiler: `🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority` (24 old-protocol hits: catalog count API, `DrawingOwnedRetirement`, `RetainedCloneSource::from_authority(.., ())`, `SnapshotRetirementStep` drain helpers), `📐️footprint/🧪️tests`, export/geometry/scene tests that still use removed APIs (`artifact_retirement_*`, `take_returned_snapshot_read_retirement().close_step(1, 4096)`), `🚪️io/📤️export/📦️owned/🧪️tests`.
+4. `DrawingPresenceMutation` has a hand-written old-style `RetireOwned` (`sequence`/`leaf`) and no `CanonicalJsonTree`; not touched (ephemeral lane, unverified whether a tree is required).
+
+## Cross-scope requests to main
+
+- `store::Viewport2d` (`🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🦀️.rs`) needs `CanonicalJsonTree` (embedded in `DrawingCanvasWindowConfigMutation`, the viewer config mutation and the presence mutation).
+- `DrawingCanvasWindowConfigMutation::Set { viewport, framed }` is an externally tagged enum with named fields; per decision 13 it must be converted to a newtype variant over a payload record. I derived it as-is; the derive may refuse it.
+- Guide corrections: `ArtifactStoreInitializationOwnerCatalog` no longer has `close_step(max_items, bytes)` or `next_close_byte_demand`; the replacements are `close_step(grant)` and `close_demands()` (staged `empty()` / `admit_next(grant)` exist next to `try_new()`). `ArtifactEnvelopeDecodeOwnerBundle::retire_envelope(envelope)` is still the ungranted form while `DocumentStoreOwners::retire_envelope_uninstalled(envelope, grant)` is the granted one. `RetainedCloneBorrowAuthority::new(())` is gone.
+
+## Verification plan once `semio-framework-plugin` is green
+
+`cargo check --manifest-path ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml -p semio-s-artifact-draw-drawing --lib --tests` (native) and the wasm32-wasip2 lib check with the component features, then `--lib --no-fail-fast` unit tests, all through the slot gate with `mg-draw` private dirs.
+
+## Update after corrections #20 (decision: route clones through the snapshot-clone preparation)
+
+Done:
+- `DrawingCanvasWindowConfigMutation::Set` and `DrawingViewerCanvasWindowConfigMutation::Set` are now newtype variants over payload records `DrawingCanvasWindowConfigSet` / `DrawingViewerCanvasWindowConfigSet` (decision 13), with a flat-tagged-wire test in each crate's window tests (`to_value` equals the legacy `{"kind":"set","viewport":..,"framed":..}`, plus decode round trip). Unverified until the crate compiles.
+- Initial snapshot clone: the genesis `Arc<DrawingSnapshot>` is sealed with `RetainedCloneSource::admit_borrowed` (funded from `cx.retained_grant()`), the snapshot cursor advances from `source.borrow()`, and cursor and source close in separate phases (`CloseInitialSnapshotClone`, new `CloseInitialSnapshotSource`). `RetainedCloneBorrowAuthority` and the rotating synthetic grants are removed from that path.
+
+Not applied, needs confirmation from main: the snapshot-clone preparation is the publication pipeline, not a replay entry point. `RetainedClonePreparationFactory` seals the base `SnapshotRead` and the owned input mutation, clones the whole base snapshot into `post` (capped at `ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES`, 1 MiB), then calls `RetainedCloneEditCursor::advance(base: RetainedCloneRef<P>, post: &mut P, mutation: RetainedCloneRef<M>, grant)` and `take_inverse()`. The initializer replays persisted edits whose mutations live in the envelope ledger, which has no sealed custody, and the only public entry points are the factory/edit/cursor/step types. So the literal routing only works for the publication lane. Proposed reading, which I will implement on a yes:
+1. Publication: replace `DrawingArtifactStorePreparation` by `RetainedClonePreparationFactory` plus a Draw `RetainedCloneEdit` whose cursor is the current mutation candidate ported to `post`, taking the layer/fill/stroke/text/asset/path clone sources as `RetainedCloneRef`s projected from the `mutation` ref (and the duplicate-layer source from the `base` ref), with `take_inverse` built from the existing bounded inverse cursors. The candidate's `cx.consume_fuel` calls become a small local turn adapter.
+2. Initialization replay: drive `ArtifactStoreInitializationRuntime::fold_forward(edit, index, schema, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)` over the owned, cloned workspace (each effective operation is refused above one page of encoding), instead of the bespoke candidate. This deletes the arena pool, bounds, digest, locator, rebuild and clone authorities from the initializer path.
+Cost to flag: replay then applies each operation with the framework's `Mutation::apply` (work proportional to the document per operation, no per-turn traversal bound), and publication gains the 1 MiB clone cap. Both are behaviour changes relative to the bespoke bounded design.
+
+## Update after corrections #24 (seal unsealed clone sources, keep the bounded candidate)
+
+Implemented in `🔨️modules/🏠️host/🧰️owned/🦀️.rs` (unverified, parse-checked only):
+- `DrawingNativeCloneAuthority::step(source: RetainedCloneRef<T>, cx)`: advances the clone cursor from a sealed ref, funded by `cx.retained_grant()` / `consume_retained`; the old borrow authority, rotating grants and count-based close are gone.
+- Candidate: `step(access: DrawingSourceAccess, mutation: RetainedCloneRef<DrawingMutation>, cx)`. Payload clone sources (asset id/asset, layer, image key, content, blend mode, new name, boolean operation, segments, fill, stroke) are projected from the sealed mutation ref through named projection functions; the duplicate-layer source is projected from a sealed snapshot ref. Read-only phases take `access.read()`, mutating phases `access.write()` (error if the snapshot is still sealed).
+- Initializer, replayed ledger mutation: `seal_forward` moves the forward out of the history ledger (an allocation-free `DeleteLayer` placeholder stays behind), or decodes the superseding replacement with `store::admit_replacement`, and seals it with `RetainedCloneSource::admit_owned`. The candidate runs against `forward_source.borrow()`. The new `ReturnForward` phase calls `take_authority` until the original is returned, then restores it to the ledger slot (or hands a replacement to `retire_pending`). Cancel/fault close the candidate first, then the snapshot source, then the forward source.
+- Initializer, duplicate-layer source before in-place mutation: the candidate reports `needs_shared_snapshot` for the locate/prepare phases of `DuplicateLayer`; the initializer seals a `runtime.share_current()` alias (`seal_snapshot`), runs the candidate with `DrawingSourceAccess::Shared`, and `release_snapshot` closes the source before the first mutating phase. The workspace-clone trigger is skipped while the alias is live.
+- Genesis snapshot clone sealed the same way (earlier update).
+
+Open points: the stale `retained-mutation-authority` tests still call the old candidate/clone/catalog signatures; supersession lookup assumes `runtime.supersessions().get(&MutationId)` and `store::admit_replacement` as used inside the store; the initializer `step` itself stays on `StepOutcome` until rn-os lists the new shape.
+
+## State at PARK (compile rounds just started)
+
+All edited files are in a consistent, parse-clean state (rustfmt parse pass over all changed files; no half edits). No draw source file was changed in the compile round.
+
+Compile round 1 (native `--lib`, slot-gated, private dirs `mg-draw`, script `/tmp/mgdraw-check.sh`, log `/tmp/mgdraw-native.log`; the script and log are scratch and may be gone):
+- Cargo workspace: `--manifest-path ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml -p semio-s-artifact-draw-drawing --lib --message-format short --keep-going`.
+- Attempt 1 and 2: `error: could not compile semio-s-artifact-stdio-binary (lib) due to 9 previous errors` (cross-scope: `semio-framework-pack-json` was only a dev-dependency of `🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/Cargo.toml`; stdio fixed it while I waited).
+- Attempt 3 (last): `error: could not compile semio-framework-plugin (lib) due to 1 previous error; 1274 warnings emitted`. The single error is inside the plugin crate (cross-scope, pl-a..pl-d); the draw crate was not reached.
+
+Next steps on resume:
+1. Re-read the corrections file (newer than #40) and `os.status`.
+2. Re-run `/tmp/mgdraw-check.sh --lib` (recreate it from the command above if missing). Once the plugin crate compiles, fix draw errors in this order: host owned `🦀️.rs` (clone/candidate/initializer call sites, `StepOutcome`-to-new `step` shape if the plugin trait changed), editor (`PluginCloseStep` -> `PluginLifecycleStep` in `maintenance_step`/`close_step` around lines 855-880, mounted job hooks taking `RetainedCloneGrant`), window config owners (#35/#36: `WindowConfigApplyEdit` / `config_apply_preparation_factory`, mutations need `RetainedClone` + `exchange`; reconcile with my `Set(payload)` newtype), viewer, snapshot/lookup cursors.
+3. Then `--target wasm32-wasip2 --lib` with the component features from the crate `[features]`, then `--tests` (skip while the `artifact-app-testing` feature is red), then `cargo test --lib --no-fail-fast -- --test-threads=4`.
+4. Migrate the stale tests: `🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority`, `📐️footprint/🧪️tests`, `🚪️io/📤️export/📦️owned/🧪️tests`, export/geometry/scene tests, editor archive-load and instance-owner tests.
+5. Keep the one-item route paged (#30/#32): the hand-written `DrawingArtifactStorePreparation` stays (no `RetainedClonePreparationFactory`); consider `store::PagedOneItemPreparationFactory` only if it removes code.
+
+## Resume round (after usage reset): blocked on upstream stdio-xml
+
+Native `--lib` of `semio-s-artifact-draw-drawing` through the slot gate: plugin lib and stdio-binary now compile; stdio-pdf's two E0106 lifetime errors were fixed upstream during the round. The draw crate is still not reached:
+`error: could not compile semio-s-artifact-stdio-xml (lib) due to 3 previous errors; 78 warnings emitted`
+- `🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs:74:128`: `canonical field requires a direct native role; custom serializers and flattened views are not field owners` (CanonicalJsonTree derive refuses a field with a custom serializer / flatten).
+- same file `:49:128` and `🧬️mutations/📜️set-doctype/🦀️.rs:6:138`: `XmlDoctype: ArtifactCanonicalJsonTree` not satisfied (consequence of the first).
+Owner: stdio-b (xml). Draw depends on stdio-xml as a normal dependency, so nothing in draw can be compiled until it is fixed. Source state of draw is unchanged since the PARK note; next steps there stand.
+
+## Round after "stdio-xml green": blocked by further upstream stdio crates (no polling per #45)
+
+Native `--lib` of the drawing crate, in order of what stopped it:
+1. `semio-s-artifact-stdio-zip` (1 error: `📦️opc/🪶️sqlite/💰️backing/📥️reconstruction/🦀️.rs:169:36 E0593 closure expected to take 3 arguments`) and `semio-s-artifact-stdio-svg` (3 errors: `🏅️standards/🔖️1.1/…/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs:17` incompatible `decode_sqlite_snapshot_native` signature (`NativeSnapshotDecodeOwner`), and `🚦️native/🦀️.rs:16,46` `?` in a closure not returning Result). Both changed upstream while I waited.
+2. Latest (`/tmp/mgdraw-native.log`): `semio-s-artifact-stdio-png` (2 errors: `📷️png/…/🏅️standards/🔖️1.2/…/⚙️operations/🦀️.rs:239` E0061, a function called with 2 of 3 arguments and one with 6 of 7). A re-check started before the PARK/budget message may still have been running in the background; its log is `/tmp/mgdraw-native.log`.
+The drawing crate itself has not been reached; no draw source changed in this round. Resume: run `/tmp/mgdraw-check.sh --lib`, then wasm32-wasip2 with the component features, per the order in the PARK note.
+
+## Round after "stdio-png green": blocked by stdio-semio
+
+Native `--lib`: png, zip, svg, xml now compile. New first upstream error:
+`error: could not compile semio-s-artifact-stdio-semio (lib) due to 1 previous error; 752 warnings emitted`
+- `🗄️stdio/🗿️artifacts/🧿️semio/…/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔄️dxf/🔖️r12/✳️any/🦀️.rs:23:63: error[E0432]: unresolved imports semio_s_artifact_stdio_dxf::{DxfArc, DxfCircle, DxfInsert, DxfLine, ..}` (draw enables the `conversion-drawing` feature of stdio-semio). Owner: stdio-a / dxf.
+Draw not reached; no draw source changed. os-kernel was not red in this round.
+
+## Round after "stdio-semio green": blocked by the plugin crate (regressed)
+
+Native `--lib`: every stdio dependency now compiles; the plugin crate is red again:
+`error: could not compile semio-framework-plugin (lib) due to 6 previous errors; 1266 warnings emitted`, first errors `🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:16449:61 E0425 cannot find type MountedOwnerPhaseV1` and `:16450:65` / `:16452:59 cannot find type MountedOwnerTurnV1` (plugin executors pl-a..pl-d, in flight). Draw not reached; no draw source changed. Resume with `/tmp/mgdraw-check.sh --lib`, then wasm32-wasip2 with the component features.
+
+## State at PARK (second): draw crate now REACHED by the compiler, 216 errors
+
+All 87 changed `.rs` files parse (rustfmt parse pass, no errors). No background runs left. Last native `--lib` (`/tmp/mgdraw-check.sh --lib`, log `/tmp/mgdraw-native.log`, may be gone; recreate the script from the first PARK note): `error: could not compile semio-s-artifact-draw-drawing (lib) due to 216 previous errors; 274 warnings emitted`. All stdio deps and the plugin lib compile.
+
+Fixed since that log (source only, not re-checked): (1) `semio_framework_value::RetireOwned` added to all command payload structs (standards `✏️editor/🎮️commands/**`, `DrawingInteractionSnapshot`, `CanvasPointerDown` in `drawing/✏️editor/🪆️1-any`, nudge macro); (2) `InteractiveJobCloseStep::Refused(x)` -> struct form in export/owned, clipboard job, simplify, import-image admission, export-document; (3) `AppOperationContext { retained: request.retained, .. }` added at 6 sites (editor x2, viewer, simplify, admission, export).
+
+Remaining error clusters (from the log), in suggested order:
+1. Root `🦀️.rs` lines 236..354 + 370: `canonical field requires a direct native role; flattened views are not field owners` (7x) and `DrawingShapeBody/PathBody/TextBody/ImageBody/GroupBody/BooleanBody/TraceBody: ArtifactCanonicalJsonTree` unsatisfied (bodies are `#[value(flatten)]` into `DrawingLayerNode`). Per corrections #13: restructure the layer node as newtype variants with identical wire (or report the derive limit to main) and prove byte identity with a serde_json test.
+2. Instance owner (`✏️editor/🦀️.rs` ~845-880): trait now `retirement_demands(body)`, `maintenance_step(RetainedCloneGrant)`, `close_step(RetainedCloneGrant)` returning `PluginLifecycleStep` (`Progress(p)|Complete(p)|Blocked{reason}|AwaitingInput`). Plan: quote `RetirementDemand { release_bytes: PAGE, depth: 1 }` when non-empty; map `InteractiveJobCloseStep::{Pending{progress}->Progress, Complete{progress}->Complete, Blocked->Blocked}`. Mounted hooks (~1886): `mounted_job_maintenance_step/close_step(instance, grant) -> PluginLifecycleStep`, new `mounted_job_close_demands(instance, body)`; port `geometry_session::{maintenance, close}` (`🧵️geometry/🦀️.rs` lines ~147-152) onto `GeometryOwner::close_step(grant)`/`begin_close`.
+3. Job impls still on the old shape (`step -> StepOutcome`, no `borrow_outcome`, `retained_work_*`, `retained_birth_grant`): `DrawingGestureOperationJob` (`✏️editor/🦀️.rs:948`), `DrawingClipboardJob` (`📋️clipboard/🧵️job`; also `ArtifactReservedJob` no longer has `close_step`/`terminal_is_empty`, missing `owned` module import, `InteractionHoverState`, `NativeDecodeContinuation`, `ClipboardFragment/ClipboardError` moved), `DrawingOwnedSerializerJob` (`🚪️io/📤️export/📦️owned`), export-document job, import-image admission (`retained_work_remaining/can_enter/charge` removed; `DrawingImageAsset` import), simplify (`ControlledRetirement` path: `retirement::controlled::ControlledRetirement`), import-image publication (`work_demands` on `PagedUtf8AppendCursor`). Template: animate `PresentationImportJob` (`🎞️animate/…/🎬️presentation/…/✏️editor/🦀️.rs` ~793-880): `step -> Result<Option<JobOutcomeBorrow>, ValueError>` with `RetainedJobPublication::advance_from_source`, `borrow_outcome`, `close_step(grant)` via `store::artifact_retirement_*`.
+4. Geometry `BoundedJob` (`✏️editor/🧵️geometry/🦀️.rs`): trait is now `step(budget, &mut IoRunControl, &mut SqliteSnapshotControl, cx) -> Result<JobStep, ValueError>`, plus `close_step(cx) -> Result<bool,_>` and `retirement_demands(copy)`; registration takes `BoundedJobFactory { admit, demands }` (use `admit_original_job`), `job_kind_is_admitted` is gone, `AppRenderOperationContext` has a new `mounted_policy` field.
+5. Window configs (`…/🪟️windows/🖼️canvas/🎚️config/🦀️.rs` edit + view): `WindowConfigOwner` now needs `type Edit`, `MAXIMUM_PREPARATION_DEPTH`, `build_retained_edit`, and the config + mutation need `RetainedClone` (corrections #35/#36: `WindowConfigApplyEdit<State, Mutation>`, mutations implement `exchange`). Keep the `Set(payload)` newtype from decision 13.
+6. Smaller: `DrawingPresence: ArtifactPresenceSnapshot` (#34: one-line `impl store::ArtifactPresenceSnapshot for DrawingPresence {}` after adding `ToValue+FromValue+RetireOwned`); `drawing` path used as `drawing::presence::…`/`drawing::…` (lines 1850/1854: path from `crate::editor::drawing`); `serde` missing for `🧬️schema/🎬️scene/📍️placement` (add `serde` dependency or drop the derives); `io/📝️text/🪪️identity/{📋️clone,➕️creation}` private imports (`DrawingIdentityKind`, `NativeEncodeControl`, `ValueError`, `DrawingIdentity`); export `svg` module path (`🚪️io/📤️export/📦️owned:7`); `export_stem` private; `inverse_drawing_mutation` missing in `crate::op` (patch-layer:33); `SharedUtf8` vs `String` in canvas-pointer-down:693; `Option<UiValue>::clone` in `📌️panels/🔍️properties:341`; host owned: `step_granted` (3098: rename to `step`), `&str` vs `&PagedUtf8` mismatch at 3153/3200 (identity cursor API), the init authority `step`/`borrow_outcome` shape (4800: `ArtifactStoreInitializationAuthority::step`).
+7. Then re-run native `--lib`; the host-owned file only showed 6 errors so far because rustc stops before later phases, expect more.

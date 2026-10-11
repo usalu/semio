@@ -11,7 +11,8 @@ use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Model
 /// 🌳️ One node of the `IfcRelAggregates`/`IfcRelContainedInSpatialStructure` decomposition tree.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct SpatialNode {
     pub id: u64,
     pub ifc_type: String,
@@ -59,13 +60,15 @@ impl Mat4 {
 
 /// 🏷️ One `IfcPropertySingleValue` — value kept as the raw generic `Part21Value` (may be a
 /// `Typed` wrapper like `IFCLENGTHMEASURE(3000.)`), nothing schema-narrowed away.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct PropertyValue {
     pub name: String,
     pub value: Part21Value,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct PropertySet {
     pub id: u64,
     pub name: String,

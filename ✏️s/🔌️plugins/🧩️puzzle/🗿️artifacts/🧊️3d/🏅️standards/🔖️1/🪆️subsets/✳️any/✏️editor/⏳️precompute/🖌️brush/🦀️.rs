@@ -15,7 +15,8 @@ use crate::editor::puzzle3d::precompute::geometry::{
     collision_body_from_buffers, compute_brush_placement_pose, normalize_vec3, pose_isometry, precompute_work, quat_rotate_vec, vec3_add, CollisionAabb, CollisionBody, CollisionPenetrationState, CollisionStepContext, CollisionStepResult, Pose3d,
 };
 use crate::standards::v1::subsets::any::schema::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, SceneConfig};
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
+use crate::puzzle_job::JobTurn;
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, StepContext};
 use semio_framework_plugin::{ArtifactInstanceOperationOwnerHandle, ToolRunJobPort};
 use semio_framework_tool_run::{ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict};
 use std::collections::HashMap;
@@ -605,7 +606,7 @@ pub(crate) fn brush_object_id(scene_snapshot: &impl BrushSceneView, payload: &Br
 //#region ⏯️BrushSuggestionsRun
 
 /// 🚥️ What the run decided about one compatible candidate of its target vortex.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum BrushSuggestionVerdict {
     Pending,
     Free,
@@ -616,7 +617,7 @@ pub enum BrushSuggestionVerdict {
 /// 🗂️ One target vortex's compatible candidates as the run resolves them: candidate `key` (the trace key)
 /// has pose `previews[key]` and verdict `verdicts[key]`. `writer` is the `(run, generation)` that published
 /// it, so a closing job never retires what its successor already published.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct BrushSuggestionsFound {
     pub(crate) writer: (u64, u32),
     pub(crate) target: String,
@@ -649,7 +650,7 @@ impl BrushSuggestionsFound {
 }
 
 /// 📨️ A tool run action the link asked the host for and has not seen answered yet.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum BrushSuggestionsRequest {
     Start,
     Abort,
@@ -659,7 +660,7 @@ pub enum BrushSuggestionsRequest {
 /// open suggestion popup wins over the brush hover), the run's wake port, the one outstanding start or abort
 /// request, and the candidates the live run has resolved so far. Commands write the target, the run job
 /// follows it and publishes what it found, renders and accepts read it. Ephemeral local-only state.
-#[derive(Default)]
+#[derive(Default, semio_framework_value::RetireOwned)]
 pub struct BrushSuggestionsLink {
     menu: Option<String>,
     hover: Option<String>,
@@ -737,6 +738,7 @@ enum BrushSuggestionsPhase {
 }
 
 /// 🧱️ One placed object's collision footprint.
+#[derive(semio_framework_value::RetireOwned)]
 struct BrushSuggestionsPlaced {
     object_id: String,
     mesh_url: String,
@@ -745,6 +747,7 @@ struct BrushSuggestionsPlaced {
 }
 
 /// 🔎️ The search over one target vortex's compatible candidates, resumable between collision units.
+#[derive(semio_framework_value::RetireOwned)]
 struct BrushSuggestionsSearch {
     found: BrushSuggestionsFound,
     cursor: usize,
@@ -781,6 +784,22 @@ fn brush_suggestions_scale(scale: &Option<semio_framework_value::DslValue>) -> f
 /// 🥽️ Where a run reads one mesh identity's geometry: the process-wide derived mesh store in production.
 pub(crate) type BrushSuggestionsMeshSource = fn(&str) -> Option<(Vec<f32>, Vec<u32>)>;
 
+/// ♻️ The owners one `BrushSuggestionsRunJob` still holds when it closes, retired as one controlled bundle.
+#[derive(semio_framework_value::RetireOwned)]
+struct BrushSuggestionsRunOwners {
+    owner: ArtifactInstanceOperationOwnerHandle,
+    port: ToolRunJobPort,
+    writer: ToolRunTickWriter,
+    scene: Arc<SceneConfig>,
+    catalogs: KindCatalogBundle,
+    lane: Vec<String>,
+    meshes: HashMap<String, CollisionBody>,
+    fallback: CollisionBody,
+    placed: Vec<BrushSuggestionsPlaced>,
+    search: Option<BrushSuggestionsSearch>,
+    released_link: Option<BrushSuggestionsFound>,
+}
+
 /// ⏯️ The read-only brush suggestions run job (`📋️tool-run-contract.md` §3.7): bounded preparation of the
 /// collision meshes (process-wide derived geometry, else the scaled box fallback) and placed bodies, then a
 /// search over the target vortex's compatible candidates. Every candidate is upserted `testing` with its pose,
@@ -788,6 +807,8 @@ pub(crate) type BrushSuggestionsMeshSource = fn(&str) -> Option<(Vec<f32>, Vec<u
 /// instance's [`BrushSuggestionsLink`]. The job follows the link's target: a new target clears the trace and
 /// searches again, and a settled search waits on its port until a gesture wakes it.
 pub(crate) struct BrushSuggestionsRunJob<O: BrushSuggestionsOwner> {
+    close_owners: crate::puzzle_job::WorkClosing<BrushSuggestionsRunOwners>,
+    outbox: crate::puzzle_job::JobOutbox,
     owner: ArtifactInstanceOperationOwnerHandle,
     port: ToolRunJobPort,
     writer: ToolRunTickWriter,
@@ -814,6 +835,8 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
         let fallback = collision_body_from_buffers(&fallback.0, &fallback.1)?;
         let catalogs = scene.kind_catalogs.clone().unwrap_or_default();
         Some(Self {
+            close_owners: Default::default(),
+            outbox: Default::default(),
             owner,
             port,
             writer: ToolRunTickWriter::new(identity),
@@ -981,7 +1004,7 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
 
     /// 📣️ Publishes an unpublished search to the link, waits on the port once the search it follows is
     /// settled, and flushes the step's tick.
-    fn settle_step(&mut self, context: &mut StepContext<'_>, desired: Option<String>) -> StepOutcome {
+    fn settle_step(&mut self, context: &mut StepContext<'_>, desired: Option<String>) -> JobTurn {
         let following = self.search.as_ref().map(|search| search.found.target.as_str()) == desired.as_deref();
         let idle = self.phase == BrushSuggestionsPhase::Ready && following && self.search.as_ref().is_none_or(|search| search.settled);
         let found = (!self.published).then(|| self.search.as_ref().map(|search| search.found.clone()));
@@ -1003,31 +1026,28 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
         self.flush(context)
     }
 
-    fn flush(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+    fn flush(&mut self, _context: &mut StepContext<'_>) -> JobTurn {
         if self.writer.is_empty() {
-            return StepOutcome::Yield;
+            return JobTurn::Yield;
         }
         self.progress_sequence += 1;
         let (tested, free, collisions, total) = self.search.as_ref().map_or((0, 0, 0, None), |search| (search.tested, search.free, search.collisions, Some(search.found.previews.len() as u64)));
         let counters = BrushSuggestionsRunCounter::ALL.iter().zip([tested, free, collisions]).map(|(counter, value)| ToolRunCounter { counter: counter.index(), value }).collect();
         self.writer.progress(ToolRunProgress { identity: self.writer.identity(), sequence: self.progress_sequence, state: ToolRunState::Running, stage: self.stage.index(), completed: tested, total, counters, units_per_second: 0.0, conflicts: 0, steps: ToolRunStepRing::default() });
         let Some(Ok(bytes)) = self.writer.finish().map(|tick| tick.encode()) else {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            return JobTurn::Fault(b"brush-suggestions-tick-encode".to_vec());
         };
-        match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
-            Ok(payload) => StepOutcome::PreviewReady(payload),
-            Err(rejected) => {
-                drop(rejected.into_source());
-                StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
-            }
+        if bytes.len() > semio_framework_job::JOB_PAYLOAD_PAGE_BYTES {
+            return JobTurn::Fault(b"brush-suggestions-tick-page".to_vec());
         }
+        JobTurn::Preview(bytes.to_vec())
     }
 }
 
-impl<O: BrushSuggestionsOwner> InteractiveJob for BrushSuggestionsRunJob<O> {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
+    fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
         if context.is_cancelled() || self.closed {
-            return StepOutcome::Cancelled;
+            return JobTurn::Cancelled;
         }
         let Ok(desired) = self.owner.with_mut::<O, _>(|owner| Ok(owner.brush_suggestions().target().map(str::to_string))) else {
             return self.flush(context);
@@ -1048,33 +1068,78 @@ impl<O: BrushSuggestionsOwner> InteractiveJob for BrushSuggestionsRunJob<O> {
         }
         self.settle_step(context, desired)
     }
+}
 
-    fn begin_close(&mut self) {
-        self.closed = true;
+impl<O: BrushSuggestionsOwner> InteractiveJob for BrushSuggestionsRunJob<O> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        match self.outbox.phase(cx)? {
+            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
+            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+                self.outbox.retire_step(cx)?;
+                return Ok(None);
+            }
+            crate::puzzle_job::OutboxPhase::Idle => {}
+        }
+        let turn = self.turn(cx);
+        self.outbox.settle(turn, cx)
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        self.closed = true;
-        let writer = self.writer_run();
-        let retired = self.owner.with_mut::<O, _>(|owner| {
-            let link = owner.brush_suggestions();
-            if link.found.as_ref().is_some_and(|found| found.writer == writer) {
-                link.found = None;
-            }
-            Ok(())
-        });
-        if retired.is_err() {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        self.outbox.borrow_outcome(descriptor)
+    }
+
+    fn begin_close(&mut self) {
+        if std::mem::replace(&mut self.closed, true) {
+            return;
         }
-        self.search = None;
-        self.meshes = HashMap::new();
-        self.placed = Vec::new();
-        let _ = self.writer.finish();
-        InteractiveJobCloseStep::Complete
+        let writer = self.writer_run();
+        let released_link = self
+            .owner
+            .with_mut::<O, _>(|owner| {
+                let link = owner.brush_suggestions();
+                Ok(link.found.take_if(|found| found.writer == writer))
+            })
+            .ok()
+            .flatten();
+        let identity = self.writer.identity();
+        self.close_owners.stage(BrushSuggestionsRunOwners {
+            owner: self.owner.clone(),
+            port: self.port.clone(),
+            writer: std::mem::replace(&mut self.writer, ToolRunTickWriter::new(identity)),
+            scene: Arc::clone(&self.scene),
+            catalogs: std::mem::take(&mut self.catalogs),
+            lane: std::mem::take(&mut self.lane),
+            meshes: std::mem::take(&mut self.meshes),
+            fallback: self.fallback.clone(),
+            placed: std::mem::take(&mut self.placed),
+            search: self.search.take(),
+            released_link,
+        });
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+        self.begin_close();
+        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.close_owners, grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closed && self.search.is_none() && self.meshes.is_empty() && self.placed.is_empty()
+        self.closed && self.outbox.terminal_is_empty() && self.close_owners.is_empty()
     }
 }
 //#endregion ⏯️BrushSuggestionsRun

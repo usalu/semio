@@ -6,6 +6,8 @@ mod allocation;
 static ORIGINAL_PORT_ALLOCATOR: allocation::RequestedAllocator=allocation::RequestedAllocator;
 
 struct OriginalPort { owner:semio_framework_value::retirement::controlled::RetainedOwnerGate<ControlledRetirement<String>>, retaining:Option<ControlledRetirement<Vec<String>>>,cancelling:bool,receipt:RetainedCloneProgress }
+/// 🔒️ Test fixture only: the port is driven from one thread and `retaining` is read exclusively through `&self` demand queries between steps.
+unsafe impl Sync for OriginalPort {}
 impl OriginalPort {fn demand(&self,read:impl FnOnce(&ControlledRetirement<String>)->Result<usize,ValueError>)->Result<usize,ValueError>{let owner=self.owner.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original port owner busy"))?;read(&owner)}}
 impl GeometryPort for OriginalPort {
     fn begin_retain(&mut self,handles:Vec<String>)->Result<(),(ValueError,Vec<String>)>{if self.retaining.is_some(){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original retain request busy"),handles));}self.retaining=Some(ControlledRetirement::new(handles)?);Ok(())}

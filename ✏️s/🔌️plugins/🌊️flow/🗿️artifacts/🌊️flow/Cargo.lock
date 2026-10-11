@@ -2229,6 +2229,7 @@ name = "semio-framework-artifact-reference"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-pack-json",
  "semio-framework-schema-registry",
  "semio-framework-value",
 ]
@@ -2403,6 +2404,7 @@ name = "semio-framework-job"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-diagnostic",
  "semio-framework-trace",
  "semio-framework-value",
 ]
@@ -2446,6 +2448,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-replication",
+ "semio-framework-value",
  "semio-framework-value-derive",
 ]
 
@@ -2971,6 +2974,7 @@ dependencies = [
  "semio-framework-dsl-record-derive",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-schema-composition",

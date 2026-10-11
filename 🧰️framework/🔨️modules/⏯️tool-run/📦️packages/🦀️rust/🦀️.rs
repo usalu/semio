@@ -2,10 +2,6 @@
 //! owner file compiles unmodified on native, `wasm32-unknown-unknown` and `wasm32-wasip2`.
 
 #[cfg(test)]
-#[global_allocator]
-static ORIGINAL_WRITER_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
-
-#[cfg(test)]
 extern crate self as semio_framework_tool_run;
 
 #[path = "../../🦀️.rs"]

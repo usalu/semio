@@ -33,7 +33,7 @@ pub const RASTER_PAINT_TOOL_KEY: &str = "stroke:0";
 /// 🖌️ One stroke dispatch as both hosts send it: the layer, the tool (`brush` or `eraser`) and the samples in the target
 /// image's pixels, in drawing order, split into their x and y columns; `phase` places it in the streamed stroke `gesture`
 /// names (`stream`, `commit`, `abort` with a `reason`; absent: the whole stroke at once).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "paint-stroke")]
 pub struct PaintStroke {
     pub layer_id: String,
@@ -264,7 +264,7 @@ pub struct RasterPaintTool {
 impl RasterPaintTool {
     /// 🚀️ The tool at rest, authoring `tool` transactions for `press` under this admission's seed.
     pub fn at_rest(tool: &str, press: &str, authoring_seed: &str) -> Result<Self, ToolRefusal> {
-        let runner = ToolMachineRunner::start(tool, protocol::ActorId(authoring_seed.to_string()), PaintToolContext::default(), PaintToolHost)?;
+        let runner = ToolMachineRunner::start(tool, protocol::ActorId(authoring_seed.into()), PaintToolContext::default(), PaintToolHost)?;
         Ok(Self { runner, press: press.to_string(), authoring_seed: authoring_seed.to_string() })
     }
 }
@@ -289,7 +289,7 @@ impl GestureTool for RasterPaintTool {
         }
         let snapshot = machine::restore::<paint_tool::PaintTool, machine::NoMigrations>(&persisted, PaintToolContext { stroke: Some(leaf.clone()) }, &[]).map_err(|_| ToolRefusal::Closed)?;
         let transaction = ToolTransaction::resume(state.transaction.clone(), vec![(RASTER_PAINT_TOOL_KEY.to_string(), leaf)]);
-        let runner = ToolMachineRunner::resume(RASTER_PAINT_TOOL_ID, protocol::ActorId(state.authoring_seed.clone()), PaintToolContext::default(), snapshot, Some(transaction), PaintToolHost)?;
+        let runner = ToolMachineRunner::resume(RASTER_PAINT_TOOL_ID, protocol::ActorId(state.authoring_seed.as_str().into()), PaintToolContext::default(), snapshot, Some(transaction), PaintToolHost)?;
         Ok(Self { runner, press: state.gesture.clone(), authoring_seed: state.authoring_seed.clone() })
     }
 
@@ -417,6 +417,13 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for PaintStrokeWork {
 
     fn extent(&self, command: &RasterCommand, _snapshot: &RasterSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>) -> Option<usize> {
         matches!(command, RasterCommand::PaintStroke(_)).then_some(1)
+    }
+
+    fn work_demands(&self, input: &ArtifactCommandInputs<'_, EditorApp<RasterPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let RasterCommand::PaintStroke(payload) = input.command else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "raster paint command required")) };
+        let samples = payload.xs.len().saturating_add(payload.ys.len()).saturating_mul(std::mem::size_of::<f64>());
+        let copy_bytes = std::mem::size_of::<(Emit<RasterMutation, RasterConfigMutation>, RasterCompositeWindowTransient)>().saturating_add(samples);
+        Ok(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: samples, depth: 1, ..Default::default() })
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>, Fault> {

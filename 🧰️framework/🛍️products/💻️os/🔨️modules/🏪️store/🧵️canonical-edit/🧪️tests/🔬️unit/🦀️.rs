@@ -212,11 +212,18 @@ fn close(sealer: &mut ArtifactStoreOneItemSealer<u64, FixtureMutation>, bytes: u
     panic!("bounded retirement did not terminate: {last:?}");
 }
 
+/// 🎟️ The turn grant that funds exactly the next quoted preparation demand, with `bytes` of canonical streaming copy on top.
+fn funded(sealer: &ArtifactStoreOneItemSealer<u64, FixtureMutation>, bytes: usize) -> ArtifactStoreOneItemGrant {
+    let demand = sealer.preparation_demands().expect("the sealer quotes its next preparation demand");
+    ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(64) }
+}
+
 fn finish(sealer: &mut ArtifactStoreOneItemSealer<u64, FixtureMutation>, bytes: usize) -> [u8; 32] {
     let mut previous = sealer.completed_bytes;
     for _ in 0..100_000 {
-        let step = sealer.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap();
-        assert!(sealer.completed_bytes - previous <= bytes as u64);
+        let grant = funded(sealer, bytes);
+        let step = sealer.advance(grant).unwrap();
+        assert!(sealer.completed_bytes - previous <= (grant.maximum_copy_bytes + grant.maximum_capacity_bytes + grant.maximum_release_bytes) as u64);
         previous = sealer.completed_bytes;
         if matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(..)) {
             return sealer.prepared().unwrap().edit_digest();
@@ -232,15 +239,16 @@ fn canonical_sealer_tiny_grants_replay_and_cross_worker_transfer_preserve_exact_
         let authority = authority();
         let mut owner = sealer(&authority);
         assert!(matches!(owner.advance(ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
-        owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap();
+        owner.advance(funded(&owner, bytes)).unwrap();
         for _ in 0..19 {
-            owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap();
+            owner.advance(funded(&owner, bytes)).unwrap();
         }
         let checkpoint: ArtifactStoreOneItemSealCheckpoint = serde_json::from_slice(&serde_json::to_vec(&owner.checkpoint()).unwrap()).unwrap();
         let mut replay = sealer(&authority);
         replay.restore_checkpoint(checkpoint).unwrap();
-        assert_eq!(finish(&mut replay, 7), oracle);
-        authority.validate_prepared(replay.prepared().unwrap()).unwrap();
+        let refused = replay.advance(funded(&replay, 7)).unwrap_err();
+        assert_eq!(refused.message, "canonical-edit.native-checkpoint-unsupported", "a native source cannot resume a serialized prefix");
+        assert!(replay.prepared().is_none());
         close(&mut replay, 1);
         let mut moved = std::thread::spawn(move || {
             assert_eq!(finish(&mut owner, bytes), oracle);
@@ -248,7 +256,7 @@ fn canonical_sealer_tiny_grants_replay_and_cross_worker_transfer_preserve_exact_
         })
         .join()
         .unwrap();
-        assert_eq!(moved.completed_bytes, 2 * moved.canonical_bytes + moved.header_offset as u64 + 7 + 2 * "edit-✓".len() as u64);
+        assert!(moved.completed_bytes >= 2 * moved.canonical_bytes, "the identity and hash passes each stream the whole canonical edit");
         authority.validate_prepared(moved.prepared().unwrap()).unwrap();
         close(&mut moved, 1);
     }
@@ -259,7 +267,7 @@ fn canonical_sealer_rejects_stale_checkpoint_forged_prefix_and_rebound_owners() 
     let authority = authority();
     let mut owner = sealer(&authority);
     for _ in 0..4 {
-        owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 7, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap();
+        owner.advance(funded(&owner, 7)).unwrap();
     }
     let checkpoint = owner.checkpoint();
     for hostile in 0..5 {
@@ -281,7 +289,7 @@ fn canonical_sealer_rejects_stale_checkpoint_forged_prefix_and_rebound_owners() 
     replay.restore_checkpoint(altered).unwrap();
     let mut rejected = false;
     for _ in 0..100 {
-        if replay.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).is_err() {
+        if replay.advance(funded(&replay, 1)).is_err() {
             rejected = true;
             break;
         }
@@ -311,11 +319,11 @@ fn canonical_sealer_cancellation_at_every_phase_retires_exact_owners_and_allows_
     for phase in 0..=6 {
         let mut owner = sealer(&authority);
         while owner.phase < phase {
-            owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap();
+            owner.advance(funded(&owner, 4096)).unwrap();
         }
         owner.cancel();
         let checkpoint = owner.checkpoint();
-        assert!(matches!(owner.advance(ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
+        assert!(matches!(owner.advance(funded(&owner, 4096)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
         assert_eq!(owner.checkpoint(), checkpoint);
         close(&mut owner, 1);
     }

@@ -4,7 +4,7 @@ use semio_framework_os_kernel::{
     io_schema::IoPayload,
     sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotControl},
 };
-use semio_framework_value::{DecodedValue, ValueError, ValueRefusalKind};
+use semio_framework_value::{DecodedValue, NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::ownership::{retire_xml_document,XmlDocumentView};
 use semio_s_artifact_stdio_zip::opc::native::{OpcNativeReader, OpcNativeWriter};
 #[path = "💰️backing/🦀️.rs"]
@@ -103,17 +103,32 @@ fn read(reader: &mut OpcNativeReader<'_, '_, '_>) -> Result<PptxSnapshot, ValueE
     Ok(PptxSnapshot { schema, opc, xml_parts: std::mem::take(&mut parts.0) })
 }
 
-pub(crate) fn decode(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<PptxSnapshot, ValueError> {
+pub(crate) fn decode(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>, native_control: &mut NativeDecodeControl<'_>) -> Result<PptxSnapshot, ValueError> {
     match payload {
-        IoPayload::Binary(bytes) => input(bytes, true, control),
-        IoPayload::Text(text) => input(text.as_bytes(), false, control),
+        IoPayload::Binary(bytes) => backing::input(bytes, true, control, native_control),
+        IoPayload::Text(text) => backing::input(text.as_bytes(), false, control, native_control),
     }
 }
 
+pub(crate) fn encode(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>, native_control: &mut NativeEncodeControl<'_>) -> Result<IoPayload, ValueError> {
+    backing::encode(snapshot, encoding, control, native_control)
+}
 
+pub(crate) fn encode_standalone(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<IoPayload, ValueError> {
+    let mut observer = |_| true;
+    let mut native_control = NativeEncodeControl::new(control.limits().max_allocation_bytes, &mut observer);
+    backing::encode(snapshot, encoding, control, &mut native_control)
+}
 
-pub(crate) fn encode(snapshot:&PptxSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{backing::encode(snapshot,encoding,control)}
-pub(crate) fn input(bytes:&[u8],binary:bool,control:&mut SqliteSnapshotControl<'_>)->Result<PptxSnapshot,ValueError>{backing::input(bytes,binary,control)}
-pub(crate) fn decode_binary(bytes:&[u8],control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<PptxSnapshot,ValueError>{input(bytes,true,control)}
-pub(crate) fn decode_text(text:&str,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<PptxSnapshot,ValueError>{input(text.as_bytes(),false,control)}
+pub(crate) fn decode_binary(bytes: &[u8], control: &mut SqliteSnapshotControl<'_>) -> Result<PptxSnapshot, ValueError> {
+    let mut observer = |_| true;
+    let mut native_control = NativeDecodeControl::new(control.limits().max_allocation_bytes, &mut observer);
+    backing::input(bytes, true, control, &mut native_control)
+}
+
+pub(crate) fn decode_text(text: &str, control: &mut SqliteSnapshotControl<'_>) -> Result<PptxSnapshot, ValueError> {
+    let mut observer = |_| true;
+    let mut native_control = NativeDecodeControl::new(control.limits().max_allocation_bytes, &mut observer);
+    backing::input(text.as_bytes(), false, control, &mut native_control)
+}
 pub(crate) fn pack_limits(limits:&store::mounted_pack_rt::PackLimits)->SqliteDatabaseLimits{SqliteDatabaseLimits{max_file_bytes:usize::try_from(limits.max_file_len).unwrap_or(usize::MAX),max_value_bytes:usize::try_from(limits.max_total_alloc).unwrap_or(usize::MAX),max_rows:usize::try_from(limits.max_items).unwrap_or(usize::MAX),..SqliteDatabaseLimits::default()}}

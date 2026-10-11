@@ -7,9 +7,10 @@ use crate::model::{Bar3, Dof, Element, Elements, Frame3, Node};
 use crate::sparse::{Csr, LdltJob, ModalInputConstruction, MountedScalarSlots, PcgJob, PcgJobConstruction, SubspaceIterationJob};
 use crate::{element_id, load_id, Fem3dSnapshot, FemElement, FemLoad};
 use semio_framework::kernel::{Effect, JobPlacement};
-use semio_framework_job::{Generation, InteractiveJob, OperationId, RevisionId, StepBudget, StepContext, StepOutcome};
-use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
-use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
+use semio_framework_job::{Generation, InteractiveJob, JobOutcomeBorrow, OperationId, RevisionId, StepContext};
+use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, IoRunControl, JobBudget, JobStep, SqliteSnapshotControl};
+use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginLifecycleStep};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
 #[cfg(test)]
 use semio_framework_ui_scene::world3d_snapshot_with_page;
 use semio_framework_ui_scene::{
@@ -439,6 +440,66 @@ impl<T, const N: usize> FixedSlots<T, N> {
     }
 }
 
+/// 🧭️ How one child job step ended, decided before the lent outcome borrow is released.
+#[derive(Clone, Copy)]
+enum ChildEnd {
+    Yield,
+    Lent,
+    Complete,
+    Fault,
+    Cancelled,
+}
+
+fn child_end(result: Result<Option<JobOutcomeBorrow<'_>>, ValueError>) -> ChildEnd {
+    match result {
+        Ok(None | Some(JobOutcomeBorrow::Yield { .. })) => ChildEnd::Yield,
+        Ok(Some(JobOutcomeBorrow::PreviewReady { .. } | JobOutcomeBorrow::CheckpointReady { .. })) => ChildEnd::Lent,
+        Ok(Some(JobOutcomeBorrow::Complete { .. })) => ChildEnd::Complete,
+        Ok(Some(JobOutcomeBorrow::Fault { .. })) | Err(_) => ChildEnd::Fault,
+        Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => ChildEnd::Cancelled,
+    }
+}
+
+/// 🎟️ One close unit's receipt: `items` released owners and `bytes` of released backing.
+fn session_pending(items: usize, bytes: usize) -> PluginLifecycleStep {
+    PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: items, released_bytes: bytes, ..Default::default() })
+}
+
+const fn largest(sizes: &[usize]) -> usize {
+    let mut index = 0;
+    let mut largest = 0;
+    while index < sizes.len() {
+        if sizes[index] > largest {
+            largest = sizes[index];
+        }
+        index += 1;
+    }
+    largest
+}
+
+/// 📏️ The largest logical element one close unit retires; every quote of the next close turn is bounded by it.
+const SESSION_CLOSE_COPY_BYTES: usize = 4_096;
+
+/// 🪜️ The deepest retained frontier one close unit reaches: session owner, job, writer and payload.
+const SESSION_CLOSE_DEPTH: usize = 3;
+
+/// 📏️ The largest single owner release one close unit performs; every quote of the next close turn is bounded by it.
+const SESSION_CLOSE_RELEASE_BYTES: usize = largest(&[
+    WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY,
+    MOUNTED_ANALYSIS_BACKING_BYTES,
+    INPUT_BYTES,
+    size_of::<Fem3dNumericalChild>(),
+    size_of::<MeshJob>(),
+    size_of::<AssemblyJob<'static>>(),
+    size_of::<PcgJob>(),
+    size_of::<LdltJob>(),
+    size_of::<SubspaceIterationJob>(),
+    size_of::<Fem3dPageVisualJob>(),
+    size_of::<Fem3dPageVisualLease>(),
+    size_of::<store::SnapshotRead<Fem3dSnapshot>>(),
+    size_of::<store::SnapshotReadReturn>(),
+]);
+
 struct Fem3dMeshedSolid {
     solid_index: usize,
     node_ids: FixedSlots<String, MAXIMUM_FIELDS>,
@@ -525,7 +586,6 @@ struct Fem3dNumericalChild {
     solver_page_lane: bool,
     modal_lumped_mass: [f64; MAXIMUM_FIELDS * 6],
     modal_free_mass: MountedScalarSlots,
-    child_outcome: Option<StepOutcome>,
 }
 
 impl Fem3dNumericalChild {
@@ -608,7 +668,6 @@ impl Fem3dNumericalChild {
             solver_page_lane: false,
             modal_lumped_mass: [0.0; MAXIMUM_FIELDS * 6],
             modal_free_mass: MountedScalarSlots::new(),
-            child_outcome: None,
         }
     }
 
@@ -660,26 +719,12 @@ impl Fem3dNumericalChild {
         Ok(())
     }
 
-    fn observe_child_outcome(&mut self, outcome: StepOutcome) -> Result<bool, Vec<u8>> {
-        assert!(self.child_outcome.is_none(), "previous child outcome must retire before another step");
-        let complete = matches!(outcome, StepOutcome::Complete(_));
-        let fault = matches!(outcome, StepOutcome::Fault(_));
-        if matches!(outcome, StepOutcome::Cancelled) {
-            return Err(b"fem3d.numerical-cancelled".to_vec());
-        }
-        if !matches!(outcome, StepOutcome::Yield) {
-            self.child_outcome = Some(outcome);
-        }
-        if fault { Err(b"fem3d.numerical-child-fault".to_vec()) } else { Ok(complete) }
-    }
-
-    fn close_child_outcome(&mut self, maximum_bytes: usize) -> Option<(bool, usize, usize)> {
-        match self.child_outcome.as_mut()?.close_step(1, maximum_bytes) {
-            semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => Some((false, released_items, released_bytes)),
-            semio_framework_job::JobPayloadCloseStep::Complete => {
-                self.child_outcome = None;
-                Some((false, 1, 0))
-            }
+    fn observe_child_end(&mut self, end: ChildEnd) -> Result<bool, Vec<u8>> {
+        match end {
+            ChildEnd::Cancelled => Err(b"fem3d.numerical-cancelled".to_vec()),
+            ChildEnd::Fault => Err(b"fem3d.numerical-child-fault".to_vec()),
+            ChildEnd::Complete => Ok(true),
+            ChildEnd::Yield | ChildEnd::Lent => Ok(false),
         }
     }
 
@@ -1092,13 +1137,6 @@ impl Fem3dNumericalChild {
 
     fn step(&mut self, doc: &Fem3dSnapshot, solver: &mut Fem3dSolverView, backing: &mut Fem3dBackingCredit, freshness: Fem3dVisualFreshness, operation: semio_framework_job::Operation, context: &mut StepContext<'_>) -> Result<bool, Vec<u8>> {
         self.operation = Some(operation);
-        if self.child_outcome.is_some() {
-            if context.is_cancelled() { return Err(b"fem3d.numerical-cancelled".to_vec()); }
-            if context.should_yield() { return Ok(false); }
-            context.consume_fuel(1);
-            self.close_child_outcome(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            return Ok(false);
-        }
         let delegated = matches!(self.stage, Fem3dNumericalStage::SolidMesh | Fem3dNumericalStage::Assembly | Fem3dNumericalStage::Pcg | Fem3dNumericalStage::Ldlt | Fem3dNumericalStage::Subspace);
         if !delegated {
             if context.is_cancelled() {
@@ -1141,8 +1179,8 @@ impl Fem3dNumericalChild {
             return Ok(false);
         }
         if self.stage == Fem3dNumericalStage::SolidMesh {
-            let outcome = self.mesh.as_mut().ok_or_else(|| b"fem3d.numerical-solid-mesh-child".to_vec())?.step(context);
-            if self.observe_child_outcome(outcome)? {
+            let end = child_end(self.mesh.as_mut().ok_or_else(|| b"fem3d.numerical-solid-mesh-child".to_vec())?.step(context));
+            if self.observe_child_end(end)? {
                 self.point_cursor = 0;
                 self.stage = Fem3dNumericalStage::SolidMeshReservePoints;
             }
@@ -1187,8 +1225,13 @@ impl Fem3dNumericalChild {
             return Ok(false);
         }
         if self.stage == Fem3dNumericalStage::SolidMeshRetire {
-            let (terminal, _, _) = self.mesh.as_mut().ok_or_else(|| b"fem3d.numerical-solid-mesh-child".to_vec())?.close_step(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY);
-            if terminal {
+            let mesh = self.mesh.as_mut().ok_or_else(|| b"fem3d.numerical-solid-mesh-child".to_vec())?;
+            let step = InteractiveJob::close_step(mesh, context.retained_grant());
+            context.consume_retained(step.progress()).map_err(|_| b"fem3d.numerical-solid-mesh-retire-grant".to_vec())?;
+            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused { .. }) {
+                return Err(b"fem3d.numerical-solid-mesh-retire-refused".to_vec());
+            }
+            if InteractiveJob::terminal_is_empty(mesh) {
                 self.mesh = None;
                 self.stage = Fem3dNumericalStage::SolidMaterial;
             }
@@ -1256,8 +1299,8 @@ impl Fem3dNumericalChild {
                 Err(error) => return Err(error.to_string().into_bytes()),
             },
             Fem3dNumericalStage::Assembly => {
-                let outcome = self.assembly.as_mut().ok_or_else(|| b"fem3d.numerical-assembly".to_vec())?.step(context);
-                if self.observe_child_outcome(outcome)? {
+                let end = child_end(self.assembly.as_mut().ok_or_else(|| b"fem3d.numerical-assembly".to_vec())?.step(context));
+                if self.observe_child_end(end)? {
                     self.node_cursor = 0;
                     self.dof_cursor = 0;
                     self.free_order = self.assembly.as_ref().map_or(0, AssemblyJob::visual_free_order);
@@ -1601,8 +1644,8 @@ impl Fem3dNumericalChild {
                 Err(detail) => return Err(detail.to_vec()),
             },
             Fem3dNumericalStage::Pcg => {
-                let outcome = self.pcg.as_mut().ok_or_else(|| b"fem3d.numerical-pcg".to_vec())?.step(context);
-                if self.observe_child_outcome(outcome)? {
+                let end = child_end(self.pcg.as_mut().ok_or_else(|| b"fem3d.numerical-pcg".to_vec())?.step(context));
+                if self.observe_child_end(end)? {
                     self.stage = Fem3dNumericalStage::ReadNodeScalar;
                     self.node_cursor = 0;
                     self.scalar_axis = 0;
@@ -1671,8 +1714,8 @@ impl Fem3dNumericalChild {
                 self.stage = Fem3dNumericalStage::Ldlt;
             }
             Fem3dNumericalStage::Ldlt => {
-                let outcome = self.ldlt.as_mut().ok_or_else(|| b"fem3d.numerical-ldlt".to_vec())?.step(context);
-                if self.observe_child_outcome(outcome)? {
+                let end = child_end(self.ldlt.as_mut().ok_or_else(|| b"fem3d.numerical-ldlt".to_vec())?.step(context));
+                if self.observe_child_end(end)? {
                     self.stage = Fem3dNumericalStage::BeginSubspace;
                 }
                 return Ok(false);
@@ -1685,8 +1728,8 @@ impl Fem3dNumericalChild {
                 self.stage = Fem3dNumericalStage::Subspace;
             }
             Fem3dNumericalStage::Subspace => {
-                let outcome = self.subspace.as_mut().ok_or_else(|| b"fem3d.numerical-subspace".to_vec())?.step(context);
-                if self.observe_child_outcome(outcome)? {
+                let end = child_end(self.subspace.as_mut().ok_or_else(|| b"fem3d.numerical-subspace".to_vec())?.step(context));
+                if self.observe_child_end(end)? {
                     self.node_cursor = 0;
                     self.scalar_axis = 0;
                     self.stage = Fem3dNumericalStage::ReadModeScalar;
@@ -1735,15 +1778,14 @@ impl Fem3dNumericalChild {
 
     fn close_interactive(step: semio_framework_job::InteractiveJobCloseStep) -> (bool, usize, usize) {
         match step {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => (false, released_items, released_bytes),
-            semio_framework_job::InteractiveJobCloseStep::Blocked => (false, 0, 0),
-            semio_framework_job::InteractiveJobCloseStep::Complete => (true, 0, 0),
+            semio_framework_job::InteractiveJobCloseStep::Pending { progress } => (false, progress.copied_items, progress.released_bytes),
+            semio_framework_job::InteractiveJobCloseStep::Blocked | semio_framework_job::InteractiveJobCloseStep::Refused { .. } => (false, 0, 0),
+            semio_framework_job::InteractiveJobCloseStep::Complete { progress } => (true, progress.copied_items, progress.released_bytes),
         }
     }
 
     fn terminal_is_empty(&self) -> bool {
         self.close_lane > 21
-            && self.child_outcome.is_none()
             && self.model.is_none()
             && self.pending_support.is_none()
             && self.pending_element.is_none()
@@ -1772,10 +1814,11 @@ impl Fem3dNumericalChild {
             && self.modal_free_mass.terminal_is_empty()
     }
 
-    fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> (bool, usize, usize) {
+        let maximum_bytes = grant.maximum_release_bytes;
+        let child = RetainedCloneGrant { maximum_items: 1, ..grant };
         if self.terminal_is_empty() { return (true, 0, 0); }
         if maximum_bytes == 0 { return (false, 0, 0); }
-        if let Some(step) = self.close_child_outcome(maximum_bytes) { return step; }
         if let Some(matrix) = self.rejected_pcg_matrix.as_mut() {
             let step = matrix.close_step(maximum_bytes);
             if step.0 {
@@ -1795,7 +1838,7 @@ impl Fem3dNumericalChild {
                     self.close_lane += 1;
                     return (false, 0, 0);
                 };
-                let step = job.close_step(maximum_bytes);
+                let step = Self::close_interactive(InteractiveJob::close_step(job, child));
                 if step.0 {
                     self.mesh = None;
                 }
@@ -1817,7 +1860,7 @@ impl Fem3dNumericalChild {
                     self.close_lane += 1;
                     return (false, 0, 0);
                 };
-                let step = job.close_step(maximum_bytes);
+                let step = job.close_retained_step(maximum_bytes);
                 if step.0 {
                     self.assembly = None;
                 }
@@ -1839,7 +1882,7 @@ impl Fem3dNumericalChild {
                     self.close_lane += 1;
                     return (false, 0, 0);
                 };
-                let step = job.close_step(maximum_bytes);
+                let step = Self::close_interactive(job.close_step(child));
                 if step.0 {
                     self.pcg_build = None;
                 }
@@ -1850,7 +1893,7 @@ impl Fem3dNumericalChild {
                     self.close_lane += 1;
                     return (false, 0, 0);
                 };
-                let step = job.close_step(maximum_bytes);
+                let step = Self::close_interactive(InteractiveJob::close_step(job, child));
                 if step.0 {
                     self.pcg = None;
                 }
@@ -1877,7 +1920,7 @@ impl Fem3dNumericalChild {
                     self.close_started_jobs |= 1;
                     return (false, 1, 0);
                 }
-                let step = Self::close_interactive(job.close_step(1, maximum_bytes));
+                let step = Self::close_interactive(InteractiveJob::close_step(job, child));
                 if step.0 {
                     self.ldlt = None;
                 }
@@ -1893,7 +1936,7 @@ impl Fem3dNumericalChild {
                     self.close_started_jobs |= 2;
                     return (false, 1, 0);
                 }
-                let step = Self::close_interactive(job.close_step(1, maximum_bytes));
+                let step = Self::close_interactive(InteractiveJob::close_step(job, child));
                 if step.0 {
                     self.subspace = None;
                 }
@@ -2950,16 +2993,13 @@ impl MountedState {
         JobStep::Failed(if detail.capacity() <= FAULT_BYTES { detail } else { b"fem3d.visual-fault-capacity".to_vec() })
     }
 
-    fn step(&mut self, budget: JobBudget) -> JobStep {
+    fn step(&mut self, budget: JobBudget, cx: &mut StepContext<'_>) -> JobStep {
         if self.cancel.is_cancelled_now() {
             return self.fail(b"fem3d.visual-cancelled".to_vec());
         }
         if budget.fuel == 0 || budget.deadline_ms == 0 {
             return JobStep::Running(None);
         }
-        let Some(now) = semio_framework_job::default_now_us() else { return JobStep::Running(None) };
-        let deadline = now.saturating_add(u64::from(budget.deadline_ms).min(STEP_CEILING_MS).saturating_mul(1_000));
-        let mut cx = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel, deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut self.preview_sequence);
         if cx.should_yield() {
             return JobStep::Running(None);
         }
@@ -2979,7 +3019,7 @@ impl MountedState {
             let operation = semio_framework_job::Operation::new(self.identity.operation, self.identity.base_revision, self.identity.generation, self.identity.job);
             let Some(snapshot) = self.snapshot.as_ref() else { return self.fail(b"fem3d.numerical-snapshot-owner".to_vec()) };
             let Some(solver) = self.solver.as_mut() else { return self.fail(b"fem3d.numerical-solver-owner".to_vec()) };
-            let step = self.numerical.as_mut().map(|numerical| numerical.step(snapshot, solver, &mut self.backing, freshness, operation, &mut cx));
+            let step = self.numerical.as_mut().map(|numerical| numerical.step(snapshot, solver, &mut self.backing, freshness, operation, cx));
             return match step {
                 Some(Ok(true)) => {
                     self.numerical_done = true;
@@ -3026,7 +3066,8 @@ impl MountedState {
         }
     }
 
-    fn close_step(&mut self, maximum_bytes: usize) -> PluginCloseStep {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+        let maximum_bytes = grant.maximum_release_bytes;
         match self.close_lane {
             0 => {
                 if let Some(candidate) = self.candidate.as_mut() {
@@ -3034,102 +3075,102 @@ impl MountedState {
                     let (terminal, items, bytes) = candidate.close_step(maximum_bytes);
                     let after = candidate.backing_usage();
                     if !self.backing.release(before.0 - after.0, before.1 - after.1) {
-                        return PluginCloseStep::Blocked { reason: "FEM3D visual candidate process credit mismatch" };
+                        return PluginLifecycleStep::Blocked { reason: "FEM3D visual candidate process credit mismatch" };
                     }
                     if !terminal {
-                        return PluginCloseStep::Pending { released_items: items, released_bytes: bytes };
+                        return session_pending(items, bytes);
                     }
                     if !candidate.terminal_is_empty() {
-                        return PluginCloseStep::Blocked { reason: "FEM3D visual candidate false terminal" };
+                        return PluginLifecycleStep::Blocked { reason: "FEM3D visual candidate false terminal" };
                     }
                     self.candidate = None;
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    return session_pending(1, 0);
                 }
                 self.close_lane = 1;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                session_pending(1, 0)
             }
             1 => {
                 if let Some(displaced) = self.displaced.as_mut() {
                     let (terminal, items, bytes) = displaced.close_step(maximum_bytes);
                     if !terminal {
-                        return PluginCloseStep::Pending { released_items: items, released_bytes: bytes };
+                        return session_pending(items, bytes);
                     }
                     if !displaced.terminal_is_empty() {
-                        return PluginCloseStep::Blocked { reason: "FEM3D displaced lease false terminal" };
+                        return PluginLifecycleStep::Blocked { reason: "FEM3D displaced lease false terminal" };
                     }
                     self.displaced = None;
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    return session_pending(1, 0);
                 }
                 self.close_lane = 2;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                session_pending(1, 0)
             }
             2 => {
                 if let Some(current) = self.current.as_mut() {
                     let (terminal, items, bytes) = current.close_step(maximum_bytes);
                     if !terminal {
-                        return PluginCloseStep::Pending { released_items: items, released_bytes: bytes };
+                        return session_pending(items, bytes);
                     }
                     if !current.terminal_is_empty() {
-                        return PluginCloseStep::Blocked { reason: "FEM3D current lease false terminal" };
+                        return PluginLifecycleStep::Blocked { reason: "FEM3D current lease false terminal" };
                     }
                     self.current = None;
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    return session_pending(1, 0);
                 }
                 self.close_lane = 3;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                session_pending(1, 0)
             }
             3 => {
                 if let Some(numerical) = self.numerical.as_mut() {
-                    let (terminal, items, bytes) = numerical.close_step(maximum_bytes);
+                    let (terminal, items, bytes) = numerical.close_step(grant);
                     if !terminal {
-                        return PluginCloseStep::Pending { released_items: items, released_bytes: bytes };
+                        return session_pending(items, bytes);
                     }
                     self.numerical = None;
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    return session_pending(1, 0);
                 }
                 self.close_lane = 4;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                session_pending(1, 0)
             }
             4 => {
                 if let Some(solver) = self.solver.as_mut() {
                     let (terminal, items, bytes) = solver.close_step(maximum_bytes);
                     if items != 0 && !self.backing.release(items, bytes) {
-                        return PluginCloseStep::Blocked { reason: "FEM3D solver process credit mismatch" };
+                        return PluginLifecycleStep::Blocked { reason: "FEM3D solver process credit mismatch" };
                     }
                     if !terminal {
-                        return PluginCloseStep::Pending { released_items: items, released_bytes: bytes };
+                        return session_pending(items, bytes);
                     }
                     self.solver = None;
-                    return PluginCloseStep::Pending { released_items: items, released_bytes: bytes };
+                    return session_pending(items, bytes);
                 }
                 self.close_lane = 5;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                session_pending(1, 0)
             }
             5 => {
                 if let Some(snapshot) = self.snapshot.take() {
                     let Some(witness) = snapshot.return_to_registry_witness() else {
-                        return PluginCloseStep::Blocked { reason: "FEM3D snapshot already returned" };
+                        return PluginLifecycleStep::Blocked { reason: "FEM3D snapshot already returned" };
                     };
                     self.snapshot_return = Some(witness);
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<store::SnapshotRead<Fem3dSnapshot>>() };
+                    return session_pending(1, size_of::<store::SnapshotRead<Fem3dSnapshot>>());
                 }
                 if self.snapshot_return.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    return session_pending(0, 0);
                 }
                 if self.snapshot_return.take().is_some() {
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<store::SnapshotReadReturn>() };
+                    return session_pending(1, size_of::<store::SnapshotReadReturn>());
                 }
                 self.close_lane = 6;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                session_pending(1, 0)
             }
             6 => {
                 if !self.backing.terminal_is_empty() {
-                    return PluginCloseStep::Blocked { reason: "FEM3D process backing credit remains live" };
+                    return PluginLifecycleStep::Blocked { reason: "FEM3D process backing credit remains live" };
                 }
                 self.close_lane = 7;
-                PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                session_pending(1, 0)
             }
-            _ => PluginCloseStep::Complete,
+            _ => PluginLifecycleStep::Complete(RetainedCloneProgress::default()),
         }
     }
 
@@ -3442,14 +3483,16 @@ struct MountedJob {
     recovery: Rc<MountedRecoverySlot>,
     identity: Identity,
     completed: bool,
+    input: Option<Vec<u8>>,
+    restored: Option<Vec<u8>>,
 }
 
 impl BoundedJob for MountedJob {
     /// ⏱️ Drives exact session units back to back until the host's step ceiling elapses, a unit
     /// publishes output, or the session leaves `Running`.
-    fn step(&mut self, budget: JobBudget) -> JobStep {
-        let Ok(mut shell) = self.shell.try_borrow_mut() else { return JobStep::Running(None) };
-        let Some(state) = shell.as_mut().filter(|state| state.identity == self.identity) else { return JobStep::Failed(b"fem3d.visual-stale-shell".to_vec()) };
+    fn step(&mut self, budget: JobBudget, _original: &mut IoRunControl<'_, '_>, _snapshot: &mut SqliteSnapshotControl<'_>, cx: &mut StepContext<'_>) -> Result<JobStep, ValueError> {
+        let Ok(mut shell) = self.shell.try_borrow_mut() else { return Ok(JobStep::Running(None)) };
+        let Some(state) = shell.as_mut().filter(|state| state.identity == self.identity) else { return Ok(JobStep::Failed(b"fem3d.visual-stale-shell".to_vec())) };
         let started = semio_framework_job::default_now_us();
         let ceiling_ms = u64::from(budget.deadline_ms).min(STEP_CEILING_MS);
         let deadline = started.map(|started| started.saturating_add(ceiling_ms.saturating_mul(1_000)));
@@ -3457,15 +3500,15 @@ impl BoundedJob for MountedJob {
         let mut step = JobStep::Running(None);
         for _ in 0..UNITS_PER_STEP {
             let Some(deadline) = deadline else {
-                step = state.step(budget);
+                step = state.step(budget, cx);
                 break;
             };
             let now = semio_framework_job::default_now_us().unwrap_or(deadline);
-            if fuel == 0 || now >= deadline {
+            if fuel == 0 || now >= deadline || cx.should_yield() {
                 break;
             }
             let remaining_ms = u32::try_from(deadline.saturating_sub(now).div_ceil(1_000)).unwrap_or(u32::MAX).max(1);
-            step = state.step(JobBudget { fuel, deadline_ms: remaining_ms });
+            step = state.step(JobBudget { fuel, deadline_ms: remaining_ms }, cx);
             fuel = fuel.saturating_sub(1);
             if !matches!(step, JobStep::Running(None)) {
                 break;
@@ -3474,7 +3517,30 @@ impl BoundedJob for MountedJob {
         if matches!(&step, JobStep::Done(_)) {
             self.completed = true;
         }
-        step
+        Ok(step)
+    }
+
+    /// 🧹️ The heavy session owner is retired by the registry's own close ladder; this handle releases its two original input buffers and itself.
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, ValueError> {
+        let grant = cx.retained_grant();
+        let demand = self.retirement_demands(0)?;
+        if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(false);
+        }
+        if let Some(input) = self.input.take() {
+            cx.consume_retained(RetainedCloneProgress { copied_items: 1, released_bytes: input.capacity(), ..Default::default() })?;
+            return Ok(false);
+        }
+        if let Some(restored) = self.restored.take() {
+            cx.consume_retained(RetainedCloneProgress { copied_items: 1, released_bytes: restored.capacity(), ..Default::default() })?;
+            return Ok(false);
+        }
+        cx.consume_retained(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+        Ok(true)
+    }
+
+    fn retirement_demands(&self, _copy: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand { release_bytes: self.input.as_ref().map_or_else(|| self.restored.as_ref().map_or(0, Vec::capacity), Vec::capacity), depth: 1, ..Default::default() })
     }
 
     fn cancel(&mut self) {
@@ -3496,7 +3562,7 @@ impl BoundedJob for MountedJob {
     }
 
     fn terminal_drop_is_shallow(&self) -> bool {
-        true
+        self.input.is_none() && self.restored.is_none()
     }
 }
 
@@ -3548,27 +3614,34 @@ fn decode_input(job: u64, input: &[u8]) -> Option<(u16, Identity)> {
     Some((shell, Identity { app_instance_id, base_revision, generation, canonical_base_revision, operation, job }))
 }
 
-fn factory(job: u64, input: &[u8], _restored: Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
-    let (shell, identity) = decode_input(job, input).ok_or_else(|| b"fem3d.visual-input".to_vec())?;
-    MOUNTED.with(|registry| {
+/// 📐️ The original request transfers its two handles into the boxed job under the framework's own original-job admission quote.
+fn job_demands(_job: u64, input: &Option<Vec<u8>>, restored: &Option<Vec<u8>>, _cx: &StepContext<'_>) -> Result<RetainedCloneGrant, ValueError> {
+    semio_framework_plugin::reactor::jobs::original_job_admission_demands::<MountedJob>(input, restored)
+}
+
+fn job_admit(job: u64, input: &mut Option<Vec<u8>>, restored: &mut Option<Vec<u8>>, cx: &mut StepContext<'_>) -> Result<Option<Box<dyn BoundedJob>>, ValueError> {
+    let bytes = input.as_deref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "fem3d.visual-input"))?;
+    let (shell, identity) = decode_input(job, bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "fem3d.visual-input"))?;
+    let (owner, recovery) = MOUNTED.with(|registry| {
         let registry = registry.borrow();
-        let owner = registry.shells.get(shell as usize).ok_or_else(|| b"fem3d.visual-shell".to_vec())?.clone();
-        let recovery = registry.recoveries.get(shell as usize).ok_or_else(|| b"fem3d.visual-recovery".to_vec())?.clone();
+        let owner = registry.shells.get(shell as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "fem3d.visual-shell"))?.clone();
+        let recovery = registry.recoveries.get(shell as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "fem3d.visual-recovery"))?.clone();
         if !owner.try_borrow().is_ok_and(|state| state.as_ref().is_some_and(|state| state.identity == identity)) {
-            return Err(b"fem3d.visual-stale-factory".to_vec());
+            return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "fem3d.visual-stale-factory"));
         }
         if recovery.reserved.get() != Some(identity) {
-            return Err(b"fem3d.visual-stale-recovery".to_vec());
+            return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "fem3d.visual-stale-recovery"));
         }
-        Ok(Box::new(MountedJob { shell: owner, recovery, identity, completed: false }) as Box<dyn BoundedJob>)
-    })
+        Ok((owner, recovery))
+    })?;
+    semio_framework_plugin::reactor::jobs::admit_original_job(input, restored, cx, move |input, restored| MountedJob { shell: owner, recovery, identity, completed: false, input: Some(input), restored })
 }
 
 pub fn initialize() {
     MOUNTED.with(|registry| {
         let _ = registry.borrow().free_len;
     });
-    semio_framework_plugin::reactor::jobs::register_bounded_job_kind(FEM3D_MOUNTED_VISUAL_JOB_KIND, factory as BoundedJobFactory);
+    semio_framework_plugin::reactor::jobs::register_bounded_job_kind(FEM3D_MOUNTED_VISUAL_JOB_KIND, BoundedJobFactory { admit: job_admit, demands: job_demands });
 }
 
 fn current_identity(app_instance_id: u32) -> Option<Identity> {
@@ -3741,7 +3814,7 @@ pub fn publish_solver_progress(render: AppRenderOperationContext, state_value: F
     state.solver.as_mut().is_some_and(|solver| solver.publish_progress(freshness, state_value, residual_norm, tolerance, completed, total))
 }
 
-fn recover_abandoned_one(registry: &mut Registry, app_instance_id: u32, maximum_bytes: usize) -> Option<PluginCloseStep> {
+fn recover_abandoned_one(registry: &mut Registry, app_instance_id: u32, grant: RetainedCloneGrant) -> Option<PluginLifecycleStep> {
     let shell = registry.recovery_cursor;
     registry.recovery_cursor = (registry.recovery_cursor + 1) % SHELL_CAPACITY;
     let recovery = registry.recoveries[shell].clone();
@@ -3752,37 +3825,37 @@ fn recover_abandoned_one(registry: &mut Registry, app_instance_id: u32, maximum_
     if publication == MountedRecoveryPublication::Retained {
         let retained = registry.shells[shell].try_borrow().ok().is_some_and(|owner| owner.as_ref().is_some_and(|state| state.identity == identity && state.done));
         if !retained {
-            return Some(PluginCloseStep::Blocked { reason: "FEM3D retained job handoff identity mismatch" });
+            return Some(PluginLifecycleStep::Blocked { reason: "FEM3D retained job handoff identity mismatch" });
         }
         recovery.clear_publication(identity);
-        return Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        return Some(session_pending(1, 0));
     }
     let mut state = recovery.take_owner(identity);
     if state.is_none() {
-        let Ok(mut shell_owner) = registry.shells[shell].try_borrow_mut() else { return Some(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }) };
+        let Ok(mut shell_owner) = registry.shells[shell].try_borrow_mut() else { return Some(session_pending(0, 0)) };
         if shell_owner.as_ref().is_some_and(|state| state.identity == identity) {
             let discovered = shell_owner.take();
             drop(shell_owner);
             if let Some(discovered) = discovered {
                 if let Err(discovered) = recovery.publish_owner(identity, discovered) {
                     std::mem::forget(discovered);
-                    return Some(PluginCloseStep::Blocked { reason: "FEM3D abandoned state recovery slot collision" });
+                    return Some(PluginLifecycleStep::Blocked { reason: "FEM3D abandoned state recovery slot collision" });
                 }
             }
             state = recovery.take_owner(identity);
         }
     }
-    let Some(mut state) = state else { return Some(PluginCloseStep::Blocked { reason: "FEM3D abandoned state owner is not discoverable" }) };
+    let Some(mut state) = state else { return Some(PluginLifecycleStep::Blocked { reason: "FEM3D abandoned state owner is not discoverable" }) };
     if state.identity != identity {
         std::mem::forget(state);
-        return Some(PluginCloseStep::Blocked { reason: "FEM3D abandoned state generation mismatch" });
+        return Some(PluginLifecycleStep::Blocked { reason: "FEM3D abandoned state generation mismatch" });
     }
     state.cancel.cancel_now();
-    let step = state.close_step(maximum_bytes);
-    if !matches!(&step, PluginCloseStep::Complete) {
+    let step = state.close_step(grant);
+    if !matches!(&step, PluginLifecycleStep::Complete(_)) {
         if let Err(state) = recovery.restore_owner(identity, state) {
             std::mem::forget(state);
-            return Some(PluginCloseStep::Blocked { reason: "FEM3D abandoned state restore collision" });
+            return Some(PluginLifecycleStep::Blocked { reason: "FEM3D abandoned state restore collision" });
         }
         return Some(step);
     }
@@ -3790,7 +3863,7 @@ fn recover_abandoned_one(registry: &mut Registry, app_instance_id: u32, maximum_
         if let Err(state) = recovery.restore_owner(identity, state) {
             std::mem::forget(state);
         }
-        return Some(PluginCloseStep::Blocked { reason: "FEM3D abandoned state false terminal" });
+        return Some(PluginLifecycleStep::Blocked { reason: "FEM3D abandoned state false terminal" });
     }
     drop(state);
     let active = identity.app_instance_id as usize % ACTIVE_CAPACITY;
@@ -3804,35 +3877,35 @@ fn recover_abandoned_one(registry: &mut Registry, app_instance_id: u32, maximum_
     }
     recovery.clear_publication(identity);
     if !recovery.release(identity) {
-        return Some(PluginCloseStep::Blocked { reason: "FEM3D abandoned recovery authority false terminal" });
+        return Some(PluginLifecycleStep::Blocked { reason: "FEM3D abandoned recovery authority false terminal" });
     }
     registry.release_credit(shell as u16);
     registry.release(shell as u16);
-    Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+    Some(session_pending(1, 0))
 }
 
-fn retire_one(app_instance_id: u32, maximum_bytes: usize) -> PluginCloseStep {
+fn retire_one(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let shell = registry.maintenance_cursor;
         registry.maintenance_cursor = (registry.maintenance_cursor + 1) % SHELL_CAPACITY;
         if !registry.retiring[shell] || registry.retiring_app[shell] != app_instance_id {
-            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            return session_pending(0, 0);
         }
         let step = {
             let mut owner = registry.shells[shell].borrow_mut();
             let Some(state) = owner.as_mut() else {
                 if registry.recoveries[shell].publication.get().is_some_and(|current| current.1 == MountedRecoveryPublication::Recover) {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    return session_pending(0, 0);
                 }
-                return PluginCloseStep::Blocked { reason: "FEM3D retiring shell empty" };
+                return PluginLifecycleStep::Blocked { reason: "FEM3D retiring shell empty" };
             };
-            state.close_step(maximum_bytes)
+            state.close_step(grant)
         };
-        if matches!(step, PluginCloseStep::Complete) {
+        if matches!(step, PluginLifecycleStep::Complete(_)) {
             let terminal_identity = registry.shells[shell].borrow().as_ref().filter(|state| state.terminal_is_empty()).map(|state| state.identity);
             let Some(identity) = terminal_identity else {
-                return PluginCloseStep::Blocked { reason: "FEM3D retiring state false terminal" };
+                return PluginLifecycleStep::Blocked { reason: "FEM3D retiring state false terminal" };
             };
             *registry.shells[shell].borrow_mut() = None;
             registry.retiring[shell] = false;
@@ -3843,54 +3916,65 @@ fn retire_one(app_instance_id: u32, maximum_bytes: usize) -> PluginCloseStep {
             assert!(registry.recoveries[shell].release(identity), "FEM3D normal retirement recovery authority mismatch");
             registry.release_credit(shell as u16);
             registry.release(shell as u16);
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return session_pending(1, 0);
         }
         step
     })
 }
 
-pub fn maintenance_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+pub fn maintenance_step(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+    let (maximum_items, maximum_bytes) = (grant.maximum_items, grant.maximum_release_bytes);
     if maximum_items == 0 {
-        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        return session_pending(0, 0);
     }
-    if let Some(step) = MOUNTED.with(|registry| recover_abandoned_one(&mut registry.borrow_mut(), app_instance_id, maximum_bytes)) {
+    if let Some(step) = MOUNTED.with(|registry| recover_abandoned_one(&mut registry.borrow_mut(), app_instance_id, grant)) {
         return step;
     }
     if let Some((items, bytes)) = world3d_snapshot_recovery_close_step(maximum_bytes) {
-        return PluginCloseStep::Pending { released_items: items, released_bytes: bytes };
+        return session_pending(items, bytes);
     }
     if let Some((items, bytes)) = close_recovered_fem3d_backing(maximum_bytes) {
-        return PluginCloseStep::Pending { released_items: items, released_bytes: bytes };
+        return session_pending(items, bytes);
     }
-    retire_one(app_instance_id, maximum_bytes)
+    retire_one(app_instance_id, grant)
 }
 
-pub fn close_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
-    if maximum_items == 0 {
-        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+/// 📏️ Quotes the next close or maintenance turn: one owner release bounded by the largest session owner.
+pub fn close_demands(app_instance_id: u32) -> RetirementDemand {
+    if terminal_is_empty(app_instance_id) {
+        RetirementDemand::default()
+    } else {
+        RetirementDemand { copy_bytes: SESSION_CLOSE_COPY_BYTES, release_bytes: SESSION_CLOSE_RELEASE_BYTES, depth: SESSION_CLOSE_DEPTH, ..Default::default() }
     }
-    if let Some(step) = MOUNTED.with(|registry| recover_abandoned_one(&mut registry.borrow_mut(), app_instance_id, maximum_bytes)) {
+}
+
+pub fn close_step(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+    let (maximum_items, maximum_bytes) = (grant.maximum_items, grant.maximum_release_bytes);
+    if maximum_items == 0 {
+        return session_pending(0, 0);
+    }
+    if let Some(step) = MOUNTED.with(|registry| recover_abandoned_one(&mut registry.borrow_mut(), app_instance_id, grant)) {
         return step;
     }
     if let Some((items, bytes)) = world3d_snapshot_recovery_close_step(maximum_bytes) {
-        return PluginCloseStep::Pending { released_items: items, released_bytes: bytes };
+        return session_pending(items, bytes);
     }
     if let Some((items, bytes)) = close_recovered_fem3d_backing(maximum_bytes) {
-        return PluginCloseStep::Pending { released_items: items, released_bytes: bytes };
+        return session_pending(items, bytes);
     }
     if terminal_is_empty(app_instance_id) {
-        return PluginCloseStep::Complete;
+        return PluginLifecycleStep::Complete(RetainedCloneProgress::default());
     }
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let slot = app_instance_id as usize % ACTIVE_CAPACITY;
         if registry.pending[slot].as_ref().is_some_and(|pending| pending.render.app_instance_id == app_instance_id) {
             registry.pending[slot] = None;
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return session_pending(1, 0);
         }
         if let Some(current) = registry.current[slot].filter(|current| current.app_instance_id == app_instance_id) {
             if !registry.retain_retiring(app_instance_id, current.shell) {
-                return PluginCloseStep::Blocked { reason: "FEM3D close retirement capacity" };
+                return PluginLifecycleStep::Blocked { reason: "FEM3D close retirement capacity" };
             }
             if let Ok(owner) = registry.shells[current.shell as usize].try_borrow() {
                 if let Some(state) = owner.as_ref() {
@@ -3898,10 +3982,10 @@ pub fn close_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usi
                 }
             }
             registry.current[slot] = None;
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return session_pending(1, 0);
         }
         drop(registry);
-        retire_one(app_instance_id, maximum_bytes)
+        retire_one(app_instance_id, grant)
     })
 }
 

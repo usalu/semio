@@ -18,7 +18,7 @@ pub(crate) const fn ent(path: &'static str, kind: &'static str, selectors: &'sta
 
 /// ➕ An insert rule: an insert into the list at `path` raises `kind` carrying the position as `index` (none appends) and the row as `item`.
 pub(crate) const fn ins(path: &'static str, kind: &'static str, selectors: &'static [Selector], index: Option<&'static str>, item: &'static str) -> InsertRule {
-    InsertRule { path, kind, selectors, index, item, with: &[] }
+    InsertRule { path, kind, selectors, index, item, item_fields: &[], with: &[] }
 }
 
 /// ➖ A remove rule: a remove of a row of the list at `path` raises `kind` naming the row as `row` says.

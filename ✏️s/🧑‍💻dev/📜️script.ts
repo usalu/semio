@@ -31,8 +31,8 @@ class PlaygroundSessionScript extends BundleScript {
     const { parsePlaygroundSessionPublicationRequestV1 } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts");
     const { PlaygroundSessionGenerateScript, PlaygroundSessionPreviewScript } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts");
     const request = parsePlaygroundSessionPublicationRequestV1(owning);
-    if (args[0] === "preview") await new PlaygroundSessionPreviewScript(this.root, request).run([]);
-    else await new PlaygroundSessionGenerateScript(this.root, request).run(args);
+    if (args[0] === "preview") await new PlaygroundSessionPreviewScript(this.root, this.repoRoot, this.invocation, request).run([]);
+    else await new PlaygroundSessionGenerateScript(this.root, this.repoRoot, this.invocation, request).run(args);
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("composition-check", CompositionScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("playground-session", PlaygroundSessionScript);

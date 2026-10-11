@@ -31,7 +31,7 @@ impl<M: Puzzle2dLiteralIdInverse> Puzzle2dLiteralIdInverseCursor<M> {
     pub fn advance(&mut self, mutation: RetainedCloneRef<'_, M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 6 { return Err(refusal("literal inverse is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        mutation.bind(&mut self.mutation)?;
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
         match self.phase {
             0 => {
                 let step = self.identifier.advance(mutation.project(1, M::inverse_id), grant)?;

@@ -14,7 +14,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// inseparable `ReconstructionParams` sub-facets and the calibration/rig full-record replace, and
 /// `replace` for the engine-owned result sub-payloads, `append`/`truncate` for durable content leaves and
 /// the atomic `commit-reconstruction` result.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = RemodelingSnapshot, diff = RemodelingDiff, schema = "remodeling.scene")]
 pub enum RemodelingMutation {

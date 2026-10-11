@@ -139,20 +139,21 @@ impl<const RETAINED: bool, const TOOLS: u8> TestAppCommandJob<RETAINED, TOOLS> {
 }
 
 impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob for TestAppCommandJob<RETAINED, TOOLS> {
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        use semio_framework_job::JobOutcomeBorrow;
         if self.admitted {
-            return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput) });
+            return JobOutcomeBorrow::admit_complete(cx, None, None);
         }
-        if self.rejected.is_some() { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: crate::app::retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"test app retains its rejected original completion") }); }
+        if self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "test app retains its rejected original completion")); }
         if cx.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
+            return JobOutcomeBorrow::admit_cancelled(cx);
         }
         if cx.should_yield() {
-            return semio_framework_job::StepOutcome::Yield;
+            return JobOutcomeBorrow::admit_yield(cx);
         }
         if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
             self.page += 1;
-            return semio_framework_job::StepOutcome::Yield;
+            return JobOutcomeBorrow::admit_yield(cx);
         }
         cx.set_stage("test-command-ephemeral");
         cx.consume_fuel(1);
@@ -167,13 +168,14 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
         let completion = self.completion.as_ref().expect("exact test app command completion");
         if let Err(original) = completion.complete(emit, ephemeral) {
             self.rejected = Some(original);
-            return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: crate::app::retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"test app original completion was rejected") });
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "test app original completion was rejected"));
         }
         self.admitted = true;
-        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-        })
+        JobOutcomeBorrow::admit_complete(cx, None, None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        crate::app::artifact_app_laws::fixture_job_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -185,8 +187,8 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         if !self.closing { return InteractiveJobCloseStep::Blocked; }
         if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }; }
-        let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return InteractiveJobCloseStep::Refused(error.kind) };
-        if grant.maximum_depth < demand.depth { return InteractiveJobCloseStep::Refused(semio_framework_value::ValueRefusalKind::DepthLimit); }
+        let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()} };
+        if grant.maximum_depth < demand.depth { return InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Default::default()}; }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }; }
         if let Some(raw) = self.raw.as_mut() {
             let step = raw.close_step(grant);
@@ -205,7 +207,7 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
         match step {
             Ok(step) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress: step.progress() },
             Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-            Err(error) => InteractiveJobCloseStep::Refused(error.kind),
+            Err(error) => InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()},
         }
     }
 
@@ -471,7 +473,7 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
         let contracts = app.tool_public_contracts().await;
         let exact = contracts.iter().filter(|contract| contract.tool_id == TEST_RESTART_TOOL && contract.owner == ToolOwnerWitness::of::<TestApp<true>>() && contract.controller_id == TestApp::<true>::APP_ID && contract.schema_id == TEST_RESTART_SCHEMA).count();
         if exact as u64 != law["retainedProofs"].as_u64().unwrap() { return Err(Fault::from("restart app lost its exact registered tool contract")); }
-        let admitted = app.dispatch_typed(command, meta).await?;
+        let admitted = app.dispatch_typed(command, meta, &mut crate::app::artifact_app_laws::fixture_identity()).await?;
         if !admitted.mutations.is_empty() { return Err(Fault::from("restart command bypassed retained publication")); }
         let (mut artifact, mut ui, mut scopes, mut terminal, mut completions) = (0, 0, 0, 0, 0);
         for _ in 0..100_000 {
@@ -480,7 +482,7 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
             if let Some(progress) = app.maintenance_step(grant)?.progress() {
                 if !progress.fits(grant) { return Err(Fault::from("restart maintenance exceeded the exact grant")); }
             }
-            app.advance_typed_operation_publication().await?;
+            app.advance_typed_operation_publication(&mut crate::app::artifact_app_laws::fixture_identity(), crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await?;
             if let Some(page) = app.take_typed_operation_result_page(meta.instance_id) {
                 let fault = match page.lane {
                     TypedOperationResultLane::Artifact => { artifact += 1; None }

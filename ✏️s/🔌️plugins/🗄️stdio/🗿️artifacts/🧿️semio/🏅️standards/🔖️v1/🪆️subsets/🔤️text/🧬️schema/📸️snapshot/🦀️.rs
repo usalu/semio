@@ -25,7 +25,8 @@ pub const STDIO_SEMIOTEXT_DOCUMENT_SCHEMA: &str = "s.stdio.semio.text";
 //#region 🔖️MarkKind
 /// 🖊️ The closed inline-mark vocabulary this leaf carries — bold/italic/code (flag-only) and link
 /// (carries an `href`). `href` on a non-`Link` mark is always the empty string.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum SemioTextMarkKind {
     #[default]
@@ -39,7 +40,8 @@ pub enum SemioTextMarkKind {
 //#region 🔖️Mark
 /// 🔖️ One inline mark applied to a run. Strong entity, index-addressed within its owning run's
 /// `marks` (an intrinsically ordered, anonymous collection — see `➕add-mark`/`➖remove-mark`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioTextMark {
     pub kind: SemioTextMarkKind,
@@ -54,7 +56,8 @@ pub struct SemioTextMark {
 /// authored `content`, and its ordered `marks`. Runs themselves are index-addressed (no stable
 /// id — an intrinsically ordered, anonymous collection, `📓️taxonomy.md` addressing rule #3), the
 /// same shape `insert-run`/`remove-run`/`reorder-runs` operate on.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioTextRun {
     #[value(default)]
@@ -67,7 +70,8 @@ pub struct SemioTextRun {
 //#endregion 🔖️Run
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.text")]
 pub struct SemioTextSnapshot {

@@ -1,0 +1,22 @@
+{
+  "$id": "framework/value/retained-clone/std-collections/schema.json",
+  "type": "object",
+  "required": ["schema", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "framework.value.retained-clone.std-collections.v1" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "kind", "value"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "kind": { "enum": ["hash-map", "btree-map", "hash-set", "btree-set"] },
+          "value": {}
+        }
+      }
+    }
+  }
+}

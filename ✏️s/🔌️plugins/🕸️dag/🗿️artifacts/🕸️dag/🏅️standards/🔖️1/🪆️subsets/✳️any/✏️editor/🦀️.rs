@@ -418,9 +418,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DagRetainedCommandJ
 const DAG_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport"];
 const DAG_RETAINED_COMMAND_SCHEMA: &str = "dag.dag/v1.tool-command.v1";
 const DAG_RETAINED_RAW_BYTES: usize = 8_192;
-/// 📬️ Admission envelope of one published document mutation: the reorganize run finalizes one `move-node` per moved
-/// node, each far below one page.
-const DAG_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 4_096;
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 fn dag_retained_config_reduce(
@@ -451,16 +448,12 @@ const DAG_CONFIG_METADATA_BYTES: usize = 64;
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DagConfigPreparationFactory;
+
 struct DagConfigPreparation {
-    base: Option<store::SnapshotRead<DagConfig>>,
-    mutation: Option<DagConfigMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    candidate: Option<(DagConfig, Vec<DagConfigMutation>, DagConfigMutation)>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    owners: store::OneItemOwners<DagConfig, DagConfigMutation>,
     retained_bytes: usize,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
-    closing: bool,
 }
 
 fn dag_config_footprint(mutation: &DagConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
@@ -471,10 +464,10 @@ fn dag_config_footprint(mutation: &DagConfigMutation) -> Result<store::ArtifactS
     Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024))
 }
 
-fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(DagConfig, Vec<DagConfigMutation>, DagConfigMutation), String> {
-    dag_config_footprint(&mutation)?;
+fn prepare_dag_config(base: &DagConfig, mutation: &DagConfigMutation) -> Result<(DagConfig, Vec<DagConfigMutation>), String> {
+    dag_config_footprint(mutation)?;
     let mut post = base.clone();
-    let inverse = match &mutation {
+    let inverse = match mutation {
         DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { .. }) => return Err("DAG Config preparation rejects whole-snapshot input".into()),
         DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x, y, zoom }) => {
             post.camera_x = *x;
@@ -483,10 +476,12 @@ fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(
             DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom })
         }
     };
-    Ok((post, vec![inverse], mutation))
+    Ok((post, vec![inverse]))
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<DagConfig, DagConfigMutation> for DagConfigPreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<DagConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<DagConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::admit_artifact_batch_digest(edit, grant) }
+
     fn preflight(&self, mutation: &DagConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("DAG Config preparation rejected its lane".into());
@@ -494,115 +489,84 @@ impl store::ArtifactStoreOneItemPreparationFactory<DagConfig, DagConfigMutation>
         dag_config_footprint(mutation)
     }
 
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation>> {
+    fn begin_demand(&self, _mutation: &DagConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<DagConfigPreparation>(), depth: 1 })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation, DagConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation, DagConfigMutation>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+
         if self.preflight(&request.mutation, request.lane).is_err()
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > DAG_CONFIG_METADATA_BYTES
         {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "preparation rejected original publication authority"), request));
         }
-        Ok(Box::new(DagConfigPreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            candidate: None,
-            prepared: None,
-            checkpoint: Default::default(),
+        Ok((Box::new(DagConfigPreparation {
+            owners: store::OneItemOwners::from_request(request),
             retained_bytes: 0,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
-            closing: false,
-        }))
+        }), progress))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation> for DagConfigPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled || self.closing {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.refused.is_some() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
-        if self.candidate.is_none() {
-            let base = self.base.as_ref().ok_or_else(|| "DAG Config preparation lost its exact base root".to_string())?.get();
+        if self.owners.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+        }
+        if self.owners.candidate.is_none() {
             let bytes = DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024;
-            if grant.maximum_bytes < bytes {
+            if grant.maximum_copy_bytes < bytes {
                 return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
             }
-            let mutation = self.mutation.take().ok_or_else(|| "DAG Config preparation lost its mutation owner".to_string())?;
-            self.candidate = Some(prepare_dag_config(base, mutation)?);
+            let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "DAG Config preparation lost its exact base root"))?.get();
+            let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "DAG Config preparation lost its mutation owner"))?;
+            let (post, inverse) = prepare_dag_config(base, mutation).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "DAG Config preparation refused its original mutation"))?;
+            let forward = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "DAG Config preparation lost its mutation owner"))?;
+            *self.owners.candidate = Some((post, inverse, forward));
             self.retained_bytes = bytes;
             self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }));
         }
-        if grant.maximum_bytes < self.retained_bytes {
+        if grant.maximum_copy_bytes < self.retained_bytes {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "DAG Config preparation lost its candidate".to_string())?;
-        let authority = self.authority.as_ref().ok_or_else(|| "DAG Config preparation lost its Store authority".to_string())?;
-        let prepared = authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post))?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "DAG Config preparation lost its Store authority"))?;
+        let (post, inverse, forward) = self.owners.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "DAG Config preparation lost its candidate"))?;
+        let prepared = match authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => {
+                *self.owners.refused = Some((edit, post));
+                return Err(error);
+            }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.owners.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
     }
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>> {
-        self.prepared.as_ref()
-    }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>> {
-        self.prepared.take()
-    }
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || !grant.permits_one() {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if self.prepared.is_some() || self.candidate.is_some() {
-            if grant.maximum_bytes < self.retained_bytes {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            if self.prepared.take().is_none() {
-                self.candidate = None;
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
-        }
-        if self.mutation.is_some() {
-            if grant.maximum_bytes < DAG_CONFIG_STORE_MAXIMUM_BYTES {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.mutation = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: DAG_CONFIG_STORE_MAXIMUM_BYTES });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "DAG Config preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
-    }
+
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>> { self.owners.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.owners.begin_close(); }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
+    fn terminal_is_empty(&self) -> bool { self.owners.terminal_is_empty() }
 }
 //#endregion 📬️ConfigStorePreparation
 
@@ -658,24 +622,12 @@ impl ArtifactEditor for DagPlayApp {
         Some(std::sync::Arc::new(DagConfigPreparationFactory))
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
     }
 
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
@@ -703,8 +655,9 @@ impl ArtifactEditor for DagPlayApp {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
+    /// 🕳️ The parent vocabulary is uninhabited, so no parent mutation can be prepared and the document lane is denied.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("dag-artifact-retained", DAG_ARTIFACT_MUTATION_MAXIMUM_BYTES))
+        None
     }
 
     /// ⏯️ Builds the reorganize tool's layout run over the run's base (`ToolRunDefinition.runJob`); resumed from the
@@ -742,6 +695,7 @@ impl ArtifactEditor for DagPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

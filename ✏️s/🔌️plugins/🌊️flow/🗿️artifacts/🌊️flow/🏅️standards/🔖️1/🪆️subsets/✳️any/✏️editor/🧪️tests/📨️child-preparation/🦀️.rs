@@ -1,5 +1,10 @@
 use super::*;
 
+fn quoted_close_grant(work:&FlowChildGroupWork,body:usize)->semio_framework_value::RetainedCloneGrant{
+    let copy=work.next_close_copy_byte_demand().unwrap().max(body);
+    semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:work.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:work.next_close_release_byte_demand().unwrap(),maximum_depth:work.next_close_depth_demand().unwrap().max(1)}
+}
+
 #[test]
 fn rejected_child_preparation_remains_owned_until_bounded_flow_work_close(){
     use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandWorkStep};
@@ -29,16 +34,17 @@ fn rejected_child_preparation_remains_owned_until_bounded_flow_work_close(){
             assert_eq!(work.output.as_ref().unwrap().child_preparations.front().unwrap().retained_operation_count(),1);
         }
         work.begin_close();
-        assert_eq!(work.close_step(0,4096),InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0});
-        assert_eq!(work.close_step(1,0),InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0});
+        let zero=semio_framework_value::RetainedCloneGrant{maximum_items:0,..quoted_close_grant(&work,4096)};
+        assert_eq!(work.close_step(zero),InteractiveJobCloseStep::Pending{progress:Default::default()});
         assert_eq!(work.output.as_ref().unwrap().child_preparations.front().unwrap().retained_operation_count(),1);
-        let grant=fixture["closeGrant"].as_u64().unwrap()as usize;
+        let body=fixture["closeGrant"].as_u64().unwrap()as usize;
         let mut terminal=false;
         for _ in 0..fixture["closeSteps"].as_u64().unwrap(){
-            match work.close_step(1,grant){
-                InteractiveJobCloseStep::Pending{released_bytes,..}=>assert!(released_bytes<=grant),
-                InteractiveJobCloseStep::Complete=>{assert!(work.terminal_is_empty());terminal=true;break;},
-                InteractiveJobCloseStep::Blocked=>panic!("[DEBUG] actual child owner blocked: source={:?}, refusal={:?}, retirement={:?}, preparations={}, groups={}",work.output.as_ref().and_then(|emit|emit.child_preparations.front()).map(|source|source.retained_operation_count()),work.output.as_ref().and_then(|emit|emit.child_preparations.front()).and_then(|source|source.refusal()),work.output.as_ref().and_then(|emit|emit.child_preparations.front()).and_then(|source|source.retirement_refusal()),work.output.as_ref().map_or(0,|emit|emit.child_preparations.len()),work.output.as_ref().map_or(0,|emit|emit.child_emits.len())),
+            let grant=quoted_close_grant(&work,body);
+            match work.close_step(grant){
+                InteractiveJobCloseStep::Pending{progress}=>assert!(progress.fits(grant)),
+                InteractiveJobCloseStep::Complete{progress}=>{assert!(progress.fits(grant));assert!(work.terminal_is_empty());terminal=true;break;},
+                other=>panic!("[DEBUG] actual child owner did not close: {other:?}"),
             }
         }
         assert!(terminal);work.closing=false;work.completed=false;

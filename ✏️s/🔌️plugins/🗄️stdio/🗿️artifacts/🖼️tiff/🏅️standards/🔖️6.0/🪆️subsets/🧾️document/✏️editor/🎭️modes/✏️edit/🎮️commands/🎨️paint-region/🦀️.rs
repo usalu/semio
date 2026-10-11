@@ -16,7 +16,7 @@ pub const MAXIMUM_RAW_BYTES: usize = 8_192;
 pub const MAXIMUM_INTERACTIVE_ROWS: u32 = TIFF_MAXIMUM_INTERACTIVE_PAINT_ROWS;
 pub const CAPACITY: ArtifactRetainedWorkCapacity = ArtifactRetainedWorkCapacity::for_invertible_items(1);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PaintRegionCommand {
     pub x: u32,
@@ -124,6 +124,10 @@ impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
         CAPACITY.rows_for_items(1)
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<TiffAnyEditor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<TiffMutation>(), depth: 1, ..Default::default() })
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<TiffAnyEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<TiffAnyEditor>>, Fault> {
         if self.closing || self.complete { return Err(fault("stdio.tiff.paint-region.work-closed", "Paint region work is already closed")); }
         let TiffAnyEditCommand::PaintRegion(command) = input.command else { return Err(fault("stdio.tiff.paint-region.route-mismatch", "Paint work received another command")); };
@@ -156,13 +160,17 @@ impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
 
     fn begin_close(&mut self) { self.closing = true; }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 { return InteractiveJobCloseStep::Blocked; }
-        self.revision = None;
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if !self.closing { return InteractiveJobCloseStep::Blocked; }
         self.rows = 0;
         self.cursor = 0;
-        InteractiveJobCloseStep::Complete
+        semio_s_artifact_stdio_contract::editing::close_revision_turn(&mut self.revision, grant)
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(semio_s_artifact_stdio_contract::editing::revision_close_demand(&self.revision).release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(semio_s_artifact_stdio_contract::editing::revision_close_demand(&self.revision).depth) }
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.revision.is_none() && self.rows == 0 && self.cursor == 0

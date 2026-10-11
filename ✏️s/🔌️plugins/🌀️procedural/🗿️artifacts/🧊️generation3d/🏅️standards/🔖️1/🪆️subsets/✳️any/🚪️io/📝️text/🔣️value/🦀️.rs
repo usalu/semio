@@ -747,7 +747,7 @@ pub struct MoveNodes {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{WidgetInputValue, ChangeWidgetInput};
+use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{WidgetInputPlane, WidgetInputValue, ChangeWidgetInput};
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -758,7 +758,7 @@ pub enum WidgetInputValue {
     Boolean(bool),
     Point([f64; 3]),
     Vector([f64; 3]),
-    Plane { origin: [f64; 3], normal: [f64; 3] },
+    Plane(WidgetInputPlane),
     NumberList(Vec<f64>),
     TextList(Vec<String>),
     BooleanList(Vec<bool>),

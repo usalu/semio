@@ -101,14 +101,14 @@ pub type BoundedJobDemand = fn(u64, &Option<Vec<u8>>, &Option<Vec<u8>>, &semio_f
 pub struct BoundedJobFactory {pub admit:BoundedJobAdmission,pub demands:BoundedJobDemand}
 
 /// 📏️ Quotes the real boxed frame and original handle transfers over all five currencies.
-pub(crate) fn original_job_admission_demands<T:BoundedJob>(input:&Option<Vec<u8>>,restored:&Option<Vec<u8>>)->Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>{
+pub fn original_job_admission_demands<T:BoundedJob>(input:&Option<Vec<u8>>,restored:&Option<Vec<u8>>)->Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>{
     use semio_framework_value::{RetainedCloneGrant,ValueError,ValueRefusalKind};
     if input.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job admission has no owned input"))}
     Ok(RetainedCloneGrant{maximum_items:2+usize::from(restored.is_some()),maximum_copy_bytes:0,maximum_capacity_bytes:std::mem::size_of::<T>(),maximum_release_bytes:0,maximum_depth:1})
 }
 
 /// 🪺️ Admits the exact boxed state and transfers original input handles without a body copy.
-pub(crate) fn admit_original_job<T:BoundedJob+'static>(input:&mut Option<Vec<u8>>,restored:&mut Option<Vec<u8>>,cx:&mut semio_framework_job::StepContext<'_>,build:impl FnOnce(Vec<u8>,Option<Vec<u8>>)->T)->Result<Option<Box<dyn BoundedJob>>,semio_framework_value::ValueError>{
+pub fn admit_original_job<T:BoundedJob+'static>(input:&mut Option<Vec<u8>>,restored:&mut Option<Vec<u8>>,cx:&mut semio_framework_job::StepContext<'_>,build:impl FnOnce(Vec<u8>,Option<Vec<u8>>)->T)->Result<Option<Box<dyn BoundedJob>>,semio_framework_value::ValueError>{
     use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
     let demand=original_job_admission_demands::<T>(input,restored)?;let grant=cx.retained_grant();
     if cx.is_cancelled()||grant.maximum_items<demand.maximum_items||grant.maximum_depth<demand.maximum_depth||grant.maximum_capacity_bytes<demand.maximum_capacity_bytes{return Ok(None)}
@@ -145,7 +145,7 @@ fn builtin_factory(kind:&str)->Option<BoundedJobFactory>{Some(match kind{
     JOB_KIND_INFER=>BoundedJobFactory{admit:infer::job_infer,demands:infer::job_infer_demands},
     JOB_KIND_MUTATION_PLAN=>BoundedJobFactory{admit:mutation_plan::job_mutation_plan,demands:two_phase_job_demands},
     JOB_KIND_MIGRATE=>BoundedJobFactory{admit:migrate::job_migrate,demands:two_phase_job_demands},
-    semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND=>BoundedJobFactory{admit:crate::plugin_runtime::framework_reserved_job_factory,demands:crate::plugin_runtime::framework_reserved_job_demands},
+    semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND=>BoundedJobFactory{admit:crate::app::framework_reserved_job_factory,demands:crate::app::framework_reserved_job_demands},
     _=>return None,
 })}
 
@@ -306,6 +306,62 @@ pub async fn step_job(job:u64,budget:JobBudget,original:&mut IoRunControl<'_,'_>
     })
 }
 
+//#endregion
+
+//#region 🔖️GuestAbi
+/// 🌉️ Guest-side `jobs` ABI: both component owners (`semio_owned_*_job_v1` and the WIT `jobs` interface) call these twins.
+/// The embedding's mounted policy funds every admission and step; the caller context is born here, so the guest
+/// drives the registry through the same original-context protocol a host turn uses.
+pub mod abi {
+    use super::*;
+    use semio_framework_job::{Generation, OperationId, StepBudget, StepContext};
+    use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
+
+    const GUEST_GENERATION: Generation = Generation(0);
+
+    fn widest(left: RetainedCloneGrant, right: RetainedCloneGrant) -> RetainedCloneGrant {
+        RetainedCloneGrant { maximum_items: left.maximum_items.max(right.maximum_items), maximum_copy_bytes: left.maximum_copy_bytes.max(right.maximum_copy_bytes), maximum_capacity_bytes: left.maximum_capacity_bytes.max(right.maximum_capacity_bytes), maximum_release_bytes: left.maximum_release_bytes.max(right.maximum_release_bytes), maximum_depth: left.maximum_depth.max(right.maximum_depth) }
+    }
+
+    /// 🚀️ Admits one registered job from its original request; a denied admission is a typed fault, never a silent drop.
+    pub fn start<PA: crate::app::PluginApp + 'static>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, job: u64, kind: String, input: Vec<u8>) -> Result<(), semio_framework::Fault> {
+        let grant = runtime.mounted_owner_policy().preparation;
+        let mut admission = Some(OriginalJobAdmission { job, kind, input: Some(input), checkpoint: None });
+        let mut sequence = 0;
+        let mut receipt = RetainedCloneProgress::default();
+        let mut cx = StepContext::new(OperationId(job), GUEST_GENERATION, StepBudget::new(1, u64::MAX, grant), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
+        let admitted = crate::__async::poll::resolve_ready(start_job(&mut admission, &mut cx)).map_err(|error| fault("job.start", error.to_string()))?;
+        if admitted {
+            Ok(())
+        } else {
+            Err(fault("job.start", "job admission was denied by its registry slots or its mounted grant"))
+        }
+    }
+
+    /// ▶️ Runs one bounded state action of an admitted job under the funded caller context.
+    pub fn step<PA: crate::app::PluginApp + 'static>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, job: u64, budget: JobBudget) -> Result<JobStep, semio_framework::Fault> {
+        let policy = runtime.mounted_owner_policy().preparation;
+        let now_us = semio_framework_job::default_now_us().unwrap_or(0);
+        let deadline_us = now_us.saturating_add(u64::from(budget.deadline_ms).saturating_mul(1000));
+        let mut sequence = 0;
+        let mut receipt = RetainedCloneProgress::default();
+        let grant = {
+            let mut quote_sequence = 0;
+            let mut quote_receipt = RetainedCloneProgress::default();
+            let cx = StepContext::new(OperationId(job), GUEST_GENERATION, StepBudget::new(1, u64::MAX, policy), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut quote_sequence, &mut quote_receipt);
+            job_admission_demands(job, &cx).map_or(policy, |quote| widest(policy, quote))
+        };
+        let mut cx = StepContext::new(OperationId(job), GUEST_GENERATION, StepBudget::new(budget.fuel, deadline_us, grant), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
+        let mut decode_callback = |_| true;
+        let mut encode_callback = |_| true;
+        let mut decode = semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes, &mut decode_callback);
+        let mut encode = semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes, &mut encode_callback);
+        let mut original = IoRunControl::new(&mut decode, &mut encode, grant);
+        let mut snapshot_callback = |_| true;
+        let mut snapshot = SqliteSnapshotControl::new(&mut snapshot_callback, Default::default());
+        crate::__async::poll::resolve_ready(step_job(job, budget, &mut original, &mut snapshot, &mut cx)).map_err(|error| fault("job.step", error.to_string()))
+    }
+}
 //#endregion
 
 //#region 🔖️Checkpoint

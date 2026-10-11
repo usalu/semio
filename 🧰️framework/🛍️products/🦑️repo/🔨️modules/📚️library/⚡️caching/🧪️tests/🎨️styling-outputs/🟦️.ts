@@ -32,10 +32,11 @@ export async function testStylingOutputs(workspace: string, output: string): Pro
   } }));
   put("📜️script.ts", `import { appendFileSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from ${JSON.stringify(join(workspace, "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"))};
 import { StylingDotnetBuildScript, StylingDotnetDepsScript } from ${JSON.stringify(join(workspace, fixture.owner, "🏗️builder/🔷️dotnet/📜️script.ts"))};
 const root = process.cwd(), command = process.argv[2], Command = command === "deps" ? StylingDotnetDepsScript : StylingDotnetBuildScript;
 if (command === "generate") { copyFileSync(join(root, "🧫️palette.cs"), join(root, ${JSON.stringify(join(fixture.owner, fixture.source))})); process.exit(0); }
-await new Command(join(root, ${JSON.stringify(packagePath)}), root).run([]);
+await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "styling-outputs-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async (invocation) => { await new Command(join(root, ${JSON.stringify(packagePath)}), root, invocation).run([]); });
 appendFileSync(join(root, command === "deps" ? ".deps" : ".runs"), command + "\\n");
 `);
   put("consumer/consumer.csproj", `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings></PropertyGroup></Project>`);

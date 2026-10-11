@@ -1,25 +1,27 @@
 use super::*;
 use crate::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text, xml_document_to_text_checked};
 use semio_framework_value::{
-    SnapshotRetirementStep,
     retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep},
-    retirement::owned_retirement,
+    retirement::{admit_owned_retirement, owned_retirement_birth_bytes},
 };
 use std::sync::Arc;
 
-fn close_cursor(cursor: &mut <RetainedXmlDocument as RetainedClone>::Cursor, grant: RetainedCloneGrant, maximum_turns: usize) {
+fn close_cursor(cursor: &mut <RetainedXmlDocument as RetainedClone>::Cursor, _grant: RetainedCloneGrant, maximum_turns: usize) {
     assert!(cursor.begin_close());
     for turn in 0..maximum_turns {
-        match cursor.close_step(grant.maximum_items, grant.maximum_capacity_bytes).expect("retained XML cursor close") {
-            SnapshotRetirementStep::Complete => {
-                assert!(cursor.terminal_is_empty());
-                return;
-            }
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= grant.maximum_items);
-                assert!(released_bytes <= grant.maximum_capacity_bytes);
-            }
-            SnapshotRetirementStep::Blocked => panic!("retained XML cursor blocked at turn {turn}"),
+        let copy = cursor.next_close_copy_byte_demand().expect("retained XML close copy demand");
+        let funded = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: copy,
+            maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(copy).expect("retained XML close capacity demand"),
+            maximum_release_bytes: cursor.next_close_release_byte_demand().expect("retained XML close release demand"),
+            maximum_depth: cursor.next_close_depth_demand().expect("retained XML close depth demand"),
+        };
+        let step = cursor.close_step(funded).unwrap_or_else(|error| panic!("retained XML cursor close at turn {turn}: {error:?}"));
+        assert!(step.progress().fits(funded));
+        if matches!(step, RetainedCloneStep::Complete(_)) {
+            assert!(cursor.terminal_is_empty());
+            return;
         }
     }
     panic!("retained XML cursor close exceeded fixture turn bound");
@@ -86,15 +88,19 @@ fn flat_retained_xml_copy_materialize_and_retire_preserve_shared_vocabulary() {
     assert!(matches!(interrupted.advance(source.borrow(), grant).unwrap(), RetainedCloneStep::Progress(_)));
     close_cursor(&mut interrupted, grant, maximum_turns);
 
-    let mut retirement = owned_retirement(copied);
+    let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: owned_retirement_birth_bytes::<RetainedXmlDocument>(), maximum_release_bytes: 0, maximum_depth: 2 };
+    let (mut retirement, receipt) = admit_owned_retirement(copied, birth).unwrap_or_else(|(error, _)| panic!("retained XML retirement birth: {error:?}"));
+    assert!(receipt.fits(birth));
     for turn in 0..maximum_turns {
-        match retirement.close_step(grant.maximum_items, grant.maximum_capacity_bytes).expect("retained XML retirement") {
-            SnapshotRetirementStep::Complete => break,
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= grant.maximum_items);
-                assert!(released_bytes <= grant.maximum_capacity_bytes);
-            }
-            SnapshotRetirementStep::Blocked => panic!("retained XML retirement blocked at turn {turn}"),
+        if retirement.terminal_is_empty() {
+            break;
+        }
+        let demand = retirement.next_demand(0).expect("retained XML retirement demand");
+        let funded = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let step = retirement.close_step(funded).unwrap_or_else(|error| panic!("retained XML retirement at turn {turn}: {error:?}"));
+        assert!(step.progress().fits(funded));
+        if matches!(step, RetainedCloneStep::Complete(_)) {
+            break;
         }
     }
     assert!(retirement.terminal_is_empty());

@@ -18,7 +18,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 /// untyped `Null/Bool/Int/Float/Str/Bytes/List/Map/Ref` JSON-like graph with no operator/variable/
 /// assumption vocabulary, genuinely unable to host structural equation edits like "change
 /// coefficient of term 3" without a typed `Expr`-shaped enum to address). See `🔖️Equation` below.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[artifact_schema(id = "s.mathematical.equation")]
 pub struct EquationSnapshot {
     #[state(artifact)]
@@ -87,7 +87,8 @@ impl FromValue for EquationSnapshot {
 /// `insert_point_inverse_is_remove_point_at_same_index` finding — a base-relative Vec index that
 /// silently resolves to the wrong element once the collection's length has changed underneath
 /// it — a label is opaque, assigned once, and never reassigned or renumbered by any mutation.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct EquationNodeLabel(pub u64);
 
 // 🌱️ Hand-written — `#[derive(ToValue, FromValue)]` only supports named-field structs, not a
@@ -118,14 +119,14 @@ impl FromValue for EquationNodeLabel {
 /// `roots` vertical slice this wave proves end-to-end). `Fn`/`Piecewise`/`Rel`/`Wild`/`RootOf`/
 /// `Constant` are future work for whichever wave extends the mutation/inference table beyond
 /// `roots`/`change-coefficient`.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct EquationNode {
     pub label: EquationNodeLabel,
     pub kind: EquationNodeKind,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum EquationNodeKind {
     /// 🔢️ Arbitrary-precision integer, round-tripped through `number::Integer`'s own
@@ -156,7 +157,7 @@ pub enum EquationNodeKind {
 /// 📸️ Persisted equation content: the expression AST plus the label allocator that guarantees
 /// every future `create-term` mints a label no earlier mutation (or its inverse) could ever
 /// collide with — `next_label` only ever increases, even across delete+undo cycles.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct EquationExprSnapshot {
     pub expr: EquationNode,

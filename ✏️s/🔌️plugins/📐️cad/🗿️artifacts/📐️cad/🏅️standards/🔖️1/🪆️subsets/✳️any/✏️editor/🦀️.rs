@@ -16,7 +16,7 @@ use crate::editor::cad::commands::reference::{patch_cad_play_reference, referenc
 use crate::editor::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use crate::editor::cad::commands::transform::{apply_transformation, rotate_selection, scale_selection, translate_selection};
 use crate::editor::cad::commands::utility::set_dislocate_option;
-use crate::editor::cad::config::{cad_sun_config_to_world, CadConfig, CadConfigMutation, CadDislocateOptions};
+use crate::editor::cad::config::{cad_sun_config_to_world, CadConfig, CadConfigMutation, CadDislocateOptions, SetEdit, SetContributionsEdit};
 use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, keyed_transitions, resolve_interaction_key, start_session, CadEngagementScratch};
 use crate::editor::cad::modes::edit;
 use crate::editor::cad::modes::edit::tools::transform::{cad_child_leaves_emit, cad_import_object_emit, cad_pane_models, CadPaneModels, CadToolEntry, CadToolLeaf, CadTransformRecord};
@@ -521,7 +521,7 @@ pub fn runtime_of(cfg: &ConfigView<'_, CadConfig>, transient: &CadWorldWindowTra
 
 /// 🔀️ The artifact-wide config snapshot of the (possibly mutated) runtime.
 pub fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> Result<CadConfigMutation, Fault> {
-    Ok(CadConfigMutation::Set { config: Box::new(cad_config_from_runtime(runtime, base)) })
+    Ok(CadConfigMutation::Set(SetEdit { config: Box::new(cad_config_from_runtime(runtime, base)) }))
 }
 
 /// 🫧️ Hands the runtime's engagement state to the addressed window's transient when it changed (design §17.4): an
@@ -1395,6 +1395,12 @@ struct CadRetainedCommandWork {
 }
 
 impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadRetainedCommandWork {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+    }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+    }
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -1478,27 +1484,24 @@ impl ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory {
 struct CadMediaJob(ArtifactRetainedCommandJob<EditorApp<CadPlayApp>>);
 
 impl semio_framework_job::InteractiveJob for CadMediaJob {
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome { semio_framework_job::InteractiveJob::step(&mut self.0, cx) }
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::step(&mut self.0, cx) }
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::borrow_outcome(&self.0, descriptor) }
     fn begin_close(&mut self) { semio_framework_job::InteractiveJob::begin_close(&mut self.0); }
-    fn close_step(&mut self, items: usize, bytes: usize) -> semio_framework_job::InteractiveJobCloseStep { semio_framework_job::InteractiveJob::close_step(&mut self.0, items, bytes) }
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep { semio_framework_job::InteractiveJob::close_step(&mut self.0, grant) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::next_close_copy_byte_demand(&self.0) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::next_close_capacity_byte_demand(&self.0, maximum_copy_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::next_close_release_byte_demand(&self.0) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::next_close_depth_demand(&self.0) }
     fn terminal_is_empty(&self) -> bool { semio_framework_job::InteractiveJob::terminal_is_empty(&self.0) }
 }
 
-impl semio_framework_plugin::ArtifactReservedJob for CadMediaJob {
-    fn close_step(&mut self, items: usize, bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        Ok(match semio_framework_job::InteractiveJob::close_step(&mut self.0, items, bytes) {
-            semio_framework_job::InteractiveJobCloseStep::Complete if semio_framework_job::InteractiveJob::terminal_is_empty(&self.0) => semio_framework_plugin::PluginCloseStep::Complete,
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
-            _ => semio_framework_plugin::PluginCloseStep::Blocked { reason: "Cad media still retains exact owners".into() },
-        })
-    }
-    fn terminal_is_empty(&self) -> bool { semio_framework_job::InteractiveJob::terminal_is_empty(&self.0) }
-}
+impl semio_framework_plugin::ArtifactReservedJob for CadMediaJob {}
 
 struct CadMediaWork {
     port: String,
     media: Option<Media>,
     children: Option<semio_framework_plugin::ChildContentView>,
+    pending: Option<(String, String, semio_framework_value::DslValue)>,
     retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     priced_bytes: usize,
     price_checksum: u64,
@@ -1509,7 +1512,7 @@ struct CadMediaWork {
 
 impl CadMediaWork {
     fn new(port: String, media: Media, children: Option<semio_framework_plugin::ChildContentView>) -> Self {
-        Self { port, media: Some(media), children, retirement: None, priced_bytes: 0, price_checksum: 0, pricing_complete: false, consumed: false, closing: false }
+        Self { port, media: Some(media), children, pending: None, retirement: None, priced_bytes: 0, price_checksum: 0, pricing_complete: false, consumed: false, closing: false }
     }
     fn borrowed_source(&self) -> Result<&[u8], Fault> {
         match &self.media.as_ref().ok_or_else(|| Fault::from("Cad media input owner is absent"))?.payload {
@@ -1547,6 +1550,12 @@ impl CadMediaWork {
 }
 
 impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadMediaWork {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+    }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+    }
     fn tool_id(&self) -> &'static str { "importCadFile" }
     fn workspace_identity(&self) -> u64 { self.borrowed_source().map_or(0, |source| (source.as_ptr() as usize as u64).wrapping_add(source.len() as u64)) }
     fn extent(&self, _: &CadCommand, _: &CadSnapshot, _: &protocol::InteractionState, _: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>) -> Option<usize> { Some(1) }
@@ -1579,33 +1588,53 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadMediaWork {
         Ok(ArtifactCommandWorkStep::Complete(emit))
     }
     fn begin_close(&mut self) { self.closing = true; }
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(maximum_copy_bytes)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(0)?.depth) }
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         use semio_framework_job::InteractiveJobCloseStep;
-        if !self.closing || maximum_items == 0 { return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
-        if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(1, maximum_bytes) {
-                Ok(store::SnapshotRetirementStep::Complete) if retirement.terminal_is_empty() => { self.retirement = None; InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 } },
-                Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }) => InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                _ => InteractiveJobCloseStep::Blocked,
-            };
-        }
+        use semio_framework_value::retained_clone::RetainedCloneStep;
+        if !self.closing || grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
+        let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+        let mapped = |step: Result<RetainedCloneStep, semio_framework_value::ValueError>| match step {
+            Ok(RetainedCloneStep::Progress(progress)) | Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+            Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.retirement.is_some() { return mapped(store::artifact_retirement_box_close_step(&mut self.retirement, child)); }
+        if self.pending.is_some() { return mapped(store::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, child)); }
         if self.media.is_some() {
-            if maximum_bytes < 4096 { return InteractiveJobCloseStep::Blocked; }
             let payload = self.media.take().expect("admitted media owner").payload;
             let (schema, value) = match payload {
                 MediaPayload::Structured { schema, json } => (schema, semio_framework_value::DslValue::String(json)),
                 MediaPayload::Intrinsic { schema, value } => (schema, value),
                 MediaPayload::Binary { format_kind, blob_hash } => (format_kind, semio_framework_value::DslValue::String(blob_hash)),
             };
-            self.retirement = Some(semio_framework_value::retirement::owned_retirement((std::mem::take(&mut self.port), schema, value)));
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            self.pending = Some((std::mem::take(&mut self.port), schema, value));
+            return InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } };
         }
         if self.children.take().is_some() {
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } };
         }
-        InteractiveJobCloseStep::Complete
+        InteractiveJobCloseStep::Complete { progress: Default::default() }
     }
-    fn terminal_is_empty(&self) -> bool { self.closing && self.media.is_none() && self.port.is_empty() && self.children.is_none() && self.retirement.is_none() }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.media.is_none() && self.port.is_empty() && self.children.is_none() && self.pending.is_none() && self.retirement.is_none() }
+}
+
+impl CadMediaWork {
+    fn close_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let nested = |mut demand: semio_framework_value::RetirementDemand| -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+            demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "Cad media close depth overflow"))?;
+            Ok(demand)
+        };
+        if let Some(retirement) = self.retirement.as_ref() {
+            return nested(store::artifact_retirement_box_demands(retirement, body)?);
+        }
+        if self.pending.is_some() {
+            return nested(store::artifact_retirement_owned_birth_demands(&self.pending)?);
+        }
+        Ok(if self.media.is_some() || self.children.is_some() { semio_framework_value::RetirementDemand { depth: 1, ..Default::default() } } else { Default::default() })
+    }
 }
 
 //#region 📬️ConfigStorePreparation
@@ -1613,13 +1642,9 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadMediaWork {
 struct CadConfigStorePreparationFactory;
 
 struct CadConfigStorePreparation {
-    base: Option<store::SnapshotRead<CadConfig>>,
-    mutation: Option<CadConfigMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>>,
+    owners: store::OneItemOwners<CadConfig, CadConfigMutation>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
-    closing: bool,
 }
 
 fn cad_config_retained_bytes(config: &CadConfig) -> usize {
@@ -1654,23 +1679,31 @@ fn admit_cad_config(config: &CadConfig) -> Result<usize, String> {
 
 fn admit_cad_config_mutation(mutation: &CadConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = match mutation {
-        CadConfigMutation::Set { config } => admit_cad_config(config)?,
-        CadConfigMutation::SetContributions { json } if json.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES => json.len(),
-        CadConfigMutation::SetContributions { .. } => return Err("CAD config mutation exceeds its fixed retained byte envelope".into()),
+        CadConfigMutation::Set(SetEdit { config }) => admit_cad_config(config)?,
+        CadConfigMutation::SetContributions(SetContributionsEdit { json }) if json.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES => json.len(),
+        CadConfigMutation::SetContributions(_) => return Err("CAD config mutation exceeds its fixed retained byte envelope".into()),
     };
     Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
-fn prepare_cad_config(base: &CadConfig, mutation: CadConfigMutation) -> Result<(CadConfig, Vec<CadConfigMutation>, CadConfigMutation), String> {
-    admit_cad_config(base)?;
-    admit_cad_config_mutation(&mutation)?;
-    let inverse = <CadConfigMutation as protocol::Mutation<CadConfig>>::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
-    let post = protocol::apply_diff(&<CadConfigMutation as protocol::Mutation<CadConfig>>::diff(&mutation, base).into_parts().0, base).map_err(|error| error.to_string())?;
-    admit_cad_config(&post)?;
-    Ok((post, inverse, mutation))
+fn cad_refusal(message: impl Into<String>) -> semio_framework_value::ValueError {
+    semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message.into())
+}
+
+fn prepare_cad_config(base: &CadConfig, mutation: &CadConfigMutation) -> Result<(CadConfig, Vec<CadConfigMutation>), semio_framework_value::ValueError> {
+    admit_cad_config(base).map_err(cad_refusal)?;
+    admit_cad_config_mutation(mutation).map_err(cad_refusal)?;
+    let inverse = <CadConfigMutation as protocol::Mutation<CadConfig>>::inverse(mutation, base)?;
+    let post = protocol::apply_diff(&<CadConfigMutation as protocol::Mutation<CadConfig>>::diff(mutation, base).into_parts().0, base).map_err(|error| cad_refusal(error.to_string()))?;
+    admit_cad_config(&post).map_err(cad_refusal)?;
+    Ok((post, inverse))
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<CadConfig, CadConfigMutation> for CadConfigStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<CadConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<CadConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &CadConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("CAD config preparation rejected its lane".into());
@@ -1678,95 +1711,55 @@ impl store::ArtifactStoreOneItemPreparationFactory<CadConfig, CadConfigMutation>
         admit_cad_config_mutation(mutation)
     }
 
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation>> {
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err(request);
+    fn begin_demand(&self, _mutation: &CadConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<CadConfigStorePreparation>(), depth: 1 })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation, CadConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation, CadConfigMutation>)> {
+        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation rejected original publication authority"), request));
         }
-        Ok(Box::new(CadConfigStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+        Ok((Box::new(CadConfigStorePreparation {
+            owners: store::OneItemOwners::from_request(request),
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
-            closing: false,
-        }))
+        }), progress))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for CadConfigStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        let base = self.base.as_ref().ok_or_else(|| "CAD config preparation lost its exact base root".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "CAD config preparation lost its mutation owner".to_string())?;
-        let (post, inverse, forward) = prepare_cad_config(base.get(), mutation)?;
-        let authority = self.authority.as_ref().ok_or_else(|| "CAD config preparation lost its Store authority".to_string())?;
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
+        if self.owners.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
+        let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation lost its exact base root"))?;
+        let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation lost its mutation owner"))?;
+        let (post, inverse) = prepare_cad_config(base.get(), mutation)?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation lost its Store authority"))?;
+        let forward = self.owners.mutation.take().expect("observed original mutation owner");
         let edit = authority.next_edit(forward, inverse);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.owners.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> {
-        self.prepared.as_ref()
-    }
-
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> {
-        self.prepared.take()
-    }
-
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.owners.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.owners.begin_close(); }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
+    fn terminal_is_empty(&self) -> bool { self.owners.terminal_is_empty() }
 }
 //#endregion 📬️ConfigStorePreparation
 
@@ -1778,13 +1771,9 @@ const CAD_ARTIFACT_STORE_MAXIMUM_ITEMS: usize = 512;
 struct CadArtifactStorePreparationFactory;
 
 struct CadArtifactStorePreparation {
-    base: Option<store::SnapshotRead<CadSnapshot>>,
-    mutation: Option<CadMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>>,
+    owners: store::OneItemOwners<CadSnapshot, CadMutation>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
-    closing: bool,
 }
 
 fn cad_child_retained_bytes<S>(child: &store::ArtifactChild<S>) -> usize {
@@ -1839,22 +1828,21 @@ fn admit_cad_artifact_mutation(mutation: &CadMutation) -> Result<store::Artifact
     Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
-fn prepare_cad_artifact(base: &CadSnapshot, mutation: CadMutation) -> Result<(CadSnapshot, Vec<CadMutation>, CadMutation), String> {
-    admit_cad_snapshot(base)?;
-    admit_cad_artifact_mutation(&mutation)?;
-    let inverse = <CadMutation as protocol::Mutation<CadSnapshot>>::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
-    let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, base);
-    let post = protocol::apply_diff(outcome.diff(), base).map_err(|error| error.to_string())?;
-    admit_cad_snapshot(&post)?;
-    Ok((post, inverse, mutation))
-}
-
-/// 🧰️ Pairs canonical Cad retirement and original typed preparation authorities.
-pub(crate) fn cad_document_store_owners() -> store::DocumentStoreOwners<CadSnapshot, CadMutation> {
-    semio_framework_plugin::bounded_document_store_owners::<CadSnapshot, CadMutation>().with_one_item_preparation(std::sync::Arc::new(CadArtifactStorePreparationFactory))
+fn prepare_cad_artifact(base: &CadSnapshot, mutation: &CadMutation) -> Result<(CadSnapshot, Vec<CadMutation>), semio_framework_value::ValueError> {
+    admit_cad_snapshot(base).map_err(cad_refusal)?;
+    admit_cad_artifact_mutation(mutation).map_err(cad_refusal)?;
+    let inverse = <CadMutation as protocol::Mutation<CadSnapshot>>::inverse(mutation, base)?;
+    let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(mutation, base);
+    let post = protocol::apply_diff(outcome.diff(), base).map_err(|error| cad_refusal(error.to_string()))?;
+    admit_cad_snapshot(&post).map_err(cad_refusal)?;
+    Ok((post, inverse))
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for CadArtifactStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<CadMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<CadMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn operation_wire_source<'a>(&self, operation: &'a CadMutation) -> Option<store::ArtifactPreparedOperationSource<'a>> {
         crate::standards::v1::subsets::any::io::binary::mutations::prepared_operation_wire_source(operation)
     }
@@ -1871,120 +1859,58 @@ impl store::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for
         admit_cad_artifact_mutation(mutation)
     }
 
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation>>, store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation>> {
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err(request);
+    fn begin_demand(&self, _mutation: &CadMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<CadArtifactStorePreparation>(), depth: 1 })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation, CadMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation, CadMutation>)> {
+        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation rejected original publication authority"), request));
         }
-        Ok(Box::new(CadArtifactStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+        Ok((Box::new(CadArtifactStorePreparation {
+            owners: store::OneItemOwners::from_request(request),
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
-            closing: false,
-        }))
+        }), progress))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        let base = self.base.as_ref().ok_or_else(|| "CAD Artifact preparation lost its exact base root".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "CAD Artifact preparation lost its mutation owner".to_string())?;
-        let (post, inverse, forward) = prepare_cad_artifact(base.get(), mutation)?;
-        let authority = self.authority.as_ref().ok_or_else(|| "CAD Artifact preparation lost its Store authority".to_string())?;
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
+        if self.owners.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
+        let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation lost its exact base root"))?;
+        let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation lost its mutation owner"))?;
+        let (post, inverse) = prepare_cad_artifact(base.get(), mutation)?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation lost its Store authority"))?;
+        let forward = self.owners.mutation.take().expect("observed original mutation owner");
         let edit = authority.next_edit(forward, inverse);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.owners.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> {
-        self.prepared.as_ref()
-    }
-
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> {
-        self.prepared.take()
-    }
-
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.owners.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.owners.begin_close(); }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
+    fn terminal_is_empty(&self) -> bool { self.owners.terminal_is_empty() }
 }
 //#endregion 📬️ArtifactStorePreparation
 
-//#region 🧹️EmptyLaneRetirement
-struct CadNoTransientStoreDisposer;
-
-impl semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>> for CadNoTransientStoreDisposer {
-    fn close_step(
-        &mut self,
-        _owner: &mut store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>,
-        maximum_items: usize,
-        _maximum_bytes: usize,
-    ) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        if maximum_items == 0 {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        assert_eq!(size_of::<semio_framework_plugin::NoTransient>(), 0);
-        Ok(semio_framework_plugin::PluginCloseStep::Complete)
-    }
-
-    fn terminal_is_empty(&self, _owner: &store::TransientStore<semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation>) -> bool {
-        size_of::<semio_framework_plugin::NoTransient>() == 0
-    }
-}
-//#endregion 🧹️EmptyLaneRetirement
 
 /// 🎯️ The four world bodies the `cad` interaction domain paints into.
 pub(crate) const CAD_WORLD_BODY_KEYS: [&str; 4] = [shape::BODY_KEY, building::BODY_KEY, energy::BODY_KEY, structure_classic::BODY_KEY];
@@ -2048,35 +1974,6 @@ impl ArtifactEditor for CadPlayApp {
 })())
 }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(cad_document_store_owners())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        assert_eq!(size_of::<NoDraft>(), 0);
-        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
-    }
-
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<NoDraft, NoDraftMutation>())
-    }
-
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(Box::new(CadNoTransientStoreDisposer))
-    }
-
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
         Some(std::sync::Arc::new(crate::editor::cad::presence::retirement::CadPresenceRetirementFactory))
     }
@@ -2086,7 +1983,7 @@ impl ArtifactEditor for CadPlayApp {
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(Box::new(crate::editor::cad::presence::retirement::CadPresenceStoreDisposer::new()))
+        Some(crate::editor::cad::presence::retirement::store_disposer())
     }
 
     /// 🎯️ The framework interaction verbs on the `cad` domain, answered out of this app's own body
@@ -2187,7 +2084,7 @@ impl ArtifactEditor for CadPlayApp {
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(CadRetainedCommandWork { tool_id, consumed: false });
-        let operation_context = AppOperationContext {
+        let operation_context = AppOperationContext { retained: request.retained,
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,
@@ -2220,7 +2117,7 @@ impl ArtifactEditor for CadPlayApp {
         if !request.raw_wire.is_empty() || request.authoring_seed.is_empty() { return Err(Fault::from("Cad media requires exact decoded admission authority")); }
         let semio_framework_plugin::ArtifactReservedToolInput::Media { port, media } = request.input else { return Err(Fault::from("Cad media requires its declared input owner")); };
         if !matches!(port.as_str(), "geometry:in" | "artifact:in") { return Err(Fault::from("Cad media input port is not declared")); }
-        let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: 0, generation: 0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed };
+        let operation = AppOperationContext { retained: request.retained, app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: 0, generation: 0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed };
         let work = Box::new(CadMediaWork::new(port, media, Some(request.children)));
         let payload = ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: String::new(), payload: String::new() }), snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None, operation, completion: request.completion },
@@ -2308,7 +2205,7 @@ impl ArtifactEditor for CadPlayApp {
     }
 
     fn host_configuration_mutation(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok((action == "setContributions").then(|| CadConfigMutation::SetContributions { json: args.and_then(|value| value.get("json")).and_then(semio_framework_value::DslValue::as_str).unwrap_or("[]").to_string() }))
+        Ok((action == "setContributions").then(|| CadConfigMutation::SetContributions(SetContributionsEdit { json: args.and_then(|value| value.get("json")).and_then(semio_framework_value::DslValue::as_str).unwrap_or("[]").to_string() })))
     }
 
     fn handle(

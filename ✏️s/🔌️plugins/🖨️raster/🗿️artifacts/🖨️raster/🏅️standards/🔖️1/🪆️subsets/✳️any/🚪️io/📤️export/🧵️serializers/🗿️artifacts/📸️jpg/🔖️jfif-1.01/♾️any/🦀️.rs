@@ -10,5 +10,5 @@ pub fn register() {}
 pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> {
     let image = raster_composite_image(snapshot).map_err(|reason| format!("jpg export not available for this raster document: {reason}"))?;
     let target: semio_s_artifact_stdio_jpg::JpgSnapshot = semio_image_to_format(&image, JPG_DIALECT)?;
-    semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&target, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(target.frame.as_ref())).map_err(|error| format!("{error:?}"))
+    semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&target, &semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).map_err(|error| format!("{error:?}"))
 }

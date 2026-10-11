@@ -19,7 +19,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant — a real per-command payload module the way `✏️editor/🎮️commands/*`
 /// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum En1998ViewCommand {
     #[default]
     Noop,

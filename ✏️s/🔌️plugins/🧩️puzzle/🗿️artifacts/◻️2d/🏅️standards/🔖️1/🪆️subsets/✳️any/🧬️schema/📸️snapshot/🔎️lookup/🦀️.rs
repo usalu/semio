@@ -45,8 +45,8 @@ impl Puzzle2dLookupCursor {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, target: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, grant: RetainedCloneGrant) -> Result<Puzzle2dLookupStep, ValueError> {
         if self.closing || self.spent { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "native lookup cursor is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Puzzle2dLookupStep::Pending(Default::default())); }
-        source.bind(&mut self.source)?;
-        target.bind(&mut self.target)?;
+        if let Some(progress) = source.bind(&mut self.source, grant)? { return Ok(Puzzle2dLookupStep::Pending(progress)); }
+        if let Some(progress) = target.bind(&mut self.target, grant)? { return Ok(Puzzle2dLookupStep::Pending(progress)); }
         if let Some(location) = self.output { return Ok(Puzzle2dLookupStep::Complete { location, progress: Default::default() }); }
         if self.phase == 1 {
             let step = self.comparison.close_step(grant)?;
@@ -65,7 +65,8 @@ impl Puzzle2dLookupCursor {
         }
         let scope = self.scope;
         let (outer, inner) = (self.outer, self.inner);
-        match self.comparison.compare(source.project(1, |snapshot| scope.identifier(snapshot, outer, inner).expect("immutable native lookup candidate")), target, BoundedOrdGrant { maximum_items: grant.maximum_items, maximum_bytes: grant.maximum_copy_bytes })? {
+        match self.comparison.compare(source.project(1, |snapshot| scope.identifier(snapshot, outer, inner).expect("immutable native lookup candidate")), target, BoundedOrdGrant { maximum_items: grant.maximum_items, maximum_bytes: grant.maximum_copy_bytes }, grant)? {
+            BoundedOrdStep::Authority(progress) => Ok(Puzzle2dLookupStep::Pending(progress)),
             BoundedOrdStep::Progress(progress) => Ok(Puzzle2dLookupStep::Pending(RetainedCloneProgress { copied_items: progress.compared_items, copied_bytes: progress.compared_bytes, ..Default::default() })),
             BoundedOrdStep::Complete { ordering, progress } => {
                 let progress = RetainedCloneProgress { copied_items: progress.compared_items, copied_bytes: progress.compared_bytes, ..Default::default() };

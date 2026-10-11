@@ -70,7 +70,7 @@ export async function registerFolderArchiveRestoreTests(
   const { describe, it, expect } = vitest;
   const documentId = "puzzle-folder-restore";
   const binding = { kind: "folder", dataClass: "persistedLocalOnly", path: "/tmp/folder-archive-restore" } as const;
-  const config = (clientInstanceId: string): ArtifactActorConfig & { readonly kind: "open"; readonly clientInstanceId: string } => ({ kind: "open", clientInstanceId, documentId, schema: "demo/v1", bindings: [binding], watchExternal: false, actor: "actor-1" });
+  const config = (clientInstanceId: string): ArtifactActorConfig & { readonly kind: "open"; readonly clientInstanceId: string } => ({ kind: "open", actorIdentityGrant: { maximumItems: 1024, maximumCopyBytes: 65536, maximumCapacityBytes: 65536, maximumReleaseBytes: 65536, maximumDepth: 64 }, clientInstanceId, documentId, schema: "demo/v1", bindings: [binding], watchExternal: false, actor: "actor-1" });
   const settle = async (done: () => boolean): Promise<void> => {
     for (let turn = 0; turn < 200 && !done(); turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
     expect(done()).toBe(true);

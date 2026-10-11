@@ -1,18 +1,22 @@
 //! 🧪️ Bounded schema-owned BMP sealing and exact first-party owner retirement.
 use super::*;
 use std::sync::Arc;
-use semio_framework_value::{FromValue,ToValue,retirement::{RetireOwned,SharedValueRetirementFactory},SnapshotRetirementStep};
+use semio_framework_value::{FromValue,ToValue,retirement::{RetireOwned,SharedValueRetirementFactory},retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
+
+fn encoding_grant(items:usize,copy:usize)->store::ArtifactStoreOneItemGrant{store::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
+fn close_policy()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4_096,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
+fn retire_reader<T:Send+Sync+'static>(reader:&mut store::ArtifactCanonicalJsonReader<T>){for _ in 0..100000{if matches!(reader.close_step(close_policy()).unwrap(),RetainedCloneStep::Complete(_)){return;}}panic!("canonical reader did not retire");}
 
 fn verify<T:store::ArtifactCanonicalJson+ToValue+RetireOwned+Sync>(value:T,expected:serde_json::Value) {
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(),expected);
     let owner=Arc::new(value);let lifetime=Arc::downgrade(&owner);
     let mut reader=store::ArtifactCanonicalJsonReader::new(owner,Arc::new(SharedValueRetirementFactory::<T>::default()));
-    let grant=store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:17};
+    let grant=encoding_grant(1,17);
     let mut bytes=Vec::new();let mut chunk=[0;17];let mut turns=0;
-    for zero in [store::ArtifactStoreOneItemGrant{maximum_items:0,..grant},store::ArtifactStoreOneItemGrant{maximum_bytes:0,..grant}]{assert_eq!(reader.encode_chunk(zero,&mut chunk).unwrap(),0);assert_eq!(reader.completed_bytes(),0);}
-    while !reader.is_complete(){turns+=1;assert!(turns<100000);let count=reader.encode_chunk(grant,&mut chunk).unwrap();assert!(count<=grant.maximum_bytes);bytes.extend_from_slice(&chunk[..count]);}
+    for zero in [store::ArtifactStoreOneItemGrant{maximum_items:0,..grant},store::ArtifactStoreOneItemGrant{maximum_copy_bytes:0,..grant}]{assert_eq!(reader.encode_chunk(zero,&mut chunk).unwrap().written_bytes,0);assert_eq!(reader.completed_bytes(),0);}
+    while !reader.is_complete(){turns+=1;assert!(turns<100000);let step=reader.encode_chunk(grant,&mut chunk).unwrap();assert!(step.ownership.progress().fits(grant.retained_grant()));let count=step.written_bytes;assert!(count<=grant.maximum_copy_bytes);bytes.extend_from_slice(&chunk[..count]);}
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&bytes).unwrap(),expected);
-    reader.begin_close();for _ in 0..100000{if reader.close_step(store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:4096}).unwrap()==SnapshotRetirementStep::Complete{break;}}
+    reader.begin_close();retire_reader(&mut reader);
     assert!(reader.terminal_is_empty());assert!(lifetime.upgrade().is_none());
     eprintln!("[DEBUG] BMP schema canonical owner turns={turns} bytes={} retired=true",bytes.len());
 }
@@ -20,9 +24,9 @@ fn verify<T:store::ArtifactCanonicalJson+ToValue+RetireOwned+Sync>(value:T,expec
 fn verify_cancel<T:store::ArtifactCanonicalJson+RetireOwned+Sync>(value:T) {
     let owner=Arc::new(value);let lifetime=Arc::downgrade(&owner);
     let mut reader=store::ArtifactCanonicalJsonReader::new(owner,Arc::new(SharedValueRetirementFactory::<T>::default()));
-    let grant=store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:17};let mut chunk=[0;17];
-    assert!(reader.encode_chunk(grant,&mut chunk).unwrap()<=17);
-    reader.cancel();reader.begin_close();for _ in 0..100000{if reader.close_step(store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:4096}).unwrap()==SnapshotRetirementStep::Complete{break;}}
+    let grant=encoding_grant(1,17);let mut chunk=[0;17];
+    assert!(reader.encode_chunk(grant,&mut chunk).unwrap().written_bytes<=17);
+    reader.cancel();reader.begin_close();retire_reader(&mut reader);
     assert!(reader.terminal_is_empty());assert!(lifetime.upgrade().is_none());
     eprintln!("[DEBUG] BMP schema canonical cancellation retired=true");
 }

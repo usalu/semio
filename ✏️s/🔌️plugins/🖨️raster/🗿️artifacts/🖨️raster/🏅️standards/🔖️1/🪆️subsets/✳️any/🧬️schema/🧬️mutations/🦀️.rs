@@ -33,7 +33,8 @@ use super::write_pixel_region;
 /// 🧬️ Closed semantic mutation vocabulary for the raster document, derived per
 /// `📓️derivation-rules.md` from `RasterLayerNode`'s recursive tree shape and the `assets` root
 /// collection.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = RasterSnapshot, diff = RasterDiff, schema = "raster.raster", retire_cold = retire_raster_mutation)]
 pub enum RasterMutation {

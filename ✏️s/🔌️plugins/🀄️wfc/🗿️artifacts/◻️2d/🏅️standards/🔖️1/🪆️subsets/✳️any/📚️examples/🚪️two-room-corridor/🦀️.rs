@@ -6,7 +6,7 @@
 //! the solver has no freedom left, which is what makes its outcome a committable fixture rather than
 //! a seeded sample.
 
-use crate::schema::snapshot::{Wfc2dColor, Wfc2dPathSegment, Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dTile, Wfc2dTileMedia, Wfc2dVectorPath, WFC_2D_DEFAULT_RELATION, WFC_2D_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{Wfc2dColor, Wfc2dPathSegment, Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dTile, Wfc2dSegmentTo, Wfc2dTileMedia, Wfc2dVectorMedia, Wfc2dVectorPath, WFC_2D_DEFAULT_RELATION, WFC_2D_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 
@@ -20,20 +20,20 @@ pub fn label() -> LocalizedLabel {
 
 /// 🎨 A full-bleed filled square in tile space — the simplest honest vector tile.
 pub(crate) fn filled_square(color: Wfc2dColor) -> Wfc2dTileMedia {
-    Wfc2dTileMedia::Vector {
+    Wfc2dTileMedia::Vector(Wfc2dVectorMedia {
         paths: vec![Wfc2dVectorPath {
             segments: vec![
-                Wfc2dPathSegment::Move { to: [0.05, 0.05] },
-                Wfc2dPathSegment::Line { to: [0.95, 0.05] },
-                Wfc2dPathSegment::Line { to: [0.95, 0.95] },
-                Wfc2dPathSegment::Line { to: [0.05, 0.95] },
+                Wfc2dPathSegment::Move(Wfc2dSegmentTo { to: [0.05, 0.05] }),
+                Wfc2dPathSegment::Line(Wfc2dSegmentTo { to: [0.95, 0.05] }),
+                Wfc2dPathSegment::Line(Wfc2dSegmentTo { to: [0.95, 0.95] }),
+                Wfc2dPathSegment::Line(Wfc2dSegmentTo { to: [0.05, 0.95] }),
                 Wfc2dPathSegment::Close,
             ],
             fill: Some(color),
             stroke: None,
             stroke_width: 0.0,
         }],
-    }
+    })
 }
 
 fn slot(id: &str, x: f64) -> Wfc2dSlot {

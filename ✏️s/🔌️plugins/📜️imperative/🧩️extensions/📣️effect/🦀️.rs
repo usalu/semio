@@ -8,6 +8,11 @@ use semio_framework_pack_json::{array, object, to_string, Value as JsonValue};
 pub struct LogPrint;
 
 impl Operator for LogPrint {
+    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let message = read_string(input, "message")?;
         Ok(channel_output("message", Dictionary::new().insert("text", Value::Atom(Atom::String(message)))))
@@ -20,6 +25,11 @@ impl Operator for LogPrint {
 pub struct StateSet;
 
 impl Operator for StateSet {
+    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let key = read_string(input, "key")?;
         let value = input.get("value").cloned().unwrap_or(Value::null());
@@ -33,6 +43,11 @@ impl Operator for StateSet {
 pub struct StateIncrement;
 
 impl Operator for StateIncrement {
+    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let key = read_string(input, "key")?;
         let by = read_number(input, "by").unwrap_or(1.0);
@@ -47,6 +62,11 @@ impl Operator for StateIncrement {
 pub struct WaitDelay;
 
 impl Operator for WaitDelay {
+    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let ms = read_number(input, "ms").unwrap_or(0.0);
         Ok(channel_output("delay", Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(ms)))))
@@ -140,9 +160,8 @@ fn bundle() -> semio_framework_plugin::ExtensionBundle {
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Effect", MODULE_VERSION)
         .extends("imperative").depends_on("imperative", semio_framework::tree_pin!())
         .mode(semio_framework_plugin::ExecutionMode::Linked)
-        .handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY, |request| {
-            imperative_extension_sdk::evaluate_invoke(&module_registry(), request).map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate"), message))
-        })
+        .resource_owner(imperative_extension_sdk::ImperativeEvaluationResources::new(module_registry))
+        .owned_handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY)
         .contributes_topic(topic_contribution.topic, topic_contribution.payload)
 }
 

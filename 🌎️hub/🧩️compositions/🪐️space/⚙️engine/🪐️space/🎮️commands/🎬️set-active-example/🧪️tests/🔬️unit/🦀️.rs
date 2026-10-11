@@ -26,8 +26,8 @@ async fn open_studio_loads_created_empty_catalog_studio() {
     let empty = empty_workflow_snapshot().await;
     let config = SpaceConfig::default();
     let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: entry.id.clone() })).await.expect("handle");
-    assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetSpaceId { space_id: Some(entry.id) }));
-    assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetActiveNode { node_id: None }));
+    assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some(entry.id) })));
+    assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: None })));
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })));
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
 }
@@ -127,7 +127,7 @@ async fn create_space_navigates_without_download_and_opens_empty() {
     let document = crate::resolve_studio_document(space_id).await.expect("created studio");
     assert_eq!(document.name, "Fresh Studio");
     assert!(document.backbone.is_none(), "ephemeral studio must not attach backbone");
-    assert!(document.vcs.genesis.snapshot().collections.is_empty());
+    assert!(document.vcs.genesis.facts().snapshot().collections.is_empty());
 
     let empty = empty_workflow_snapshot().await;
     let studio_doc = ArtifactView::new(&empty, &history);

@@ -26,7 +26,8 @@ pub const STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA: &str = "stdio.semio.object";
 /// may carry a precise b-rep AND a tessellated preview mesh at once, hence both, each optional and
 /// independently owned); `properties` is one owned `value` tree for arbitrary property-set data
 /// (materials, IFC property sets, custom metadata).
-#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[artifact_schema(id = "s.stdio.semio.object")]
 pub struct SemioObjectSnapshot {
     #[state(artifact)]

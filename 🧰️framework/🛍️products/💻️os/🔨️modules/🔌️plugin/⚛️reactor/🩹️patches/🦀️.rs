@@ -550,7 +550,8 @@ impl PatchTracker {
             let slot = state.slots[index].as_mut().expect("selected structural producer slot");
             let Some(producer) = slot.producer.as_mut() else { return has_work(&state) };
             let mut preview_sequence = slot.preview_sequence;
-            let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX), slot.cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
+            let mut unfunded = Default::default();
+            let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX, semio_framework_job::retained_work::NO_RETAINED_WORK), slot.cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut unfunded);
             let outcome = producer.authority.step(slot.generation, context.is_cancelled(), context.deadline_exceeded());
             #[cfg(test)]
             tests::after_producer_step();
@@ -1248,7 +1249,8 @@ fn drive_job_one(state: &mut PatchTrackerState, index: usize) {
     let Some(_) = state.ready[output_index].as_ref().filter(|output| output.key == slot.key && output.generation == slot.generation) else { return };
     if job.is_ready() {
         let slot = state.slots[index].as_mut().expect("retained ready job slot");
-        let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX), slot.cancel.clone(), semio_framework_job::default_now_us, &mut slot.preview_sequence);
+        let mut unfunded = Default::default();
+        let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX, semio_framework_job::retained_work::NO_RETAINED_WORK), slot.cancel.clone(), semio_framework_job::default_now_us, &mut slot.preview_sequence, &mut unfunded);
         if slot.job.as_mut().expect("retained ready job authority").drive_one(&mut context) != SurfaceReconcileJobStep::Ready {
             return;
         }
@@ -1273,7 +1275,8 @@ fn drive_job_one(state: &mut PatchTrackerState, index: usize) {
         return;
     }
     let slot = state.slots[index].as_mut().expect("retained job slot");
-    let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX), slot.cancel.clone(), semio_framework_job::default_now_us, &mut slot.preview_sequence);
+    let mut unfunded = Default::default();
+        let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX, semio_framework_job::retained_work::NO_RETAINED_WORK), slot.cancel.clone(), semio_framework_job::default_now_us, &mut slot.preview_sequence, &mut unfunded);
     let outcome = slot.job.as_mut().expect("retained job authority").drive_one(&mut context);
     if outcome == SurfaceReconcileJobStep::Fault {
         if let Some(target) = state.terminals.iter_mut().find(|slot| slot.is_none()) {

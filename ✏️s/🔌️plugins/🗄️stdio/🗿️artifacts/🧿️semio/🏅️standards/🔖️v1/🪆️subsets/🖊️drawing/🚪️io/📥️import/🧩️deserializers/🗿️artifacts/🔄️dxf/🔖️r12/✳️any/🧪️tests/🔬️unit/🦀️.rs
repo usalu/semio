@@ -4,9 +4,9 @@ use super::*;
 fn sample_dxf() -> DxfSnapshot {
     DxfSnapshot {
         entities: vec![
-            DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
-            DxfEntity::Circle { center: [2.0, 2.0, 0.0], radius: 1.0, layer: "walls".into(), unknown_group_codes: vec![] },
-            DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![] },
+            DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }),
+            DxfEntity::Circle(DxfCircle { center: [2.0, 2.0, 0.0], radius: 1.0, layer: "walls".into(), unknown_group_codes: vec![] }),
+            DxfEntity::Other(DxfOther { kind: "3DFACE".into(), group_codes: vec![] }),
         ],
         ..DxfSnapshot::default()
     }

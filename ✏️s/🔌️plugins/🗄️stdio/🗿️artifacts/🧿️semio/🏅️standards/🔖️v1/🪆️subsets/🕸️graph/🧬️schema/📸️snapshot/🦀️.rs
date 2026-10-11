@@ -39,7 +39,8 @@ pub const STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA: &str = "s.stdio.semio.graph";
 /// 🪪 Stable identity for a graph node — a NAMED single-field struct, never a bare tuple newtype
 /// (`dsl` has no blanket `DslField` impl for tuples of any arity — see `🔢️value`'s `ValueId` for
 /// the precedent this follows).
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct GraphNodeId {
     pub value: String,
@@ -55,7 +56,8 @@ impl GraphNodeId {
 
 //#region 🔖️EdgeId
 /// 🪪 Stable identity for a graph edge — same named-single-field convention as [`GraphNodeId`].
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct GraphEdgeId {
     pub value: String,
@@ -71,7 +73,8 @@ impl GraphEdgeId {
 
 //#region 🔖️PortKind
 /// 🔌️ The direction a node port carries data in.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum SemioGraphPortKind {
     #[default]
@@ -85,7 +88,8 @@ pub enum SemioGraphPortKind {
 /// 🔌️ One named port on a node. Intrinsically ordered, anonymous, nested inside its owning node's
 /// `ports` — the same shape `🔤️text`'s marks-inside-run pattern uses one level up
 /// (`➕add-node-port`/`🔚remove-node-port`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioGraphPort {
     pub name: String,

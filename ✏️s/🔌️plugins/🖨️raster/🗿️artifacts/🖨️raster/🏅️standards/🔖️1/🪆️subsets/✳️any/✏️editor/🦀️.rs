@@ -25,7 +25,7 @@ use crate::{RasterLayerNode, RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
 use semio_framework_pack_json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPublication, StepContext};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
@@ -606,6 +606,21 @@ impl RasterDownloadProofs {
 }
 
 //#region 📬️StorePreparation
+type RasterRetirementDemand = semio_framework_value::RetirementDemand;
+
+fn raster_preparation_fault(message: &'static str) -> semio_framework_value::ValueError {
+    semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message)
+}
+
+fn raster_preparation_nested(mut demand: RasterRetirementDemand) -> Result<RasterRetirementDemand, semio_framework_value::ValueError> {
+    demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "preparation close depth overflow"))?;
+    Ok(demand)
+}
+
+fn raster_preparation_factory_demand() -> RasterRetirementDemand {
+    RasterRetirementDemand { copy_bytes: std::mem::size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }
+}
+
 /// 📬️ The document lane's one-item retained preparation. Without it every route declaring
 /// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract and
 /// stays dispatch-dead, no matter how it is classified.
@@ -613,17 +628,19 @@ impl RasterDownloadProofs {
 struct RasterStorePreparationFactory;
 
 struct RasterStorePreparation {
-    base: Option<store::SnapshotRead<RasterSnapshot>>,
-    mutation: Option<RasterMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<RasterSnapshot, RasterMutation>>,
+    base: std::mem::ManuallyDrop<Option<store::SnapshotRead<RasterSnapshot>>>,
+    mutation: std::mem::ManuallyDrop<Option<RasterMutation>>,
+    post: std::mem::ManuallyDrop<Option<RasterSnapshot>>,
+    refused: std::mem::ManuallyDrop<Option<(protocol::Edit<RasterMutation>, std::sync::Arc<RasterSnapshot>)>>,
+    authority: std::mem::ManuallyDrop<Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>>,
+    prepared: std::mem::ManuallyDrop<Option<store::ArtifactStoreOneItemPrepared<RasterSnapshot, RasterMutation>>>,
     /// 🧮 The clone-free stepwise apply (`RasterOneItemApply`), live from the first `advance` until
     /// the post snapshot is handed over, or closed through its own retirement on cancel/fault.
-    apply: Option<crate::host::owned::RasterOneItemApply>,
-    /// 🧹️ A cancelled/faulted item's mutation may carry a populated owned map (a `create-layer` of an
-    /// adjustment with params) that must never reach `Drop` — it retires through the mutation
-    /// retirement factory instead.
-    mutation_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    apply: std::mem::ManuallyDrop<Option<crate::host::owned::RasterOneItemApply>>,
+    mutation_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<RasterMutation>>>>,
+    snapshot_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<RasterSnapshot>>>>,
+    active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    factories: std::mem::ManuallyDrop<[Option<semio_framework_value::FactoryAuthority>; 2]>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
     closing: bool,
@@ -633,7 +650,46 @@ struct RasterStorePreparation {
 /// clone, a page shift), so a two-layer document lands within a handful of grants.
 const RASTER_ONE_ITEM_APPLY_FUEL: u64 = 256;
 
+impl RasterStorePreparation {
+    fn close_demands(&self, body: usize) -> Result<RasterRetirementDemand, semio_framework_value::ValueError> {
+        if let Some(active) = self.active.as_ref() {
+            return raster_preparation_nested(store::artifact_retirement_box_demands(active, body)?);
+        }
+        if self.prepared.is_some() {
+            let birth = store::ArtifactStoreOneItemPrepared::<RasterSnapshot, RasterMutation>::retirement_birth_demand();
+            return Ok(RasterRetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() });
+        }
+        if let Some(apply) = self.apply.as_ref() {
+            return raster_preparation_nested(apply.close_demands(body)?);
+        }
+        if self.mutation.is_some() {
+            return raster_preparation_nested(store::artifact_retirement_owned_birth_demands(&self.mutation)?);
+        }
+        if self.post.is_some() {
+            return raster_preparation_nested(store::artifact_retirement_owned_birth_demands(&self.post)?);
+        }
+        if self.refused.is_some() {
+            return raster_preparation_nested(store::artifact_retirement_owned_birth_demands(&self.refused)?);
+        }
+        if self.base.is_some() {
+            return raster_preparation_nested(store::artifact_retirement_owned_birth_demands(&self.base)?);
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            let birth = authority.retirement_birth_demand();
+            return Ok(RasterRetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() });
+        }
+        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() {
+            return Ok(raster_preparation_factory_demand());
+        }
+        self.factories.iter().find_map(Option::as_ref).map_or(Ok(Default::default()), |factory| raster_preparation_nested(factory.demands(body)?))
+    }
+}
+
 impl store::ArtifactStoreOneItemPreparationFactory<RasterSnapshot, RasterMutation> for RasterStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<RasterMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<RasterMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &RasterMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("Raster Store preparation rejected its lane".into());
@@ -641,64 +697,98 @@ impl store::ArtifactStoreOneItemPreparationFactory<RasterSnapshot, RasterMutatio
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
+    fn begin_demand(&self, _mutation: &RasterMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        if lane != store::HistoryLane::Document {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Raster Store preparation has no admissible lane"));
+        }
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<RasterStorePreparation>(), depth: 1 })
+    }
+
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation>>, store::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation>> {
+        request: store::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation, RasterMutation>,
+        grant: store::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation, RasterMutation>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         let item_count = crate::standards::v1::subsets::any::schema::flatten_raster_layers(&request.base.get().layers).len().saturating_add(request.base.get().assets.len());
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
+        if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || item_count > RASTER_RETAINED_WORK_ITEMS
         {
-            return Err(request);
+            return Err((raster_preparation_fault("Raster preparation original request refused"), request));
         }
-        Ok(Box::new(RasterStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
-            apply: None,
-            mutation_retirement: None,
+        Ok((Box::new(RasterStorePreparation {
+            base: std::mem::ManuallyDrop::new(Some(request.base)),
+            mutation: std::mem::ManuallyDrop::new(Some(request.mutation)),
+            post: std::mem::ManuallyDrop::new(None),
+            refused: std::mem::ManuallyDrop::new(None),
+            authority: std::mem::ManuallyDrop::new(Some(request.authority)),
+            prepared: std::mem::ManuallyDrop::new(None),
+            apply: std::mem::ManuallyDrop::new(None),
+            mutation_retirement: std::mem::ManuallyDrop::new(Some(request.mutation_retirement)),
+            snapshot_retirement: std::mem::ManuallyDrop::new(Some(request.snapshot_retirement)),
+            active: std::mem::ManuallyDrop::new(None),
+            factories: std::mem::ManuallyDrop::new(Default::default()),
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
             closing: false,
-        }))
+        }), progress))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for RasterStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::Mutation as _;
-        if !grant.permits_one() || self.cancelled {
+        use semio_framework_value::retained_clone::RetainedCloneProgress;
+        if !grant.permits_one() || self.cancelled || self.closing {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.refused.is_some() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Raster preparation retains its original semantic refusal"));
         }
-        let base = self.base.as_ref().ok_or_else(|| "Raster preparation lost its exact base root".to_string())?;
-        let authority = self.authority.as_ref().ok_or_else(|| "Raster preparation lost its Store authority".to_string())?;
-        // 🧮 Clone-free apply: `Mutation::diff` + `RasterDiff::apply` would `Clone` the base and every
-        // carried layer (a populated `RasterOwnedMap` asserts) and refuse a populated asset map — the
-        // retained candidate authority builds the post snapshot one owned value at a time instead.
-        let post = {
-            let mutation = self.mutation.as_ref().ok_or_else(|| "Raster preparation lost its mutation owner".to_string())?;
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
+        }
+        let mut receipt = RetainedCloneProgress::default();
+        if self.post.is_none() {
+            let base = self.base.as_ref().ok_or_else(|| raster_preparation_fault("Raster preparation lost its exact base root"))?;
+            let authority = self.authority.as_ref().ok_or_else(|| raster_preparation_fault("Raster preparation lost its Store authority"))?;
+            let mutation = self.mutation.as_ref().ok_or_else(|| raster_preparation_fault("Raster preparation lost its mutation owner"))?;
             let apply = self.apply.get_or_insert_with(crate::host::owned::RasterOneItemApply::new);
-            match apply.advance(base.get(), mutation, authority.operation(), authority.generation(), RASTER_ONE_ITEM_APPLY_FUEL).map_err(semio_framework_value::ValueError::into_message)? {
-                Some(post) => post,
-                None => return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint)),
+            let (post, progress) = apply.advance(base.get(), mutation, authority.operation(), authority.generation(), RASTER_ONE_ITEM_APPLY_FUEL, grant.retained_grant())?;
+            receipt = progress;
+            let Some(post) = post else {
+                return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, receipt));
+            };
+            *self.post = Some(post);
+            drop(self.apply.take());
+        }
+        let (Some(base), Some(authority)) = (self.base.as_ref(), self.authority.as_ref()) else {
+            return Err(raster_preparation_fault("Raster preparation lost its exact base root or Store authority"));
+        };
+        let mutation = self.mutation.take().ok_or_else(|| raster_preparation_fault("Raster preparation lost its mutation owner"))?;
+        let inverse = match mutation.inverse(base.get()) {
+            Ok(inverse) => inverse,
+            Err(error) => {
+                *self.mutation = Some(mutation);
+                return Err(error);
             }
         };
-        drop(self.apply.take());
-        let mutation = self.mutation.take().ok_or_else(|| "Raster preparation lost its mutation owner".to_string())?;
-        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
+        let post = self.post.take().ok_or_else(|| raster_preparation_fault("Raster preparation lost its semantic candidate"))?;
         let edit = authority.next_edit(mutation, inverse);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => {
+                *self.refused = Some((edit, post));
+                return Err(error);
+            }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, receipt))
     }
 
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
@@ -717,171 +807,138 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+        let empty = RetainedCloneProgress::default();
+        let grant = grant.retained_grant();
         if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            return Ok(RetainedCloneStep::Progress(empty));
         }
-        if let Some(apply) = self.apply.as_mut() {
-            let step = apply.close_step(grant.maximum_items, grant.maximum_bytes)?;
-            if apply.terminal_is_empty() {
-                self.apply = None;
-            }
-            return Ok(match step {
-                store::SnapshotRetirementStep::Complete => store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 },
-                other => other,
-            });
+        if self.terminal_is_empty() {
+            return Ok(RetainedCloneStep::Complete(empty));
         }
-        if let Some(mutation) = self.mutation.take() {
-            self.mutation_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::owned::RasterMutationRetirementFactory, mutation));
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth {
+            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "preparation close exceeds original depth"));
         }
-        if let Some(retirement) = self.mutation_retirement.as_mut() {
-            let step = retirement.close_step(grant.maximum_items, grant.maximum_bytes)?;
-            if retirement.terminal_is_empty() {
-                self.mutation_retirement = None;
-            }
-            return Ok(match step {
-                store::SnapshotRetirementStep::Complete => store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 },
-                other => other,
-            });
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(RetainedCloneStep::Progress(empty));
         }
-        if self.prepared.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Raster preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.apply.is_none() && self.mutation_retirement.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
-}
-
-/// 📬️ The config lane's twin of {@link RasterStorePreparationFactory} — raster's seven session verbs
-/// (`setBrushSize`/`setBrushOpacity`/`setCompositeViewport`/`setCamera`/`setCameraZoom`/
-/// publication contract outright when this factory is absent. `RasterConfig`'s `Diff` is its own sparse
-/// per-field diff.
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct RasterConfigStorePreparationFactory;
-
-struct RasterConfigStorePreparation {
-    base: Option<store::SnapshotRead<RasterConfig>>,
-    mutation: Option<RasterConfigMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<RasterConfig, RasterConfigMutation>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    cancelled: bool,
-    closing: bool,
-}
-
-impl store::ArtifactStoreOneItemPreparationFactory<RasterConfig, RasterConfigMutation> for RasterConfigStorePreparationFactory {
-    fn preflight(&self, mutation: &RasterConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
-            return Err("Raster config preparation rejected its lane".into());
-        }
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
-    }
-
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<RasterConfig, RasterConfigMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<RasterConfig, RasterConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<RasterConfig, RasterConfigMutation>> {
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err(request);
-        }
-        Ok(Box::new(RasterConfigStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-
-impl store::ArtifactStoreOneItemPreparation<RasterConfig, RasterConfigMutation> for RasterConfigStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::Mutation as _;
-        if !grant.permits_one() || self.cancelled {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if self.active.is_some() {
+            return store::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+            if self.mutation_retirement.is_none() || self.snapshot_retirement.is_none() {
+                return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation retains its original installed issuers"));
+            }
+            let original = self.prepared.take().expect("observed original prepared candidate");
+            let mutations = self.mutation_retirement.take().expect("original mutation issuer");
+            let snapshots = self.snapshot_retirement.take().expect("original snapshot issuer");
+            return match original.admit_retirement(mutations, snapshots, child) {
+                Ok((owner, progress)) => {
+                    *self.active = Some(owner);
+                    semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "original prepared close birth")?;
+                    if progress.retained_capacity_bytes != demand.capacity_bytes {
+                        return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation child changed its actual admitted birth"));
+                    }
+                    Ok(RetainedCloneStep::Progress(progress))
+                }
+                Err((error, original, mutations, snapshots)) => {
+                    *self.prepared = Some(original);
+                    *self.mutation_retirement = Some(mutations);
+                    *self.snapshot_retirement = Some(snapshots);
+                    Err(error)
+                }
+            };
         }
-        let base = self.base.as_ref().ok_or_else(|| "Raster config preparation lost its exact base root".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "Raster config preparation lost its mutation owner".to_string())?;
-        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-        let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
-        let authority = self.authority.as_ref().ok_or_else(|| "Raster config preparation lost its Store authority".to_string())?;
-        let edit = authority.next_edit(mutation, inverse);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        if let Some(apply) = self.apply.as_mut() {
+            let step = apply.close_step(child)?;
+            if apply.terminal_is_empty() {
+                drop(self.apply.take());
+            }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        if self.mutation.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.mutation, &mut self.active, child);
+        }
+        if self.post.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.post, &mut self.active, child);
+        }
+        if self.refused.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.refused, &mut self.active, child);
+        }
+        if self.base.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.base, &mut self.active, child);
+        }
+        if let Some(authority) = self.authority.take() {
+            return match authority.retire(child) {
+                Ok((owner, progress)) => {
+                    *self.active = Some(owner);
+                    semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "original preparation authority close birth")?;
+                    if progress.retained_capacity_bytes != demand.capacity_bytes {
+                        return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation authority changed admitted birth"));
+                    }
+                    Ok(RetainedCloneStep::Progress(progress))
+                }
+                Err((error, original)) => {
+                    *self.authority = Some(original);
+                    Err(error)
+                }
+            };
+        }
+        if let Some(factory) = self.mutation_retirement.take() {
+            let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory;
+            self.factories[0] = Some(semio_framework_value::FactoryAuthority::new(factory));
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
+        }
+        if let Some(factory) = self.snapshot_retirement.take() {
+            let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory;
+            self.factories[1] = Some(semio_framework_value::FactoryAuthority::new(factory));
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
+        }
+        if let Some(slot) = self.factories.iter_mut().find(|slot| slot.is_some()) {
+            let factory = slot.as_mut().expect("original preparation factory alias");
+            let step = factory.step(child)?;
+            let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original preparation factory close")?;
+            if factory.terminal_is_empty() {
+                *slot = None;
+            }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        Ok(RetainedCloneStep::Complete(empty))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.copy_bytes)
     }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<RasterConfig, RasterConfigMutation>> {
-        self.prepared.as_ref()
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(body)?.capacity_bytes)
     }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<RasterConfig, RasterConfigMutation>> {
-        self.prepared.take()
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.release_bytes)
     }
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Raster config preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.raster_owners_released()
     }
 }
+
+impl RasterStorePreparation {
+    fn raster_owners_released(&self) -> bool {
+        self.active.is_none() && self.factories.iter().all(Option::is_none) && self.mutation_retirement.is_none() && self.snapshot_retirement.is_none() && self.apply.is_none() && self.refused.is_none() && self.post.is_none() && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
+    }
+}
+
+impl Drop for RasterStorePreparation {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.raster_owners_released(), "preparation must retain original owners until supplied-grant terminal closure");
+    }
+}
+
 //#endregion 📬️StorePreparation
 
 //#region 🎞️ReservedImport
@@ -898,31 +955,25 @@ const RASTER_IMPORT_PORT: &str = "image:in";
 /// completion authority. The decode itself is `crate::standards::v1::subsets::any::io::raster_image_layer_and_asset` — the SAME
 /// function the pure seam used — so the import's meaning lives in one place.
 struct RasterImportJob {
-    port: String,
+    port: Option<String>,
     media_json: Option<String>,
     snapshot: Option<std::sync::Arc<RasterSnapshot>>,
-    mutations: Vec<RasterMutation>,
+    mutations: Option<Vec<RasterMutation>>,
     decoded: bool,
     completed: bool,
     closing: bool,
     completion: Option<ArtifactToolCompletion<EditorApp<RasterPlayApp>>>,
     pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<RasterPlayApp>>>,
+    publication: RetainedJobPublication,
+    publishing: Option<JobPublicationKind>,
+    source: Vec<u8>,
+    delivered: bool,
+    active: Option<Box<dyn store::ErasedSnapshotRetirement>>,
 }
 
-fn raster_job_payload(cx: &mut StepContext<'_>, stream: JobPayloadStream, bytes: &[u8]) -> RetainedJobPayload {
-    match cx.payload_from_bytes(stream, bytes) {
-        Ok(payload) => payload,
-        Err(rejected) => {
-            drop(rejected.into_source());
-            RetainedJobPayload::empty(stream)
-        }
-    }
-}
-
-fn raster_job_fault(cx: &mut StepContext<'_>, detail: &str) -> StepOutcome {
-    let bytes = detail.as_bytes();
-    let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
-    StepOutcome::Fault(JobFault { detail: raster_job_payload(cx, JobPayloadStream::Fault, bounded) })
+enum RasterImportAction {
+    Publish,
+    Complete,
 }
 
 impl RasterImportJob {
@@ -931,143 +982,247 @@ impl RasterImportJob {
             MediaPayload::Structured { json, .. } => Some(json),
             MediaPayload::Binary { .. } | MediaPayload::Intrinsic { .. } => None,
         };
-        Self { port, media_json, snapshot: Some(request.snapshot), mutations: Vec::new(), decoded: false, completed: false, closing: false, completion: Some(request.completion), pending_completion_rejection: None }
+        Self {
+            port: Some(port),
+            media_json,
+            snapshot: Some(request.snapshot),
+            mutations: Some(Vec::new()),
+            decoded: false,
+            completed: false,
+            closing: false,
+            completion: Some(request.completion),
+            pending_completion_rejection: None,
+            publication: RetainedJobPublication::new(),
+            publishing: None,
+            source: Vec::new(),
+            delivered: false,
+            active: None,
+        }
     }
 
-    fn decode(&mut self, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
-        if self.port != RASTER_IMPORT_PORT {
-            return Some(raster_job_fault(cx, "raster import only implements image:in"));
-        }
-        let Some(media_json) = self.media_json.as_ref() else {
-            return Some(raster_job_fault(cx, "raster image:in only accepts a Structured (base64 PNG) payload"));
-        };
-        let Some(snapshot) = self.snapshot.as_ref() else {
-            return Some(raster_job_fault(cx, "raster import lost its snapshot authority"));
-        };
-        let index = snapshot.layers.len();
-        let (asset_id, asset, layer) = match crate::standards::v1::subsets::any::io::raster_image_layer_and_asset(media_json) { Ok(value) => value, Err(error) => return Some(raster_job_fault(cx, &error)) };
-        self.mutations = vec![
-            RasterMutation::AddLayerAsset(crate::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
-            RasterMutation::CreateLayer(crate::mutations::create_layer::mutation::CreateLayer { parent_id: None, index, layer: Box::new(layer) }),
-        ];
-        self.decoded = true;
-        None
+    /// 🧯️ Stages one bounded fault description for the next publication turns.
+    fn stage_fault(&mut self, detail: &str) {
+        let bytes = detail.as_bytes();
+        self.source = bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec();
+        self.publishing = Some(JobPublicationKind::Fault);
     }
-}
 
-impl InteractiveJob for RasterImportJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+    fn decode(&mut self) -> bool {
+        if self.port.as_deref() != Some(RASTER_IMPORT_PORT) {
+            self.stage_fault("raster import only implements image:in");
+            return false;
         }
+        let decoded = {
+            let (Some(media_json), Some(snapshot)) = (self.media_json.as_ref(), self.snapshot.as_ref()) else {
+                self.stage_fault("raster image:in only accepts a Structured (base64 PNG) payload over its snapshot authority");
+                return false;
+            };
+            let index = snapshot.layers.len();
+            crate::standards::v1::subsets::any::io::raster_image_layer_and_asset(media_json).map(|(asset_id, asset, layer)| {
+                vec![
+                    RasterMutation::AddLayerAsset(crate::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
+                    RasterMutation::CreateLayer(crate::mutations::create_layer::mutation::CreateLayer { parent_id: None, index, layer: Box::new(layer) }),
+                ]
+            })
+        };
+        match decoded {
+            Ok(mutations) => {
+                self.mutations = Some(mutations);
+                self.decoded = true;
+                true
+            }
+            Err(error) => {
+                self.stage_fault(&error);
+                false
+            }
+        }
+    }
+
+    /// ⏭️ Runs the next bounded unit of work and reports what the step must publish.
+    fn advance(&mut self) -> RasterImportAction {
         if self.pending_completion_rejection.is_some() {
-            return raster_job_fault(cx, "raster import completion remains rejected");
+            self.stage_fault("raster import completion remains rejected");
+            return RasterImportAction::Publish;
         }
         if !self.decoded {
-            cx.set_stage("raster-import-decode");
-            if let Some(outcome) = self.decode(cx) {
-                return outcome;
+            if !self.decode() {
+                return RasterImportAction::Publish;
             }
-            cx.consume_fuel(1);
-            return StepOutcome::CheckpointReady(Checkpoint { state: raster_job_payload(cx, JobPayloadStream::CheckpointState, &[1]), applied_progress: 1 });
+            self.source = vec![1];
+            self.publishing = Some(JobPublicationKind::Checkpoint { applied_progress: 1 });
+            return RasterImportAction::Publish;
         }
-        cx.set_stage("raster-import-publish");
         if !self.completed {
-            let mutations = std::mem::take(&mut self.mutations);
+            let mutations = self.mutations.take().unwrap_or_default();
             let Some(completion) = self.completion.as_ref() else {
-                return raster_job_fault(cx, "raster import lost its completion authority");
+                self.stage_fault("raster import lost its completion authority");
+                return RasterImportAction::Publish;
             };
             if !completion.has_mounted_consumer() {
-                return raster_job_fault(cx, "raster import completion consumer is absent");
+                self.stage_fault("raster import completion consumer is absent");
+                return RasterImportAction::Publish;
             }
             if let Err(rejected) = completion.complete(Ok(Emit { artifact_mutations: mutations, ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }), EphemeralEmit::default()) {
                 let message = rejected.fault.message.clone();
                 self.pending_completion_rejection = Some(rejected);
-                return raster_job_fault(cx, &message);
+                self.stage_fault(&message);
+                return RasterImportAction::Publish;
             }
             self.completed = true;
         }
-        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
+        RasterImportAction::Complete
+    }
+
+    fn close_demands(&self, body: usize) -> Result<RasterRetirementDemand, semio_framework_value::ValueError> {
+        if !self.publication.terminal_is_empty() {
+            return self.publication.retirement_demands();
+        }
+        if let Some(active) = self.active.as_ref() {
+            return raster_preparation_nested(store::artifact_retirement_box_demands(active, body)?);
+        }
+        if self.pending_completion_rejection.is_some() {
+            return raster_preparation_nested(store::artifact_retirement_owned_birth_demands(&self.pending_completion_rejection)?);
+        }
+        if self.mutations.is_some() {
+            return raster_preparation_nested(store::artifact_retirement_owned_birth_demands(&self.mutations)?);
+        }
+        if self.media_json.is_some() {
+            return raster_preparation_nested(store::artifact_retirement_owned_birth_demands(&self.media_json)?);
+        }
+        if self.port.is_some() {
+            return raster_preparation_nested(store::artifact_retirement_owned_birth_demands(&self.port)?);
+        }
+        if self.snapshot.is_some() {
+            return raster_preparation_nested(store::artifact_retirement_owned_birth_demands(&self.snapshot)?);
+        }
+        if self.completion.is_some() {
+            return raster_preparation_nested(store::artifact_retirement_owned_birth_demands(&self.completion)?);
+        }
+        Ok(RasterRetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
+    }
+}
+
+impl InteractiveJob for RasterImportJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if self.delivered {
+            let step = self.publication.close_step(cx.retained_grant())?;
+            cx.consume_retained(step.progress())?;
+            if matches!(step, RetainedCloneStep::Complete(_)) {
+                self.delivered = false;
+            }
+            return Ok(None);
+        }
+        if cx.is_cancelled() {
+            return JobOutcomeBorrow::admit_cancelled(cx);
+        }
+        if self.publishing.is_none() {
+            cx.set_stage(if self.decoded { "raster-import-publish" } else { "raster-import-decode" });
+            if matches!(self.advance(), RasterImportAction::Complete) {
+                return JobOutcomeBorrow::admit_complete(cx, None, None);
+            }
+            cx.consume_fuel(1);
+            return Ok(None);
+        }
+        let Some(kind) = self.publishing else { return Ok(None) };
+        let result = self.publication.advance_from_source(kind, &self.source, cx)?;
+        if result.is_some() {
+            self.delivered = true;
+            if matches!(kind, JobPublicationKind::Checkpoint { .. }) {
+                self.publishing = None;
+            }
+        }
+        Ok(result)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Complete if self.completed => descriptor.complete(None, None),
+            _ => self.publication.borrow_outcome(descriptor),
+        }
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
-            Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-            Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            Ok(semio_framework_plugin::PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
-            Ok(semio_framework_plugin::PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
+        let demand = match self.close_demands(grant.maximum_copy_bytes) {
+            Ok(demand) => demand,
+            Err(error) => return refused(error),
+        };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: Default::default() };
         }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        ArtifactReservedJob::terminal_is_empty(self)
-    }
-}
-
-impl ArtifactReservedJob for RasterImportJob {
-    /// 🧯️ `CreateLayer` owns a layer subtree (and through an `Adjustment` a fail-closed
-    /// `RasterOwnedMap`), so an abandoned mutation is retired through the artifact's own
-    /// `retire_raster_mutation` rather than dropped.
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        self.closing = true;
-        if maximum_items == 0 {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
+            return InteractiveJobCloseStep::Pending { progress: Default::default() };
         }
-        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
-            if let Ok(emit) = rejected.emit.as_mut() {
-                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
-                    return Ok(step);
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+        macro_rules! owned {
+            ($slot:expr) => {
+                if $slot.is_some() {
+                    return match store::artifact_retirement_admit_owned(&mut $slot, &mut self.active, child) {
+                        Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+                        Err(error) => refused(error),
+                    };
                 }
-            }
-            self.pending_completion_rejection = None;
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            };
         }
-        if let Some(mutation) = self.mutations.pop() {
-            crate::standards::v1::subsets::any::schema::mutations::retire_raster_mutation(mutation);
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        if !self.publication.terminal_is_empty() {
+            return match self.publication.close_step(grant) {
+                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+                Err(error) => refused(error),
+            };
         }
-        if self.mutations.capacity() > 0 {
-            self.mutations = Vec::new();
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        if self.delivered {
+            self.delivered = false;
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } };
         }
-        if self.media_json.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        if self.active.is_some() {
+            return match store::artifact_retirement_box_close_step(&mut self.active, child) {
+                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+                Err(error) => refused(error),
+            };
         }
-        if !self.port.is_empty() || self.port.capacity() > 0 {
-            self.port = String::new();
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
-            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "raster import snapshot has no mounted retained authority" });
-        }
-        if self.snapshot.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
-            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "raster import completion has no mounted consumer authority" });
-        }
-        if self.completion.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(semio_framework_plugin::PluginCloseStep::Complete)
+        owned!(self.pending_completion_rejection);
+        owned!(self.mutations);
+        owned!(self.media_json);
+        owned!(self.port);
+        owned!(self.snapshot);
+        owned!(self.completion);
+        InteractiveJobCloseStep::Complete { progress: Default::default() }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.copy_bytes)
+    }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(body)?.capacity_bytes)
+    }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.release_bytes)
+    }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
         self.closing
-            && self.port.is_empty()
-            && self.port.capacity() == 0
+            && !self.delivered
+            && self.publication.terminal_is_empty()
+            && self.active.is_none()
+            && self.port.is_none()
             && self.media_json.is_none()
             && self.snapshot.is_none()
-            && self.mutations.is_empty()
-            && self.mutations.capacity() == 0
+            && self.mutations.is_none()
             && self.completion.is_none()
             && self.pending_completion_rejection.is_none()
     }
 }
+
+impl ArtifactReservedJob for RasterImportJob {}
 //#endregion 🎞️ReservedImport
 
 //#region 🔖️RasterPlayApp
@@ -1120,7 +1275,7 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(std::sync::Arc::new(RasterConfigStorePreparationFactory))
+        Some(store::mutation_apply_preparation_factory::<RasterConfig, RasterConfigMutation>())
     }
 
     fn bounded_first_step_tool_proofs()->Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
@@ -1163,6 +1318,7 @@ impl ArtifactEditor for RasterPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(
@@ -1189,8 +1345,12 @@ impl ArtifactEditor for RasterPlayApp {
         Some(crate::host::owned::raster_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::owned::raster_document_store_owners())
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::host::owned::raster_document_store_owners_source_demands()
+    }
+
+    fn build_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::host::owned::raster_document_store_owners_admission(grant))
     }
 
     fn build_document_store_initialization_job(
@@ -1206,18 +1366,9 @@ impl ArtifactEditor for RasterPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    /// 🧹️ The config and draft lanes' owner catalogs + bounded disposers (forms precedent) — without
-    /// them a closing instance faults `interactive-job.close-owned-disposer-missing … config-store`
-    /// and then "artifact store has no owner-supplied bounded disposer" (found by the mounted boot
-    /// test of ticket 26/09/05/RASTER-PLUGIN-END-TO-END).
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
-
+    /// 🧹️ The config and draft lanes' owner catalogs are the framework's bounded defaults; their
+    /// disposers close through the matching bounded store disposers (forms precedent) — without them
+    /// a closing instance faults `interactive-job.close-owned-disposer-missing … config-store`.
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
@@ -1234,11 +1385,11 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(crate::editor::raster::presence::RasterPresenceRetirementFactory))
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(crate::editor::raster::presence::RasterPresenceRetirementFactory))
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {

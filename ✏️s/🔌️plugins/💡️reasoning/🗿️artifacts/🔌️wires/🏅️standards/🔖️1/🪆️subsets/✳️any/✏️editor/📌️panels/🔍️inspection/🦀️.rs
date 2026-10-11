@@ -156,7 +156,7 @@ pub struct DefaultWiresExtension {
     pub allowed_identities: std::collections::BTreeSet<TopicId>,
 }
 
-impl canvas::CanvasExtension for DefaultWiresExtension {
+impl semio_framework_canvas::CanvasExtension for DefaultWiresExtension {
     fn extension_id(&self) -> &str {
         "reasoning.mindmap/wires"
     }

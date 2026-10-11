@@ -13,7 +13,8 @@ use framework_schema::ArtifactSchema;
 /// `SemioPoint2` for the position field per the type-ownership doc's geometry rule; `width`/
 /// `height` stay plain `f64` (a size is not itself a position, and the shared engine has no `Size`
 /// type — inventing a two-field wrapper here would just be a bare-tuple-in-disguise).
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SlideFrame {
     pub origin: SemioPoint2,
@@ -25,7 +26,8 @@ pub struct SlideFrame {
 /// 🖼️ An embedded raster image (pptx `p:pic` -> `a:blip` target part), self-contained (no
 /// cross-reference to the `image` subset — presentation embeds its own media parts, same as pptx
 /// itself does not share media storage with other OOXML packages).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SlidePictureImage {
     pub asset_id: String,
@@ -35,7 +37,8 @@ pub struct SlidePictureImage {
 }
 /// 🏷️ pptx placeholder type (`p:ph/@type`), the subset every named placeholder in a layout/slide
 /// declares itself as.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum PlaceholderKind {
     Title,
@@ -49,14 +52,16 @@ pub enum PlaceholderKind {
 /// 🔲️ One `a:tc` table cell — holds its own block content, reusing `document`'s `DocBlock` (same
 /// cross-reuse the master plan calls out for `TextBox`; a table cell's text content is shaped
 /// identically to a text box's).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SlideTableCell {
     #[value(default)]
     pub blocks: Vec<DocBlock>,
 }
 /// ➖️ One `a:tr` table row.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SlideTableRow {
     #[value(default)]
@@ -67,7 +72,8 @@ pub struct SlideTableRow {
 /// `kind`) because the `Placeholder` variant's own field is itself named `kind` (its pptx
 /// placeholder type) — an internally-tagged enum's tag name must not collide with any variant's
 /// own field name, so this avoids the collision rather than renaming the more-natural field.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "shapeKind", rename_all = "camelCase")]
 pub enum SlideShape {
     /// ✍️ `p:sp` with a text body — `blocks` reuses `document::DocBlock` verbatim (spec-mandated
@@ -91,7 +97,8 @@ pub enum SlideShape {
 //#endregion 🔖️Shapes
 //#region 🔖️Structure
 /// 🗂️ One `p:sldMaster` — id-keyed (matches pptx's own part-relationship identity), a shape tree.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SlideMaster {
     pub id: String,
@@ -100,7 +107,8 @@ pub struct SlideMaster {
 }
 /// 📐️ One `p:sldLayout` — references its owning master by id (`master_id`), like pptx's
 /// layout-to-master relationship part.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SlideLayout {
     pub id: String,
@@ -113,7 +121,8 @@ pub struct SlideLayout {
 /// (see the diff facet's `SlidesDiff` for why: an index-keyed collection, not name-keyed).
 /// `notes` is the slide's own `p:notesSlide` content (one notes page per slide in pptx, so it is
 /// modeled per-slide rather than as a top-level sibling collection).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Slide {
     pub id: String,

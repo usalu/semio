@@ -273,7 +273,7 @@ impl GestureTool for Fem3dGumballTool {
     type Mutation = Fem3dMutation;
 
     fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
-        let runner = ToolMachineRunner::start(format!("{FEM3D_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), Fem3dGumballContext::default(), GumballToolHost)?;
+        let runner = ToolMachineRunner::start(format!("{FEM3D_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string().into()), Fem3dGumballContext::default(), GumballToolHost)?;
         Ok(Self { runner, verb: verb.to_string(), authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string() })
     }
 
@@ -284,7 +284,7 @@ impl GestureTool for Fem3dGumballTool {
             _ => None,
         });
         let snapshot = gesture.snapshot::<gumball_tool::GumballTool>(Fem3dGumballContext { stream })?;
-        let runner = ToolMachineRunner::resume(format!("{FEM3D_EDITOR_APP_ID}#{}", gesture.verb), protocol::ActorId(gesture.authoring_seed.clone()), Fem3dGumballContext::default(), snapshot, Some(ToolTransaction::resume(gesture.transaction.clone(), entries)), GumballToolHost)?;
+        let runner = ToolMachineRunner::resume(format!("{FEM3D_EDITOR_APP_ID}#{}", gesture.verb), protocol::ActorId(gesture.authoring_seed.clone().into()), Fem3dGumballContext::default(), snapshot, Some(ToolTransaction::resume(gesture.transaction.clone(), entries)), GumballToolHost)?;
         Ok(Self { runner, verb: gesture.verb.clone(), authoring_seed: gesture.authoring_seed.clone(), base_revision: gesture.base_revision.clone() })
     }
 

@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { SchemaScript } from "../../../../../../../../📜️script.ts";
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import Ajv from "ajv";
 import { loadProductionSchemaEntriesV1 } from "../🟦️.ts";
 
@@ -41,9 +42,9 @@ test("production schema registry refuses the genuine alternate entity catalog ro
 });
 
 
-test("original schema routes refuse test inputs and protect existing output before acquisition",async()=>{
+test("original schema routes refuse test inputs and protect existing output before acquisition",()=>withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"schema-registry-test",maximumElapsedMilliseconds:0},{},Date.now()),async invocation=>{
  const root=resolve(import.meta.dir,"../../../../../../../..");
- const script=new SchemaScript(root,root);
+ const script=new SchemaScript(root,root,invocation);
  for(const route of ["verify","entries"])
   await expect(script.run([route,"--rust-entries","testing-input.json"])).rejects.toThrow("Registry inputs are produced fresh");
  await expect(script.run(["entries","--out"])).rejects.toThrow("--out requires a path");
@@ -57,4 +58,4 @@ test("original schema routes refuse test inputs and protect existing output befo
   expect(readFileSync(output)).toEqual(bytes);
   console.log("[DEBUG] original SchemaScript rejects two test-input routes / missing output / preserves real existing UTF8 bytes before acquisition");
  }finally{rmSync(directory,{recursive:true,force:true});}
-});
+}));

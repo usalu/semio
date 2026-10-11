@@ -270,10 +270,10 @@ impl MutationDiff<RewritingSnapshot> for RewritingDiff {
             patch.write_into(&mut next.rhs);
         }
         if let Some(bindings) = &self.parameter_bindings {
-            bindings.write_into(&mut next.parameter_bindings).map_err(|error| error.under(["parameterBindings"]))?;
+            bindings.apply_onto(&mut next.parameter_bindings).map_err(|error| error.under(["parameterBindings"]))?;
         }
         if let Some(layout) = &self.rule_layout {
-            layout.write_into(&mut next.rule_layout).map_err(|error| error.under(["ruleLayout"]))?;
+            layout.apply_onto(&mut next.rule_layout).map_err(|error| error.under(["ruleLayout"]))?;
         }
         Ok(next)
     }

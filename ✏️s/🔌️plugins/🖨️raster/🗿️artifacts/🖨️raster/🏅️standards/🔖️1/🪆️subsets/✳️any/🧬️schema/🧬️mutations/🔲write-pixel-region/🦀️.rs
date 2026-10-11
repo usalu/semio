@@ -8,7 +8,8 @@ use crate::{RasterMutation, RasterSnapshot};
 
 //#region 🔖️Payload
 /// 🔲 `width × height` RGBA8 `samples`, row-major, written at `(x, y)` of `layer_id`'s `target` image (`pixels` or `mask`).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct WritePixelRegion {
@@ -73,7 +74,7 @@ pub fn inverse(payload: &WritePixelRegion, base: &RasterSnapshot) -> Result<Vec<
 
 //#region 🔖️Kind
 impl protocol::MutationKind<RasterSnapshot, RasterMutation> for WritePixelRegion {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "write", entity: "pixel-region", kind: "write-pixel-region", record: "WrittenPixelRegion" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "pixel-region", kind: "write-pixel-region", record: "WrittenPixelRegion" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         diff(self, base)

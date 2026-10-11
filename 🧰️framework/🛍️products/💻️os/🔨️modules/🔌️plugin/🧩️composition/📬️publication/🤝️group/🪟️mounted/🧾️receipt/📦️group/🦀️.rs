@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{SharedUtf8,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::ManuallyDrop;
 
 pub(crate) trait MountedGroupPreparedChildEdits {
@@ -147,12 +147,14 @@ impl MountedGroupReceipt {
     fn progress(birth:usize,release:usize)->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:birth,released_bytes:release,..Default::default()})}
     fn text_demand(text:&String)->usize{text.capacity()}
     fn clear_text(text:&mut String){drop(std::mem::take(text));}
+    fn shared_demand(text:&SharedUtf8)->usize{text.original_allocation_bytes()}
+    fn clear_shared(text:&mut SharedUtf8){drop(std::mem::take(text));}
     fn dependencies_demand(ids:&Vec<MutationId>)->usize{ids.last().map_or(ids.capacity()*size_of::<MutationId>(),|id|id.0.capacity())}
     fn clear_dependencies(ids:&mut Vec<MutationId>)->bool{if let Some(id)=ids.last_mut(){Self::clear_text(&mut id.0);ids.pop();false}else{drop(std::mem::take(ids));true}}
     fn inverse_demand(inverse:&InverseMutation,field:usize)->usize{match field{0=>inverse.target_mutation.0.capacity(),1=>inverse.inverse_diff.schema.0.capacity(),2=>inverse.inverse_diff.payload.capacity(),3=>Self::dependencies_demand(&inverse.dependencies),_=>0}}
     fn clear_inverse(inverse:&mut InverseMutation,field:usize)->bool{match field{0=>Self::clear_text(&mut inverse.target_mutation.0),1=>Self::clear_text(&mut inverse.inverse_diff.schema.0),2=>drop(std::mem::take(&mut inverse.inverse_diff.payload)),3=>return Self::clear_dependencies(&mut inverse.dependencies),_=>{}}true}
-    fn mutation_demand(mutation:&KernelMutation,field:usize)->usize{match field{0=>mutation.id.0.capacity(),1=>mutation.invocation_id.0.capacity(),2=>mutation.diff.schema.0.capacity(),3=>mutation.diff.payload.capacity(),4..=7=>Self::inverse_demand(&mutation.inverse,field-4),8=>Self::dependencies_demand(&mutation.dependencies),9=>mutation.author.0.capacity(),_=>0}}
-    fn clear_mutation(mutation:&mut KernelMutation,field:usize)->bool{match field{0=>Self::clear_text(&mut mutation.id.0),1=>Self::clear_text(&mut mutation.invocation_id.0),2=>Self::clear_text(&mut mutation.diff.schema.0),3=>drop(std::mem::take(&mut mutation.diff.payload)),4..=7=>return Self::clear_inverse(&mut mutation.inverse,field-4),8=>return Self::clear_dependencies(&mut mutation.dependencies),9=>Self::clear_text(&mut mutation.author.0),_=>{}}true}
+    fn mutation_demand(mutation:&KernelMutation,field:usize)->usize{match field{0=>mutation.id.0.capacity(),1=>mutation.invocation_id.0.capacity(),2=>mutation.diff.schema.0.capacity(),3=>mutation.diff.payload.capacity(),4..=7=>Self::inverse_demand(&mutation.inverse,field-4),8=>Self::dependencies_demand(&mutation.dependencies),9=>Self::shared_demand(&mutation.author.0),_=>0}}
+    fn clear_mutation(mutation:&mut KernelMutation,field:usize)->bool{match field{0=>Self::clear_text(&mut mutation.id.0),1=>Self::clear_text(&mut mutation.invocation_id.0),2=>Self::clear_text(&mut mutation.diff.schema.0),3=>drop(std::mem::take(&mut mutation.diff.payload)),4..=7=>return Self::clear_inverse(&mut mutation.inverse,field-4),8=>return Self::clear_dependencies(&mut mutation.dependencies),9=>Self::clear_shared(&mut mutation.author.0),_=>{}}true}
     /// 🍂️ Borrows the next exact original field or empty-vector backing retirement demand.
     pub(crate) fn next_close_byte_demand(&self)->usize{if self.transferred{return 0;}match self.close_phase{0=>self.mutations.last().map_or(self.mutations.capacity()*size_of::<KernelMutation>(),|mutation|Self::mutation_demand(mutation,self.close_field)),1=>self.undo_ids.last().map_or(self.undo_ids.capacity()*size_of::<MutationId>(),|id|id.0.capacity()),2=>self.inverses.last().map_or(self.inverses.capacity()*size_of::<InverseMutation>(),|inverse|Self::inverse_demand(inverse,self.close_field)),3=>self.member_edits.last().map_or(self.member_edits.capacity()*size_of::<EditRef>(),|edit|edit.edit_id.capacity()),4=>self.command_children.last().map_or(self.command_children.capacity()*size_of::<String>(),Self::text_demand),5=>self.invocation.next_close_byte_demand(),6=>self.parent.next_close_byte_demand(),7=>self.child.next_close_byte_demand(),8=>self.edit.next_close_byte_demand(),_=>0}}
     /// 📏️ Quotes the fixed causal field path or the selected original byte cursor.

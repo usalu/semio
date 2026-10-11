@@ -11,7 +11,7 @@ pub type FormsStore = store::ArtifactStore<FormsSnapshot, crate::op::FormMutatio
 /// `FormsPlayApp::build_document_store_owners`; every standalone store goes through here instead.
 pub async fn new_forms_store(envelope: FormsEnvelope, actor: protocol::ActorId) -> Result<OwnedFormsStore, store::VcsError> {
     let mut store = FormsStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<FormsSnapshot, crate::op::FormMutation>());
+    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<FormsSnapshot, crate::op::FormMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     Ok(OwnedFormsStore(store))
 }
 
@@ -24,9 +24,7 @@ pub struct OwnedFormsStore(FormsStore);
 impl OwnedFormsStore {
     /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
     pub fn close(&mut self) {
-        while !self.0.close_owned_terminal_is_empty() {
-            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Forms document store closes through its exact bounded owners");
-        }
+        self.0.close_owned_unscheduled().expect("Forms document store closes through its exact bounded owners");
     }
 }
 

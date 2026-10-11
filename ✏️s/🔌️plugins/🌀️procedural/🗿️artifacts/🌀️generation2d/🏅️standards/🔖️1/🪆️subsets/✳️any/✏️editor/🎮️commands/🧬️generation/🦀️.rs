@@ -27,7 +27,7 @@ pub fn handle_generation(action: &str, args: Option<&semio_framework_value::DslV
             select_generation(&mut state, id);
         }
         return Generation2dGenerationCommandResult {
-            emit: Emit::config(vec![Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id: state.selected_generation_id.clone() }]),
+            emit: Emit::config(vec![Generation2dConfigMutation::SetSelectedGeneration(crate::editor::generation2d::config::SetSelectedGenerationSetting { selected_generation_id: state.selected_generation_id.clone() })]),
             preview_values: selected_generation(&state).map(|selected| selected.values.clone()),
             publishes_preview: true,
         };
@@ -38,7 +38,7 @@ pub fn handle_generation(action: &str, args: Option<&semio_framework_value::DslV
     for operation in &operations {
         apply_generation_mutation(&mut state, operation);
     }
-    let config_mutations = (state.selected_generation_id != cfg.snapshot.selected_generation_id).then(|| Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id: state.selected_generation_id.clone() }).into_iter().collect();
+    let config_mutations = (state.selected_generation_id != cfg.snapshot.selected_generation_id).then(|| Generation2dConfigMutation::SetSelectedGeneration(crate::editor::generation2d::config::SetSelectedGenerationSetting { selected_generation_id: state.selected_generation_id.clone() })).into_iter().collect();
     Generation2dGenerationCommandResult {
         emit: Emit { artifact_mutations: operations.into_iter().map(generation_mutation_to_generation2d).collect(), config_mutations, ..Default::default() },
         preview_values: selected_generation(&state).map(|selected| selected.values.clone()),

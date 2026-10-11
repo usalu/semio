@@ -954,9 +954,9 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
             let mut job = HistoryLog::fold_job(source.clone(), crate::os_spr::HistoryShape::Document);
             let mut completed = 0;
             let mut reached = false;
-            for _ in 0..100000 {
+            for turn in 0..100000 {
                 match job.step(job.next_step_grant(work.as_u64().unwrap() as usize, bytes.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
-                    crate::os_spr::HistoryFoldJobStep::Pending { completed: next, .. } => { assert!(next >= completed && next-completed <= work.as_u64().unwrap()); completed = next; },
+                    crate::os_spr::HistoryFoldJobStep::Pending { completed: next, progress, .. } => { assert!(next >= completed && next-completed <= work.as_u64().unwrap()); if turn % 20000 == 19999 { eprintln!("[DEBUG] fold turn {turn} completed {next} progress {progress:?} grant {:?}", job.next_step_grant(work.as_u64().unwrap() as usize, bytes.as_u64().unwrap() as usize)); } completed = next; },
                     crate::os_spr::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), .. } => {
                         assert_eq!(conflicts.len(), source.conflicts.len());
                         if !conflicts.is_empty() {
@@ -970,7 +970,7 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
                     crate::os_spr::HistoryFoldJobStep::Rejected { .. } => panic!("native history fold: {:?}", job.rejection()),
                 }
             }
-            assert!(reached && job.terminal_is_empty());
+            assert!(reached && job.terminal_is_empty(), "work grant {work} byte grant {bytes}: reached {reached}, terminal {}", job.terminal_is_empty());
         }
     }
     for stop in law["cancelAt"].as_array().unwrap() {

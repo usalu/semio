@@ -28,7 +28,8 @@ pub mod discard_response;
 //#region 🔖️FormMutation
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<FormsSnapshot, FormMutation>` payload
 /// struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = FormsSnapshot, diff = FormsDiff, schema = "s.forms.forms")]
 pub enum FormMutation {

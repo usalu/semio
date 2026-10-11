@@ -1,11 +1,11 @@
 //! 🧩️ 🧩️ S Studio app command — `copy-app-instance`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ClipboardSetting};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "copy-app-instance")]
 pub struct CopyAppInstance {}
 
@@ -14,9 +14,9 @@ pub struct CopyAppInstance {}
 /// only through that macro-generated path (`SpaceApp::handle` always routes this command through
 /// `apply` below instead), so it degrades to treating the selection as empty (copies nothing).
 pub fn handle(_payload: &CopyAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard { node_ids: Vec::new() }]))
+    Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: Vec::new() })]))
 }
 
 pub async fn apply(_payload: &CopyAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard { node_ids: interaction.selection("graph").ids.clone() }]))
+    Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: interaction.selection("graph").ids.clone() })]))
 }

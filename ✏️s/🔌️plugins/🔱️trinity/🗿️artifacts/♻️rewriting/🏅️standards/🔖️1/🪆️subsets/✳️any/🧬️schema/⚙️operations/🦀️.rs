@@ -18,7 +18,7 @@ pub fn create_rewrite_rule_envelope(id: &str, state: RewritingSnapshot) -> Rewri
 /// catalog through `build_document_store_owners`, every standalone store goes through here.
 pub async fn new_rewrite_rule_store(envelope: RewriteRuleEnvelope, actor: protocol::ActorId) -> Result<OwnedRewriteRuleStore, store::VcsError> {
     let mut store = RewriteRuleStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::schema::retirement::document_store_owners());
+    store::install_unscheduled_catalog(&mut store, store::funded_bounded_artifact_store_owners::<RewritingSnapshot, RewriteRuleMutation>())?;
     Ok(OwnedRewriteRuleStore(store))
 }
 
@@ -30,9 +30,7 @@ pub struct OwnedRewriteRuleStore(RewriteRuleStore);
 impl OwnedRewriteRuleStore {
     /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
     pub fn close(&mut self) {
-        while !self.0.close_owned_terminal_is_empty() {
-            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("rewriting document store closes through its exact bounded owners");
-        }
+        self.0.close_owned_unscheduled().expect("rewriting document store closes through its exact bounded owners");
     }
 }
 
@@ -69,11 +67,11 @@ pub fn inverse_rewrite_rule_mutation(snapshot: &RewritingSnapshot, mutation: &Re
 }
 
 /// ▶️ Dispatches a batch of granular mutations as one VCS edit.
-pub async fn dispatch_rewrite_rule_mutations(store: &mut RewriteRuleStore, mutations: Vec<RewriteRuleMutation>) -> Result<(), TrinityRewritingError> {
+pub async fn dispatch_rewrite_rule_mutations(store: &mut RewriteRuleStore, mutations: Vec<RewriteRuleMutation>, identity: &mut ::store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), TrinityRewritingError> {
     if mutations.is_empty() {
         return Ok(());
     }
-    store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }).await.map_err(TrinityRewritingError::from).map(|_| ())
+    store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, identity).await.map_err(TrinityRewritingError::from).map(|_| ())
 }
 //#endregion 🔖️BatchHelpers
 

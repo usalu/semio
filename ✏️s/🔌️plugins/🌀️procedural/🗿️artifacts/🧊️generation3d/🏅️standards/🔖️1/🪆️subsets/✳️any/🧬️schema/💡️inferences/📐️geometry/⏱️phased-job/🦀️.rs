@@ -142,14 +142,6 @@ pub struct Pipeline {
     steps: Vec<Step>,
 }
 
-/// 🚀️ Builds the pipeline of a compute, or answers with the fault that stopped it from being built.
-pub fn launch(kind: &Kind, build: impl FnOnce() -> Result<Pipeline, WidgetFault>) -> Box<dyn WidgetJob> {
-    match build() {
-        Ok(pipeline) => pipeline.start(),
-        Err(fault) => failed(fault, kind.quality),
-    }
-}
-
 fn fraction(done: usize, total: usize) -> f32 {
     if total == 0 {
         0.0

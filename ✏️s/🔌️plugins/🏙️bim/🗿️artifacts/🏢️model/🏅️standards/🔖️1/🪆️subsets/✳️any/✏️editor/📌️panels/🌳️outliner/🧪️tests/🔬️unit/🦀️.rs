@@ -4,7 +4,7 @@ use semio_framework_ui_locale::{Locale, Terminology};
 
 fn demo() -> (ModelSnapshot, ModelInference) {
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, Clone::clone);
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     (snapshot, inference)
 }
 
@@ -98,7 +98,7 @@ async fn a_wall_sweep_hangs_under_its_wall_and_makes_no_storey_group() {
     let (snapshot, _) = demo();
     let create = kind_of("wall-sweep").and_then(|row| row.create).expect("wall sweep create");
     let snapshot = crate::mutations::apply_model_mutation(&snapshot, &create(&snapshot, "sw-1", "w-south", "Baseboard").expect("creates")).expect("applies");
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, Clone::clone);
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     for locale in [Locale::En, Locale::De] {
         let rendered = text(&snapshot, &inference, locale);
         assert!(!rendered.contains("Wall sweeps") && !rendered.contains("Wandprofile"), "{rendered}");

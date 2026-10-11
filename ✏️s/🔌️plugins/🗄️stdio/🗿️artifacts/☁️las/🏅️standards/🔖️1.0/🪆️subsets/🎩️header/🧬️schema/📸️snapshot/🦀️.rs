@@ -21,7 +21,7 @@ use framework_schema::ArtifactSchema;
 /// the pre-existing `header_size` precedent) so a stale value here can never corrupt a re-encode;
 /// they stay typed + diffable because they're real bytes on disk that `decode_las` retains
 /// verbatim from whatever was actually read.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct LasHeader {
     pub version_major: u8,
@@ -99,7 +99,8 @@ impl Default for LasHeader {
 /// 📦 One Variable Length Record — `data` is retained byte-verbatim (VLR content is registered
 /// per `(user_id, record_id)` by third parties and is proprietary/unmodeled by spec, the
 /// recipe's typed raw-retention exception, same shape as `PngChunk`/`GifAppExtension`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct LasVlr {
     pub user_id: String,
@@ -115,7 +116,8 @@ pub struct LasVlr {
 /// already-tested content the recipe's "nothing real on disk silently dropped" rule forbids
 /// regressing). `gps_time` / `rgb` are `None` for point data formats that don't carry them (0/2
 /// and 0/1 respectively).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct LasPoint {
     pub x: f64,
@@ -138,7 +140,7 @@ pub struct LasPoint {
 //#endregion 🔖️PointModel
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.las")]
 pub struct LasSnapshot {

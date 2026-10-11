@@ -18,6 +18,7 @@ export type ComponentSourceOwnerV1 = {
   readonly dependsOn: readonly string[];
   readonly host?: PluginHostMetadata;
 };
+export type PluginBuildTargetV1 = ComponentSourceOwnerV1 & { readonly directoryName: InstallationDirectoryV1 };
 export type CompiledComponentOwnerV1 = ComponentSourceOwnerV1 & {
   readonly capabilities: readonly string[];
   readonly contributes: readonly string[];
@@ -47,6 +48,10 @@ function admit(stage: keyof typeof contract.$defs, value: unknown): Record<strin
 /** 📄️Admits source-authored component facts without descriptor fields. */
 export function parseComponentSourceRowV1(value: unknown): ComponentSourceOwnerV1 {
   return admit("ComponentSourceOwnerV1", value) as ComponentSourceOwnerV1;
+}
+/** 🔨️Admits one discovered plugin crate's source facts as a build target, independent of its descriptor. */
+export function parsePluginBuildTargetV1(value: unknown): PluginBuildTargetV1 {
+  return admit("PluginBuildTargetV1", value) as PluginBuildTargetV1;
 }
 /** 🛂️Admits real compiled descriptor facts with optional deployment declaration. */
 export function parseCompiledComponentRowV1(value: unknown): CompiledComponentOwnerV1 {

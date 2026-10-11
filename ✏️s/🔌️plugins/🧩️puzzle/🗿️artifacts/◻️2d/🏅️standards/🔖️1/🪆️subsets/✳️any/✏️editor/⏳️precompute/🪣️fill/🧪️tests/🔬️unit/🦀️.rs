@@ -4,7 +4,7 @@ use crate::editor::puzzle2d::unit_tests::context::*;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::{board_snapshot_nodes, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID};
 use geo::{coord, Intersects, Rect};
-use semio_framework_job::{drive_step, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
+use semio_framework_job::{INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
 use semio_framework_plugin::{DslValue, PluginApp};
 use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTraceOp};
 use semio_framework_pack_json::json;
@@ -53,10 +53,6 @@ fn identity(run: u64, generation: u32) -> ToolRunIdentity {
 
 fn fresh(document: &Arc<Puzzle2dPlaySnapshot>, run: u64, requested: u64) -> Puzzle2dFillRunJob {
     Puzzle2dFillRunJob::new(identity(run, 0), Arc::clone(document), PUZZLE2D_DEFAULT_SUGGESTION_OFFSET, requested as u32, None, &[]).expect("fresh fill run")
-}
-
-fn payload_bytes(payload: &RetainedJobPayload) -> Vec<u8> {
-    (0..payload.page_count()).flat_map(|index| payload.page(index).unwrap_or_default().to_vec()).collect()
 }
 
 /// 📼️ Everything a sequence of run ticks told the ledger, applied the way the ledger applies it.
@@ -124,34 +120,24 @@ impl RunLog {
 }
 
 fn close_job(job: &mut dyn InteractiveJob) {
-    job.begin_close();
-    for _ in 0..1 << 20 {
-        if matches!(job.close_step(1, JOB_PAYLOAD_PAGE_BYTES), InteractiveJobCloseStep::Complete) && job.terminal_is_empty() {
-            return;
-        }
-    }
-    panic!("fill run job never reached terminal-empty");
+    crate::puzzle_job::testing::close_job(job);
 }
 
 fn step_job(job: &mut dyn InteractiveJob, budget: StepBudget, now_us: fn() -> Option<u64>, log: &mut RunLog, sequence: &mut u64) {
-    let mut context = StepContext::new(OperationId(1), Generation(0), budget, semio_framework_job::root_cancel_token(), now_us, sequence);
-    let mut outcome = job.step(&mut context);
-    drop(context);
-    let failure = match &outcome {
-        StepOutcome::PreviewReady(payload) => ToolRunTick::decode(&payload_bytes(payload)).map(|tick| log.apply(tick)).err().map(|error| format!("tick decode {error:?}")),
-        StepOutcome::CheckpointReady(checkpoint) => {
-            log.checkpoints.push(payload_bytes(&checkpoint.state));
+    let failure = match crate::puzzle_job::testing::drive(job, budget, now_us, sequence) {
+        JobTurn::Preview(bytes) => ToolRunTick::decode(&bytes).map(|tick| log.apply(tick)).err().map(|error| format!("tick decode {error:?}")),
+        JobTurn::Checkpoint { state, .. } => {
+            log.checkpoints.push(state);
             None
         }
-        StepOutcome::Complete(_) => {
+        JobTurn::Complete => {
             log.complete = true;
             None
         }
-        StepOutcome::Yield => None,
-        StepOutcome::Cancelled => Some("cancelled".to_string()),
-        StepOutcome::Fault(fault) => Some(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned()),
+        JobTurn::Yield => None,
+        JobTurn::Cancelled => Some("cancelled".to_string()),
+        JobTurn::Fault(bytes) => Some(String::from_utf8_lossy(&bytes).into_owned()),
     };
-    close_outcome(&mut outcome);
     if let Some(failure) = failure {
         close_job(job);
         panic!("fill run failed: {failure}");
@@ -165,7 +151,7 @@ fn run_to_complete(job: &mut dyn InteractiveJob, fuel: u64, log: &mut RunLog) {
             close_job(job);
             return;
         }
-        step_job(job, StepBudget::new(fuel, u64::MAX), fill_run_monotonic_zero, log, &mut sequence);
+        step_job(job, StepBudget::new(fuel, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), fill_run_monotonic_zero, log, &mut sequence);
     }
     panic!("fill run never completed");
 }
@@ -512,21 +498,19 @@ fn fill_run_job_drive_step_stays_below_the_interactive_ceiling_for_nakagin() {
         let (mut log, mut preview_sequence, mut turn) = (RunLog::default(), 0_u64, 0);
         while !log.complete {
             let start = replay_clock().expect("clock");
-            let budget = StepBudget::from_duration(INTERACTIVE_LANE_FUEL, start, INTERACTIVE_LANE_WALL_US).expect("budget");
-            let mut verdict = None;
+            let budget = StepBudget::from_duration(INTERACTIVE_LANE_FUEL, start, INTERACTIVE_LANE_WALL_US, crate::puzzle_job::testing::unbounded_grant()).expect("budget");
             let began = std::time::Instant::now();
-            let mut outcome = drive_step(&mut job, "puzzle2d.fill.run.test", OperationId(1), Generation(0), InteractiveStage::InteractiveStep, budget, semio_framework_job::root_cancel_token(), replay_clock, &mut preview_sequence, &mut verdict);
+            let outcome = crate::puzzle_job::testing::drive(&mut job, budget, replay_clock, &mut preview_sequence);
             let elapsed = began.elapsed().as_micros();
             let failure = match &outcome {
-                StepOutcome::PreviewReady(payload) => ToolRunTick::decode(&payload_bytes(payload)).map(|tick| log.apply(tick)).err().map(|error| format!("{error:?}")),
-                StepOutcome::Complete(_) => {
+                JobTurn::Preview(bytes) => ToolRunTick::decode(bytes).map(|tick| log.apply(tick)).err().map(|error| format!("{error:?}")),
+                JobTurn::Complete => {
                     log.complete = true;
                     None
                 }
-                StepOutcome::Fault(fault) => Some(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned()),
+                JobTurn::Fault(bytes) => Some(String::from_utf8_lossy(bytes).into_owned()),
                 _ => None,
             };
-            close_outcome(&mut outcome);
             if let Some(failure) = failure {
                 close_job(&mut job);
                 panic!("interactive fill run failed: {failure}");
@@ -565,7 +549,7 @@ fn pump_until(app: &mut Puzzle2dApp, what: &str, done: impl Fn(&Puzzle2dApp) -> 
         if done(app) {
             return;
         }
-        PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
+        crate::puzzle_job::testing::maintain(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
         ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));

@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse delta for the layout artifact: id-keyed collection rows, owned-field patches and positional list rows.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutDiff {
@@ -53,7 +53,7 @@ pub struct LayoutDiff {
 
 //#region 🔖️DeltaHelpers
 /// 📐 Owned-field patch of the baseline grid.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct GridPatch {
     pub baseline_grid: Option<f64>,
@@ -62,14 +62,14 @@ pub struct GridPatch {
 }
 
 /// 🖨️ A present change distinguishes clearing the print target from leaving it alone.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(deny_unknown_fields)]
 pub struct PrintTargetChange {
     pub target: Option<String>,
 }
 
 /// 🧾️ How the data-field dictionary came or went: created from absent, deleted, or replaced wholesale.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum DataFieldsPresence {
     Created,
@@ -78,7 +78,7 @@ pub enum DataFieldsPresence {
 }
 
 /// 🧾️ Delta of the optional data-field dictionary: its presence transition and keyed entry rows.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct LayoutDataFieldsDelta {
     pub presence: Option<DataFieldsPresence>,
@@ -86,7 +86,7 @@ pub struct LayoutDataFieldsDelta {
 }
 
 /// ✏️ One text edit of the imported plan: the text at `index` now reads `text`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct LayoutDrawingTextRow {
     pub index: u32,
@@ -94,7 +94,7 @@ pub struct LayoutDrawingTextRow {
 }
 
 /// 📍️ Positional rows of the style runs of one story: the final length (when it changes) and every position whose run differs from the base.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -104,7 +104,7 @@ pub struct TextStyleRunsDelta {
 }
 
 /// 📍️ One positional style-run row.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -114,7 +114,7 @@ pub struct TextStyleRunRow {
 }
 
 /// 📍️ Positional rows of the guides of one page.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -124,7 +124,7 @@ pub struct PageGuidesDelta {
 }
 
 /// 📍️ One positional guide row.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -247,7 +247,7 @@ impl protocol::list_delta::Keyed for LayoutDataEntryRow {
 }
 
 /// ➖️ One `entries` row removed, with the base index the inverse reinserts it at.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LayoutDataEntryRemoval {
     pub id: String,
@@ -255,7 +255,7 @@ pub struct LayoutDataEntryRemoval {
 }
 
 /// ➕️ One `entries` row inserted at its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LayoutDataEntryInsertion {
     pub index: usize,
@@ -263,7 +263,7 @@ pub struct LayoutDataEntryInsertion {
 }
 
 /// ↕️ One `entries` row moved from its base index to its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LayoutDataEntryRelocation {
     pub id: String,
@@ -272,7 +272,7 @@ pub struct LayoutDataEntryRelocation {
 }
 
 /// 🧩 Positional keyed rows of the `entries` list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct LayoutDataEntriesDelta {
     pub removed: Vec<LayoutDataEntryRemoval>,
@@ -366,7 +366,7 @@ impl protocol::list_delta::Keyed for Frame {
 }
 
 /// ➖️ One `frames` row removed, with the base index the inverse reinserts it at.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PageFrameRemoval {
     pub id: String,
@@ -374,7 +374,7 @@ pub struct PageFrameRemoval {
 }
 
 /// ➕️ One `frames` row inserted at its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PageFrameInsertion {
     pub index: usize,
@@ -383,7 +383,7 @@ pub struct PageFrameInsertion {
 }
 
 /// ↕️ One `frames` row moved from its base index to its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PageFrameRelocation {
     pub id: String,
@@ -392,7 +392,7 @@ pub struct PageFrameRelocation {
 }
 
 /// 🩹 One modified `frames` row.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PageFramesModification {
     pub id: String,
@@ -400,7 +400,7 @@ pub struct PageFramesModification {
 }
 
 /// 🧩 Positional keyed rows of the `frames` list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct PageFramesDelta {
     pub removed: Vec<PageFrameRemoval>,
@@ -474,7 +474,7 @@ impl PageFramesDelta {
 }
 
 /// 🩹 Sparse patch for a {@link ParagraphStyle}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -489,7 +489,7 @@ pub struct ParagraphStylePatch {
 }
 
 /// 🩹 Sparse patch for a {@link CharacterStyle}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -504,7 +504,7 @@ pub struct CharacterStylePatch {
 }
 
 /// 🩹 Sparse patch for a {@link ParentPage}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -515,7 +515,7 @@ pub struct ParentPagePatch {
 }
 
 /// 🩹 Sparse patch for a {@link Spread}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -523,7 +523,7 @@ pub struct SpreadPatch {
     pub name: Option<String>,
 }
 /// 📄️ Owned-field patch of one page: its dimensions, margins, columns and parent, the positional guides, and the keyed overrides, frames and layers.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(default, deny_unknown_fields)]
 pub struct PagePatch {
     pub name: Option<String>,

@@ -8,7 +8,8 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔹Types
 /// 🗺️ One id-keyed spatial feature carried as its full opaque descriptor payload.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -27,7 +28,7 @@ impl Identified<String> for MapFeature {
 
 /// 🩹️ Payload patch: an optional whole-payload replacement, then ordered single-property edits. Inverts to the prior
 /// payload (replacement) or to the reversed per-property undo (edits).
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -40,7 +41,7 @@ pub struct MapFeaturePatch {
 
 /// ✏️ One edit of a single payload property: sets `key` (in place when present, otherwise inserted before the `before`
 /// key, appended without one) or, when `set` is absent, removes it.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -55,7 +56,7 @@ pub struct MapFeaturePropertyEdit {
 }
 
 /// 🧱️ Explicit wrapper so a property set to `null` survives the wire (a bare nested option collapses).
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]

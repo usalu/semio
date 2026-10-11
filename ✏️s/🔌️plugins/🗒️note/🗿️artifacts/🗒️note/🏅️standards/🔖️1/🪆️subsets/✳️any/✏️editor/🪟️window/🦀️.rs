@@ -3,7 +3,7 @@
 use crate::editor::note::NOTE_PLAY_WINDOW_COMPOSITE;
 use crate::NoteCamera;
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, Default, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, Default, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -34,9 +34,10 @@ mod diff;
 mod transient;
 pub use diff::{NoteCompositeWindowConfigDiff, NoteCompositeWindowTransientDiff};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum NoteCompositeWindowConfigMutation {
-    SetCamera { camera: NoteCamera },
+    SetCamera(NoteCamera),
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -65,14 +66,14 @@ impl protocol::Mutation<NoteCompositeWindowConfig> for NoteCompositeWindowConfig
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
     fn diff(&self, base: &NoteCompositeWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         match self {
-            Self::SetCamera { camera } => match &base.camera == camera {
+            Self::SetCamera(camera) => match &base.camera == camera {
                 true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window camera is unchanged."),
                 false => protocol::MutationOutcome::new(NoteCompositeWindowConfigDiff { camera: Some(camera.clone()) }),
             },
         }
     }
     fn inverse(&self, base: &NoteCompositeWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        Ok(vec![Self::SetCamera { camera: base.camera.clone() }])
+        Ok(vec![Self::SetCamera(base.camera.clone())])
     }
 }
 
@@ -176,6 +177,14 @@ fn note_composite_window_transient_transfer(mutation: NoteCompositeWindowTransie
     }
 }
 
+impl semio_framework_plugin::app::WindowConfigApplyMutation<NoteCompositeWindowConfig> for NoteCompositeWindowConfigMutation {
+    fn exchange(self, post: &mut NoteCompositeWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetCamera(camera) => Self::SetCamera(std::mem::replace(&mut post.camera, camera)),
+        })
+    }
+}
+
 pub struct NoteCompositeWindowConfigOwner;
 impl semio_framework_plugin::WindowConfigOwner for NoteCompositeWindowConfigOwner {
     const WINDOW_KIND_ID: &'static str = NOTE_PLAY_WINDOW_COMPOSITE;
@@ -183,6 +192,9 @@ impl semio_framework_plugin::WindowConfigOwner for NoteCompositeWindowConfigOwne
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = NoteCompositeWindowConfig;
     type Mutation = NoteCompositeWindowConfigMutation;
+    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<NoteCompositeWindowConfig, NoteCompositeWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
@@ -225,7 +237,7 @@ pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: NoteCo
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("note-composite-window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str());
     if kind != Some(NOTE_PLAY_WINDOW_COMPOSITE) { return Err(semio_framework_plugin::Fault::from("note-composite-window-kind-required")); }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<NoteCompositeWindowConfigOwner>(id, NoteCompositeWindowConfigMutation::SetCamera { camera: config.camera }))
+    Ok(semio_framework_plugin::WindowConfigMutation::of::<NoteCompositeWindowConfigOwner>(id, NoteCompositeWindowConfigMutation::SetCamera(config.camera)))
 }
 pub fn addressed_transient(snapshot: &semio_framework_plugin::WindowTransientSnapshot, transient: NoteCompositeWindowTransient) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
     if snapshot.window_kind_id() != NOTE_PLAY_WINDOW_COMPOSITE { return Err(semio_framework_plugin::Fault::from("note-composite-window-kind-required")); }

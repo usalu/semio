@@ -20,7 +20,8 @@ use crate::standards::v1::subsets::any::schema::{
     AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry,
     KindCatalogBundle, ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps,
 };
-use semio_framework_job::{CommitCandidate, Generation, InteractiveJob, JobFault, JobPayloadStream, Operation, OperationId, RetainedJobPayload, StepContext, StepOutcome};
+use crate::puzzle_job::JobTurn;
+use semio_framework_job::{Generation, InteractiveJob, Operation, OperationId, StepContext};
 use semio_framework_tool_run::{
     ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTickWriter, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_PROVISIONAL_OPS_MAX,
     TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_PROVISIONAL_CAP,
@@ -73,7 +74,6 @@ pub(crate) trait FillStepContext: CollisionStepContext {
     fn operation(&self) -> OperationId;
     fn generation(&self) -> Generation;
     fn set_stage(&mut self, label: &'static str);
-    fn fault_payload(&mut self, bytes: &[u8]) -> RetainedJobPayload;
 }
 
 impl FillStepContext for StepContext<'_> {
@@ -87,13 +87,6 @@ impl FillStepContext for StepContext<'_> {
 
     fn set_stage(&mut self, label: &'static str) {
         StepContext::set_stage(self, label);
-    }
-
-    fn fault_payload(&mut self, bytes: &[u8]) -> RetainedJobPayload {
-        self.payload_from_bytes(JobPayloadStream::Fault, bytes).unwrap_or_else(|rejected| {
-            drop(rejected.into_source());
-            RetainedJobPayload::empty(JobPayloadStream::Fault)
-        })
     }
 }
 
@@ -116,7 +109,7 @@ fn fill_run_scale(scale: &Option<semio_framework_value::DslValue>) -> f32 {
 
 /// 🧱️ One already-placed object's collision footprint, kept alongside the plan so each new fill step
 /// only has to test the candidate against bodies it can actually hit.
-#[derive(Clone)]
+#[derive(Clone, semio_framework_value::RetireOwned)]
 pub(crate) struct PlacedCollisionEntry {
     pub(crate) object_id: String,
     pub(crate) mesh_url: String,
@@ -1842,7 +1835,7 @@ impl FillBuilder {
         self.stage = FillJobStage::TestCollision;
     }
 
-    fn test_collision<C: FillStepContext>(&mut self, context: &mut C) -> Option<StepOutcome> {
+    fn test_collision<C: FillStepContext>(&mut self, context: &mut C) -> Option<JobTurn> {
         let Some(pair_id) = self.broad_phase_query.as_ref().and_then(|query| query.candidate(self.broad_phase_cursor)).cloned() else {
             self.stage = FillJobStage::AcceptCandidate;
             return None;
@@ -1868,7 +1861,7 @@ impl FillBuilder {
         let result = collision.step(context, preview_body, &preview_world, other, &entry.world);
         match result {
             CollisionStepResult::Pending => {}
-            CollisionStepResult::Cancelled => return Some(StepOutcome::Cancelled),
+            CollisionStepResult::Cancelled => return Some(JobTurn::Cancelled),
             CollisionStepResult::Complete { depth, .. } if depth > self.contact_tolerance => {
                 self.reject_candidate("solid-overlap");
             }
@@ -1880,12 +1873,12 @@ impl FillBuilder {
         None
     }
 
-    fn accept_candidate(&mut self) -> StepOutcome {
+    fn accept_candidate(&mut self) -> JobTurn {
         match self.accept_phase {
             AcceptPhase::Validate => {
                 let Some(preview) = self.current_preview.clone() else {
                     self.reject_candidate("missing-preview");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 let payload = BrushPlacePayload {
                     target_vortex_full_id: preview.target_vortex_full_id.clone(),
@@ -1897,16 +1890,16 @@ impl FillBuilder {
                 };
                 let Some(kind) = self.catalogs.objects.iter().find(|kind| kind.id == payload.object_kind_id) else {
                     self.reject_candidate("placement-kind-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 if kind.vortices.get(payload.source_vortex_index).is_none() {
                     self.reject_candidate("placement-vortex-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 }
                 let scene_snapshot = self.scene_view();
                 let Some(mesh_url) = resolve_object_kind_mesh_url(&payload.object_kind_id, &self.catalogs, &scene_snapshot) else {
                     self.reject_candidate("placement-mesh-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 let object_id = brush_object_id(&scene_snapshot, &payload);
                 let source_vortex_id = format!("{object_id}:v{}", payload.source_vortex_index);
@@ -1938,65 +1931,65 @@ impl FillBuilder {
                 self.accept_attraction_cursor = 0;
                 self.accept_vortex_cursor = 0;
                 self.accept_phase = AcceptPhase::CheckAttractions;
-                StepOutcome::Yield
+                JobTurn::Yield
             }
             AcceptPhase::CheckAttractions => {
                 let Some((pending_attracting, pending_attracted)) = self.pending_attraction.as_ref().map(|pending| (pending.attracting.clone(), pending.attracted.clone())) else {
                     self.reject_candidate("placement-state-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 if let Some(rejected) = self.scene_attraction(self.accept_attraction_cursor).map(|attraction| attraction.attracting == pending_attracting || attraction.attracted == pending_attracted) {
                     self.accept_attraction_cursor += 1;
                     if rejected {
                         self.reject_candidate("placement-rejected");
                     }
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 }
                 self.accept_phase = AcceptPhase::BuildVortices;
-                StepOutcome::Yield
+                JobTurn::Yield
             }
             AcceptPhase::BuildVortices => {
                 let Some(payload) = self.pending_payload.as_ref() else {
                     self.reject_candidate("placement-state-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 let Some(kind) = self.catalogs.objects.iter().find(|kind| kind.id == payload.object_kind_id) else {
                     self.reject_candidate("placement-kind-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 if let Some(template) = kind.vortices.get(self.accept_vortex_cursor) {
                     let object_id = self.pending_object.as_ref().expect("pending object").id.clone();
                     let index = self.accept_vortex_cursor;
                     self.accept_vortex_cursor += 1;
                     self.pending_object.as_mut().expect("pending object").vortices.push(VortexProps { id: format!("{object_id}:v{index}"), vortex_kind: template.vortex_kind.clone(), position: template.point, direction: template.direction });
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 }
                 self.accept_phase = AcceptPhase::BeginSpatial;
-                StepOutcome::Yield
+                JobTurn::Yield
             }
             AcceptPhase::BeginSpatial => {
                 let Some(object) = self.pending_object.as_ref() else {
                     self.reject_candidate("placement-state-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 let Some(mesh_url) = object.mesh_url.as_ref() else {
                     self.accept_phase = AcceptPhase::Commit;
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 let Some(body) = self.meshes.get(mesh_url) else {
                     self.reject_candidate("placement-mesh-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 let world = pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale);
                 self.pending_spatial = Some(self.spatial_index.begin_replacement(self.collision_owner(), object.id.clone(), CollisionAabb::from_body(body, &world)));
                 self.accept_phase = AcceptPhase::StepSpatial;
-                StepOutcome::Yield
+                JobTurn::Yield
             }
             AcceptPhase::StepSpatial => {
                 let owner = self.collision_owner();
                 let Some(mutation) = self.pending_spatial.as_mut() else {
                     self.reject_candidate("placement-spatial-state-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 match self.spatial_index.step_replacement(mutation, owner) {
                     CollisionMutationStep::Pending => {}
@@ -2007,59 +2000,59 @@ impl FillBuilder {
                     CollisionMutationStep::Rejected(rejected) => self.fixed_rejection = Some(FillRetiredOwner::Spatial(rejected)),
                     CollisionMutationStep::Stale => self.reject_candidate("stale-spatial-mutation"),
                 }
-                StepOutcome::Yield
+                JobTurn::Yield
             }
             AcceptPhase::InstallLookup => {
                 let Some(object) = self.pending_object.as_ref() else {
                     self.reject_candidate("placement-state-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 let Some(mesh_url) = object.mesh_url.as_ref() else {
                     self.accept_phase = AcceptPhase::Commit;
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 let index = self.placed.len();
                 match self.placed_lookup.try_insert(object.id.clone(), index) {
                     Ok(FixedOwnerMapInsert::Inserted) => {}
                     Ok(FixedOwnerMapInsert::Occupied { input_key, input_value: _ }) | Err((input_key, _)) => {
                         self.fixed_rejection = Some(FillRetiredOwner::String(input_key));
-                        return StepOutcome::Yield;
+                        return JobTurn::Yield;
                     }
                 }
                 self.placed.push(PlacedCollisionEntry { object_id: object.id.clone(), mesh_url: mesh_url.clone(), world: pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale) });
                 self.accept_vortex_cursor = 0;
                 self.accept_phase = AcceptPhase::AppendTargets;
-                StepOutcome::Yield
+                JobTurn::Yield
             }
             AcceptPhase::AppendTargets => {
                 let (Some(object), Some(payload)) = (self.pending_object.as_ref(), self.pending_payload.as_ref()) else {
                     self.reject_candidate("placement-state-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 let index = self.accept_vortex_cursor;
                 let Some(vortex) = object.vortices.get(index) else {
                     self.accept_phase = AcceptPhase::Commit;
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 self.accept_vortex_cursor += 1;
                 if index != payload.source_vortex_index {
                     let target = BrushFillVortexTarget { full_id: puzzle3d_vortex_full_id(&object.id, &vortex.id), object_id: object.id.clone(), object_kind: object.object_kind.clone(), vortex_kind: vortex.vortex_kind.clone(), vortex_index: index };
                     self.push_target(target);
                 }
-                StepOutcome::Yield
+                JobTurn::Yield
             }
             AcceptPhase::Commit => {
                 let Some(payload) = self.pending_payload.take() else {
                     self.reject_candidate("placement-state-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 let Some(placed_object) = self.pending_object.take() else {
                     self.reject_candidate("placement-state-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 let Some(attraction) = self.pending_attraction.take() else {
                     self.reject_candidate("placement-state-missing");
-                    return StepOutcome::Yield;
+                    return JobTurn::Yield;
                 };
                 self.sequence.push(payload);
                 self.appended_objects.push(placed_object);
@@ -2075,7 +2068,7 @@ impl FillBuilder {
                 if matches!(self.stage, FillJobStage::Complete(_)) {
                     return self.complete();
                 }
-                StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: RetainedJobPayload::empty(JobPayloadStream::CheckpointState), applied_progress: self.applied_count as u64 })
+                JobTurn::Checkpoint { applied_progress: self.applied_count as u64, state: Vec::new() }
             }
         }
     }
@@ -2212,14 +2205,14 @@ impl FillBuilder {
     /// preparation preflight's refusal publishes one `danger` step through the run's tick writer and then
     /// faults the run (nothing was changed). Without a writer the refusal faults at once. A page that fills
     /// mid-plan is [`FillBuilder::stall_on_capacity`] instead.
-    pub(crate) fn capacity_refusal<C: FillStepContext>(&mut self, context: &mut C, writer: Option<&mut ToolRunTickWriter>) -> Option<StepOutcome> {
+    pub(crate) fn capacity_refusal<C: FillStepContext>(&mut self, context: &mut C, writer: Option<&mut ToolRunTickWriter>) -> Option<JobTurn> {
         if let Some(refusal) = self.preparation_capacity_refusal.as_mut() {
             if let Some(writer) = writer.filter(|_| !refusal.published) {
                 refusal.published = true;
                 let _ = writer.step(ToolRunStepKind::Danger, FillRunStage::Prepare.index(), FillRunReason::ArtifactCapacity.code(), None, &[ToolRunStepArg::Unsigned(refusal.omitted_index as u64)]);
-                return Some(StepOutcome::Yield);
+                return Some(JobTurn::Yield);
             }
-            return Some(StepOutcome::Fault(JobFault { detail: context.fault_payload(refusal.diagnostic().as_bytes()) }));
+            return Some(JobTurn::Fault(refusal.diagnostic().as_bytes().to_vec()));
         }
         None
     }
@@ -2236,11 +2229,8 @@ impl FillBuilder {
         false
     }
 
-    fn complete(&self) -> StepOutcome {
-        StepOutcome::Complete(CommitCandidate {
-            state: RetainedJobPayload::empty(JobPayloadStream::CommitState),
-            output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput),
-        })
+    fn complete(&self) -> JobTurn {
+        JobTurn::Complete
     }
 
     pub(crate) fn stage_label(&self) -> &'static str {
@@ -2268,12 +2258,12 @@ impl FillBuilder {
 
 impl FillBuilder {
     /// 🪜️ One bounded planner transition under any [`FillStepContext`].
-    pub(crate) fn advance<C: FillStepContext>(&mut self, context: &mut C) -> StepOutcome {
+    pub(crate) fn advance<C: FillStepContext>(&mut self, context: &mut C) -> JobTurn {
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return JobTurn::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: context.fault_payload(b"stale-fill-operation") });
+            return JobTurn::Fault(b"stale-fill-operation".to_vec());
         }
         if let Some(outcome) = self.capacity_refusal(context, None) {
             return outcome;
@@ -2282,20 +2272,20 @@ impl FillBuilder {
             return self.complete();
         }
         if context.should_yield() {
-            return StepOutcome::Yield;
+            return JobTurn::Yield;
         }
         context.set_stage(self.stage_label());
         let stage = self.stage;
         let outcome = match stage {
             FillJobStage::RetractTail => {
                 if self.discard_tail_one().is_err() {
-                    return StepOutcome::Fault(JobFault { detail: context.fault_payload(b"stale-spatial-index") });
+                    return JobTurn::Fault(b"stale-spatial-index".to_vec());
                 }
                 None
             }
             FillJobStage::PrepareScene | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => {
                 if self.prepare_one().is_err() {
-                    return StepOutcome::Fault(JobFault { detail: context.fault_payload(b"stale-spatial-index") });
+                    return JobTurn::Fault(b"stale-spatial-index".to_vec());
                 }
                 None
             }
@@ -2333,7 +2323,7 @@ impl FillBuilder {
             context.consume_fuel(1);
         }
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return JobTurn::Cancelled;
         }
         if stage == self.stage
             && matches!(
@@ -2351,37 +2341,43 @@ impl FillBuilder {
                     | FillJobStage::QueryBroadPhase
             )
         {
-            return StepOutcome::Yield;
+            return JobTurn::Yield;
         }
-        outcome.unwrap_or(StepOutcome::Yield)
+        outcome.unwrap_or(JobTurn::Yield)
     }
 }
 
-impl InteractiveJob for FillBuilder {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        self.advance(context)
-    }
-
-    fn begin_close(&mut self) {
+impl FillBuilder {
+    pub(crate) fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    /// ♻️ Retires one planner owner per granted turn; a turn needs one owner page of release credit.
+    pub(crate) fn close_turn(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         self.closing = true;
-        if maximum_items == 0 || maximum_bytes < FILL_BUILDER_OWNER_PAGE_BYTES {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        if grant.maximum_items == 0 || grant.maximum_release_bytes < FILL_BUILDER_OWNER_PAGE_BYTES {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
         }
         if self.retire_one_close_owner() {
-            semio_framework_job::InteractiveJobCloseStep::Complete
+            semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
         } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: FILL_BUILDER_OWNER_PAGE_BYTES }
+            semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: FILL_BUILDER_OWNER_PAGE_BYTES, ..Default::default() } }
         }
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    /// 📏️ Quotes the next close turn: one owner page of release credit until the planner holds nothing.
+    pub(crate) fn close_demands(&self) -> semio_framework_value::RetirementDemand {
+        if self.terminal_is_empty() {
+            return Default::default();
+        }
+        semio_framework_value::RetirementDemand { release_bytes: FILL_BUILDER_OWNER_PAGE_BYTES, depth: 1, ..Default::default() }
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.closing && self.close_current.is_none() && self.terminal_owners_empty()
     }
 }
+
 //#endregion 🧵️InteractiveFillJob
 
 //#region ⏯️FillRunJob
@@ -2435,7 +2431,7 @@ pub(crate) fn fill_run_placements(provisional: &[crate::standards::v1::subsets::
 }
 
 /// 🧱️ One provisional placement of a fill run: its trace key, entity, object and attraction.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub(crate) struct FillRunPlacement {
     pub(crate) key: u64,
     pub(crate) subject: ToolRunTraceSubject,
@@ -2491,10 +2487,6 @@ impl FillStepContext for FillRunTransitionContext<'_, '_> {
     fn set_stage(&mut self, label: &'static str) {
         self.outer.set_stage(label);
     }
-
-    fn fault_payload(&mut self, bytes: &[u8]) -> RetainedJobPayload {
-        FillStepContext::fault_payload(self.outer, bytes)
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2525,6 +2517,7 @@ pub(crate) struct FillRunVerdictRecord {
 /// same deterministic sequence (raise) or retracts the tail (lower); a job rebuilt after the framework
 /// closed its predecessor reaches that checkpoint first by a silent replay ([`FillRunJob::replaying`]).
 pub(crate) struct FillRunJob {
+    outbox: crate::puzzle_job::JobOutbox,
     builder: FillBuilder,
     writer: ToolRunTickWriter,
     inputs: [u8; 32],
@@ -2612,6 +2605,7 @@ impl FillRunJob {
         builder.observe_run();
         let mesh_index = mesh_lane.iter().enumerate().map(|(index, url)| (url.clone(), index as u32)).collect();
         Self {
+            outbox: Default::default(),
             builder,
             writer,
             inputs,
@@ -2886,27 +2880,23 @@ impl FillRunJob {
         Ok(())
     }
 
-    fn flush(&mut self, context: &mut StepContext<'_>) -> Option<StepOutcome> {
+    fn flush(&mut self, context: &mut StepContext<'_>) -> Option<JobTurn> {
         if self.writer.is_empty() {
             return None;
         }
         let progress = self.progress_snapshot();
         self.writer.progress(progress);
         let bytes = self.writer.finish()?.encode().ok();
-        let page = bytes.as_deref().map(|bytes| context.payload_from_bytes(JobPayloadStream::Preview, bytes));
-        Some(match page {
-            Some(Ok(payload)) => StepOutcome::PreviewReady(payload),
-            Some(Err(rejected)) => {
-                drop(rejected.into_source());
-                StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-run-tick-page") })
-            }
-            None => StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-run-tick-encode") }),
+        Some(match bytes {
+            Some(bytes) if bytes.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes.to_vec()),
+            Some(_) => JobTurn::Fault(b"fill-run-tick-page".to_vec()),
+            None => JobTurn::Fault(b"fill-run-tick-encode".to_vec()),
         })
     }
 
-    fn flush_then(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> StepOutcome {
+    fn flush_then(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> JobTurn {
         match self.flush(context) {
-            Some(preview @ StepOutcome::PreviewReady(_)) => {
+            Some(preview @ JobTurn::Preview(_)) => {
                 self.owed = Some(owed);
                 preview
             }
@@ -2915,16 +2905,10 @@ impl FillRunJob {
         }
     }
 
-    fn settle_owed(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> StepOutcome {
+    fn settle_owed(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> JobTurn {
         match owed {
             FillRunOwed::Complete => self.builder.complete(),
-            FillRunOwed::Checkpoint => match context.payload_from_bytes(JobPayloadStream::CheckpointState, &self.checkpoint().encode()) {
-                Ok(state) => StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.placement_keys.len() as u64 }),
-                Err(rejected) => {
-                    drop(rejected.into_source());
-                    StepOutcome::Yield
-                }
-            },
+            FillRunOwed::Checkpoint => JobTurn::Checkpoint { applied_progress: self.placement_keys.len() as u64, state: self.checkpoint().encode().to_vec() },
         }
     }
 }
@@ -2961,10 +2945,10 @@ impl FillRunJob {
     }
 }
 
-impl InteractiveJob for FillRunJob {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+impl FillRunJob {
+    fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return JobTurn::Cancelled;
         }
         if let Some(owed) = self.owed.take() {
             return self.settle_owed(context, owed);
@@ -2972,23 +2956,23 @@ impl InteractiveJob for FillRunJob {
         loop {
             if let Some(outcome) = self.builder.capacity_refusal(context, Some(&mut self.writer)) {
                 return match outcome {
-                    StepOutcome::Yield => self.flush(context).unwrap_or(StepOutcome::Yield),
+                    JobTurn::Yield => self.flush(context).unwrap_or(JobTurn::Yield),
                     outcome => outcome,
                 };
             }
             if self.builder.stall_on_capacity() {
                 if let Err(detail) = self.observe(context) {
-                    return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, detail) });
+                    return JobTurn::Fault(detail.to_vec());
                 }
             }
             if self.replay.is_none() && self.deferred.is_empty() && matches!(self.builder.stage, FillJobStage::Complete(_)) {
                 if let Err(detail) = self.settle() {
-                    return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, detail) });
+                    return JobTurn::Fault(detail.to_vec());
                 }
                 return self.flush_then(context, FillRunOwed::Complete);
             }
             if context.deadline_exceeded() || (self.replay.is_none() && (context.fuel_exhausted() || self.writer.pending_bytes() >= FILL_RUN_TICK_FLUSH_BYTES)) {
-                return if self.replay.is_some() { StepOutcome::Yield } else { self.flush(context).unwrap_or(StepOutcome::Yield) };
+                return if self.replay.is_some() { JobTurn::Yield } else { self.flush(context).unwrap_or(JobTurn::Yield) };
             }
             let operation = self.builder.operation;
             let outcome = self.deferred.is_empty().then(|| self.builder.advance(&mut FillRunTransitionContext { outer: context, operation }));
@@ -2996,12 +2980,12 @@ impl InteractiveJob for FillRunJob {
                 Ok(accepted) => accepted,
                 Err(detail) => {
                     drop(outcome);
-                    return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, detail) });
+                    return JobTurn::Fault(detail.to_vec());
                 }
             };
             match outcome {
-                Some(StepOutcome::Cancelled) => return StepOutcome::Cancelled,
-                Some(fault @ StepOutcome::Fault(_)) => return fault,
+                Some(JobTurn::Cancelled) => return JobTurn::Cancelled,
+                Some(fault @ JobTurn::Fault(_)) => return fault,
                 _ => {}
             }
             if self.replay.is_some() {
@@ -3013,17 +2997,68 @@ impl InteractiveJob for FillRunJob {
             }
         }
     }
+}
+
+impl InteractiveJob for FillRunJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        match self.outbox.phase(cx)? {
+            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
+            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+                self.outbox.retire_step(cx)?;
+                return Ok(None);
+            }
+            crate::puzzle_job::OutboxPhase::Idle => {}
+        }
+        let turn = self.turn(cx);
+        self.outbox.settle(turn, cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        self.outbox.borrow_outcome(descriptor)
+    }
 
     fn begin_close(&mut self) {
         self.builder.begin_close();
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        self.builder.close_step(maximum_items, maximum_bytes)
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        self.begin_close();
+        if !self.outbox.terminal_is_empty() {
+            return match self.outbox.close_step(grant) {
+                Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => semio_framework_job::InteractiveJobCloseStep::Pending { progress },
+                Err(error) => semio_framework_job::InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            };
+        }
+        self.builder.close_turn(grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.builder.terminal_is_empty()
+        self.outbox.terminal_is_empty() && self.builder.terminal_is_empty()
+    }
+}
+
+impl FillRunJob {
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.outbox.terminal_is_empty() {
+            return self.outbox.retirement_demands();
+        }
+        Ok(self.builder.close_demands())
     }
 }
 
@@ -3043,7 +3078,24 @@ enum FillRevalidatePhase {
 /// `success` (`fits`) or `danger` (`TOOL_RUN_REASON_CONFLICT`) trace record. The last
 /// tick retracts to the first conflict and re-appends every later survivor's ops and entity, with one
 /// `danger` conflict step carrying the conflict count; `Complete` follows on the next call.
+/// ♻️ The owners one `FillRevalidateJob` still holds when it closes, retired as one controlled bundle.
+#[derive(semio_framework_value::RetireOwned)]
+struct FillRevalidateOwners {
+    scene: Arc<SceneConfig>,
+    meshes: Arc<HashMap<String, CollisionBody>>,
+    placements: Vec<FillRunPlacement>,
+    head: Vec<PlacedCollisionEntry>,
+    head_ids: std::collections::HashSet<String>,
+    vortex_owners: HashMap<String, String>,
+    collision: Option<CollisionPenetrationState>,
+    conflicts: Vec<bool>,
+    ops: Vec<ToolRunTraceOp>,
+    steps: Vec<ToolRunStep>,
+}
+
 pub(crate) struct FillRevalidateJob {
+    close_owners: crate::puzzle_job::WorkClosing<FillRevalidateOwners>,
+    outbox: crate::puzzle_job::JobOutbox,
     operation: Operation,
     identity: ToolRunIdentity,
     scene: Arc<SceneConfig>,
@@ -3072,6 +3124,8 @@ pub(crate) struct FillRevalidateJob {
 impl FillRevalidateJob {
     pub(crate) fn new(operation: Operation, identity: ToolRunIdentity, head: FillPreparationRoots, placements: Vec<FillRunPlacement>, first_sequence: u64) -> Self {
         Self {
+            close_owners: Default::default(),
+            outbox: Default::default(),
             operation,
             identity,
             scene: head.scene,
@@ -3175,7 +3229,7 @@ impl FillRevalidateJob {
         }
     }
 
-    fn flush(&mut self, context: &mut StepContext<'_>, final_ops: Option<(u32, Vec<Vec<u8>>, Vec<u64>)>) -> StepOutcome {
+    fn flush(&mut self, context: &mut StepContext<'_>, final_ops: Option<(u32, Vec<Vec<u8>>, Vec<u64>)>) -> JobTurn {
         let (retract_to, append_ops, append_entities) = match final_ops {
             Some((retract_to, ops, entities)) => (Some(retract_to), ops, entities),
             None => (None, Vec::new(), Vec::new()),
@@ -3197,17 +3251,14 @@ impl FillRevalidateJob {
         };
         let tick = ToolRunTick { identity: self.identity, sequence: self.sequence, progress: Some(progress), steps: std::mem::take(&mut self.steps), trace, append_ops, append_entities, retract_to, payload: None };
         self.sequence += 1;
-        match tick.encode().ok().map(|bytes| context.payload_from_bytes(JobPayloadStream::Preview, &bytes)) {
-            Some(Ok(payload)) => StepOutcome::PreviewReady(payload),
-            Some(Err(rejected)) => {
-                drop(rejected.into_source());
-                StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-revalidate-tick-page") })
-            }
-            None => StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-revalidate-tick-encode") }),
+        match tick.encode().ok() {
+            Some(bytes) if bytes.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes.to_vec()),
+            Some(_) => JobTurn::Fault(b"fill-revalidate-tick-page".to_vec()),
+            None => JobTurn::Fault(b"fill-revalidate-tick-encode".to_vec()),
         }
     }
 
-    fn finish(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+    fn finish(&mut self, context: &mut StepContext<'_>) -> JobTurn {
         self.phase = FillRevalidatePhase::Done;
         if let Some(previous) = self.shown.take() {
             self.ops.push(ToolRunTraceOp::Retire { key: previous });
@@ -3230,7 +3281,7 @@ impl FillRevalidateJob {
         let mut entities = Vec::new();
         for (placement, _) in self.placements.iter().zip(&self.conflicts).skip(first).filter(|(_, conflict)| !**conflict) {
             let Some([create, connect]) = fill_run_ops(&placement.object, &placement.attraction, &peers, &catalog_snapshot) else {
-                return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-revalidate-op-encode") });
+                return JobTurn::Fault(b"fill-revalidate-op-encode".to_vec());
             };
             if let Ok(mut peer) = <Puzzle3dObject as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&placement.object)) {
                 let kind_id = placement.object.object_kind.as_deref().unwrap_or("object");
@@ -3246,19 +3297,17 @@ impl FillRevalidateJob {
     }
 }
 
-impl InteractiveJob for FillRevalidateJob {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+impl FillRevalidateJob {
+    fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return JobTurn::Cancelled;
         }
         loop {
             match self.phase {
-                FillRevalidatePhase::Done => {
-                    return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
-                }
+                FillRevalidatePhase::Done => return JobTurn::Complete,
                 FillRevalidatePhase::Finish => return self.finish(context),
                 _ if context.fuel_exhausted() || context.deadline_exceeded() => {
-                    return if self.ops.is_empty() { StepOutcome::Yield } else { self.flush(context, None) };
+                    return if self.ops.is_empty() { JobTurn::Yield } else { self.flush(context, None) };
                 }
                 FillRevalidatePhase::PrepareHead => {
                     self.prepare_head_one();
@@ -3299,27 +3348,70 @@ impl InteractiveJob for FillRevalidateJob {
             }
         }
     }
+}
 
-    fn begin_close(&mut self) {
-        self.closed = true;
+impl InteractiveJob for FillRevalidateJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        match self.outbox.phase(cx)? {
+            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
+            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+                self.outbox.retire_step(cx)?;
+                return Ok(None);
+            }
+            crate::puzzle_job::OutboxPhase::Idle => {}
+        }
+        let turn = self.turn(cx);
+        self.outbox.settle(turn, cx)
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        self.closed = true;
-        self.placements = Vec::new();
-        self.head = Vec::new();
-        self.head_ids = std::collections::HashSet::new();
-        self.vortex_owners = HashMap::new();
-        self.collision = None;
-        self.ops = Vec::new();
-        self.steps = Vec::new();
-        semio_framework_job::InteractiveJobCloseStep::Complete
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        self.outbox.borrow_outcome(descriptor)
+    }
+
+    fn begin_close(&mut self) {
+        if std::mem::replace(&mut self.closed, true) {
+            return;
+        }
+        self.close_owners.stage(FillRevalidateOwners {
+            scene: Arc::clone(&self.scene),
+            meshes: Arc::clone(&self.meshes),
+            placements: std::mem::take(&mut self.placements),
+            head: std::mem::take(&mut self.head),
+            head_ids: std::mem::take(&mut self.head_ids),
+            vortex_owners: std::mem::take(&mut self.vortex_owners),
+            collision: self.collision.take(),
+            conflicts: std::mem::take(&mut self.conflicts),
+            ops: std::mem::take(&mut self.ops),
+            steps: std::mem::take(&mut self.steps),
+        });
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        self.begin_close();
+        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.close_owners, grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closed && self.placements.is_empty() && self.head.is_empty() && self.ops.is_empty()
+        self.closed && self.outbox.terminal_is_empty() && self.close_owners.is_empty()
     }
 }
+
 //#endregion ⏯️FillRunJob
 
 //#region 🧪️Tests

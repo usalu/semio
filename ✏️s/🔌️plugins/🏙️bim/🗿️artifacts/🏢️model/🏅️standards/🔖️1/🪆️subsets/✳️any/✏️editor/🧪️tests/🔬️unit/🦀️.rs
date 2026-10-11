@@ -412,7 +412,7 @@ async fn resizing_a_storey_through_set_field_re_infers_the_walls_above_it() {
     assert!(result.edited_document());
     let snapshot = app.snapshot().expect("snapshot");
     assert!((snapshot.storeys["st-ground"].height - 3.6).abs() < 1e-12);
-    let height = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, |inference| inference.wall_layout["w-south"].height);
+    let height = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, |inference| inference.wall_layout["w-south"].height);
     assert!((height - 3.6).abs() < 1e-9, "the wall follows its storey by inference, got {height}");
 }
 

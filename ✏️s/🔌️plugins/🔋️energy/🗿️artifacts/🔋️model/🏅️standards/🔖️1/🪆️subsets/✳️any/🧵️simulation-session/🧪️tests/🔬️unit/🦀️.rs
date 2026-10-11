@@ -34,10 +34,37 @@ fn identity() -> ToolRunIdentity {
     ToolRunIdentity::new(ToolRunId { app_instance_id: 7, run: 1 }, [3; 32])
 }
 
+const TEST_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
+
+/// 🧭️ What one driven call of the run job lent to its caller.
+#[derive(Debug, PartialEq, Eq)]
+enum Stepped {
+    Yield,
+    Tick(Vec<u8>),
+    Checkpoint,
+    Complete,
+    Fault,
+    Cancelled,
+}
+
+fn step_once(job: &mut EnergySimulationRunJob, fuel: u64, deadline_us: u64, cancel: &semio_framework_job::CancelToken, operation: OperationId, generation: Generation, sequence: &mut u64) -> Stepped {
+    let mut receipt = RetainedCloneProgress::default();
+    let mut cx = StepContext::new(operation, generation, StepBudget::new(fuel, deadline_us, TEST_GRANT), cancel.clone(), semio_framework_job::default_now_us, sequence, &mut receipt);
+    let mut verdict = None;
+    match semio_framework_job::drive_step(job, &mut cx, "energy.simulation.run.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("run step admission") {
+        None | Some(JobOutcomeBorrow::Yield { .. }) => Stepped::Yield,
+        Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => Stepped::Tick((0..payload.page_count()).flat_map(|index| payload.page(index).expect("tick page").to_vec()).collect()),
+        Some(JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Checkpoint,
+        Some(JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
+        Some(JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
+        Some(JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
+    }
+}
+
 /// 🦶️ Every observable outcome of driving a run job to settlement with a fixed fuel budget per call.
 struct Drive {
     ticks: Vec<ToolRunTick>,
-    settled: StepOutcome,
+    settled: Stepped,
     calls: usize,
 }
 
@@ -47,16 +74,10 @@ fn drive(job: &mut EnergySimulationRunJob, fuel: u64) -> Drive {
     let mut ticks = Vec::new();
     for calls in 1..=50_000_000 {
         let now = semio_framework_job::default_now_us().expect("clock");
-        let budget = StepBudget::new(fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4);
-        let mut verdict = None;
-        match semio_framework_job::drive_step(job, "energy.simulation.run.test", operation, generation, semio_framework_job::InteractiveStage::InteractiveStep, budget, cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut verdict) {
-            StepOutcome::Yield => {}
-            StepOutcome::PreviewReady(mut payload) => {
-                let bytes: Vec<u8> = (0..payload.page_count()).flat_map(|index| payload.page(index).expect("tick page").to_vec()).collect();
-                close_payload(&mut payload);
-                ticks.push(ToolRunTick::decode(&bytes).expect("tick decodes"));
-            }
-            StepOutcome::CheckpointReady(_) => panic!("a restart-policy run never reports a checkpoint"),
+        match step_once(job, fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4, &cancel, operation, generation, &mut sequence) {
+            Stepped::Yield => {}
+            Stepped::Tick(bytes) => ticks.push(ToolRunTick::decode(&bytes).expect("tick decodes")),
+            Stepped::Checkpoint => panic!("a restart-policy run never reports a checkpoint"),
             settled => return Drive { ticks, settled, calls },
         }
     }
@@ -66,13 +87,20 @@ fn drive(job: &mut EnergySimulationRunJob, fuel: u64) -> Drive {
 fn close(job: &mut EnergySimulationRunJob) {
     job.begin_close();
     for _ in 0..10_000_000 {
-        match job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-            InteractiveJobCloseStep::Complete => {
+        let demand = RetirementDemand {
+            copy_bytes: job.next_close_copy_byte_demand().expect("a locally owned run quotes its copy demand"),
+            capacity_bytes: job.next_close_capacity_byte_demand(usize::MAX).expect("a locally owned run quotes its capacity demand"),
+            release_bytes: job.next_close_release_byte_demand().expect("a locally owned run quotes its release demand"),
+            depth: job.next_close_depth_demand().expect("a locally owned run quotes its depth demand"),
+        };
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        match job.close_step(grant) {
+            InteractiveJobCloseStep::Complete { .. } => {
                 assert!(job.terminal_is_empty(), "a closed run job holds no owner");
                 return;
             }
-            InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
-            InteractiveJobCloseStep::Blocked => panic!("the run job close blocked"),
+            InteractiveJobCloseStep::Pending { progress } => assert!(progress.fits(grant), "a close receipt fits its own quoted grant"),
+            InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. } => panic!("the run job close blocked or was refused"),
         }
     }
     panic!("the run job close never completed");
@@ -161,7 +189,7 @@ fn the_pause_step_fuel_unit_is_one_computed_timestep() {
     let (snapshot, template) = scenario();
     let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
     let run = drive(&mut job, number(&fixture["fuel"]["fuelPerStep"]));
-    assert!(matches!(run.settled, StepOutcome::Complete(_)), "the run completes");
+    assert_eq!(run.settled, Stepped::Complete, "the run completes");
     let (before, last) = run.ticks.split_at(run.ticks.len() - 1);
     assert_eq!(before.len() as u64, number(&fixture["fuel"]["ticksBeforeSettle"]));
     let mut completed = 0;
@@ -185,9 +213,7 @@ fn the_pause_step_fuel_unit_is_one_computed_timestep() {
     visited.dedup();
     assert_eq!(visited, fixture["run"]["stagesVisited"].as_array().unwrap().iter().map(|stage| stage.as_str().unwrap()).collect::<Vec<_>>());
     assert!(run.calls as u64 > number(&fixture["fuel"]["ticksBeforeSettle"]), "preparation and finalization yield without a tick");
-    let StepOutcome::Complete(mut candidate) = run.settled else { unreachable!() };
-    close_payload(&mut candidate.state);
-    close_payload(&mut candidate.output);
+    assert_eq!(run.settled, Stepped::Complete);
     close(&mut job);
 }
 
@@ -200,9 +226,7 @@ fn run_job_results_and_final_readout_agree_with_the_batch_engine_oracle() {
     let oracle = crate::Engine::run(snapshot.model.clone(), config).expect("batch engine run");
     let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
     let run = drive(&mut job, semio_framework_job::INTERACTIVE_LANE_FUEL);
-    let StepOutcome::Complete(mut candidate) = run.settled else { panic!("the streamed run completes") };
-    close_payload(&mut candidate.state);
-    close_payload(&mut candidate.output);
+    assert_eq!(run.settled, Stepped::Complete, "the streamed run completes");
     let results = job.numerical.as_mut().expect("numerical owner").take_results().expect("streamed results");
     assert_eq!(results.meters, oracle.meters);
     assert_eq!(results.summaries, oracle.summaries);
@@ -225,21 +249,15 @@ fn cancellation_mid_run_settles_cancelled_and_close_retires_every_owner() {
     let mut sequence = 0;
     let mut ticks = 0;
     while ticks < 3 {
-        let budget = StepBudget::new(1, u64::MAX);
-        let mut verdict = None;
-        match semio_framework_job::drive_step(&mut job, "energy.simulation.cancel.test", operation, generation, semio_framework_job::InteractiveStage::InteractiveStep, budget, cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut verdict) {
-            StepOutcome::PreviewReady(mut payload) => {
-                close_payload(&mut payload);
-                ticks += 1;
-            }
-            StepOutcome::Yield => {}
+        match step_once(&mut job, 1, u64::MAX, &cancel, operation, generation, &mut sequence) {
+            Stepped::Tick(_) => ticks += 1,
+            Stepped::Yield => {}
             _ => panic!("the run settled before it could be cancelled"),
         }
     }
     assert!(job.numerical.is_some(), "the run is simulating");
     cancel.cancel_now();
-    let mut verdict = None;
-    assert!(matches!(semio_framework_job::drive_step(&mut job, "energy.simulation.cancel.test", operation, generation, semio_framework_job::InteractiveStage::InteractiveStep, StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut verdict), StepOutcome::Cancelled));
+    assert_eq!(step_once(&mut job, 1, u64::MAX, &cancel, operation, generation, &mut sequence), Stepped::Cancelled);
     close(&mut job);
 }
 
@@ -251,7 +269,7 @@ fn a_model_beyond_numerical_admission_publishes_a_danger_step_before_the_fault()
     let snapshot = Arc::new(crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None));
     let mut job = EnergySimulationRunJob::new(identity(), snapshot, SimulationConfig { warmup_days: 0, ..template });
     let run = drive(&mut job, 1);
-    assert!(matches!(run.settled, StepOutcome::Fault(_)), "an unsimulatable model faults the run");
+    assert_eq!(run.settled, Stepped::Fault, "an unsimulatable model faults the run");
     let last = run.ticks.last().expect("the refusal travels in a tick before the fault");
     let step = last.steps.last().expect("danger step");
     assert_eq!(step.kind, ToolRunStepKind::Danger);
@@ -341,13 +359,13 @@ fn partial_capture_closes_one_nested_character_or_item_per_grant() {
     let mut close = EnergyModelCloseCursor::new(capture.finish());
     let mut turns = 0;
     while !close.terminal_is_empty() {
-        match close.close_step(4) {
-            InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= 4);
+        match close.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 4, maximum_depth: 1 }) {
+            InteractiveJobCloseStep::Pending { progress } => {
+                assert!(progress.copied_items <= 1);
+                assert!(progress.released_bytes <= 4);
             }
-            InteractiveJobCloseStep::Complete => {}
-            InteractiveJobCloseStep::Blocked => panic!("owned partial model cannot block"),
+            InteractiveJobCloseStep::Complete { .. } => {}
+            InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. } => panic!("owned partial model cannot block"),
         }
         turns += 1;
         assert!(turns < 64);
@@ -374,9 +392,7 @@ fn a_tier_boundary_and_the_completing_tick_carry_the_per_surface_map() {
     let surfaces = snapshot.model.surfaces.len() + snapshot.model.fenestrations.len();
     let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
     let run = drive(&mut job, semio_framework_job::INTERACTIVE_LANE_FUEL);
-    let StepOutcome::Complete(mut candidate) = run.settled else { panic!("the streamed run completes") };
-    close_payload(&mut candidate.state);
-    close_payload(&mut candidate.output);
+    assert_eq!(run.settled, Stepped::Complete, "the streamed run completes");
 
     let carrying: Vec<&ToolRunTick> = run.ticks.iter().filter(|tick| tick.payload.is_some()).collect();
     assert!(!carrying.is_empty(), "no tick ever carried a per-surface payload");

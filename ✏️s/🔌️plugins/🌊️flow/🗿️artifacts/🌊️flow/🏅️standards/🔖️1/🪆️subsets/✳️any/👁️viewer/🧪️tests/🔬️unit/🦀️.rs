@@ -10,7 +10,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 #[semio_framework_async_macros::async_test]
 async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract() {
     use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-    use semio_framework_plugin::{Plugin, PluginApp, PluginCloseStep};
+    use semio_framework_plugin::{Plugin, PluginApp, PluginLifecycleStep};
     let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️owners/🔣️.json")).unwrap();
     let definition = create_flow_viewer();
     assert_eq!(definition.role, AppRole::Viewer);
@@ -42,14 +42,17 @@ async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract(
     let mut app = plugin.create_app(&id, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).expect("registered Flow viewer factory must retain its typed member fleet");
     assert!(matches!(&app, FlowViewerTestApps::FlowViewer(_)));
     let items = fixture["grant"]["items"].as_u64().unwrap() as usize;
-    let bytes = fixture["grant"]["bytes"].as_u64().unwrap() as usize;
+    let body = fixture["grant"]["bytes"].as_u64().unwrap() as usize;
     let mut completed = false;
     for _ in 0..fixture["maximumSteps"].as_u64().unwrap() {
-        match app.close_step(items, bytes).expect("actual viewer closes through its declared five-lane owners") {
-            PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= items && released_bytes <= bytes),
-            PluginCloseStep::Blocked { .. } => panic!("fresh viewer has no outstanding reader that may block close"),
-            PluginCloseStep::AwaitingInput { reason } => panic!("fixture has no active worker input to await: {reason}"),
-            PluginCloseStep::Complete => {
+        let demand = app.close_retirement_demands(body).expect("actual viewer quotes its next close turn");
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        match app.close_step(grant).expect("actual viewer closes through its declared five-lane owners") {
+            PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
+            PluginLifecycleStep::Blocked { .. } => panic!("fresh viewer has no outstanding reader that may block close"),
+            PluginLifecycleStep::AwaitingInput { reason } => panic!("fixture has no active worker input to await: {reason}"),
+            PluginLifecycleStep::Complete(progress) => {
+                assert!(progress.fits(grant));
                 completed = true;
                 break;
             }

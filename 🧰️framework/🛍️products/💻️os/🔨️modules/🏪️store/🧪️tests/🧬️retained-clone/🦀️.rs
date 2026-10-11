@@ -351,7 +351,7 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
     let registry = super::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(captured.clone());
     let lease = registry.try_issue(Arc::clone(&owner)).expect("production snapshot read lease");
-    let mut retained_source = RetainedCloneSource::admit(Arc::clone(&owner), super::SnapshotRead::new(Arc::clone(&owner), lease), physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
+    let mut retained_source = super::SnapshotRead::new(Arc::clone(&owner), lease).admit_retained_clone_source(physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
     let copy_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: captured.len(), maximum_depth: 64, maximum_release_bytes: captured.len() };
     let mut cursor = String::retained_clone_cursor();
     let mut turns = 0usize;
@@ -373,7 +373,7 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
     let registry = super::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(source(&fixture));
     let lease = registry.try_issue(Arc::clone(&owner)).expect("production cancellation snapshot read lease");
-    let mut retained_source = RetainedCloneSource::admit(Arc::clone(&owner), super::SnapshotRead::new(owner, lease), physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
+    let mut retained_source = super::SnapshotRead::new(owner, lease).admit_retained_clone_source(physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
     let grant = grant(&fixture);
     let mut cursor = NeutralSnapshot::retained_clone_cursor();
     cursor.advance(retained_source.borrow(), grant).expect("production cancellation reserve");
@@ -606,7 +606,7 @@ fn retained_source<T: RetireOwned + Sync>(owner: T) -> RetainedCloneSource<T> {
     source
 }
 
-fn close_source<T: RetireOwned + Sync>(source: &mut RetainedCloneSource<T>) {
+fn close_source<T: Sync + 'static, A: RetireOwned + Sync>(source: &mut RetainedCloneSource<T, A>) {
     let grant = physical_grant();
     for _ in 0..100_000 {
         if source.terminal_is_empty() { return; }
@@ -618,7 +618,7 @@ fn close_source<T: RetireOwned + Sync>(source: &mut RetainedCloneSource<T>) {
 }
 
 fn close_registry(registry: super::SnapshotReadRegistryHandle) {
-    let mut original = Some(registry);
+    let mut original = Some(super::SnapshotReadRegistryAliasRetirement::new(registry));
     let grant = physical_grant();
     for _ in 0..100_000 {
         if original.is_none() { return; }
@@ -627,4 +627,52 @@ fn close_registry(registry: super::SnapshotReadRegistryHandle) {
         assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
     }
     panic!("original registry backing did not close under its independent policy");
+}
+
+fn child_fixture() -> (ArtifactChild<()>, Arc<String>) {
+    let owner = Arc::new("local materialization".to_string());
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "artifact-β".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "semio.test.child".into(), standard: "standard".into(), subset: "*".into() } };
+    (ArtifactChild::new("child-α".into(), target).with_local_owner(owner.clone()), owner)
+}
+
+#[test]
+fn artifact_child_retained_clone_matches_clone_and_value_oracles_and_aliases_the_local_owner() {
+    let (child, owner) = child_fixture();
+    let oracle = child.clone();
+    let copy = retained_copy(&child, physical_grant());
+    assert_eq!(copy, oracle);
+    assert_eq!(semio_framework_value::ToValue::to_value(&copy), semio_framework_value::ToValue::to_value(&oracle));
+    assert!(Arc::ptr_eq(&copy.require_local_owner::<String>().expect("cloned child aliases its local owner"), &owner));
+    let bare = ArtifactChild::<()>::new("bare".into(), child.target.clone());
+    let bare_copy = retained_copy(&bare, physical_grant());
+    assert_eq!(bare_copy, bare);
+    assert!(bare_copy.local_owner::<String>().is_none());
+    drop(copy);
+    drop(bare_copy);
+    drop(child);
+    drop(oracle);
+    assert_eq!(Arc::strong_count(&owner), 1);
+}
+
+#[test]
+fn artifact_child_retained_clone_retires_every_partial_cursor_under_cancellation() {
+    let (child, owner) = child_fixture();
+    let mut source = retained_source(child);
+    let grant = physical_grant();
+    for stop in 0..16usize {
+        let mut cursor = <ArtifactChild<()> as RetainedClone>::retained_clone_cursor();
+        let mut completed = false;
+        for _ in 0..stop {
+            if matches!(cursor.advance(source.borrow(), grant).expect("child clone before cancel"), RetainedCloneStep::Complete(_)) {
+                completed = true;
+                break;
+            }
+        }
+        if completed {
+            drop(cursor.take());
+        }
+        close_cursor::<ArtifactChild<()>>(&mut cursor);
+    }
+    close_source(&mut source);
+    assert_eq!(Arc::strong_count(&owner), 1);
 }

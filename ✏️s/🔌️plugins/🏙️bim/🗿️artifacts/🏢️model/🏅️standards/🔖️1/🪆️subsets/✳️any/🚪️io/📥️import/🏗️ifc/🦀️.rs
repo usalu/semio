@@ -8,7 +8,7 @@
 
 use crate::standards::v1::subsets::any::io::export::ifc::ifc4::IFC4_DIALECT;
 use crate::standards::v1::subsets::any::io::export::ifc::{codec, Schema, IFC_DIALECT};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, registry};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, instance as inference};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 use crate::ModelSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
@@ -127,7 +127,7 @@ impl<'a> Import<'a> {
 pub fn import_document(schema: Schema, document: &semio_s_artifact_stdio_ifc::part21::Part21Document) -> Result<(ModelSnapshot, Vec<String>), String> {
     let mut import = Import::new(schema, Doc::new(document));
     spatial::read(&mut import);
-    import.levels = registry::probe::<{ kinds::LEVELS }, _>(None, &import.model, |inferred| inferred.storey_levels.clone()).map_err(|error| error.to_string())?;
+    import.levels = inference::probe::<{ kinds::LEVELS }, _>(None, &import.model, |inferred| inferred.storey_levels.clone()).map_err(|error| error.to_string())?;
     data::read_materials(&mut import);
     data::read_types(&mut import);
     walls::read(&mut import);

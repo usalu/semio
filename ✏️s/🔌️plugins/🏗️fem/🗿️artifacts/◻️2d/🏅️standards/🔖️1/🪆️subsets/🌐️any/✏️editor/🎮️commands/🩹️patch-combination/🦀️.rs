@@ -21,7 +21,7 @@ pub const APPENDED_TERM_FACTOR: f64 = 1.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️PatchCombination
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "patch-combination")]
 pub struct PatchCombination {
     pub id: String,

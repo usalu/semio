@@ -158,15 +158,11 @@ const PLAYGROUND_STORE_MAXIMUM_BYTES: usize = 8_192;
 struct PlaygroundStorePreparationFactory;
 
 struct PlaygroundStorePreparation {
-    base: Option<store::SnapshotRead<PlaygroundSnapshot>>,
-    mutation: Option<PlaygroundMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    candidate: Option<(PlaygroundSnapshot, Vec<PlaygroundMutation>, PlaygroundMutation, usize)>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<PlaygroundSnapshot, PlaygroundMutation>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    owners: store::OneItemOwners<PlaygroundSnapshot, PlaygroundMutation>,
     phase: u8,
+    retained_bytes: usize,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
-    closing: bool,
 }
 
 fn playground_mutation_bytes(mutation: &PlaygroundMutation) -> Result<usize, String> {
@@ -177,6 +173,8 @@ fn playground_mutation_bytes(mutation: &PlaygroundMutation) -> Result<usize, Str
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<PlaygroundSnapshot, PlaygroundMutation> for PlaygroundStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<PlaygroundMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<PlaygroundMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::admit_artifact_batch_digest(edit, grant) }
+
     fn preflight(&self, mutation: &PlaygroundMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("Playground Store preparation rejected its lane".into());
@@ -184,10 +182,14 @@ impl store::ArtifactStoreOneItemPreparationFactory<PlaygroundSnapshot, Playgroun
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, playground_mutation_bytes(mutation)?))
     }
 
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<PlaygroundSnapshot, PlaygroundMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutation>>, store::ArtifactStoreOneItemPreparationRequest<PlaygroundSnapshot, PlaygroundMutation>> {
+    fn begin_demand(&self, _mutation: &PlaygroundMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<PlaygroundStorePreparation>(), depth: 1 })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<PlaygroundSnapshot, PlaygroundMutation, PlaygroundMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<PlaygroundSnapshot, PlaygroundMutation, PlaygroundMutation>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+
         if request.lane != store::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
@@ -195,96 +197,80 @@ impl store::ArtifactStoreOneItemPreparationFactory<PlaygroundSnapshot, Playgroun
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || request.base.get().schema.len() > PLAYGROUND_STORE_MAXIMUM_BYTES
         {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "preparation rejected original publication authority"), request));
         }
-        Ok(Box::new(PlaygroundStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            candidate: None,
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+        Ok((Box::new(PlaygroundStorePreparation {
+            owners: store::OneItemOwners::from_request(request),
             phase: 0,
+            retained_bytes: 0,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
-            closing: false,
-        }))
+        }), progress))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutation> for PlaygroundStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::Mutation as _;
-        if !grant.permits_one() || self.cancelled {
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() || self.phase >= 2 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.refused.is_some() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
+        }
+        if self.owners.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+        }
+        if self.phase >= 2 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         match self.phase {
             0 => {
-                let base = self.base.as_ref().ok_or_else(|| "Playground preparation lost its exact base root".to_string())?;
-                let mutation = self.mutation.take().ok_or_else(|| "Playground preparation lost its mutation owner".to_string())?;
-                let completed_bytes = playground_mutation_bytes(&mutation)?;
-                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-                let post = protocol::apply_diff(&mutation.diff(base.get()).into_parts().0, base.get()).map_err(|_| "Playground mutation could not produce its post root".to_string())?;
-                self.candidate = Some((post, inverse, mutation, completed_bytes));
+                let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playground preparation lost its exact base root"))?;
+                let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playground preparation lost its mutation owner"))?;
+                let completed_bytes = playground_mutation_bytes(mutation).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Playground schema mutation exceeds its fixed Store envelope"))?;
+                if grant.maximum_copy_bytes < completed_bytes {
+                    return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+                }
+                let inverse = mutation.inverse(base.get())?;
+                let post = protocol::apply_diff(&mutation.diff(base.get()).into_parts().0, base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Playground mutation could not produce its post root"))?;
+                let forward = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playground preparation lost its mutation owner"))?;
+                *self.owners.candidate = Some((post, inverse, forward));
+                self.retained_bytes = completed_bytes;
                 self.phase = 1;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: completed_bytes as u64, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: completed_bytes, ..Default::default() }))
             }
             1 => {
-                let (post, inverse, mutation, completed_bytes) = self.candidate.take().ok_or_else(|| "Playground preparation lost its semantic candidate".to_string())?;
-                let authority = self.authority.as_ref().ok_or_else(|| "Playground preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post))?;
+                let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playground preparation lost its Store authority"))?;
+                let (post, inverse, mutation) = self.owners.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playground preparation lost its semantic candidate"))?;
+                let prepared = match authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post)) {
+                    Ok(prepared) => prepared,
+                    Err((error, edit, post)) => {
+                        *self.owners.refused = Some((edit, post));
+                        return Err(error);
+                    }
+                };
                 self.phase = 2;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: completed_bytes as u64, digest: prepared.edit_digest() };
-                self.prepared = Some(prepared);
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+                *self.owners.prepared = Some(prepared);
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
             }
-            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)),
+            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())),
         }
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<PlaygroundSnapshot, PlaygroundMutation>> {
-        self.prepared.as_ref()
-    }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<PlaygroundSnapshot, PlaygroundMutation>> {
-        self.prepared.take()
-    }
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Playground preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
-    }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<PlaygroundSnapshot, PlaygroundMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<PlaygroundSnapshot, PlaygroundMutation>> { self.owners.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.owners.begin_close(); }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
+    fn terminal_is_empty(&self) -> bool { self.owners.terminal_is_empty() }
 }
 //#endregion 📬️StorePreparation
 
@@ -318,24 +304,12 @@ impl ArtifactEditor for PlaygroundEditor {
     /// retirement factory` (measured headless on :6107, `🗑️generated/b3a-demonstrator/report.json`),
     /// which then poisoned the shell into `data-semio-os-error="demonstrator"`. Same defect and same
     /// cure as 📖️playbook's.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
-
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::no_config_store_disposer())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
     }
 
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
@@ -401,6 +375,7 @@ impl ArtifactEditor for PlaygroundEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

@@ -9,9 +9,10 @@
 //! option: nothing picked yet shows the opened document, while the picker's own `No example` row
 //! shows no example at all.
 
-use super::{Generation3dViewConfigPatch, Generation3dViewConfig, Generation3dViewConfigMutation};
+use super::{Generation3dViewConfigPatch, Generation3dActiveExampleChange, Generation3dViewConfig, Generation3dViewConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "active-example")]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]

@@ -4,7 +4,8 @@
 use super::*;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertSheet {
     pub(crate) sheet: XlsxSheet,
@@ -16,7 +17,8 @@ pub struct InsertSheet {
 
 /// 🧩️ Everything the workbook holds for one sheet beyond its typed cells: the `sheet` entry's attributes, the workbook relationship to the worksheet part, the part itself and
 /// the relationships that part owns. A slot is written verbatim, so a removed sheet returns exactly as it stood.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct XlsxSheetSlot {
     pub attrs: Vec<XmlAttr>,
     pub relationship: semio_s_artifact_stdio_zip::opc::OpcRelationship,

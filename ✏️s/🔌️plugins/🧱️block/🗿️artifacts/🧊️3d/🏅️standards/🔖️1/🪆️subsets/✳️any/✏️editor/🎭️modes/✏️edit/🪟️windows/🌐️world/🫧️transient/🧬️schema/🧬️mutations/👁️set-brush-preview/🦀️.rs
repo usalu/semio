@@ -3,7 +3,8 @@
 use super::{Block3dBrushPreviewSet, Block3dWorldWindowTransient, Block3dWorldWindowTransientDiff, Block3dWorldWindowTransientMutation};
 use crate::editor::block3d::modes::edit::windows::world::transient::Block3dBrushPreview;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "set-brush-preview")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetBrushPreview {

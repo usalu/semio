@@ -45,3 +45,16 @@ fn cancel_token_borrowed_alias_return_concurrent_weak_and_strong_peers_never_rel
  let root=CancelToken::root_now();let pointer=Arc::as_ptr(&root.0)as usize;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<CancelToken>(),maximum_depth:1,..Default::default()};
  std::thread::scope(|scope|{let source=&root;let peer=scope.spawn(move||{for _ in 0..4096{let weak=Arc::downgrade(&source.0);let alias=source.clone();assert_eq!(Arc::as_ptr(&alias.0)as usize,pointer);drop(alias);drop(weak);}});for _ in 0..4096{let mut owner=CancelTokenRetirement::from_token(root.clone());let(step,heap)=observe(||owner.return_alias_step(&root,grant).unwrap());assert_eq!(heap,(0,0));assert_eq!(step.progress().released_bytes,0);assert!(owner.terminal_is_empty());assert_eq!(Arc::as_ptr(&root.0)as usize,pointer);}peer.join().unwrap();});assert_eq!(Arc::strong_count(&root.0),1);assert_eq!(Arc::weak_count(&root.0),0);close(CancelTokenRetirement::from_token(root),shared_retirement_allocation_bytes::<CancelNode>());eprintln!("[DEBUG] actual4096 witnessed aliases return with heap0 while4096 strong/weak races retain originalroot; final Arc allocation paid once");
 }
+#[test]
+fn cancel_token_retire_owned_erases_the_typed_ladder_and_refuses_registered_waiters(){
+ use semio_framework_value::retirement::{RetireOwned,RetirementStep};
+ let grant=policy();
+ let expected=2*shared_retirement_allocation_bytes::<CancelNode>();
+ let mut cursor=CancelToken::root_now().child_now().retirement();let mut released=0;let mut turns=0;
+ while !cursor.terminal_is_empty(){turns+=1;assert!(turns<=16);match cursor.close_step(grant){RetirementStep::Progress(progress)=>released+=progress.released_bytes,RetirementStep::Complete=>break,_=>panic!("original cancellation retirement turn")}}
+ assert_eq!(released,expected);assert!(cursor.terminal_is_empty());
+ let waiting=CancelToken::root_now();waiting.0.waiters.lock().push((1,Waker::noop().clone()));let weak=Arc::downgrade(&waiting.0);let mut cursor=waiting.retirement();
+ assert!(matches!(cursor.close_step(grant),RetirementStep::Failure(error)if error.kind==ValueRefusalKind::UnsupportedOwner));assert!(!cursor.terminal_is_empty());
+ weak.upgrade().unwrap().waiters.lock().clear();drop(weak);
+ while !cursor.terminal_is_empty(){turns+=1;assert!(turns<=32);match cursor.close_step(grant){RetirementStep::Progress(_)=>{}, RetirementStep::Complete=>break,_=>panic!("cleared cancellation retirement turn")}}
+}

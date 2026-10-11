@@ -35,7 +35,7 @@ fn close_abandoned_mailbox_step() -> bool {
 fn close_job_step(job: &mut PreparedRenderJob) -> bool {
     use semio_framework_job::{InteractiveJobCloseStep as Close, RetainedCloneGrant};
     InteractiveJob::begin_close(job);
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: InteractiveJob::next_close_capacity_byte_demand(job, 1).unwrap(), maximum_release_bytes: InteractiveJob::next_close_release_byte_demand(job).unwrap(), maximum_depth: InteractiveJob::next_close_depth_demand(job).unwrap() };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: InteractiveJob::next_close_copy_byte_demand(job).unwrap(), maximum_capacity_bytes: InteractiveJob::next_close_capacity_byte_demand(job, 1).unwrap(), maximum_release_bytes: InteractiveJob::next_close_release_byte_demand(job).unwrap(), maximum_depth: InteractiveJob::next_close_depth_demand(job).unwrap() };
     match InteractiveJob::close_step(job, grant) {
         Close::Complete { progress } => { assert!(progress.fits(grant)); assert!(job.terminal_is_empty()); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },

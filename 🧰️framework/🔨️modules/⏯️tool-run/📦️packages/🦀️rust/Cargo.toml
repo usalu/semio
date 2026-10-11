@@ -29,4 +29,3 @@ serde = { workspace = true }
 [dev-dependencies]
 semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
-semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }

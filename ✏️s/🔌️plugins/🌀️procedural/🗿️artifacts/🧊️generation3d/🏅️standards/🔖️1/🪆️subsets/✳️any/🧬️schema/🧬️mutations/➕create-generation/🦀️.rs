@@ -8,7 +8,8 @@ use crate::Generation3dSnapshot;
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 //#region 🔖️CreateGeneration
 /// ➕ Full initial payload for a new generation.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateGeneration {
     pub generation: FormGeneration,

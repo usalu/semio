@@ -30,7 +30,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant — real per-command payload modules the way `✏️editor/🎮️commands/*`
 /// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, semio_framework_value::RetireOwned)]
 pub enum PlaybookViewCommand {
     #[default]
     Noop,

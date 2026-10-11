@@ -10,7 +10,7 @@ use protocol::MutationDiff;
 /// 🔺️ Sparse field delta for the presentation artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
 /// The derived `presentation` handle and the immutable `animation` handle (see `crate::animation_child_handle`'s doc comment) have
 /// no field here.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.animate.presentation")]
 pub struct PresentationDiff {
@@ -27,21 +27,21 @@ pub struct PresentationDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🧱️ Carries the optional source aspect as a present slot, so clearing it stays distinct from leaving it untouched on every wire.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct PresentationOptionalAspect {
     pub value: Option<f64>,
 }
 
 /// 🧱️ Carries the optional PDF page as a present slot, so clearing it stays distinct from leaving it untouched on every wire.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct PresentationOptionalPage {
     pub value: Option<u32>,
 }
 
 /// 🩹 Field patch of the shared figure; every present slot is the new value of exactly that field.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct PresentationSourcePatch {
     pub src: Option<String>,
@@ -56,7 +56,7 @@ protocol::list_delta! {
 }
 
 /// 🩹 Field patch of one tile; every present slot is the new value of exactly that field.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct PresentationTilePatch {
     pub name: Option<String>,

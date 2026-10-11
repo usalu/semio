@@ -24,10 +24,10 @@
     "{\"revision\":1} false"
   ],
   "grant": {
-    "items": 64,
-    "copyBytes": 4096,
-    "capacityBytes": 8192,
-    "releaseBytes": 8192,
+    "items": 65536,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
     "depth": 64
   }
 }

@@ -16,7 +16,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod import_cad_file {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "import-cad-file")]
     pub struct ImportCadFile {
         pub name: String,
@@ -55,7 +55,7 @@ pub mod import_cad_file {
 pub mod save_selected {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "save-selected")]
     pub struct SaveSelected {}
 
@@ -72,7 +72,7 @@ pub mod save_selected {
 pub mod save_in_play {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "save-in-play")]
     pub struct SaveInPlay {}
 
@@ -91,7 +91,7 @@ pub mod save_in_play {
 pub mod save_current {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "save-current")]
     pub struct SaveCurrent {
         pub format: Option<String>,
@@ -115,7 +115,7 @@ pub mod save_current {
 pub mod load_raw_request {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "load-raw-request")]
     pub struct LoadRawRequest {}
 

@@ -48,7 +48,7 @@ pub const EPW_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.epw", 
 /// per-record columns are addressable — the 8 verbatim header lines (LOCATION, DESIGN CONDITIONS, …)
 /// have no cell in a flat record table, so they are not yet editable through this surface
 /// (documented honestly, matching energy's own `SetStructureField` scope note).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum EpwEditorCommand {
     #[dsl(key = "set-record-cell")]
     SetCell { row: u32, column: String, revision: String, value: String },

@@ -426,6 +426,12 @@ impl GisMapWindowWork {
 }
 
 impl ArtifactCommandWork<EditorApp<Gis2dPlayApp>> for GisMapWindowWork {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Gis2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+    }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+    }
     fn tool_id(&self) -> &'static str { self.tool_id }
 
     fn extent(
@@ -520,12 +526,13 @@ impl ArtifactOwnedToolJobFactory for Gis2dRetainedCommandJobFactory {
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Gis2dOneItemPreparationFactory<P, M> {
     marker: std::marker::PhantomData<fn() -> (P, M)>,
-    stamp: Option<GisMapOneItemStampV1>,
+    #[factory_owned]
+    stamp: GisMapStampSlot,
 }
 
 impl<P, M> Default for Gis2dOneItemPreparationFactory<P, M> {
     fn default() -> Self {
-        Self { marker: std::marker::PhantomData, stamp: None }
+        Self { marker: std::marker::PhantomData, stamp: GisMapStampSlot(None) }
     }
 }
 
@@ -536,6 +543,48 @@ pub struct GisMapOneItemStampV1 {
     pub timestamp: protocol::HybridLogicalTimestamp,
 }
 semio_framework_value::artifact_retire_struct!(GisMapOneItemStampV1 { mutation_id, timestamp });
+
+/// 🏷️ The factory-owned optional stamp: its heap-bearing mutation id retires through a funded controlled owner.
+#[derive(Clone)]
+struct GisMapStampSlot(Option<GisMapOneItemStampV1>);
+
+impl GisMapStampSlot {
+    fn as_ref(&self) -> Option<&GisMapOneItemStampV1> {
+        self.0.as_ref()
+    }
+}
+
+impl semio_framework_value::FactoryPayloadRetirement for GisMapStampSlot {
+    type CloseState = Option<semio_framework_value::retirement::controlled::ControlledRetirement<GisMapOneItemStampV1>>;
+    fn close_state_birth_bytes(&self) -> usize { 0 }
+    fn close_state_constructor_depth(&self) -> usize { 0 }
+    fn close_state_constructor_copy_bytes(&self) -> usize { 0 }
+    fn prepare_close_state(&self) -> Self::CloseState { None }
+    fn close_state_preparation_demands(&self, _: &Self::CloseState, _: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { Ok(Default::default()) }
+    fn prepare_close_state_step(&self, _: &mut Self::CloseState, _: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())) }
+    fn close_state_preparation_is_complete(_: &Self::CloseState) -> bool { true }
+    fn transfer_payload(value: Self, state: &mut Self::CloseState) {
+        if let Some(stamp) = value.0 {
+            *state = Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(stamp).unwrap_or_else(|(error, _)| panic!("GIS stamp supports controlled retirement: {error}")));
+        }
+    }
+    fn close_state_demands(state: &Self::CloseState, _: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        state.as_ref().map_or(Ok(Default::default()), |owner| Ok(semio_framework_value::RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(owner.next_copy_byte_demand()?)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }))
+    }
+    fn close_state_step(state: &mut Self::CloseState, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        let Some(owner) = state.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())) };
+        if owner.terminal_is_empty() {
+            if grant.maximum_items == 0 {
+                return Ok(RetainedCloneStep::Progress(Default::default()));
+            }
+            drop(state.take());
+            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        }
+        owner.step(grant)
+    }
+    fn close_state_terminal_is_empty(state: &Self::CloseState) -> bool { state.is_none() }
+}
 
 /// 📍 Creates the exact parent Map preparation port used by the retained fixed-three assembly.
 pub fn gis_map_parent_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> {
@@ -564,7 +613,7 @@ pub fn gis_map_value_one_item_preparation_factory() -> std::sync::Arc<
 
 /// 📍 Creates the exact stamped parent preparation port used by the Hub-owned fixed-three committer.
 pub fn gis_map_parent_stamped_one_item_preparation_factory(stamp: GisMapOneItemStampV1) -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> {
-    std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: Some(stamp) })
+    std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: GisMapStampSlot(Some(stamp)) })
 }
 
 /// 🎨 Creates the exact stamped drawing preparation port used by the Hub-owned fixed-three committer.
@@ -576,7 +625,7 @@ pub fn gis_map_drawing_stamped_one_item_preparation_factory(
         semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
     >,
 > {
-    std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: Some(stamp) })
+    std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: GisMapStampSlot(Some(stamp)) })
 }
 
 /// 🔢 Creates the exact stamped value preparation port used by the Hub-owned fixed-three committer.
@@ -588,7 +637,7 @@ pub fn gis_map_value_stamped_one_item_preparation_factory(
         semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
     >,
 > {
-    std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: Some(stamp) })
+    std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: GisMapStampSlot(Some(stamp)) })
 }
 
 struct Gis2dOneItemPreparation<P, M> {
@@ -651,9 +700,13 @@ where P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for Gis2dOneItemPreparationFactory<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<M>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn stamped_clock(&self) -> Option<protocol::HybridLogicalTimestamp> {
         self.stamp.as_ref().map(|stamp| stamp.timestamp)
     }
@@ -670,7 +723,7 @@ where
     }
 
     fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        let capacity_bytes = std::mem::size_of::<Gis2dOneItemPreparation<P, M>>().checked_add(self.stamp.as_ref().map_or(0, |stamp| stamp.mutation_id.len())).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS original stamp birth extent overflow"))?;
+        let capacity_bytes = std::mem::size_of::<Gis2dOneItemPreparation<P, M>>().checked_add(self.stamp.0.as_ref().map_or(0, |stamp| stamp.mutation_id.0.len())).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS original stamp birth extent overflow"))?;
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: 1 })
     }
 
@@ -685,7 +738,7 @@ where
         }
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let mut progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
-        let copied_bytes = self.stamp.as_ref().map_or(0, |stamp| stamp.mutation_id.len());
+        let copied_bytes = self.stamp.0.as_ref().map_or(0, |stamp| stamp.mutation_id.0.len());
         if grant.maximum_copy_bytes < copied_bytes { return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS original stamp copy exceeds supplied authority"), request)); }
         progress.copied_bytes = copied_bytes;
         Ok((Box::new(Gis2dOneItemPreparation {
@@ -705,7 +758,7 @@ where
             phase: 0,
             cancelled: false,
             closing: false,
-            stamp: std::mem::ManuallyDrop::new(self.stamp.clone()),
+            stamp: std::mem::ManuallyDrop::new(self.stamp.0.clone()),
         }), progress))
     }
 }
@@ -724,7 +777,7 @@ where
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
         if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         match self.phase {
             0 => {
@@ -747,13 +800,13 @@ where
                 *self.candidate = Some((post, inverse, mutation));
                 self.phase = 1;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()))
             }
             1 => {
                 let authority = self.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its Store authority"))?;
 
                 let line_bytes = authority.line_id().map_or(0, str::len);
-                if grant.maximum_bytes < line_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+                if grant.maximum_copy_bytes < line_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
                 let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its semantic candidate"))?;
                 let edit = gis2d_one_item_edit(mutation, inverse, authority, self.stamp.take());
                 let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
@@ -763,7 +816,7 @@ where
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1 + line_bytes as u64, digest: prepared.edit_digest() };
                 *self.prepared = Some(prepared);
                 self.phase = 2;
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
             }
             _ => Ok(store::ArtifactStoreOneItemPreparationStep::Blocked),
         }
@@ -943,7 +996,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(GisMapWindowWork::new(tool_id));
-        let operation_context = AppOperationContext {
+        let operation_context = AppOperationContext { retained: request.retained,
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,
@@ -975,18 +1028,6 @@ impl ArtifactEditor for Gis2dPlayApp {
         Some(crate::host::owned::gis_map_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::owned::gis_map_document_store_owners())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
-
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
@@ -998,30 +1039,6 @@ impl ArtifactEditor for Gis2dPlayApp {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
-    }
-
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
-    }
-
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
-    }
-
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
-    }
-
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
-    }
-
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
-    }
-
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {

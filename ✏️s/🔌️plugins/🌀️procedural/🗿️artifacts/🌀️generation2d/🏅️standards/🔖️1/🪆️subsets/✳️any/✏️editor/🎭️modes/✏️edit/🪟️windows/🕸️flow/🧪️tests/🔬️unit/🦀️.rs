@@ -43,15 +43,12 @@ async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
 fn render_paints_the_selection_it_is_handed() {
     let document = crate::Generation2dSnapshot::default();
     let config = config::Generation2dMainWindowConfig::default();
-    let mut session = FlowEvalSession::new();
+    let session = FlowEvalSession::new();
     let selection = vec!["slider".into(), "rect".into()];
     let node = render(&document, &config, &session, &selection).expect("empty fixture still renders a node-graph scene");
     let tree = semio_framework_plugin::built_to_component_tree(node);
     let encoded = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("tree json");
-    session.begin_close();
-    while !session.terminal_is_empty() {
-        let _ = session.close_step(usize::MAX, usize::MAX);
-    }
+    session.retire_cold();
     let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<NodeGraphScene>(&encoded).expect("scene");
     assert_eq!(scene.selection, selection);
 }

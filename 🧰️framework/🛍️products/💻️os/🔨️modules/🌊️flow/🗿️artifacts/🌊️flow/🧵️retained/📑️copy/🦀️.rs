@@ -361,7 +361,7 @@ struct CopyState<R: Send + Sync + 'static, T: Copy> {
     result: Option<T>,
     retirement: Retirement,
     active_root_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
-    factory_close:Option<Box<dyn semio_framework_value::retirement::factory::FactoryRetirementTicket>>,
+    factory_close:Option<Box<dyn semio_framework_value::FactoryRetirementTicket>>,
     source: Option<Arc<R>>,
     root_retirement: Option<Arc<dyn SnapshotRetirementFactory<R>>>,
     factory_source:Option<Arc<dyn semio_framework_value::FactoryRetirement>>,

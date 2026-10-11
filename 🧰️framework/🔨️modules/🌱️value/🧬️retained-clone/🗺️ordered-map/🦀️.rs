@@ -3,7 +3,7 @@
 use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_close, admit_retained_clone_progress, close_retained_binding};
 use crate::{retirement::RetireOwned};
 use serde::{Serialize, Serializer, ser::SerializeMap};
-use std::{cmp::Ordering, mem::size_of, sync::Arc};
+use std::{cmp::Ordering, mem::size_of};
 
 pub const RETAINED_ORDERED_MAP_PAGE_CAPACITY: usize = 16;
 

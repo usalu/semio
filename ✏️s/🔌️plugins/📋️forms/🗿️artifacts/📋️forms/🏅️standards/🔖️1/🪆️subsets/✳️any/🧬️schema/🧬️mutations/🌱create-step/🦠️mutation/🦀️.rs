@@ -9,7 +9,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// 🌱️ Brings a new [`FormStep`] into existence at an optional FINAL-state `index` (`None` appends).
 /// A duplicate `step.id` is Fatal `mutation.duplicate-id` (an id-keyed entity that already exists
 /// cannot be re-created).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct CreateStep {

@@ -106,10 +106,6 @@ pub(crate) const BRANCH_EXAMPLE_DSL: &str = include_str!("../🖼️assets/🎬�
 
 //#region 🔖️DocumentHelpers
 /// 📦️ The default trinity graph snapshot (Nakagin capsule tower) — the initial document projection.
-/// 📬️ Admission envelope of one published document mutation: the reorganize run finalizes one `move-node` per moved
-/// node, each far below one page.
-const TRINITY_JACK_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 4_096;
-
 pub(crate) fn default_snapshot() -> JackSnapshot {
     JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_DSL).unwrap_or_else(|_| crate::empty_trinity_graph_snapshot())
 }
@@ -260,7 +256,7 @@ pub(crate) fn jack_io() -> semio_framework_plugin::AppIo {
 /// (TEMPLATE §5.1's fallback) — it already has a byte-identical, working wire format, so a macro
 /// rebuild would only add risk for zero benefit; only the `handle()` match BODY is decomposed across
 /// `🎮️commands/<group>/component.rs`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum TrinityJackCommand {
     // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
     #[dsl(key = "set-snapshot-json")]
@@ -744,16 +740,10 @@ impl ArtifactEditor for TrinityJackPlayApp {
     }
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::no_config_store_disposer())
     }
 
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(semio_framework_plugin::no_draft_store_disposer())
     }
@@ -845,6 +835,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
                 operation_id: request.operation.operation.0,
                 generation: request.operation.generation.0,
                 canonical_base_revision: request.canonical_base_revision,
+                retained: request.retained,
                 authoring_seed: request.authoring_seed.clone(),
             };
             let payload = ArtifactRetainedCommandPayload::new(
@@ -892,6 +883,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(
@@ -918,10 +910,6 @@ impl ArtifactEditor for TrinityJackPlayApp {
         Some(crate::host::jack_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::jack_document_store_owners())
-    }
-
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
@@ -931,12 +919,8 @@ impl ArtifactEditor for TrinityJackPlayApp {
         Ok(crate::host::jack_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
-    }
-
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("trinity-jack-artifact-retained", TRINITY_JACK_ARTIFACT_MUTATION_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     /// ⏯️ Builds the reorganize tool's layout run over the run's base (`ToolRunDefinition.runJob`); resumed from the

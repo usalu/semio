@@ -35,9 +35,9 @@ async fn real_text_round_trip_through_dxf_codec() {
     assert_eq!(reparsed.blocks.len(), 1);
     assert_eq!(reparsed.blocks[0].entities.len(), 1);
     assert_eq!(reparsed.entities.len(), 2);
-    assert!(matches!(reparsed.entities[0], DxfEntity::Circle { .. }));
+    assert!(matches!(reparsed.entities[0], DxfEntity::Circle(DxfCircle { .. })));
     match &reparsed.entities[1] {
-        DxfEntity::Other { kind, .. } => assert_eq!(kind, "ELLIPSE"),
+        DxfEntity::Other(DxfOther { kind, .. }) => assert_eq!(kind, "ELLIPSE"),
         other => panic!("expected raw-retained ELLIPSE, got {other:?}"),
     }
 }

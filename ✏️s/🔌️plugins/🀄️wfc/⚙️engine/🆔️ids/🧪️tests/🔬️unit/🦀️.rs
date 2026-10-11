@@ -20,7 +20,7 @@ fn id_ordering_and_equality() {
 #[test]
 fn id_serde_roundtrip() {
     let r = RelationId(42);
-    let json = semio_framework_os_kernel::json::to_json_string(&r);
-    let back: RelationId = semio_framework_os_kernel::json::from_json_str(&json).unwrap();
+    let json = semio_framework_pack_json::to_json_string(&r);
+    let back: RelationId = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(r, back);
 }

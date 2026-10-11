@@ -1,4 +1,5 @@
 import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
 import { fileURLToPath as testFileUrlToPath, pathToFileURL } from "node:url";
 const testSourceDirectory = testFileUrlToPath(new URL("../../🧫️fixtures/🌐️wasi-activation", import.meta.url));
 /** 🧭️ Qualifies isolated browser WASI resources against neutral traces and Preview2. */
@@ -65,7 +66,7 @@ export async function testPreview2GuestLogVendoring(repoRoot: string): Promise<v
   assert.throws(() => patchPreview2ShimGuestLogLineRelease(drift), /line release patch did not match/);
 }
 
-export async function testBrowserWasiActivation(repoRoot: string): Promise<void> {
+export async function testBrowserWasiActivation(repoRoot: string, invocation: ScriptInvocation): Promise<void> {
   await testPreview2GuestLogVendoring(repoRoot);
   const fixture = JSON.parse(readFileSync(join(testSourceDirectory, "🔣️.json"), "utf8"));
   const schemaDocument = JSON.parse(readFileSync(resolve(testSourceDirectory, "../../🧬️schema/🔣️.json"), "utf8"));
@@ -205,7 +206,7 @@ export async function testBrowserWasiActivation(repoRoot: string): Promise<void>
     assert.deepEqual(writes, [fixture.output]);
     assert.deepEqual([...ready], fixture.readyIndices);
     console.log(JSON.stringify({ writes, ready: [...ready], preview2: 1 }));
-  `, join(testSourceDirectory, "🔣️.json"), repoRoot], { cwd: repoRoot, env: process.env, budgetMs: 60_000, maxOutputBytes: 64 * 1024, stdoutPath: join(evidence, "oracle.stdout.json"), stderrPath: join(evidence, "oracle.stderr"), cancelled: () => false });
+  `, join(testSourceDirectory, "🔣️.json"), repoRoot], { invocation, cwd: repoRoot, env: process.env, budgetMs: 60_000, maxOutputBytes: 64 * 1024, stdoutPath: join(evidence, "oracle.stdout.json"), stderrPath: join(evidence, "oracle.stderr") });
   assert.equal(oracle.status, 0, oracle.stderr);
   const hostCalls: Parameters<Parameters<typeof createGuestLogLineSink>[0]>[0][] = [];
   const sink = createGuestLogLineSink((line) => hostCalls.push(line));

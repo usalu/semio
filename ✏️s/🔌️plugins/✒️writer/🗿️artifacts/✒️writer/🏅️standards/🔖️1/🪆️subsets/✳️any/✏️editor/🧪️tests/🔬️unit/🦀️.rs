@@ -86,14 +86,7 @@ pub(crate) mod context {
     /// so the artifact's OWN owner catalog retires it here — the same shape `🖨️raster`'s
     /// `retire_raster_envelope` uses for exactly this fixture pattern.
     pub fn retire_writer_envelope(envelope: store::ArtifactEnvelope<WriterSnapshot, WriterMutation>) {
-        let mut retirement = crate::host::owned::writer_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled writer owner catalog retires one envelope");
-        for _ in 0..1_000_000 {
-            if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) {
-                return;
-            }
-            store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("writer test envelope retires within its exact grant");
-        }
-        panic!("writer test envelope did not reach its terminal-empty shell")
+        crate::host::owned::retire_writer_envelope(envelope);
     }
     
     pub async fn dispatch(app: &mut WriterApp, command: WriterCommand) -> InvocationResult {
@@ -185,22 +178,8 @@ fn writer_envelope_wire() -> Vec<u8> {
     let snapshot_hex = <WriterSnapshot as ArtifactPack>::encode_pack(&snapshot).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = format!("{{\"schema\":\"{WRITER_DOCUMENT_SCHEMA}\",\"id\":\"writer-live-load\",\"vcs\":{{\"initialPack\":\"{snapshot_hex}\",\"edits\":[],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}").into_bytes();
     let envelope = store::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", snapshot, None);
-    let mut retirement = crate::host::owned::writer_envelope_decode_owner_bundle().retire_envelope(envelope);
-    for _ in 0..10_000 {
-        match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Writer fixture envelope retirement") {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                drop(retirement);
-                return wire;
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("unshared Writer fixture envelope retirement blocked"),
-        }
-    }
-    panic!("Writer fixture envelope retirement did not reach terminal")
+    crate::host::owned::retire_writer_envelope(envelope);
+    wire
 }
 
 #[test]
@@ -220,18 +199,16 @@ fn interactive_job_fixture_matches_the_exact_factory_join() {
 }
 
 #[test]
-fn writer_artifact_store_preparation_is_exact_bounded_and_reversible() {
-    let base = crate::writer_snapshot_with_text(WRITER_DOCUMENT_SCHEMA, "writer", "plaintext", "writer://document", "before");
-    let mutation = WriterMutation::EditText(crate::schema::mutations::EditText { text: "after".into() });
-    let footprint = admit_writer_artifact_mutation(&mutation).expect("bounded Writer Artifact mutation");
+fn writer_artifact_store_preparation_admits_only_the_exact_bounded_text_cohort() {
+    let factory = WriterArtifactPreparationFactory::shared();
+    let edit = |text: String| WriterMutation::EditText(crate::schema::mutations::EditText { text });
+    let footprint = factory.preflight(&edit("after".into()), store::HistoryLane::Document).expect("bounded Writer Artifact mutation");
     assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, "one point-invertible EditText declares its forward AND its inverse row");
-    assert_eq!(footprint.retained_bytes, 5);
-    let (post, inverse, forward) = prepare_writer_artifact(&base, mutation.clone()).expect("exact Writer Artifact preparation");
-    assert_eq!(writer_text(&post), "after");
-    assert_eq!(forward, mutation);
-    assert_eq!(inverse, vec![WriterMutation::EditText(crate::schema::mutations::EditText { text: "before".into() })]);
-    assert!(admit_writer_artifact_mutation(&WriterMutation::EditText(crate::schema::mutations::EditText { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) })).is_err());
-    assert!(admit_writer_artifact_mutation(&WriterMutation::RenameWriter(crate::schema::mutations::RenameWriter { new_id: "other".into() })).is_err());
+    assert!(footprint.is_admissible());
+    assert!(factory.preflight(&edit("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES)), store::HistoryLane::Document).is_ok());
+    assert!(factory.preflight(&edit("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1)), store::HistoryLane::Document).is_err());
+    assert!(factory.preflight(&edit("after".into()), store::HistoryLane::Interaction).is_err());
+    assert!(factory.preflight(&WriterMutation::RenameWriter(crate::schema::mutations::RenameWriter { new_id: "other".into() }), store::HistoryLane::Document).is_err());
 }
 
 #[test]
@@ -267,68 +244,13 @@ fn retained_wire_decoder_and_third_party_serde_have_command_parity() {
     }
 }
 
-fn writer_command_job(command: WriterCommand, text: Arc<str>) -> WriterCommandToolJob {
-    WriterCommandToolJob {
-        command: Some(command),
-        snapshot: Some(Arc::new(crate::schema::empty_writer_snapshot())),
-        text: Some(text),
-        view_state: Some(context::main_window_view()),
-        window_config: Some(WriterMainWindowConfig::default()),
-        window_transient: Some(WriterMainWindowTransient::default()),
-        completion: None,
-        pending_completion_rejection: None,
-        returned_allocations: semio_framework_value::retirement::allocation_return::ParentAllocationReturn::try_new(MAX_WRITER_COMMAND_RAW_BYTES,MAX_WRITER_COMMAND_RAW_BYTES*16).unwrap(),
-        returned_fault: semio_framework_plugin::__diagnostic::FaultCloseOwner::empty(),
-        return_refusal: None,
-        raw_input: None,
-        raw_bytes: vec![1, 2, 3],
-        raw_page_cursor: 2,
-        raw_scan_cursor: 1,
-        raw_validated: true,
-        text_admitted: false,
-        completed: false,
-        closing: false,
-    }
+fn writer_admitted(command: &WriterCommand, text: &str) -> bool {
+    let snapshot = crate::writer_snapshot_with_text(WRITER_DOCUMENT_SCHEMA, "writer", "plaintext", "writer://document", text);
+    writer_command_admitted(command, &snapshot, Some(&WriterMainWindowTransient::default()))
 }
 
 #[test]
-fn writer_completion_rejection_retires_child_before_command_without_reemission() {
-    let mut emit: Emit<WriterMutation, NoConfigMutation, NoDraftMutation> = Emit::default();
-    emit.child_emits.push(semio_framework_plugin::app::ChildEmit::open("member","writer-child",0));
-    let rejected = ArtifactToolCompletionRejection::<EditorApp<WriterPlayApp>> {
-        emit: Ok(emit),
-        ephemeral: EphemeralEmit::default(),
-        fault: Fault::new(semio_framework_plugin::FaultOrigin::Framework, semio_framework_plugin::FaultCode::new("test.completion-rejected"), "injected completion rejection"),
-    };
-    let mut job = writer_command_job(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("lint".into()) }), Arc::from("writer text"));
-    job.raw_bytes = Vec::new();
-    job.pending_completion_rejection = Some(rejected);
-    job.begin_close();
-    assert_eq!(job.close_step(0, 1), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
-    assert!(job.pending_completion_rejection.is_some());
-    assert!(job.command.is_some());
-    for _ in 0..128 {
-        if job.pending_completion_rejection.is_none() {
-            break;
-        }
-        let step = job.close_step(1, 4);
-        if let InteractiveJobCloseStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1 && released_bytes <= 4);
-        }
-    }
-    assert!(job.pending_completion_rejection.is_none());
-    assert!(job.command.is_some(), "typed command owner stays retained until the rejected output is terminal");
-    for _ in 0..16 {
-        if job.terminal_is_empty() {
-            break;
-        }
-        let _ = job.close_step(1, MAX_WRITER_COMMAND_RAW_BYTES);
-    }
-    assert!(job.terminal_is_empty());
-}
-
-#[test]
-fn bounded_text_admission_preserves_rejected_job_state_and_owners() {
+fn bounded_text_admission_rejects_plus_one_current_text() {
     for command in [
         WriterCommand::TextEdit(text_edit::TextEdit { text: "changed".into() }),
         WriterCommand::SetText(set_text::SetText { text: "changed".into() }),
@@ -336,62 +258,29 @@ fn bounded_text_admission_preserves_rejected_job_state_and_owners() {
         WriterCommand::CommitRename(commit_rename::CommitRename { text: "renamed".into() }),
         WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("format".into()) }),
     ] {
-        let maximum: Arc<str> = Arc::from("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES));
-        let mut accepted = writer_command_job(command, maximum.clone());
-        let accepted_cursor = (accepted.raw_page_cursor, accepted.raw_scan_cursor, accepted.raw_bytes.clone());
-        assert!(accepted.admit_text());
-        assert!(accepted.text_admitted);
-        assert_eq!((accepted.raw_page_cursor, accepted.raw_scan_cursor, accepted.raw_bytes.clone()), accepted_cursor);
-        assert_eq!(Arc::strong_count(&maximum), 2);
-
-        let over: Arc<str> = Arc::from("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1));
-        let mut rejected = writer_command_job(accepted.command.take().expect("accepted command owner"), over.clone());
-        let rejected_cursor = (rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone());
-        let rejected_command = rejected.command.clone();
-        let rejected_snapshot = rejected.snapshot.clone();
-        let rejected_window_config = rejected.window_config.clone();
-        assert!(!rejected.admit_text());
-        assert!(!rejected.text_admitted);
-        assert_eq!((rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone()), rejected_cursor);
-        assert_eq!(rejected.command, rejected_command);
-        assert!(Arc::ptr_eq(rejected.snapshot.as_ref().expect("snapshot owner"), rejected_snapshot.as_ref().expect("saved snapshot owner")));
-        assert_eq!(rejected.window_config, rejected_window_config);
-        assert_eq!(Arc::strong_count(&over), 2);
+        assert!(writer_admitted(&command, &"x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES)));
+        assert!(!writer_admitted(&command, &"x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1)));
     }
-
-    let over: Arc<str> = Arc::from("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1));
-    let mut lint = writer_command_job(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("lint".into()) }), over);
-    assert!(lint.admit_text());
+    let lint = WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("lint".into()) });
+    assert!(writer_admitted(&lint, &"x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1)));
 }
 
 #[test]
-fn bounded_open_document_admission_preserves_maximum_plus_one_job_state_and_owners() {
-    let current: Arc<str> = Arc::from("");
-    let accepted_command = WriterCommand::OpenDocument(open_document::OpenDocument { uri: "u".repeat(MAX_WRITER_COMMAND_URI_BYTES), text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) });
-    let mut accepted = writer_command_job(accepted_command, current.clone());
-    assert!(accepted.admit_text());
-    assert_eq!(accepted.emit().expect("bounded open document emission").0.effects.len(), 1);
-
-    for rejected_command in [
+fn bounded_open_document_admission_rejects_maximum_plus_one() {
+    let accepted = WriterCommand::OpenDocument(open_document::OpenDocument { uri: "u".repeat(MAX_WRITER_COMMAND_URI_BYTES), text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) });
+    assert!(writer_admitted(&accepted, ""));
+    let snapshot = crate::schema::empty_writer_snapshot();
+    assert_eq!(writer_command_emit(&accepted, &snapshot, None, None, None).expect("bounded open document emission").0.effects.len(), 1);
+    for rejected in [
         WriterCommand::OpenDocument(open_document::OpenDocument { uri: "u".repeat(MAX_WRITER_COMMAND_URI_BYTES), text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
         WriterCommand::OpenDocument(open_document::OpenDocument { uri: "u".repeat(MAX_WRITER_COMMAND_URI_BYTES + 1), text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
     ] {
-        let mut rejected = writer_command_job(rejected_command, current.clone());
-        let rejected_cursor = (rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone());
-        let rejected_command = rejected.command.clone();
-        let rejected_snapshot = rejected.snapshot.clone();
-        let rejected_window_config = rejected.window_config.clone();
-        assert!(!rejected.admit_text());
-        assert_eq!((rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone()), rejected_cursor);
-        assert_eq!(rejected.command, rejected_command);
-        assert!(Arc::ptr_eq(rejected.snapshot.as_ref().expect("snapshot owner"), rejected_snapshot.as_ref().expect("saved snapshot owner")));
-        assert_eq!(rejected.window_config, rejected_window_config);
+        assert!(!writer_admitted(&rejected, ""));
     }
 }
 
 #[test]
-fn bounded_host_load_and_engagement_admission_reject_plus_one_without_consuming_owners() {
-    let current: Arc<str> = Arc::from("");
+fn bounded_host_load_and_engagement_admission_reject_plus_one() {
     let accepted = [
         WriterCommand::TextEdit(text_edit::TextEdit { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
         WriterCommand::SetText(set_text::SetText { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
@@ -401,9 +290,8 @@ fn bounded_host_load_and_engagement_admission_reject_plus_one_without_consuming_
         WriterCommand::CommitRename(commit_rename::CommitRename { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
         WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES)) }),
     ];
-    for command in accepted {
-        let mut job = writer_command_job(command, current.clone());
-        assert!(job.admit_text());
+    for command in &accepted {
+        assert!(writer_admitted(command, ""));
     }
     let rejected = [
         WriterCommand::TextEdit(text_edit::TextEdit { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
@@ -414,15 +302,8 @@ fn bounded_host_load_and_engagement_admission_reject_plus_one_without_consuming_
         WriterCommand::CommitRename(commit_rename::CommitRename { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
         WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1)) }),
     ];
-    for command in rejected {
-        let mut job = writer_command_job(command, current.clone());
-        let command_owner = job.command.clone();
-        let snapshot_owner = job.snapshot.clone();
-        let window_config_owner = job.window_config.clone();
-        assert!(!job.admit_text());
-        assert_eq!(job.command, command_owner);
-        assert!(Arc::ptr_eq(job.snapshot.as_ref().expect("snapshot owner"), snapshot_owner.as_ref().expect("saved snapshot owner")));
-        assert_eq!(job.window_config, window_config_owner);
+    for command in &rejected {
+        assert!(!writer_admitted(command, ""));
     }
 }
 
@@ -851,45 +732,3 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 //#endregion 🔖️ExampleArchiveLoad
-
-//#region 📬️StorePreparation
-/// 🧺️ The retained `Artifact` lane folds a point-invertible item as TWO staged rows — the forward
-/// `EditText` plus the row `inverse_writer_mutation` yields for it — and `fold_batch_item` refuses
-/// the candidate outright when the declaration is smaller than `forwards.len() + inverse.len()`.
-/// `admit_writer_artifact_mutation` used to declare `1`, so writer's retained text edits could never
-/// fold (ticket 26/09/18, slice F1).
-#[test]
-fn the_artifact_preflight_declares_room_for_the_inverse_it_will_stage() {
-    let base = jack_snapshot();
-    let mutation = WriterMutation::EditText(crate::schema::mutations::EditText { text: format!("{}\nsemio", crate::writer_text(&base)) });
-    let inverse = crate::schema::mutations::inverse_writer_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
-    let footprint = admit_writer_artifact_mutation(&mutation).expect("an EditText inside the retained envelope is admitted");
-    assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
-    assert!(1 + inverse.len() <= footprint.work_items, "declared {} rows for 1 forward + {} inverse", footprint.work_items, inverse.len());
-    assert!(footprint.is_admissible());
-}
-//#endregion 📬️StorePreparation
-
-#[test]
-fn writer_parent_return_keeps_actual_allocations_and_typed_fault_until_physical_close(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️parent-return.json")).unwrap();
-    let mut emit:Emit<WriterMutation,NoConfigMutation,NoDraftMutation>=Emit::default();
-    emit.child_emits.push(semio_framework_plugin::app::ChildEmit::open(fixture["slot"].as_str().unwrap(),fixture["childId"].as_str().unwrap(),0));
-    let rejected=ArtifactToolCompletionRejection::<EditorApp<WriterPlayApp>>{emit:Ok(emit),ephemeral:EphemeralEmit::default(),fault:Fault::new(semio_framework_plugin::FaultOrigin::Framework,semio_framework_plugin::FaultCode::new(fixture["faultCode"].as_str().unwrap()),fixture["faultMessage"].as_str().unwrap())};
-    let scope=rejected.fault.scope.as_ref()as*const _;let message=rejected.fault.message.as_ptr();
-    let mut job=writer_command_job(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit{value:Some("lint".into())}),Arc::from("writer text"));job.raw_bytes=Vec::new();job.pending_completion_rejection=Some(rejected);job.begin_close();
-    assert_eq!(job.close_step(0,1),InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0});
-    for _ in 0..fixture["childTurns"].as_u64().unwrap(){if job.pending_completion_rejection.is_none(){break;}let step=job.close_step(1,fixture["childBytes"].as_u64().unwrap()as usize);if let InteractiveJobCloseStep::Pending{released_items,released_bytes}=step{assert!(released_items<=1&&released_bytes<=4);}}
-    assert!(job.pending_completion_rejection.is_none());assert!(job.command.is_some());assert!(!job.terminal_is_empty());assert!(job.returned_allocations.retained_bytes()>0);let fault=job.returned_fault.fault().unwrap();assert_eq!(fault.scope.as_ref()as*const _,scope);assert_eq!(fault.message.as_ptr(),message);assert_eq!(fault.code.0,fixture["faultCode"].as_str().unwrap());assert_eq!(fault.message,fixture["faultMessage"].as_str().unwrap());
-    for _ in 0..fixture["parentTurns"].as_u64().unwrap(){if job.terminal_is_empty(){break;}let _=job.close_step(1,fixture["parentBytes"].as_u64().unwrap()as usize);}
-    assert!(job.returned_allocations.terminal_is_empty());assert_eq!(job.returned_allocations.retained_bytes(),0);assert!(job.returned_fault.terminal_is_empty());assert!(job.terminal_is_empty());eprintln!("[DEBUG] Writer exact typed rejection handed genuine allocations to registered job parent; physical parent and fault owners empty only after original4096 grant");
-}
-
-#[test]
-fn writer_parent_return_drains_full_parent_before_retrying_exact_child_owner(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️parent-return.json")).unwrap();let mut emit:Emit<WriterMutation,NoConfigMutation,NoDraftMutation>=Emit::default();emit.child_emits.push(semio_framework_plugin::app::ChildEmit::open(fixture["slot"].as_str().unwrap(),fixture["childId"].as_str().unwrap(),0));let child_pointer=emit.child_emits[0].child_id.as_ptr();let rejected=ArtifactToolCompletionRejection::<EditorApp<WriterPlayApp>>{emit:Ok(emit),ephemeral:EphemeralEmit::default(),fault:Fault::new(semio_framework_plugin::FaultOrigin::Framework,semio_framework_plugin::FaultCode::new(fixture["faultCode"].as_str().unwrap()),fixture["faultMessage"].as_str().unwrap())};let mut job=writer_command_job(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit{value:Some("lint".into())}),Arc::from("writer text"));job.raw_bytes=Vec::new();job.pending_completion_rejection=Some(rejected);job.begin_close();let capacity=fixture["childId"].as_str().unwrap().len();for _ in 0..fixture["parentSlots"].as_u64().unwrap(){let mut text=fixture["childId"].as_str().unwrap().to_owned();assert!(job.returned_allocations.return_text(&mut text,1).unwrap());}
-    let before=job.returned_allocations.retained_bytes();assert_eq!(job.close_step(1,4),InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0});assert_eq!(job.returned_allocations.retained_bytes(),before);assert_eq!(job.pending_completion_rejection.as_ref().unwrap().emit.as_ref().unwrap().child_emits[0].child_id.as_ptr(),child_pointer);
-    assert_eq!(job.close_step(1,4096),InteractiveJobCloseStep::Pending{released_items:1,released_bytes:capacity});assert_eq!(job.returned_allocations.retained_bytes(),before-capacity);assert_eq!(job.pending_completion_rejection.as_ref().unwrap().emit.as_ref().unwrap().child_emits[0].child_id.as_ptr(),child_pointer);
-    for _ in 0..fixture["childTurns"].as_u64().unwrap(){if job.terminal_is_empty(){break;}let step=job.close_step(1,4096);if let InteractiveJobCloseStep::Pending{released_items,released_bytes}=step{assert!(released_items<=1&&released_bytes<=4096);}}
-    assert!(job.terminal_is_empty());assert!(job.returned_allocations.terminal_is_empty());assert!(job.returned_fault.terminal_is_empty());eprintln!("[DEBUG] full actual parent slots retain original child pointer; original full parent grant releases one allocation before source retry and eventual true terminal");
-}

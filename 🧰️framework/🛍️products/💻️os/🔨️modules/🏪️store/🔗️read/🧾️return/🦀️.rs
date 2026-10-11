@@ -73,6 +73,57 @@ impl RetirementCursor for SnapshotReadReturnRetirement {
 impl Drop for SnapshotReadReturnRetirement {
  fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"returned read witness abandoned original registry custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.registry);ManuallyDrop::drop(&mut self.last_registry);}}}
 }
+/// 🗳️ An erased original read hands its registry slot back as an exact witness before that witness retires through its own typed cursor.
+struct ErasedSnapshotReadRetirement {
+ read:ManuallyDrop<Option<super::ErasedSnapshotRead>>,
+ witness:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<SnapshotReadReturn>>>,
+}
+impl ErasedSnapshotReadRetirement {
+ fn new(read:super::ErasedSnapshotRead)->Self {Self{read:ManuallyDrop::new(Some(read)),witness:ManuallyDrop::new(None)}}
+ fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+  if self.read.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<SnapshotReadReturn>()+size_of::<u64>()+size_of::<usize>(),depth:2,..Default::default()});}
+  let Some(owner)=self.witness.as_ref()else{return Ok(Default::default())};
+  let depth=owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"erased read witness depth overflow"))?;
+  Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth})
+ }
+ fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+  if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
+  let demand=self.demands(grant.maximum_copy_bytes)?;
+  if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"erased read closure exceeds admitted depth"));}
+  if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
+  if let Some(read)=self.read.take(){
+   return match read.try_return_to_registry_witness(grant){
+    Ok((witness,progress))=>{*self.witness=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(witness).unwrap_or_else(|(error,_)|unreachable!("registry witness has typed retirement: {error}")));Ok(RetainedCloneStep::Progress(progress))},
+    Err((error,read))=>{*self.read=Some(read);Err(error)},
+   };
+  }
+  let owner=self.witness.as_mut().expect("erased read witness remains until terminal");
+  let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
+  let step=owner.step(child)?;
+  if owner.terminal_is_empty(){self.witness.take();return Ok(RetainedCloneStep::Complete(step.progress()));}
+  Ok(RetainedCloneStep::Progress(step.progress()))
+ }
+}
+impl RetireOwned for super::ErasedSnapshotRead {
+ fn retirement(self)->Box<dyn RetirementCursor>{Box::new(ErasedSnapshotReadRetirement::new(self))}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ErasedSnapshotReadRetirement>())}
+ fn controlled_retirement_supported()->bool{true}
+}
+impl RetirementCursor for ErasedSnapshotReadRetirement {
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
+ fn terminal_is_empty(&self)->bool{self.read.is_none()&&self.witness.is_none()}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
+ fn allows_admitted_narrow_work(&self)->bool{true}
+ fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.demands(copy).ok().map(|demand|demand.capacity_bytes)}
+ fn next_close_byte_demand(&self)->Option<usize>{self.demands(0).ok().map(|demand|demand.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl Drop for ErasedSnapshotReadRetirement {
+ fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"erased read custody requires full granted closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.read);ManuallyDrop::drop(&mut self.witness);}}}
+}
+
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

@@ -74,7 +74,7 @@ fn matd_from_rows(rows: &[Vec<f64>]) -> crate::algebra::MatD {
 /// 🔺️ An f64 vertex-soup triangle mesh: the workhorse representation every other region in this
 /// crate reads from or writes into. No implicit topology — [`TriMesh::edge_map`] derives it on
 /// demand from `triangles` alone, so iteration order (via `BTreeMap`) is always deterministic.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct TriMesh {
     pub positions: Vec<[f64; 3]>,
     pub triangles: Vec<[u32; 3]>,
@@ -190,6 +190,7 @@ impl TriMesh {
 
 /// 🧩️ Minimal union-find over `0..n`, path-halved on find, union by size — the shared workhorse
 /// behind small-component removal, non-manifold fan grouping and connected-component counting.
+#[derive(semio_framework_value::RetireOwned)]
 struct DisjointSet {
     parent: Vec<u32>,
     size: Vec<u32>,
@@ -582,6 +583,7 @@ pub fn extract_tsdf(vol: &remodeling_dense::TsdfVolume, iso: f64, bounds_min: [i
 /// triangles), and the synthetic orbit reconstruction faulted at the surface stage the same way.
 /// A surface net spends one vertex per surface cube and two triangles per crossed axis edge, which
 /// is the leanest closed surface the lattice supports and fits the envelope with room to spare.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct TsdfExtractionPreparation {
     iso: f64,
     bounds_min: [i32; 3],
@@ -1068,7 +1070,7 @@ pub struct CleanStats {
     pub small_components_removed: usize,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum BoundedCleanPhase {
     Vertices,
     Triangles,
@@ -1083,6 +1085,7 @@ enum BoundedCleanPhase {
     Done,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedCleanPreparation {
     phase: BoundedCleanPhase,
     cursor: usize,
@@ -1300,12 +1303,13 @@ impl BoundedCleanPreparation {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, semio_framework_value::RetireOwned)]
 struct BoundedEdgeRecord {
     directed: [u32; 2],
     faces: Vec<u32>,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedEdgePreparation {
     cursor: usize,
     records: BTreeMap<(u32, u32), BoundedEdgeRecord>,
@@ -1330,7 +1334,7 @@ impl BoundedEdgePreparation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum BoundedRepairPhase {
     Edges,
     /// 🧩️ Union the faces across every 2-face edge, one edge record per unit.
@@ -1347,6 +1351,7 @@ enum BoundedRepairPhase {
 /// used to do — only moved the defect: the hole fill that followed closed the two holes it left and
 /// put a face back on the same edge, so a net with one such edge failed validation with exactly
 /// one non-manifold edge, every time.
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedRepairPreparation {
     phase: BoundedRepairPhase,
     edges: BoundedEdgePreparation,
@@ -1454,7 +1459,7 @@ impl BoundedRepairPreparation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum BoundedOrientPhase {
     Edges,
     AllocateVisited,
@@ -1462,6 +1467,7 @@ enum BoundedOrientPhase {
     Done,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedOrientPreparation {
     phase: BoundedOrientPhase,
     edges: BoundedEdgePreparation,
@@ -1532,7 +1538,7 @@ impl BoundedOrientPreparation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum BoundedHoleFillPhase {
     Edges,
     Boundary,
@@ -1541,6 +1547,7 @@ enum BoundedHoleFillPhase {
     Done,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedHoleFillPreparation {
     phase: BoundedHoleFillPhase,
     edges: BoundedEdgePreparation,
@@ -2666,7 +2673,7 @@ pub fn close_voxel(mesh: &TriMesh, voxel: f64) -> TriMesh {
 // #endregion 🔖️Close
 
 // #region 🔖️Validate
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct WatertightReport {
     pub vertex_count: usize,
     pub triangle_count: usize,
@@ -3440,6 +3447,7 @@ pub fn unwrap_mesh(mesh: &mut TriMesh, charts: &[Chart]) -> Vec<[f32; 2]> {
 
 // #region 🔖️Texture
 /// 📷️ One candidate texturing source: its pose/intrinsics and the color image it observed.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct TextureView {
     pub pose: remodeling_camera::CameraPose,
     pub intrinsics: remodeling_camera::Intrinsics,
@@ -3713,7 +3721,7 @@ pub fn bake_texture(mesh: &TriMesh, uvs: &[[f32; 2]], atlas_size: u32, views: &[
 // #endregion 🔖️Texture
 
 // #region 🔖️Interchange
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum InterchangePhase {
     AllocateNormals,
     AccumulateNormals,
@@ -3726,6 +3734,7 @@ enum InterchangePhase {
     Done,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct InterchangePreparation {
     phase: InterchangePhase,
     cursor: usize,
@@ -3846,7 +3855,7 @@ impl InterchangePreparation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum BoundedTexturePngPhase {
     Header,
     Rows,
@@ -3854,6 +3863,7 @@ enum BoundedTexturePngPhase {
     Done,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedTexturePngPreparation {
     phase: BoundedTexturePngPhase,
     row: u32,
@@ -3959,7 +3969,7 @@ impl BoundedTexturePngPreparation {
 // #endregion 🔖️Interchange
 
 // #region 🔖️BoundedValidation
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum BoundedValidationPhase {
     Edges,
     AllocateFaces,
@@ -3974,6 +3984,7 @@ enum BoundedValidationPhase {
     Done,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedValidationPreparation {
     phase: BoundedValidationPhase,
     edges: BoundedEdgePreparation,
@@ -4225,6 +4236,7 @@ impl BoundedValidationPreparation {
 // #endregion 🔖️BoundedValidation
 
 // #region 🔖️BoundedPostprocess
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedOutwardPreparation {
     cursor: usize,
     signed_volume: f64,
@@ -4263,7 +4275,7 @@ impl BoundedOutwardPreparation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum BoundedTaubinPhase {
     AllocateNeighbors,
     Edges,
@@ -4271,6 +4283,7 @@ enum BoundedTaubinPhase {
     Done,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedTaubinPreparation {
     phase: BoundedTaubinPhase,
     cursor: usize,
@@ -4343,6 +4356,7 @@ impl BoundedTaubinPreparation {
     }
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedSimplifyPreparation {
     cursor: usize,
     target: usize,
@@ -4371,13 +4385,14 @@ impl BoundedSimplifyPreparation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum BoundedUnwrapPhase {
     Bounds,
     Vertices,
     Done,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedUnwrapPreparation {
     phase: BoundedUnwrapPhase,
     cursor: usize,
@@ -4429,13 +4444,14 @@ impl BoundedUnwrapPreparation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum BoundedTexturePhase {
     Allocate,
     Faces,
     Done,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct BoundedTexturePreparation {
     phase: BoundedTexturePhase,
     atlas_size: u32,
@@ -4516,7 +4532,8 @@ impl BoundedTexturePreparation {
 // #endregion 🔖️BoundedPostprocess
 
 // #region 🔖️Pipeline
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct MeshParams {
     pub guarantee_watertight: bool,
     pub hole_fill_max_boundary_verts: usize,
@@ -4598,6 +4615,7 @@ const STAGE_ORDER: [Stage; 16] = [
 /// 🏗️ Engine-chunkable driver over the full watertight-mesh-out pipeline: MC → Clean → Repair →
 /// Orient(consistency) → HoleFill → Validate → `[Close if triggered → re-Validate, must pass]` →
 /// Orient(outward) → Taubin → QEM → Validate(light) → LSCM → Texture bake → `to_mesh_data`.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct MeshPipeline {
     mesh: TriMesh,
     tsdf: Option<remodeling_dense::TsdfVolume>,

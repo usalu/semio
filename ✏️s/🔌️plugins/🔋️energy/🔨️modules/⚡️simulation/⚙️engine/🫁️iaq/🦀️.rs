@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️ContaminantState
 /// 🫁️ Contaminant concentration state with history for transient integration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ContaminantState {
     pub concentration_ppm: f64,
     pub history_ppm: [f64; 3],
@@ -25,7 +25,7 @@ impl ContaminantState {
 
 // #region 🔖️ContaminantBalance
 /// ⚖️ Generic contaminant mass balance inputs.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ContaminantBalance {
     pub zone_volume_m3: f64,
     pub generation_rate_mg_s: f64,
@@ -45,7 +45,7 @@ impl ContaminantBalance {
 
 // #region 🔖️Co2Balance
 /// 🫁️ CO₂-specific balance parameters per ASHRAE 62.1.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Co2Balance {
     pub zone_volume_m3: f64,
     pub occupancy: f64,
@@ -76,7 +76,7 @@ impl Co2Balance {
 
 // #region 🔖️DcvControl
 /// 🎛️ Demand-controlled ventilation setpoint.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct DcvControl {
     pub target_ppm: f64,
     pub min_flow_per_person_m3_s: f64,

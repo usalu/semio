@@ -317,8 +317,8 @@ fn marks_of(interaction: &semio_framework_plugin::app::InteractionView<'_>) -> w
     world::Marks { selected: interaction.selection(ELEMENT_DOMAIN).ids.clone(), hovered: interaction.hover(ELEMENT_DOMAIN, HOVER_CHANNEL).ids.clone() }
 }
 
-fn render_body(body_key: &str, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::Instance<'_>, snapshot: &ModelSnapshot, cfg: &ConfigView<'_, NoConfig>, marks: &world::Marks, labels: &terminology::BimViewerLabels) -> UiAssemblyResult<ComponentTree> {
-    let node = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(instance, snapshot, |inference| match body_key {
+fn render_body(body_key: &str, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, snapshot: &ModelSnapshot, cfg: &ConfigView<'_, NoConfig>, marks: &world::Marks, labels: &terminology::BimViewerLabels) -> UiAssemblyResult<ComponentTree> {
+    let node = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, snapshot, |inference| match body_key {
         world::BODY_KEY => world::render(snapshot, inference, &world::config::current(cfg), marks),
         plan::BODY_KEY => plan::render(snapshot, inference, &plan::config::current(cfg), &marks.selected),
         _ => semio_framework_plugin::built_text_node(Label::data(format!("{}: {body_key}", labels.unknown_body.as_str()))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("bim.viewer.ui.capacity", "viewer label admission failed")),
@@ -350,11 +350,6 @@ impl ArtifactViewer for BimModelViewer {
 
     fn initial_snapshot() -> ModelSnapshot {
         crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
-    }
-
-    /// 🛂️ The document store keeps the framework's funded bounded owners and disposer; every other lane of this viewer is `No*`.
-    fn build_config_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>, semio_framework_value::ValueError>> {
-        Some(semio_framework_plugin::no_config_store_owners())
     }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
@@ -437,6 +432,7 @@ impl ArtifactViewer for BimModelViewer {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

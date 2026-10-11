@@ -105,7 +105,7 @@ class VerifyScript extends BundleScript {
     }
     if (runBunxStatus(["vitest", "run"], join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript")) !== 0) throw new Error("framework-renderer-react tests failed");
     await runStudioE2eVerify(studioUrl, timeoutMs);
-    await new PluginCapabilityLintScript(this.root).run();
+    await new PluginCapabilityLintScript(this.root, this.repoRoot, this.invocation).run();
     console.log(`s studio verify passed (${studioUrl})`);
   }
 }

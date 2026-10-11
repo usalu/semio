@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️Dispatch
 /// 🎛️ Equipment dispatch scheme.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum DispatchScheme {
     Sequential,
     Uniform,
@@ -17,7 +17,7 @@ pub enum DispatchScheme {
 }
 
 /// 🎛️ Equipment priority entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct EquipmentPriority {
     pub equipment_id: u32,
     pub priority: u32,
@@ -26,7 +26,7 @@ pub struct EquipmentPriority {
 }
 
 /// 🎛️ Dispatch request for plant equipment.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct DispatchRequest {
     pub total_load_w: f64,
     pub available_capacity_w: f64,
@@ -34,7 +34,7 @@ pub struct DispatchRequest {
 }
 
 /// 🎛️ Dispatch result per equipment.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct DispatchResult {
     pub equipment_id: u32,
     pub load_w: f64,
@@ -67,7 +67,7 @@ impl Dispatcher {
 }
 
 /// 🎛️ Stable one-equipment-at-a-time dispatch cursor over pre-admitted input order.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[cfg(test)]
 pub(crate) struct DispatchBuilder {
     request: DispatchRequest,
@@ -80,14 +80,14 @@ pub(crate) struct DispatchBuilder {
     fault: Option<DispatchFault>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[cfg(test)]
 pub(crate) enum DispatchFault {
     ResultBacking,
     UnorderedPriority,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[cfg(test)]
 pub(crate) enum DispatchStage {
     Reserve,

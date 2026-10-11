@@ -235,6 +235,7 @@ pub(crate) struct PairKerning {
     serif: Option<SwashFontRef<'static>>,
     mono: Option<SwashFontRef<'static>>,
     sans_pairs: BorrowedFontPairSource<'static>,
+    serif_pairs: BorrowedFontPairSource<'static>,
     mono_pairs: BorrowedFontPairSource<'static>,
 }
 
@@ -242,8 +243,10 @@ impl Default for PairKerning {
     fn default() -> Self {
         Self {
             sans: SwashFontRef::from_index(authored_face_bytes(TextFace::Sans), 0),
+            serif: SwashFontRef::from_index(authored_face_bytes(TextFace::Serif), 0),
             mono: SwashFontRef::from_index(authored_face_bytes(TextFace::Mono), 0),
             sans_pairs: BorrowedFontPairSource::read(authored_face_bytes(TextFace::Sans),*b"latn").expect("embedded Anta pair table"),
+            serif_pairs: BorrowedFontPairSource::read(authored_face_bytes(TextFace::Serif),*b"latn").expect("embedded Kelly Slab pair table"),
             mono_pairs: BorrowedFontPairSource::read(authored_face_bytes(TextFace::Mono),*b"latn").expect("embedded Share Tech Mono pair table"),
         }
     }
@@ -255,7 +258,7 @@ impl PairKerning {
     /// 📏️ Projects the original glyph pair's design-unit adjustment to logical em units.
     pub(crate) fn em(&mut self, face: TextFace, left: char, right: char) -> f32 {
         if is_zero_width_format_char(left) || is_zero_width_format_char(right) { return 0.0; }
-        let (font,pairs)=match face {TextFace::Sans=>(self.sans,&self.sans_pairs),TextFace::Mono=>(self.mono,&self.mono_pairs)};
+        let (font,pairs)=match face {TextFace::Sans=>(self.sans,&self.sans_pairs),TextFace::Serif=>(self.serif,&self.serif_pairs),TextFace::Mono=>(self.mono,&self.mono_pairs),TextFace::Emoji=>return 0.0};
         let Some(font)=font else{return 0.0};let charmap=font.charmap();let units=f32::from(font.metrics(&[]).units_per_em);
         let query=FontPairQuery{left_glyph:charmap.map(left),right_glyph:charmap.map(right)};
         if units<=0.0||query.left_glyph==0||query.right_glyph==0{return 0.0;}
@@ -1270,7 +1273,7 @@ pub async fn fetch_font_bytes(url: &str) -> Result<Vec<u8>, String> {
         array.copy_to(&mut bytes);
         Ok(bytes)
     }
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
     {
         let _ = url;
         Ok(Vec::new())

@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::schema::snapshot::{Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dTile, Wfc2dTileMedia, WFC_2D_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{Wfc2dBitmapMedia, Wfc2dImageMedia, Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dTile, Wfc2dTileMedia, Wfc2dVectorMedia, WFC_2D_DOCUMENT_SCHEMA};
 
 //#region 🔖️DslMirror
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]

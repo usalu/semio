@@ -1,4 +1,5 @@
 use super::*;
+use crate::retirement_driver::{drive_erased_released, exact_grant, retire_owned_for_test, retire_shared_for_test, Stepped, STEP_GRANT};
 use crate::standards::v1::subsets::any::io::binary::mutations::{decode_op, encode_op};
 
 //#region 🔮️ThirdPartyOracle
@@ -128,12 +129,29 @@ fn initializer(operation: semio_framework_job::OperationId, generation: semio_fr
 fn close_initializer(authority: &mut Generation3dStoreInitializationAuthority) {
     use semio_framework_plugin::ArtifactStoreInitializationAuthority;
     for _ in 0..100_000 {
-        if matches!(authority.close_step(1, GENERATION3D_OWNER_BYTES).expect("P3 initializer bounded close"), semio_framework_plugin::PluginCloseStep::Complete) {
+        let demand = authority.retirement_demands(GENERATION3D_OWNER_BYTES).expect("P3 initializer close quote");
+        if matches!(authority.close_step(exact_grant(demand)).expect("P3 initializer bounded close"), store::RetainedCloneStep::Complete(_)) {
             assert!(authority.terminal_is_empty());
             return;
         }
     }
     panic!("P3 initializer did not reach terminal-empty close");
+}
+
+/// 🦶️ Drives one step of the initializer under `fuel` and `deadline_us` and answers what it lent.
+fn step_initializer(authority: &mut Generation3dStoreInitializationAuthority, fuel: u64, deadline_us: u64, cancel: &semio_framework_job::CancelToken, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, sequence: &mut u64) -> Stepped {
+    use semio_framework_job::JobOutcomeBorrow;
+    use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+    let mut receipt = store::RetainedCloneProgress::default();
+    let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(fuel, deadline_us, STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, sequence, &mut receipt);
+    match authority.step(&mut cx).expect("P3 initializer step admission") {
+        None | Some(JobOutcomeBorrow::Yield { .. }) => Stepped::Yield,
+        Some(JobOutcomeBorrow::PreviewReady { .. }) => Stepped::Preview(Vec::new()),
+        Some(JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Checkpoint,
+        Some(JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
+        Some(JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
+        Some(JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
+    }
 }
 
 #[test]
@@ -145,11 +163,9 @@ fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
     let mut authority = initializer(operation, generation);
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut sequence = 0;
-    let mut zero_fuel = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(0, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence);
-    assert!(matches!(authority.step(&mut zero_fuel), semio_framework_job::StepOutcome::Yield));
+    assert_eq!(step_initializer(&mut authority, 0, u64::MAX, &cancel, operation, generation, &mut sequence), Stepped::Yield);
     assert!(matches!(authority.phase, Generation3dStoreInitializationPhase::ValidateEnvelope));
-    let mut expired = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, 0), cancel, semio_framework_job::default_now_us, &mut sequence);
-    assert!(matches!(authority.step(&mut expired), semio_framework_job::StepOutcome::Yield));
+    assert_eq!(step_initializer(&mut authority, 1, 0, &cancel, operation, generation, &mut sequence), Stepped::Yield);
     assert!(matches!(authority.phase, Generation3dStoreInitializationPhase::ValidateEnvelope));
     close_initializer(&mut authority);
     assert!(generation3d_release_publication_authority(operation, generation));
@@ -167,16 +183,13 @@ fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
     let cancelled_token = semio_framework_job::CancelToken::root_now();
     let mut cancelled_outcome = None;
     for _ in 0..100_000 {
-        let mut context = semio_framework_job::StepContext::new(cancelled_operation, cancelled_generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancelled_token.clone(), semio_framework_job::default_now_us, &mut cancelled_sequence);
-        let outcome = cancelled.step(&mut context);
-        if !matches!(outcome, semio_framework_job::StepOutcome::Yield) {
+        let outcome = step_initializer(&mut cancelled, 1, u64::MAX, &cancelled_token, cancelled_operation, cancelled_generation, &mut cancelled_sequence);
+        if outcome != Stepped::Yield {
             cancelled_outcome = Some(outcome);
             break;
         }
     }
-    let mut cancelled_outcome = cancelled_outcome.expect("cancelled P3 initializer must terminate within its bounded owner budget");
-    assert!(matches!(cancelled_outcome, semio_framework_job::StepOutcome::Cancelled));
-    close_outcome(&mut cancelled_outcome);
+    assert_eq!(cancelled_outcome.expect("cancelled P3 initializer must terminate within its bounded owner budget"), Stepped::Cancelled);
     assert!(cancelled.terminal_is_empty());
     assert!(generation3d_release_publication_authority(cancelled_operation, cancelled_generation));
 
@@ -187,40 +200,16 @@ fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
     let stale_token = semio_framework_job::CancelToken::root_now();
     let mut stale_outcome = None;
     for _ in 0..100_000 {
-        let mut context = semio_framework_job::StepContext::new(
-            stale_operation,
-            semio_framework_job::Generation(stale_generation.0 + 1),
-            semio_framework_job::StepBudget::new(1, u64::MAX),
-            stale_token.clone(),
-            semio_framework_job::default_now_us,
-            &mut stale_sequence,
-        );
-        let outcome = stale.step(&mut context);
-        if !matches!(outcome, semio_framework_job::StepOutcome::Yield) {
+        let outcome = step_initializer(&mut stale, 1, u64::MAX, &stale_token, stale_operation, semio_framework_job::Generation(stale_generation.0 + 1), &mut stale_sequence);
+        if outcome != Stepped::Yield {
             stale_outcome = Some(outcome);
             break;
         }
     }
-    let mut stale_outcome = stale_outcome.expect("stale P3 initializer must terminate within its bounded owner budget");
-    assert!(matches!(stale_outcome, semio_framework_job::StepOutcome::Fault(_)));
-    close_outcome(&mut stale_outcome);
+    assert_eq!(stale_outcome.expect("stale P3 initializer must terminate within its bounded owner budget"), Stepped::Fault);
     assert!(stale.terminal_is_empty());
     assert!(generation3d_release_publication_authority(stale_operation, stale_generation));
 }
-/// 🧹️ Drains a terminal [`semio_framework_job::StepOutcome`]'s retained payload pages. A
-/// `Fault`/`PreviewReady`/`Complete` outcome carries a `RetainedJobPayload` whose `Drop` deliberately
-/// preserves its page backing, so an owner that merely inspects the discriminant and lets the value
-/// fall out of scope aborts the test process
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-fn close_outcome(outcome: &mut semio_framework_job::StepOutcome) {
-    for _ in 0..GENERATION3D_MAXIMUM_DOMAIN_ITEMS {
-        if matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {
-            return;
-        }
-    }
-    panic!("P3 terminal step outcome did not close");
-}
-
 //#endregion ⏱️BoundedInitializer
 
 fn close_session(session: &mut Generation3dMutationSession) {
@@ -303,72 +292,44 @@ fn every_variant_decodes_through_retained_structural_grants() {
 }
 
 //#region 🧹️FlowFrontierOwnership
-/// 🚪️ The EXACT driver every framework close ladder is: one item, one 4 KiB page, and NO channel to
-/// ask the owner for a bigger grant. `SnapshotReadReturnPump::drive`
-/// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`) turns a `Blocked` answer into
-/// `PluginCloseStep::Blocked { reason: "returned snapshot-read disposer is waiting on external
-/// ownership" }`, and `close_registered_fixture_app` then yields and asks again with the same grant
-/// until its deadline — so for a retirement this app owns, `Blocked` is not backpressure, it is a
-/// permanent stall (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-fn drive_under_the_frameworks_fixed_page_grant(retirement: &mut dyn ErasedSnapshotRetirement, owner: &str) -> usize {
-    let mut released = 0usize;
-    for _ in 0..GENERATION3D_MAXIMUM_DOMAIN_ITEMS {
-        match retirement.close_step(1, GENERATION3D_OWNER_BYTES).unwrap_or_else(|reason| panic!("{owner} retirement faulted: {reason}")) {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty(), "{owner} reported Complete without its exact terminal-empty witness");
-                return released;
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1, "{owner} released {released_items} items under a one-item grant");
-                assert!(released_bytes <= GENERATION3D_OWNER_BYTES, "{owner} released {released_bytes} bytes under a {GENERATION3D_OWNER_BYTES}-byte grant");
-                released += released_bytes;
-            }
-            store::SnapshotRetirementStep::Blocked => panic!(
-                "{owner} answered Blocked under the framework's exact one-page close grant — nothing external owns this value, so paying the Flow frontier's own reserve-then-close demand is this retirement's business and the app close ladder spins here forever"
-            ),
-        }
-    }
-    panic!("{owner} did not reach its terminal-empty close witness")
-}
-
 /// 🧊️ Every widget, synapse, layout row and generation this app's document owns is retired through
 /// a `semio_framework_artifact_flow_flow::retained::FlowRetirement`, which is a RESERVE-then-CLOSE
-/// frontier: `close_step` answers `Blocked` — never an error — while `next_allocation_bytes` still
-/// names a page the current owner's decomposition needs. Both of this codec's retirements therefore
-/// have to pay that reservation themselves, because the erased `ErasedSnapshotRetirement` contract
-/// they are driven through has no demand channel at all.
+/// frontier: each turn must be granted exactly the capacity, release and depth its quote names. Both
+/// document retirement routes therefore run under exactly their quoted grants.
 ///
 /// The oracle is the framework's OWN generic route to the same value — the `Arc` retirement
-/// `store::SnapshotRetirementFactory` hands the document store — which must release byte-for-byte
+/// `SharedValueRetirementFactory` hands the document store — which must release byte-for-byte
 /// what the owned route releases.
 #[test]
-fn every_document_retirement_pays_its_own_flow_frontier_under_the_fixed_page_grant() {
-    let mut owned = generation3d_retire_owned_snapshot(Generation3dSnapshot::default());
-    let owned_bytes = drive_under_the_frameworks_fixed_page_grant(owned.as_mut(), "owned document snapshot");
-    let mut aliased = store::SnapshotRetirementFactory::retire(&Generation3dRetainedSnapshotRetirementFactory, std::sync::Arc::new(Generation3dSnapshot::default()));
-    let aliased_bytes = drive_under_the_frameworks_fixed_page_grant(aliased.as_mut(), "aliased document snapshot");
+fn every_document_retirement_pays_its_own_flow_frontier_under_its_quoted_grants() {
+    let mut owned = retire_owned_for_test(Generation3dSnapshot::default(), "owned document snapshot");
+    let owned_bytes = drive_erased_released(owned.as_mut(), "owned document snapshot");
+    let mut aliased = retire_shared_for_test(std::sync::Arc::new(Generation3dSnapshot::default()), "aliased document snapshot");
+    let aliased_bytes = drive_erased_released(aliased.as_mut(), "aliased document snapshot");
     assert_eq!(owned_bytes, aliased_bytes, "the owned and Arc retirement routes must release the same exact document backing");
     assert!(owned_bytes > 0, "a populated document fixture owns real backing");
 }
 
 /// 🔁️ The same law for the replay displacement route: every `generation3d_apply_initialization_mutation`
-/// that displaces a widget, a synapse or a string hands the store a `Generation3dReplayRetirement`,
-/// which the store's displaced-retirement ladder drives under the identical fixed page grant.
+/// that displaces a widget, a synapse or a string hands the initializer a `Generation3dReplayDisplaced`,
+/// which its close ladder drives under the same quoted grants.
 #[test]
-fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_the_fixed_page_grant() {
+fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_its_quoted_grants() {
     let mut snapshot = Generation3dSnapshot::default();
     let mutations = generation3d_all_retained_mutation_fixtures_for_test();
     let mut displaced = 0usize;
     for mutation in &mutations {
-        let Ok(Some(mut retirement)) = generation3d_apply_initialization_mutation(&mut snapshot, mutation) else { continue };
-        drive_under_the_frameworks_fixed_page_grant(retirement.as_mut(), "displaced replay owner");
+        let Ok(Some(value)) = generation3d_apply_initialization_mutation(&mut snapshot, mutation) else { continue };
+        let mut owner = retire_owned_for_test(value, "displaced replay owner");
+        drive_erased_released(owner.as_mut(), "displaced replay owner");
         displaced += 1;
     }
     for mutation in mutations {
         mutation.retire_cold();
     }
     assert!(displaced > 0, "the retained mutation fixtures must displace at least one owner");
-    drive_under_the_frameworks_fixed_page_grant(generation3d_retire_owned_snapshot(snapshot).as_mut(), "replayed document snapshot");
+    let mut replayed = retire_owned_for_test(snapshot, "replayed document snapshot");
+    drive_erased_released(replayed.as_mut(), "replayed document snapshot");
 }
 //#endregion 🧹️FlowFrontierOwnership
 
@@ -377,7 +338,7 @@ fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_the_fixed_page_
 /// params state each declared input's default literal.
 #[test]
 fn semantic_wire_vectors_match_independent_json_oracle() {
-    use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
+    use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{WidgetInputPlane, WidgetInputValue};
     use crate::standards::v1::subsets::any::schema::mutations::{generation3d_number_literal,generation3d_param_number,generation3d_param_vector,generation3d_vector_literal};
 
     use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
@@ -405,11 +366,12 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
         snapshot.host_snapshot.widgets.push(record("rotate", "brep.xform.rotate", vec![("axis", generation3d_vector_literal("vector", [0.0, 0.0, 1.0])), ("angle", generation3d_number_literal(0.0))]));
         snapshot.host_snapshot.widgets.push(record("scale", "brep.xform.scale", vec![("factor", generation3d_vector_literal("vector", [1.0; 3])), ("center", generation3d_vector_literal("point", [0.0; 3])), ("uniform", WidgetInputValue::Boolean(false).literal())]));
         snapshot.host_snapshot.widgets.push(record("shape", "semantic-wire-law.collections", vec![("items", semio_framework_value::DslValue::Object(vec![("$schema".into(), semio_framework_value::DslValue::String("list".into()))]))]));
-        snapshot.host_snapshot.widgets.push(record("section", "semantic-wire-law.sections", vec![("plane", WidgetInputValue::Plane { origin: [0.0; 3], normal: [0.0, 0.0, 1.0] }.literal())]));
+        snapshot.host_snapshot.widgets.push(record("section", "semantic-wire-law.sections", vec![("plane", WidgetInputValue::Plane(WidgetInputPlane { origin: [0.0; 3], normal: [0.0, 0.0, 1.0] }).literal())]));
         snapshot.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
         let before_schema = snapshot.host_snapshot.schema.clone();
-        if let Some(mut displaced) = generation3d_apply_initialization_mutation(&mut snapshot, &mutation).expect("direct semantic replay") {
-            drive_under_the_frameworks_fixed_page_grant(displaced.as_mut(), "semantic replay displacement");
+        if let Some(displaced) = generation3d_apply_initialization_mutation(&mut snapshot, &mutation).expect("direct semantic replay") {
+            let mut owner = retire_owned_for_test(displaced, "semantic replay displacement");
+            drive_erased_released(owner.as_mut(), "semantic replay displacement");
         }
         assert_eq!(snapshot.host_snapshot.widgets.len(), 6);
         assert_eq!(snapshot.host_snapshot.schema, before_schema);
@@ -437,7 +399,8 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
             }
         }
         mutation.retire_cold();
-        drive_under_the_frameworks_fixed_page_grant(generation3d_retire_owned_snapshot(snapshot).as_mut(), "semantic replay snapshot");
+        let mut replayed = retire_owned_for_test(snapshot, "semantic replay snapshot");
+        drive_erased_released(replayed.as_mut(), "semantic replay snapshot");
     }
 }
 

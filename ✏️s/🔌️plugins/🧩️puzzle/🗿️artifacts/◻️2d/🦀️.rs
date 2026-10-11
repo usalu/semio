@@ -26,6 +26,9 @@ pub(crate) mod test_source_custody;
 #[path = "../../🔨️modules/🎲️board/🎬️scene/🦀️.rs"]
 pub mod board_scene;
 
+#[path = "../../🎮️commands/📤️jobs/🦀️.rs"]
+pub mod puzzle_job;
+
 #[cfg(feature = "component-app-assembly")]
 #[path = "../../🎮️commands/🧵️retained/🦀️.rs"]
 pub mod retained_command;

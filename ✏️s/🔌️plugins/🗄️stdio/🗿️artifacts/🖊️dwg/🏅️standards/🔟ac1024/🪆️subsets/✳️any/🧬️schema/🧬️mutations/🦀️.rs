@@ -35,7 +35,8 @@ pub mod set_application_history;
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none, and `no` is not an
 /// approved semantic verb.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = DwgSnapshot, diff = DwgDiff, schema = "DwgMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum DwgMutation {

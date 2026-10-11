@@ -13,23 +13,31 @@ fn expected_clock_cause(samples: &[Option<u64>]) -> super::super::RuntimeCleanup
     RuntimeCleanupFault::InteractiveCeiling
 }
 
+fn admit_fixture_session<J: semio_framework_job::InteractiveJob + 'static>(job: J, params: semio_framework_job::BatchJobParams) -> semio_framework_job::BatchJobSession<J> {
+    match crate::reserved_job_session::admit_batch(job, params, crate::app::artifact_app_laws::fixture_mounted_policy().preparation) { Ok(session) => session, Err(_) => panic!("fixed fixture session admission") }
+}
+
+fn close_fixture_session<J: semio_framework_job::InteractiveJob + 'static>(session: &mut semio_framework_job::BatchJobSession<J>) {
+    for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(crate::app::artifact_app_laws::fixture_mounted_policy().close); }
+    assert!(session.terminal_is_empty());
+}
+
 fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sync::Arc<super::super::RuntimeCloseWorkerState<TestRuntimeApps>> {
     use super::super::*;
-    let job = RuntimeCloseCleanupJob { state: None, progress: None, contended: false, closing: true };
+    let job = RuntimeCloseCleanupJob { state: None, instance_id: 7, progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: true };
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(711), generation: semio_framework_job::Generation(1),
         cancel: semio_framework_job::CancelToken::root_now(),
-        config: semio_framework_job::BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "exact-close-terminal-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 },
+        config: semio_framework_job::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-terminal-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 },
         now_us: semio_framework_job::default_now_us,
     };
-    let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) { Ok(session) => session, Err(_) => panic!("fixed terminal fixture admission") };
+    let mut session = admit_fixture_session(job, params);
     session.begin_close();
-    for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(crate::app::plugin_page_grant(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)); }
-    assert!(session.terminal_is_empty());
+    close_fixture_session(&mut session);
     let mut pump = RuntimeCloseCleanupPump::new();
     pump.session = Some(session); pump.terminal = true; pump.complete = complete; pump.faulted = faulted; pump.blocked = blocked;
     std::sync::Arc::new(RuntimeCloseWorkerState {
-        instance_id: 7, generation: semio_framework_job::Generation(1),
+        instance_id: 7, generation: semio_framework_job::Generation(1), mounted_policy: crate::app::artifact_app_laws::fixture_mounted_policy(),
         cell: std::sync::Mutex::new(std::mem::ManuallyDrop::new(None)), pump: std::sync::Mutex::new(pump),
         status: AtomicU8::new(RuntimeCloseStatus::Queued.repr()), deadline_resume: AtomicU8::new(u8::MAX), deadline_elapsed_us: AtomicU64::new(0), stalled_steps: AtomicU8::new(0),
         stall_since_us: AtomicU64::new(0), stall_credit_spent_us: AtomicU64::new(0),
@@ -77,7 +85,7 @@ fn instance_lifetime_close_deadline_resume_never_reenters_completed_work() {
             let mut readings = [Some(0), Some(0), Some(elapsed)].into_iter();
             run_runtime_close_turn_with_clock(&state, || readings.next().flatten());
             assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), if elapsed == 8000 { RuntimeCloseStatus::DeadlineYield } else { candidate });
-            assert!(owner.session.is_none() && owner.outcome.is_none());
+            assert!(owner.session.is_none() && !owner.outcome_pending);
         }
         assert_eq!(state.deadline_resume.load(Ordering::SeqCst), u8::MAX);
         assert_eq!(state.deadline_elapsed_us.load(Ordering::SeqCst), row["elapsedUs"].as_u64().unwrap());
@@ -91,7 +99,7 @@ async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() 
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(false, false, false);
     *state.pump.lock().unwrap() = RuntimeCloseCleanupPump::new();
-    **state.cell.lock().unwrap() = Some(std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() })));
+    **state.cell.lock().unwrap() = Some(std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy())));
     let limit = fixture["callbackLimitUs"].as_u64().unwrap();
     for _ in 0..4096 {
         state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
@@ -106,11 +114,10 @@ async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() 
     assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::DeadlineYield);
     {
         let pump = state.pump.lock().unwrap();
-        assert!(pump.outcome.is_some());
-        let outcome = pump.outcome.as_ref().unwrap() as *const _;
+        assert!(pump.outcome_pending && pump.session.is_some());
         state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
         run_runtime_close_turn_with_clock(&state, || Some(0));
-        assert_eq!(pump.outcome.as_ref().unwrap() as *const _, outcome);
+        assert!(pump.outcome_pending && pump.session.is_some());
         assert_eq!(state.physical_close_calls.load(Ordering::SeqCst) > 1, fixture["owners"]["lateResumeRepeatsPhysicalClose"].as_bool().unwrap());
     }
     for _ in 0..200_000 {
@@ -142,7 +149,7 @@ fn instance_lifetime_close_deadline_submit_refusal_preserves_candidate() {
     run_runtime_close_turn_with_clock(&state, || Some(0));
     assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Complete);
     assert_eq!(state.deadline_resume.load(Ordering::SeqCst), u8::MAX);
-    assert!(pump.session.is_none() && pump.outcome.is_none());
+    assert!(pump.session.is_none() && !pump.outcome_pending);
 }
 
 #[test]
@@ -181,7 +188,7 @@ fn instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward
 async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_owner() {
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
-    let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
+    let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
     let state = terminal_close_state(true, false, false);
     **state.cell.lock().unwrap() = Some(cell.clone());
     assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::Fault(RuntimeCleanupFault::InstanceNotDrained));
@@ -212,19 +219,20 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(true, false, false);
-    let job = RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(&state)), progress: None, contended: false, closing: false };
+    let job = RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(&state)), instance_id: 7, progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: false };
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(719), generation: semio_framework_job::Generation(1), cancel: semio_framework_job::CancelToken::root_now(),
-        config: semio_framework_job::BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 },
+        config: semio_framework_job::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 },
         now_us: || Some(0),
     };
-    let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) { Ok(session) => session, Err(_) => panic!("fixed source fixture admission") };
-    session.step().unwrap();
-    let outcome = session.take_outcome().unwrap();
-    let identity = match &outcome { semio_framework_job::StepOutcome::Complete(candidate) => candidate.state.single_page().unwrap().as_ptr() as usize, _ => panic!("empty app close produces its exact instance receipt") };
+    let mut session = admit_fixture_session(job, params);
+    session.step(crate::app::artifact_app_laws::fixture_mounted_policy().close).unwrap();
+    assert!(session.checkout_outcome());
+    assert!(session.take_checked_out_retained_step_receipt().is_some());
+    assert!(matches!(session.checked_out_outcome(), Ok(Some(semio_framework_job::JobOutcomeView::Complete { .. }))));
     {
         let mut pump = state.pump.lock().unwrap();
-        pump.outcome = Some(outcome);
+        pump.outcome_pending = true;
         pump.session = Some(session);
     }
     let (ready_tx, ready_rx) = std::sync::mpsc::channel();
@@ -242,13 +250,11 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     let status = RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst));
     let mut pump = state.pump.lock().unwrap();
     let session_preserved = pump.session.is_some();
-    let source_preserved = matches!(pump.outcome.as_ref(), Some(semio_framework_job::StepOutcome::Complete(candidate)) if candidate.state.single_page().is_some_and(|bytes| bytes.as_ptr() as usize == identity && bytes == [7, 0, 0, 0]));
-    if let Some(outcome) = pump.outcome.as_mut() { while !outcome.terminal_is_empty() { let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES); } }
-    pump.outcome = None;
+    let source_preserved = pump.outcome_pending && pump.session.as_ref().is_some_and(|session| matches!(session.checked_out_outcome(), Ok(Some(semio_framework_job::JobOutcomeView::Complete { .. }))));
+    pump.outcome_pending = false;
     if let Some(session) = pump.session.as_mut() {
         session.begin_close();
-        for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(crate::app::plugin_page_grant(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)); }
-        assert!(session.terminal_is_empty());
+        close_fixture_session(session);
     }
     pump.session = None;
     pump.terminal = false;
@@ -258,7 +264,7 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
 }
 
 async fn close_lease_app(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>) {
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
+    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell);
 }
 
@@ -389,7 +395,8 @@ async fn run_ingress(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
     let mut input = Some((seq, ingress));
     let mut frames = Vec::new();
     for _ in 0..100 {
-        let output = crate::plugin_runtime::plugin_exchange(runtime, 7, input).await.unwrap();
+        let mut cx = crate::app::artifact_app_laws::fixture_step_context();
+        let output = crate::plugin_runtime::plugin_exchange(runtime, 7, input, &mut crate::app::artifact_app_laws::fixture_identity(), &mut cx).await.unwrap();
         for bytes in output.frames { frames.push(protocol::decode_app_frame(&bytes).await.unwrap()); }
         input = output.retry_command;
         if input.is_none() { return frames; }
@@ -406,7 +413,7 @@ async fn run_ingress(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection() {
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
+    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
     assert!(!denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "the route answers through its own transaction frame, not an error frame: {denied:?}");
@@ -455,7 +462,7 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
 #[semio_framework_async_macros::async_test]
 async fn a_merge_archive_command_is_admitted_under_its_own_sequence_on_both_routes() {
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
+    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let merge = |seq| protocol::AppCommand::MergeDocumentArchive { seq, archive: protocol::DocumentArchivePack { parent_pack: vec![1, 2], parent_spr: vec![3], members: Vec::new() } };
     for (seq, frames) in [(0, wire_command(&runtime, 0, merge(0)).await), (1, cold_decoded_command(&runtime, 1, merge(1)).await)] {
@@ -480,7 +487,7 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
     let envelope = store::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None);
     let mut interaction = store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
     store::install_unscheduled_catalog(&mut interaction, crate::local_interaction::retirement::funded_interaction_store_owners()).unwrap();
-    let mut app = interaction_app_raw().await;
+    let mut app = interaction_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let mut previous = std::mem::replace(&mut app.interaction_store, interaction);
     previous.close_owned_unscheduled().unwrap();
     assert!(previous.close_owned_terminal_is_empty());
@@ -491,7 +498,7 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_registered_query_channel_continuation_ack_and_close() {
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
+    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let mut pending = std::collections::VecDeque::from(query_command(&runtime, 1, protocol::LocalInteractionQueryCommand::Read { request_id: 13 }).await);
     let mut expected_identity = None;
@@ -503,7 +510,7 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
     let mut ephemeral = 0;
     for _ in 0..200_000 {
         if pending.is_empty() {
-            let (next, _) = crate::plugin_runtime::plugin_continue_typed_operations(&runtime, crate::plugin_runtime::TypedOperationGrant::UNIT).await.unwrap();
+            let (next, _) = crate::plugin_runtime::plugin_continue_typed_operations(&runtime, crate::plugin_runtime::TypedOperationGrant::UNIT, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
             if let Some((instance, batch)) = next {
                 assert_eq!(instance, 7);
                 for bytes in batch.frames { pending.push_back(protocol::decode_app_frame(&bytes).await.unwrap()); }

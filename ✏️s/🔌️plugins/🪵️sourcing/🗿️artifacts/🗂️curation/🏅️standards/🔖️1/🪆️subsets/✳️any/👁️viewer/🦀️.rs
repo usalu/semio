@@ -20,7 +20,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
 /// `Default` is required by `artifact_app_laws::assert_viewer_never_mutates::<V>()` (contract §2.5) to
 /// synthesize a representative command with zero caller-supplied arguments.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, semio_framework_value::RetireOwned)]
 pub enum SourcingViewCommand {
     #[default]
     Noop,

@@ -11,7 +11,8 @@ use framework_schema::ArtifactSchema;
 //#region ColorTable
 /// 🎨️ One color table entry (GCT/LCT), stored exactly as read from disk — including any
 /// power-of-two padding entries past the meaningful palette, since those are real on-disk bytes.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct GifRgb {
     pub r: u8,
@@ -22,7 +23,8 @@ pub struct GifRgb {
 /// 🎨️ A Global or Local Color Table. `colors.len()` must be a power of two in `2..=256` on encode
 /// (the on-disk "size" field is `log2(len)-1`). `sorted` mirrors the packed byte's sort flag
 /// (decreasing importance ordering — rarely used in practice, but real on-disk state).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct GifColorTable {
     #[value(default)]
@@ -35,7 +37,8 @@ pub struct GifColorTable {
 //#region ImageModel
 /// 🖼️ One Table-Based Image (GIF87a §20-22): its own screen sub-rectangle, optional Local Color
 /// Table, interlace flag, and losslessly-retained palette indices (NOT decoded RGBA).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct GifImage {
     pub left: u32,
@@ -72,7 +75,7 @@ impl GifImage {
 //#endregion ImageModel
 
 //#region Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif")]
 pub struct GifSnapshot {

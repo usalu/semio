@@ -8,8 +8,14 @@ use crate::ProcedureSnapshot;
 
 //#region 🔖️Aggregate
 /// 🕳️ The uninhabited parent vocabulary of a document whose whole content is its composed children.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 pub enum ProcedureMutation {}
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ProcedureMutation {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+        match *self {}
+    }
+}
 
 impl protocol::Mutation<ProcedureSnapshot> for ProcedureMutation {
     type Diff = ProcedureDiff;

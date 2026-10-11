@@ -6,7 +6,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted Kit catalog child, sourcing geometry and availability, and ordered selection.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(id = "curation.curation", layout = "lines")]
 #[artifact_schema(id = "s.sourcing.curation")]

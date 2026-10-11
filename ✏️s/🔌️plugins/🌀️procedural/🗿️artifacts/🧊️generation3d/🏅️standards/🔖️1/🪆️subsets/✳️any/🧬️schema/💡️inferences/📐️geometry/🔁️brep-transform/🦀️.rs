@@ -2,9 +2,10 @@
 //!
 //! A motion never edits its input: the input value is imported into a fresh kernel session and the moved copy is exported, so the input widget's value is shared untouched.
 
-use super::phased_job::{launch, Pipeline, Work};
+use super::brep_curve::guarded;
+use super::phased_job::{Pipeline, Work};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::brep::engine::{Brep, BrepError, BrepOperation, GeometryHandle, GeometryKind, ShapeRoot};
+use semio_framework_3d::brep::engine::{Brep, BrepError, BrepOperation, GeometryHandle, GeometryKind, ShapeRoot, ShapeValue};
 use semio_framework_3d::brep::representation::vector::matrix::Affine3;
 use semio_framework_3d::brep::representation::vector::{Pnt3, Vec3};
 
@@ -72,7 +73,7 @@ fn moved_handle(work: &mut Work, motion: Motion, root: &ShapeRoot, source: &Shap
 }
 
 fn moved(kind: &Kind, inputs: &WidgetInputs, motion: impl FnOnce(&WidgetInputs) -> Result<Motion, WidgetFault>) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let shape = inputs.shape("shape")?.clone();
         let motion = motion(inputs)?;
         let source = shape.clone();
@@ -127,7 +128,7 @@ fn count(inputs: &WidgetInputs, port: &str) -> Result<usize, WidgetFault> {
 }
 
 fn pattern<P: Send + 'static>(kind: &Kind, inputs: &WidgetInputs, read: impl FnOnce(&WidgetInputs) -> Result<P, WidgetFault>, plan: impl FnOnce(GeometryHandle, P) -> BrepOperation + Send + 'static) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let shape = inputs.shape("shape")?.clone();
         let parameters = read(inputs)?;
         Ok(Pipeline::new(kind).import(&shape).operation(move |work| Ok(plan(work.handle(0)?, parameters))).exported("shape"))

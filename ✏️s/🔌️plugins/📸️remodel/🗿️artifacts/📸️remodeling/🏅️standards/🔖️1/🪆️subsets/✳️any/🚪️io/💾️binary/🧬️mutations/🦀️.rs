@@ -27,9 +27,7 @@ mod tests;
 
 mod native_codec {
 use super::*;
-use crate::schema::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
-pub use mutations_wire_codec::*;
-pub use json_orchestration::{apply_remodeling_mutation_json,undo_remodeling_mutation_json};
+use crate::schema::mutations::RemodelingMutation;
 
 impl protocol::OpBinary for RemodelingMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

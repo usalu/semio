@@ -348,7 +348,7 @@ fn refusal(refused: ToolRefusal) -> Fault {
 impl NoteInkTool {
     /// 🚀️ The tool at rest for `<appId>#<verb>` under this admission's seed and document revision.
     pub fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
-        let runner = ToolMachineRunner::start(format!("{}#{verb}", crate::editor::note::NOTE_PLAY_CONTROLLER_ID), protocol::ActorId(authoring_seed.to_string()), (), NoteInkToolHost)?;
+        let runner = ToolMachineRunner::start(format!("{}#{verb}", crate::editor::note::NOTE_PLAY_CONTROLLER_ID), protocol::ActorId(authoring_seed.into()), (), NoteInkToolHost)?;
         Ok(Self { runner, verb: verb.to_string(), authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string() })
     }
 
@@ -359,7 +359,7 @@ impl NoteInkTool {
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: definition.fingerprint, states: state.states.clone(), history: Vec::new(), done: false };
         let entries = state.entries.iter().map(|entry| Ok((entry.key.clone(), semio_framework_value::FromValue::from_value(entry.mutation.clone()).map_err(|_| ToolRefusal::Closed)?))).collect::<Result<Vec<(String, NoteMutation)>, ToolRefusal>>()?;
         let snapshot = machine::restore::<ink_tool::InkTool, machine::NoMigrations>(&persisted, NoteInkToolContext, &[]).map_err(|_| ToolRefusal::Closed)?;
-        let runner = ToolMachineRunner::resume(format!("{}#{}", crate::editor::note::NOTE_PLAY_CONTROLLER_ID, state.verb), protocol::ActorId(state.authoring_seed.clone()), (), snapshot, Some(ToolTransaction::resume(state.transaction.clone(), entries)), NoteInkToolHost)?;
+        let runner = ToolMachineRunner::resume(format!("{}#{}", crate::editor::note::NOTE_PLAY_CONTROLLER_ID, state.verb), protocol::ActorId(state.authoring_seed.as_str().into()), (), snapshot, Some(ToolTransaction::resume(state.transaction.clone(), entries)), NoteInkToolHost)?;
         Ok(Self { runner, verb: state.verb.clone(), authoring_seed: state.authoring_seed.clone(), base_revision: state.base_revision.clone() })
     }
 
@@ -464,7 +464,7 @@ pub fn note_ink_tool_preview(document: &NoteSnapshot, state: &NoteInkToolState) 
 }
 //#endregion 🛠️InkTool
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "ink-apply-events")]
 pub struct InkApplyEvents {
     #[value(default)]

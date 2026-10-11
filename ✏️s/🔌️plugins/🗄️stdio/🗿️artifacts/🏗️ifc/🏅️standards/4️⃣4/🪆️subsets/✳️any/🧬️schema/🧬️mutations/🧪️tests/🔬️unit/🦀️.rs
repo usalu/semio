@@ -251,7 +251,7 @@ fn op_text_binary_roundtrip_law() {
                     IfcValue::Enum("EDGE".into()),
                     IfcValue::Reference(42),
                     IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)]),
-                    IfcValue::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] },
+                    IfcValue::TypedValue(IfcTypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] }),
                 ],
             ),
         }),

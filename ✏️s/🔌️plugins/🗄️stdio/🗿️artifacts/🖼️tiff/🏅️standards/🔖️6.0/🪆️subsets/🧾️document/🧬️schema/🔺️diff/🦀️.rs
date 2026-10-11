@@ -18,14 +18,14 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 //#region 🔖️TagsTriple
 /// 🏷️ One `entries.modified[]`/`.added[]` entity — `TiffTag` is a weak value, so both carry
 /// the entry's NEW `kind`/`values` directly (never a nested per-field diff).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffTagModified {
     pub tag: u16,
     pub values: TiffValues,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffTagAdded {
     pub tag: u16,
@@ -33,7 +33,7 @@ pub struct TiffTagAdded {
 }
 
 /// 🔺️ Tag-id-keyed `entries` triple for one IFD.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffTagsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -110,7 +110,7 @@ fn absorb_tags(d1: TiffTagsDiff, d2: TiffTagsDiff) -> TiffTagsDiff {
 
 //#region 🔖️SampleRuns
 /// 🧱️ One contiguous run of replacement words inside block `block` of an IFD, starting at word `offset` of the block's pixel-major sample list.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffSampleRun {
     pub block: usize,
@@ -207,7 +207,7 @@ fn inverse_runs(runs: &[TiffSampleRun], blocks: &[TiffSampleBlock]) -> Vec<TiffS
 /// 🗂️ The per-IFD delta: the recursive tag-triple, a whole-value slot for that directory's raw block list (`TiffIfd::blocks`,
 /// replaced wholesale when the block geometry itself changes) and the sparse sample runs that rewrite words inside the
 /// surviving blocks (applied after the block list, so a run always addresses the block list the diff leaves behind).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffIfdDiff {
     #[value(default, skip_serializing_if = "TiffTagsDiff::is_empty")]
@@ -226,14 +226,14 @@ impl TiffIfdDiff {
 }
 
 /// 🗂️ One `ifds.modified[]` entity — the recursive per-IFD delta.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffIfdModified {
     pub index: usize,
     pub diff: TiffIfdDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffIfdAdded {
     pub index: usize,
@@ -241,7 +241,7 @@ pub struct TiffIfdAdded {
 }
 
 /// 🔺️ Index-keyed `ifds` triple (TIFF's IFD chain is positional).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffIfdsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -475,7 +475,7 @@ fn absorb_ifds_opt(base: &mut Option<TiffIfdsDiff>, other: Option<TiffIfdsDiff>)
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.tiff`: the index-keyed IFD triple. `TiffValues` is a data-carrying enum that `DslField` cannot express, so the
 /// text and binary diff codecs frame the value tree directly instead of deriving a field grammar.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.stdio.tiff.diff")]
 pub struct TiffDiff {

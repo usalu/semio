@@ -173,7 +173,8 @@ describe("cross-platform bootstrap", () => {
       writeFileSync(join(clone, "AGENTS.md"), "# agents\n");
       const { SetupScript, REPO_LOCAL_GIT_CONFIG } = await import(join(repoRoot, "📜️script.ts"));
       expect(REPO_LOCAL_GIT_CONFIG).toEqual(fixture.repoLocalGitConfig);
-      await new SetupScript(clone, clone).run(["git"]);
+      const { createScriptProcessEnvelope, withScriptProcessEnvelope } = await import(join(repoRoot, "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"));
+      await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "cross-platform-bootstrap-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async (invocation: unknown) => { await new SetupScript(clone, clone, invocation).run(["git"]); });
       for (const [key, value] of fixture.repoLocalGitConfig) expect(git(["config", "--local", "--get", key], clone).trim()).toBe(value);
       expect(readFileSync(globalConfig, "utf8")).toBe(sentinel);
       expect(lstatSync(join(clone, "CLAUDE.md")).isSymbolicLink() || process.platform === "win32").toBe(true);

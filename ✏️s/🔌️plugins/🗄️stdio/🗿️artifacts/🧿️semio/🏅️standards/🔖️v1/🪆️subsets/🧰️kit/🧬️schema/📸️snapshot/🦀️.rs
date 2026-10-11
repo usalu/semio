@@ -29,7 +29,8 @@ pub const STDIO_SEMIOKIT_DOCUMENT_SCHEMA: &str = "stdio.semio.kit";
 /// 🏷️ One TYPE in the kit's catalog — a name/category, its representations living in the sibling
 /// `representations` LINK pool (joined by `role == id`, see module doc comment). Id-keyed (no
 /// positional meaning — `add-type`/`remove-type`/`rename-type` all address by `id`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -43,7 +44,8 @@ pub struct SemioKitType {
 //#region 🔖️Design
 /// 📐️ One PIECE inside a design: an instance of a TYPE (`type_id`, joins `SemioKitType.id`) at a
 /// local `transform`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -54,7 +56,8 @@ pub struct SemioKitPiece {
 }
 
 /// 🔌️ One CONNECTION between two pieces' named ports.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -67,7 +70,8 @@ pub struct SemioKitConnection {
 }
 
 /// 📋️ One DESIGN — a named arrangement of pieces and their connections. Id-keyed.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -80,7 +84,8 @@ pub struct SemioKitDesign {
 //#endregion 🔖️Design
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[artifact_schema(id = "s.stdio.semio.kit")]
 pub struct SemioKitSnapshot {
     #[state(artifact)]

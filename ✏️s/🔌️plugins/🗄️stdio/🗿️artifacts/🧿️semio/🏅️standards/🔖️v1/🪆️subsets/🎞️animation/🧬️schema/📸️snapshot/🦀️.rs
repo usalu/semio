@@ -18,7 +18,8 @@ pub const STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.animation"
 /// (`KHR_*` animation-pointer style extensions target arbitrary properties by name).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
-#[derive(Default)]
+#[derive(Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum AnimTargetProperty {
     #[default]
     Translation,
@@ -30,7 +31,8 @@ pub enum AnimTargetProperty {
     },
 }
 /// 🎯️ A channel's animated node + which of its properties is driven.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct AnimTarget {
     pub node: String,
@@ -42,7 +44,8 @@ pub struct AnimTarget {
 /// 📈️ gltf `sampler.interpolation` — how `keyframes` are resampled between `t` values.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-#[derive(Default)]
+#[derive(Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum AnimInterpolation {
     #[default]
     Linear,
@@ -56,7 +59,8 @@ pub enum AnimInterpolation {
 /// translation/scale, `Quat` for rotation (reuses the shared named quaternion, never a bare
 /// `[f64;4]`), `Weights` for morph-target weight vectors (arity = mesh's own primitive count, not
 /// fixed — hence `Vec<f64>`, not a fixed array).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum AnimValue {
     Scalar { value: f64 },
@@ -74,7 +78,8 @@ impl Default for AnimValue {
 /// ⏱️ One sample point on a channel's timeline. Real GIFs/glTF exporters expect `t` non-decreasing
 /// across a channel's own `keyframes` (a `SubsetValidator` referential invariant, see the
 /// `🎹️composer` module) but this type itself stores whatever was decoded, honestly.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct AnimKeyframe {
     pub t: f64,
@@ -86,7 +91,8 @@ pub struct AnimKeyframe {
 /// 🎚️ One animated property track: gltf `channel` + its `sampler`, flattened into a single owned
 /// keyframe list (this snapshot does not separately model gltf's accessor-indirection — the
 /// keyframes ARE the resolved sample data).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct AnimChannel {
     pub target: AnimTarget,
@@ -100,7 +106,8 @@ pub struct AnimChannel {
 /// 🎬️ One gltf `animation` entry — an optional display `name` (gltf's own `animation.name` is
 /// optional and not spec-required to be unique, hence `Option<String>` rather than a name key) plus
 /// its ordered `channels`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct AnimTimeline {
     #[value(default)]

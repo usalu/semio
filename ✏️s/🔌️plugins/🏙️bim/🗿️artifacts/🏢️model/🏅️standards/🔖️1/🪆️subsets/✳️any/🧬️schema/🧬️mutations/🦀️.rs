@@ -37,7 +37,8 @@ pub mod option_rules;
 //#region 🔖️Operations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<ModelSnapshot, ModelMutation>` payload struct declared in the
 /// corresponding leaf's `🦠️mutation/🦀️.rs`.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = ModelSnapshot, diff = ModelDiff, schema = "bim.model")]
 pub enum ModelMutation {

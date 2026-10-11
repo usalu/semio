@@ -38,7 +38,8 @@ use super::reorder_rows;
 /// alias `🦀️.rs` declares (`extern crate semio_framework_os_kernel as dsl;`), the same spelling
 /// `🔤️text`'s already-compiling facet uses.
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioTableSnapshot, diff = SemioTableDiff, schema = "s.stdio.semio.table")]
 pub enum SemioTableMutation {
     CreateColumn(create_column::CreateColumn),

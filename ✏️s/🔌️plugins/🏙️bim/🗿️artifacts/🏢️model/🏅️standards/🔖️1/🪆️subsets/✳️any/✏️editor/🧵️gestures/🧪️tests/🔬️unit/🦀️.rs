@@ -115,7 +115,7 @@ pub(crate) mod fixture {
 
         fn drive(&mut self, feed: impl FnOnce(&mut ToolSession, &mut ToolContext<'_>) -> (Step, Preview)) -> Step {
             self.operations += 1;
-            let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &self.snapshot, |inference| inference.clone());
+            let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &self.snapshot, |inference| inference.clone());
             let snapshot = self.snapshot.clone();
             let mut context = ToolContext::new(&snapshot, &inference, self.surface.clone(), &format!("op{}", self.operations));
             context.selected = &self.selected;
@@ -206,7 +206,7 @@ async fn the_hotkeys_cover_the_specified_tools_and_each_arms_an_existing_command
 async fn a_utility_switch_drops_the_gesture_in_progress_without_a_trace() {
     let mut owner = GestureOwner::default();
     let snapshot = model();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, |inference| inference.clone());
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, |inference| inference.clone());
     let mut context = session::ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
     let pointer = |x: f64| ToolEvent::Down(session::Pointer { at: [x, 0.0], modifiers: Modifiers::default(), tolerance: PIXEL });
     owner.advance("w1", PLAN, "wall", &mut context, &pointer(0.0));
@@ -221,7 +221,7 @@ async fn a_utility_switch_drops_the_gesture_in_progress_without_a_trace() {
 async fn the_owner_closes_empty() {
     let mut owner = GestureOwner::default();
     let snapshot = model();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, |inference| inference.clone());
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, |inference| inference.clone());
     let mut context = session::ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
     owner.advance("w1", PLAN, "wall", &mut context, &ToolEvent::Escape);
     assert!(!semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
@@ -265,7 +265,7 @@ async fn drawing_four_walls_placing_a_window_and_dragging_the_storey_top_re_infe
     let placed = windows.down(3.0, 0.0);
     assert_eq!(placed.mutations.len(), 1);
     let opening = windows.snapshot.openings.keys().next().expect("the window").clone();
-    let infer = |snapshot: &ModelSnapshot| crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, snapshot, |inference| inference.clone());
+    let infer = |snapshot: &ModelSnapshot| crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, |inference| inference.clone());
     let before = infer(&windows.snapshot);
     assert!(before.wall_layout.values().all(|layout| (layout.height - 3.0).abs() < 1e-9), "every wall starts as high as its 3 m storey");
     assert!((before.opening_frames[&opening].host_height - 3.0).abs() < 1e-9 && before.opening_frames[&opening].valid);
@@ -405,7 +405,7 @@ async fn every_modify_gesture_previews_live_in_the_plan_the_3d_window_and_the_tr
         assert!(shown.iter().all(|marks| *marks > 0), "{utility}: every step of the gesture shows something, {shown:?}");
         assert_eq!(session::Preview::from_text(&rig.preview.to_text()), rig.preview, "{utility}: the preview survives the window transient");
         assert!(!overlay::plan_records(&rig.snapshot, &rig.selected, utility, &rig.preview, 1.0).is_empty(), "{utility}: the plan paints it");
-        let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &rig.snapshot, Clone::clone);
+        let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, Clone::clone);
         assert!(!world::preview_items(&rig.snapshot, &inference, &world::config::BimWorldWindowConfig::default(), &rig.preview).is_empty(), "{utility}: the 3D window paints it");
     }
 }

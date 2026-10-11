@@ -34,7 +34,8 @@ pub fn synapse_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize
 //#endregion 🔖️Addressing
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Generation2dSnapshot, diff = Generation2dDiff, schema = "generation.2d")]
 pub enum Generation2dMutation {
     CreateWidget(super::create_widget::CreateWidget),

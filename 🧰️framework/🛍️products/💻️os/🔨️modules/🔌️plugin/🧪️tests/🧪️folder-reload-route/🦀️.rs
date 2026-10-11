@@ -14,6 +14,18 @@ use super::*;
 
 const FOLDER_RELOAD_ROUTE_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/🧫️folder-reload-route/🔣️.json");
 
+async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool) {
+    super::pump_until(app, what, done, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await
+}
+
+async fn verb(app: &mut ToyApp, fixture: &Value, action: &str, args: Vec<(String, DslValue)>) -> InvocationResult {
+    super::verb(app, fixture, action, args, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await
+}
+
+async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value) -> Option<InvocationResult> {
+    super::run_step(app, fixture, step, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await
+}
+
 /// 🧫️ The shared route fixture.
 fn route_fixture() -> Value {
     serde_json::from_str(FOLDER_RELOAD_ROUTE_FIXTURE_JSON).expect("folder-reload-route fixture parses")
@@ -161,8 +173,8 @@ async fn bind_document_port(app: &mut ToyApp, uri: &str) -> MemoryBackbone {
 
 /// 🧩️ A fresh registered program of the toy app authoring as `actor`.
 async fn fresh_program(actor: &str) -> ToyApp {
-    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into())).await;
-    assert_eq!(app.store.local_actor_id(), &protocol::ActorId(actor.to_string()));
+    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    assert_eq!(app.store.local_actor_id().0.as_str(), actor);
     app
 }
 
@@ -235,7 +247,7 @@ async fn deliver(batches: Vec<BackboneMessage>, port: &mut MemoryBackbone, to: &
     for message in batches {
         port.send(message).await.expect("a batch reaches the reader");
     }
-    to.tick_backbone().await.expect("the reader ingests the batch");
+    to.tick_backbone(&mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the reader ingests the batch");
     pump_until(to, "the reader adopts the batch", |app| app.store.reprojection_progress().is_none()).await;
     to.refresh_cache().await.expect("the reader's history backfills");
 }
@@ -261,7 +273,7 @@ async fn drive_archive_host(app: &mut ToyApp, mut host: protocol::DocumentArchiv
             protocol::AppCommand::PollDocumentArchiveLoad { seq, operation } => {
                 polls += 1;
                 assert!(polls < 1_000_000, "the archive operation never reaches a terminal status");
-                PluginApp::poll_document_archive_load(app, operation).await.map(|status| protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status })
+                PluginApp::poll_document_archive_load(app, operation, &mut crate::app::artifact_app_laws::fixture_identity()).await.map(|status| protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status })
             }
             protocol::AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation } => PluginApp::acknowledge_document_archive_load(app, operation).map(|()| protocol::AppFrame::Done { in_reply_to: seq }),
             other => panic!("the load driver sends admit, poll and acknowledge only, not {other:?}"),
@@ -439,14 +451,14 @@ async fn every_refused_whole_document_load_is_named_and_told_in_every_locale() {
         Ok(()) => findings.0.push("a second load under a live operation was admitted".to_string()),
         Err(fault) => hold_refusal(&mut findings, "a second load under a live operation", &fault, "plugin.document-load.busy", &[]),
     }
-    match PluginApp::poll_document_archive_load(&mut app, 4_242).await {
+    match PluginApp::poll_document_archive_load(&mut app, 4_242, &mut crate::app::artifact_app_laws::fixture_identity()).await {
         Ok(status) => findings.0.push(format!("a poll of an operation that does not run answered {status:?}")),
         Err(fault) => hold_refusal(&mut findings, "a poll of an operation that does not run", &fault, "plugin.document-load.operation-unknown", &[]),
     }
     PluginApp::cancel_document_archive_load(&mut app, 90).expect("the admitted load is cancelled");
     let mut polls = 0usize;
     let ended = loop {
-        let status = PluginApp::poll_document_archive_load(&mut app, 90).await.expect("the cancelled load is polled");
+        let status = PluginApp::poll_document_archive_load(&mut app, 90, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the cancelled load is polled");
         polls += 1;
         assert!(polls < 1_000_000, "the cancelled load never reaches a terminal status");
         if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
@@ -485,7 +497,7 @@ async fn a_whole_document_load_reports_the_work_it_did_and_never_goes_back() {
     PluginApp::begin_document_archive_load(&mut target, 61, archive).expect("the archive is admitted");
     let mut statuses: Vec<(u64, u64)> = Vec::new();
     let ended = loop {
-        let status = PluginApp::poll_document_archive_load(&mut target, 61).await.expect("the load is polled");
+        let status = PluginApp::poll_document_archive_load(&mut target, 61, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the load is polled");
         assert!(statuses.len() < 1_000_000, "the load never reaches a terminal status");
         statuses.push((status.completed, status.total));
         if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
@@ -519,7 +531,7 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
     author_edit(&mut target, &fixture["example"]).await;
     let before = head(&target);
     PluginApp::begin_document_archive_load(&mut target, 62, archive).expect("the archive is admitted");
-    let first = PluginApp::poll_document_archive_load(&mut target, 62).await.expect("the load is polled once");
+    let first = PluginApp::poll_document_archive_load(&mut target, 62, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the load is polled once");
     findings.holds(matches!(first.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running), || format!("the load ended within one poll ({:?}), so the cancel has nothing to cancel", first.state));
     findings.holds(target.reprojection_status().is_some_and(|status| status.kind == semio_framework::kernel::HistoryReprojectionKind::Load), || "a running load shows no loading row".to_string());
     let cancelled = verb(&mut target, &fixture, semio_framework::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, Vec::new()).await;
@@ -533,7 +545,7 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
         turns += 1;
     }
     findings.holds(target.document_archive_loads.get(62).is_some_and(|load| load.terminal()), || format!("the cancelled load did not retire in {turns} maintenance turns without a host poll"));
-    let status = PluginApp::poll_document_archive_load(&mut target, 62).await.expect("the host's next poll");
+    let status = PluginApp::poll_document_archive_load(&mut target, 62, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the host's next poll");
     findings.same(&status.state, &protocol::DocumentArchiveLoadState::Cancelled, "what the host's next poll finds");
     PluginApp::acknowledge_document_archive_load(&mut target, 62).expect("the cancelled load is acknowledged");
     findings.same(&head(&target), &before, "the document after the cancelled load");

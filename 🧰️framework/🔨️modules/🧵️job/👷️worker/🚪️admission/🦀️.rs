@@ -5,6 +5,8 @@ pub trait WorkerJobAdmissionControl {
     fn admission_identity(&self)->(OperationId,Generation);
     fn admission_grant(&self)->Result<RetainedCloneGrant,ValueError>;
     fn admission_is_open(&self)->bool;
+    /// 🪪️ The original cancellation token of the admitting context, when it carries one.
+    fn admission_cancel(&self)->Option<&CancelToken>{None}
     fn receive_admission(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>;
 }
 /// 🧾️ Borrows a caller-authored normal budget and recipient without allocating another context ledger.
@@ -22,6 +24,7 @@ impl WorkerJobAdmissionControl for StepContext<'_>{
     fn admission_identity(&self)->(OperationId,Generation){(self.operation,self.generation)}
     fn admission_grant(&self)->Result<RetainedCloneGrant,ValueError>{if !self.retained_progress().fits(self.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session context recipient exceeds original normal authority"))}Ok(self.retained_grant())}
     fn admission_is_open(&self)->bool{!self.is_cancelled()&&!self.should_yield()}
+    fn admission_cancel(&self)->Option<&CancelToken>{Some(self.original_cancel_token())}
     fn receive_admission(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{self.consume_retained(progress)}
 }
 

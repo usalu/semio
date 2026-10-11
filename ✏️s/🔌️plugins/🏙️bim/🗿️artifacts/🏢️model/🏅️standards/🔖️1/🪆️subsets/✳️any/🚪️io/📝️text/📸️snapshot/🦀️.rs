@@ -57,7 +57,7 @@ pub fn encode_model_projection_json(snapshot: &ModelSnapshot) -> String {
 
 /// 💡️ The canonical JSON of one inferred table the inference oracles compare, by slug: `storey-levels`, `wall-layout`, `opening-frames`, `stair-runs`, `spaces`, `quantities` (the closed-form kinds), `plan-metrics`, `view-metrics`, `diagnostics`, or a derived table such as `wall-solids` (base, top and volume of every straight wall) and `frame-solids`.
 pub fn encode_inference_projection_json(snapshot: &ModelSnapshot, slug: &str) -> Option<String> {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::try_with_inference(None, snapshot, |inferred| projection_of(snapshot, slug, inferred)).ok().flatten()
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, snapshot, |inferred| projection_of(snapshot, slug, inferred)).ok().flatten()
 }
 
 fn projection_of(snapshot: &ModelSnapshot, slug: &str, inferred: &crate::ModelInference) -> Option<String> {

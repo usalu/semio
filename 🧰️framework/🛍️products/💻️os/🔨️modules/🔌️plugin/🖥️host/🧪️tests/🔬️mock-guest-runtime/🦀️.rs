@@ -16,18 +16,18 @@ async fn scripted_turn_is_returned_exactly_once_fifo() {
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: hash(1).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(42);
-    let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("instantiate");
+    let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("instantiate");
 
-    let mut first = MockGuestRuntime::idle_turn().await;
+    let mut first = MockGuestRuntime::idle_turn(crate::test_native_authority::original_retained_turn()).await;
     first.fuel_used = 7;
-    let mut second = MockGuestRuntime::idle_turn().await;
+    let mut second = MockGuestRuntime::idle_turn(crate::test_native_authority::original_retained_turn()).await;
     second.fuel_used = 9;
     runtime.script_turn(actor, first).await;
     runtime.script_turn(actor, second).await;
 
-    let got_first = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }, &mut identity)).expect("first scripted turn");
+    let got_first = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }, &mut identity)).expect("first scripted turn");
     assert_eq!(got_first.fuel_used, 7);
-    let got_second = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }, &mut identity)).expect("second scripted turn");
+    let got_second = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }, &mut identity)).expect("second scripted turn");
     assert_eq!(got_second.fuel_used, 9);
     crate::test_native_authority::close(&mut identity);
 }
@@ -41,8 +41,8 @@ async fn exhausted_script_queue_is_a_loud_error_not_a_fabricated_idle_turn() {
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("cad".to_string()), hash: hash(2).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(7);
-    let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
-    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }, &mut identity)).expect_err("no script queued");
+    let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
+    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }, &mut identity)).expect_err("no script queued");
     assert!(matches!(error, TurnFault::Exhausted));
     crate::test_native_authority::close(&mut identity);
 }
@@ -56,9 +56,9 @@ async fn scripted_fault_surfaces_as_trapped() {
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("block".to_string()), hash: hash(3).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(9);
-    let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
+    let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
     runtime.script_fault(actor, "epoch deadline exceeded").await;
-    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }, &mut identity)).expect_err("scripted fault");
+    let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }, &mut identity)).expect_err("scripted fault");
     assert!(matches!(error, TurnFault::Trapped(message) if message == "epoch deadline exceeded"));
     crate::test_native_authority::close(&mut identity);
 }
@@ -72,10 +72,10 @@ async fn checkpoint_then_restore_round_trips_through_a_fresh_instance() {
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("puzzle".to_string()), hash: hash(4).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(11);
-    let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
+    let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
     let snapshot = semio_framework_async::block_on(runtime.checkpoint(&mut inst, &mut identity)).expect("checkpoint");
 
-    let mut restored = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("re-instantiate");
+    let mut restored = runtime.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("re-instantiate");
     semio_framework_async::block_on(runtime.restore(&mut restored, &snapshot, &mut identity)).expect("restore");
     let GuestInstanceState::Mock(state) = &restored.state else { panic!("expected a Mock instance") };
     assert_eq!(state.checkpoint.as_deref(), Some(snapshot.as_slice()));
@@ -96,8 +96,8 @@ async fn drop_instance_forgets_the_actors_script_queue() {
     let runtime = MockGuestRuntime::new().await;
     let compiled = runtime.compile(&PackageRef { package: PackageId("layout".to_string()), hash: hash(5).await }, &[]).await.expect("compile");
     let actor = RuntimeActorId(13);
-    let inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
-    runtime.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
+    let inst = runtime.instantiate(&compiled, actor, &[], &Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
+    runtime.script_turn(actor, MockGuestRuntime::idle_turn(crate::test_native_authority::original_retained_turn()).await).await;
     runtime.drop_instance(inst).await;
     assert!(!runtime.scripts.lock().expect("lock").contains_key(&actor.0));
 }

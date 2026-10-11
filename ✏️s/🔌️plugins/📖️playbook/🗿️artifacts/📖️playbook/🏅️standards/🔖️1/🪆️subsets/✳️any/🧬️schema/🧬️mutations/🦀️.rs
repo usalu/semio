@@ -25,7 +25,8 @@ use serde::{Deserialize, Serialize};
 /// 🧮️ Semantic playbook PARENT-lane mutation vocabulary: the playbook's own title scalar. Steps and blocks are composed content
 /// of the `flow` child and are edited only on that child's lane (stdio flow leaves, design §20.15 of ticket
 /// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING; see the artifact root's `🔖️ChildLane`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]

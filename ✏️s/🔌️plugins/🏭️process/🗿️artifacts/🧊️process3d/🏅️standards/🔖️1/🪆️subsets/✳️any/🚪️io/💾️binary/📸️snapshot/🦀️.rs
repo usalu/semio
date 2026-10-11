@@ -545,14 +545,16 @@ impl mounted::RetainedTypedPackOwner for Process3dMountedSnapshotOwner {
             }
             return false;
         }
-        if let Some(retirement) = self.retirement.as_mut() {
-            if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), Ok(store::SnapshotRetirementStep::Complete)) && retirement.terminal_is_empty() {
-                drop(self.retirement.take());
+        if self.retirement.is_some() {
+            if let Ok(demand) = store::artifact_retirement_box_demands(self.retirement.as_ref().expect("observed original retirement"), store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                let _ = store::artifact_retirement_box_close_step(&mut self.retirement, process3d_self_funded_grant(demand));
             }
             return false;
         }
-        if let Some(candidate) = self.candidate.take() {
-            *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::owned::Process3dSnapshotRetirementFactory, candidate));
+        if self.candidate.is_some() {
+            if let Ok(demand) = store::artifact_retirement_owned_birth_demands(&self.candidate) {
+                let _ = store::artifact_retirement_admit_owned(&mut self.candidate, &mut self.retirement, process3d_self_funded_grant(demand));
+            }
             return false;
         }
         self.handed_back = true;
@@ -562,6 +564,11 @@ impl mounted::RetainedTypedPackOwner for Process3dMountedSnapshotOwner {
     fn terminal_is_empty(&self) -> bool {
         self.handed_back && self.candidate.is_none() && self.retirement.is_none() && self.stack.is_empty() && self.string.is_none()
     }
+}
+
+/// 🎟️ The mounted-pack owner trait carries no scheduler grant, so its synchronous close funds each turn from its own quoted demand.
+fn process3d_self_funded_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }
 
 impl Drop for Process3dMountedSnapshotOwner {

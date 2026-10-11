@@ -39,19 +39,21 @@ pub struct Block3dDiff {
 //#region 🔖️Patches
 block_patch!(test; /// 🔘️ Field patch over a vortex kind (its id is the row identity).
     Block3dVortexKindPatch for Block3dVortexKind { plain { name: String, label: String, color: String, default_cable_kind: String } optional {  } });
+semio_framework_value::artifact_retire_struct!(Block3dVortexKindPatch { name, label, color, default_cable_kind });
 block_patch!(test; /// 🌱️ Field patch over a vortex template (its id is the row identity).
     Block3dVortexTemplatePatch for Block3dVortexTemplate { plain { vortex_kind: String, position: [f64; 3], direction: [f64; 3], radius: f64 } optional { label: BlockOptionalText } });
+semio_framework_value::artifact_retire_struct!(Block3dVortexTemplatePatch { vortex_kind, position, direction, radius, label });
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the vortex kinds.
-    pub Block3dVortexKindsDelta { removal: Block3dVortexKindsRemoval, insertion: Block3dVortexKindsInsertion, relocation: Block3dVortexKindsRelocation, modification: Block3dVortexKindsPatchEntry, row: Block3dVortexKind, patch: Block3dVortexKindPatch, key: id, values_only }
+    pub Block3dVortexKindsDelta { removal: Block3dVortexKindsRemoval, insertion: Block3dVortexKindsInsertion, relocation: Block3dVortexKindsRelocation, modification: Block3dVortexKindsPatchEntry, row: Block3dVortexKind, patch: Block3dVortexKindPatch, key: id }
 }
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the vortex templates.
-    pub Block3dVorticesDelta { removal: Block3dVorticesRemoval, insertion: Block3dVorticesInsertion, relocation: Block3dVorticesRelocation, modification: Block3dVorticesPatchEntry, row: Block3dVortexTemplate, patch: Block3dVortexTemplatePatch, key: id, values_only }
+    pub Block3dVorticesDelta { removal: Block3dVorticesRemoval, insertion: Block3dVorticesInsertion, relocation: Block3dVorticesRelocation, modification: Block3dVorticesPatchEntry, row: Block3dVortexTemplate, patch: Block3dVortexTemplatePatch, key: id }
 }
 //#endregion 🔖️Patches
 

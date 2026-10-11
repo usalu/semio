@@ -4,6 +4,14 @@ use crate::standards::v1::subsets::any::schema::{snapshot::retire_raster_snapsho
 use crate::standards::v1::subsets::any::schema::create_pixel_layer;
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_snapshot};
 
+fn close_work(work:&mut ImageExportWork) {
+    work.closing=true;
+    if let Some(mut job)=work.preparing.take(){job.cancel();}
+    if let Some(mut job)=work.compositing.take(){job.cancel();}
+    if let Some(mut job)=work.encoding.take(){job.cancel();}
+    work.encoded=Vec::new();
+}
+
 fn document(width:u32,height:u32,pixels:Vec<u8>)->RasterSnapshot {
     let mut encoder=PngEncodeJob::new(semio_framework_pixels::RasterImage {width,height,pixels}).unwrap();while !encoder.advance().unwrap().done {}
     let asset=crate::RasterImageAsset {mime:"image/png".into(),data:encoder.into_result().unwrap().data};
@@ -29,7 +37,7 @@ fn export_work_preserves_rgba_and_yields_each_stage() {
     for _ in 0..1000 {stages.insert(work.stage());if let Some(chunk)=work.advance(&document,1).unwrap(){assert!(chunk.len()<=ArtifactOutputChunks::CHUNK_BYTES);output.extend(chunk);}if work.done{break;}}
     assert!(work.done);for stage in fixture["stages"].as_array().unwrap(){assert!(stages.contains(stage.as_str().unwrap()));}
     let bytes=base64_codec::base64_standard_decode(std::str::from_utf8(&output).unwrap()).unwrap();let decoded=semio_framework_pixels::decode_png(&bytes).unwrap();assert_eq!((decoded.width,decoded.height),(2,2));assert_eq!(decoded.pixels,pixels);
-    assert!(work.advance(&document,1).is_err());while !work.terminal_is_empty(){work.close_step(4096);}retire_raster_snapshot(document);
+    assert!(work.advance(&document,1).is_err());close_work(&mut work);retire_raster_snapshot(document);
 }
 
 #[test]
@@ -37,10 +45,10 @@ fn export_cancels_every_stage_and_refuses_an_empty_document() {
     let document=document(128,128,(0..128*128*4).map(|i|((i*73+i/31)%256) as u8).collect());
     for stage in ["prepare","composite","encode","output"] {
         let mut work=ImageExportWork::default();for _ in 0..10000 {if work.stage()==stage{break;}work.advance(&document,1).unwrap();}assert_eq!(work.stage(),stage);
-        work.closing=true;assert!(work.advance(&document,1).is_err());for _ in 0..10000 {if work.terminal_is_empty(){break;}work.close_step(4096);}assert!(work.terminal_is_empty());
+        work.closing=true;assert!(work.advance(&document,1).is_err());close_work(&mut work);assert!(work.terminal_is_empty());
     }
     retire_raster_snapshot(document);
-    let empty=empty_raster_snapshot();let mut work=ImageExportWork::default();let mut refused=false;for _ in 0..100 {if work.advance(&empty,1).is_err(){refused=true;break;}}assert!(refused);while !work.terminal_is_empty(){work.close_step(4096);}retire_raster_snapshot(empty);
+    let empty=empty_raster_snapshot();let mut work=ImageExportWork::default();let mut refused=false;for _ in 0..100 {if work.advance(&empty,1).is_err(){refused=true;break;}}assert!(refused);close_work(&mut work);retire_raster_snapshot(empty);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -66,7 +74,7 @@ async fn retained_image_export_completes_or_cancels_without_mutating_history() {
 #[test]
 fn export_progress_uses_neutral_localized_stage_labels() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    for stage in fixture["stages"].as_array().unwrap() {let mut publication=Publication::progress(stage.as_str().unwrap(),7);let payload:serde_json::Value=serde_json::from_slice(&publication.bytes).unwrap();assert_eq!(payload["stage"],*stage);assert_eq!(payload["completedUnits"],7);for locale in ["en","de"]{assert_eq!(payload[locale],fixture["labels"][stage.as_str().unwrap()][locale]);}let mut writer=publication.writer.take().unwrap();writer.begin_close();while !writer.terminal_is_empty(){writer.close_step(1,4096);}}
+    for stage in fixture["stages"].as_array().unwrap() {let bytes=progress_payload(stage.as_str().unwrap(),7);let payload:serde_json::Value=serde_json::from_slice(&bytes).unwrap();assert_eq!(payload["stage"],*stage);assert_eq!(payload["completedUnits"],7);for locale in ["en","de"]{assert_eq!(payload[locale],fixture["labels"][stage.as_str().unwrap()][locale]);}}
 }
 
 #[semio_framework_async_macros::async_test]
@@ -154,18 +162,21 @@ async fn png_progress_control_cancels_its_exact_visible_operation() {
 }
 #[test]
 fn export_snapshot_disposal_obeys_grants_and_retires_the_last_shared_owner() {
-    use semio_framework_plugin::{ArtifactEditor,PluginCloseStep};
+    use semio_framework_plugin::{ArtifactEditor,PluginLifecycleStep};
     let snapshot=std::sync::Arc::new(crate::standards::v1::subsets::any::schema::raster_image_test_snapshot());
     let mut aliases=[Some(snapshot.clone()),Some(snapshot)];
     let mut disposers=[RasterPlayApp::build_snapshot_disposer().unwrap(),RasterPlayApp::build_snapshot_disposer().unwrap()];
     for index in 0..2 {
-        assert_eq!(disposers[index].close_step(&mut aliases[index],0,16384).unwrap(),PluginCloseStep::Pending {released_items:0,released_bytes:0});
+        let unfunded=RetainedCloneGrant {maximum_items:0,maximum_copy_bytes:16384,maximum_capacity_bytes:16384,maximum_release_bytes:16384,maximum_depth:16};
+        assert_eq!(disposers[index].close_step(&mut aliases[index],unfunded).unwrap(),PluginLifecycleStep::Progress(Default::default()));
         assert!(aliases[index].is_some());
         let mut complete=false;
         for _ in 0..100000 {
-            match disposers[index].close_step(&mut aliases[index],1,16384).unwrap() {
-                PluginCloseStep::Complete=>{complete=true;break;},
-                PluginCloseStep::Pending {released_items,released_bytes}=>{assert!(released_items<=1);assert!(released_bytes<=16384);},
+            let demand=disposers[index].retirement_demands(&aliases[index],4096).unwrap();
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)};
+            match disposers[index].close_step(&mut aliases[index],grant).unwrap() {
+                PluginLifecycleStep::Complete(_)=>{complete=true;break;},
+                PluginLifecycleStep::Progress(progress)=>{assert!(progress.fits(grant));},
                 other=>panic!("export snapshot failed to retire its owned alias: {other:?}"),
             }
         }

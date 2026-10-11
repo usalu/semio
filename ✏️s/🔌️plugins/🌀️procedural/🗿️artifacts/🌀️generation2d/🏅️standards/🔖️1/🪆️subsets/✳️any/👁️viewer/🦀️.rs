@@ -27,7 +27,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant — real per-command payload modules the way the editor's `🎮️commands/*`
 /// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, semio_framework_value::RetireOwned)]
 pub enum Generation2dViewCommand {
     #[default]
     Noop,
@@ -73,13 +73,6 @@ impl ArtifactViewer for Generation2dViewer {
 
     const DIALECT: Dialect = GENERATION2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
-
-    /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: the snapshot holds
-    /// retained `OrderedMap` roots that only this catalogue retires explicitly, and the framework's generic bounded
-    /// owners dropped them plainly (`ordered-map root must be explicitly retired before drop`, S15 viewer matrix).
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::owned::generation2d_document_store_owners())
-    }
 
     fn initial_snapshot() -> Generation2dSnapshot {
         crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()

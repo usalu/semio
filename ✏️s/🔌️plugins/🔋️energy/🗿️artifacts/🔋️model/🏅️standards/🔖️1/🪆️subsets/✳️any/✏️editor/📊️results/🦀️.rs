@@ -51,7 +51,7 @@ pub fn band_color(value: f64, min: f64, max: f64) -> &'static str {
 
 //#region 📊️Map
 /// 📊️ One surface's published energy, in kWh.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct SurfaceEnergy {
     pub conduction_loss_kwh: f64,
     pub conduction_gain_kwh: f64,

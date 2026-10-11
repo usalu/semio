@@ -25,7 +25,7 @@ use std::collections::BTreeMap;
 
 // #region Shared
 /// 🆔️ Stable catalogue identifier.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(transparent)]
 #[value(rename_all = "camelCase")]
@@ -35,7 +35,7 @@ pub struct CatalogueId(pub String);
 
 
 /// 🆔️ Dictionary identifier with version.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -50,7 +50,8 @@ pub struct DictionaryRef {
 pub use crate::document::LocalizedText;
 
 /// 📝️ Preferred and alternative names.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -62,7 +63,8 @@ pub struct Names {
 }
 
 /// 📊️ Physical dimension signature for unit compatibility.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -84,7 +86,8 @@ impl DimensionSignature {
 }
 
 /// 📐️ Catalogue unit with canonical SI display.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -95,7 +98,8 @@ pub struct CatalogueUnit {
 }
 
 /// 🔢️ Typed catalogue value.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(tag = "kind", rename_all = "camelCase")]
@@ -117,7 +121,8 @@ pub enum CatalogueValue {
 
 
 /// ∅ Value availability states.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum NullState {
     Unavailable,
@@ -129,7 +134,8 @@ pub enum NullState {
 }
 
 /// 🔢️ Cardinality constraint.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -167,7 +173,8 @@ pub struct CatalogueReference {
 }
 
 /// 🧩️ Lossless extension bag for unknown fields.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -176,7 +183,7 @@ pub struct ExtensionBag {
 }
 
 /// 📅️ Lifecycle metadata.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -193,7 +200,7 @@ pub mod part_1 {
     use super::*;
 
     /// 🏭️ Manufacturer metadata.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -203,7 +210,8 @@ pub mod part_1 {
     }
 
     /// 📦️ Product group declaration.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -214,7 +222,8 @@ pub mod part_1 {
     }
 
     /// 🏷️ Product class in a hierarchy.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -228,7 +237,8 @@ pub mod part_1 {
     }
 
     /// 📚️ Product series sharing geometry and properties.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -241,7 +251,8 @@ pub mod part_1 {
     }
 
     /// 🔧️ Variant parameter domain.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -252,7 +263,8 @@ pub mod part_1 {
     }
 
     /// 🧮️ Property definition.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -267,7 +279,8 @@ pub mod part_1 {
     }
 
     /// 📊️ Property kind per Part 1 §5.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum PropertyKind {
         Static,
@@ -277,7 +290,8 @@ pub mod part_1 {
     }
 
     /// 📋️ Property value on a product or variant.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -288,7 +302,8 @@ pub mod part_1 {
     }
 
     /// 🧩️ Product variant with parameters.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -301,7 +316,8 @@ pub mod part_1 {
     }
 
     /// 📦️ Catalogue product (generic or resolved).
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -315,7 +331,8 @@ pub mod part_1 {
     }
 
     /// 🔍️ Product index for selection.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -327,7 +344,7 @@ pub mod part_1 {
     }
 
     /// 🔗️ Accessory relationship.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -339,7 +356,7 @@ pub mod part_1 {
     }
 
     /// 🧱️ Composition relationship (`hasPart`).
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -359,7 +376,7 @@ pub mod part_1 {
     }
 
     /// 📄️ Descriptive media object.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -372,7 +389,7 @@ pub mod part_1 {
     }
 
     /// 📚️ Full catalogue document.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -401,7 +418,7 @@ pub mod part_1 {
     }
 
     /// 📋️ Catalogue metadata.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -412,7 +429,7 @@ pub mod part_1 {
     }
 
     /// 📑️ Supported ISO 16757 edition profile.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum EditionProfile {
         #[dsl(key = "part1_2015")]
@@ -428,7 +445,8 @@ pub mod part_1 {
     }
 
     /// 🎯️ Selection constraint on a property.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -441,7 +459,8 @@ pub mod part_1 {
     }
 
     /// ⚖️ Constraint operator.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum ConstraintOperator {
         Equal,
@@ -456,7 +475,7 @@ pub mod part_1 {
     }
 
     /// 🔎️ Selection request.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -499,7 +518,8 @@ pub mod part_2 {
     use super::*;
 
     /// 📐️ Space classification per Part 2 §5.3.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum SpaceKind {
         Overall,
@@ -511,7 +531,8 @@ pub mod part_2 {
     }
 
     /// 🔌️ Port medium and direction.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -524,7 +545,8 @@ pub mod part_2 {
     }
 
     /// 📦️ Axis-aligned bounding box.
-    #[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -556,7 +578,7 @@ pub mod part_2 {
     }
 
     /// 🧱️ CSG primitive kind registry entry.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -569,7 +591,8 @@ pub mod part_2 {
     /// `#[dsl(statements)] Box<GeometryNode>` (exactly one nested tagged value) and
     /// `Boolean.children` is `#[dsl(statements, block)] Vec<GeometryNode>` (a nested tagged
     /// collection), both recursing back into this same enum's own `DslVariants` impl.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(tag = "node", rename_all = "camelCase", rename_all_fields = "camelCase"))]
     #[value(tag = "node", rename_all = "camelCase")]
@@ -596,7 +619,8 @@ pub mod part_2 {
     }
 
     /// ➕️ Boolean CSG operator.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum BooleanOperator {
         Union,
@@ -605,7 +629,8 @@ pub mod part_2 {
     }
 
     /// 🏗️ Complete geometry object.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -622,7 +647,8 @@ pub mod part_2 {
     }
 
     /// 📦️ Space envelope with kind.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -638,7 +664,8 @@ pub mod part_2 {
     }
 
     /// 🎨️ Semantic surface.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -649,7 +676,7 @@ pub mod part_2 {
     }
 
     /// 📚️ Geometry catalogue index.
-    #[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -676,7 +703,8 @@ pub mod part_4 {
     use super::*;
 
     /// 🏷️ Dictionary subject kind.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum SubjectKind {
         #[dsl(key = "productGroup")]
@@ -699,7 +727,8 @@ pub mod part_4 {
     }
 
     /// 📖️ Dictionary subject.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -712,7 +741,7 @@ pub mod part_4 {
     }
 
     /// 🔗️ Relationship kind per Part 4 §4.4.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum RelationshipKind {
         #[dsl(key = "isSubtypeOf")]
@@ -728,7 +757,7 @@ pub mod part_4 {
     }
 
     /// 🔗️ Typed relationship.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -741,7 +770,7 @@ pub mod part_4 {
     }
 
     /// 📊️ Dictionary property definition.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -756,7 +785,7 @@ pub mod part_4 {
     }
 
     /// ✅️ Controlled value list.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -767,7 +796,7 @@ pub mod part_4 {
     }
 
     /// 🎯️ Value constraint on a property.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -778,7 +807,7 @@ pub mod part_4 {
     }
 
     /// 📚️ Data dictionary snapshot.
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -814,7 +843,8 @@ pub mod part_5 {
     use super::*;
 
     /// 🔄️ Exchange process stage.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     pub enum ExchangeProcess {
         #[dsl(key = "createFromDictionary")]
@@ -830,7 +860,8 @@ pub mod part_5 {
     }
 
     /// 🔢️ Part number rule.
-    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
     #[value(tag = "kind", rename_all = "camelCase")]
@@ -882,7 +913,7 @@ pub mod part_5 {
     }
 
     /// 🧮️ Script execution limits.
-    #[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[value(rename_all = "camelCase")]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]

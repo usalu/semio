@@ -9,7 +9,8 @@ use store::ArtifactPack;
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "shooting.presence")]
 #[dsl(layout = "lines")]
-#[derive(Default)]
+#[derive(Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct ShootingPresence {
     /// 👥️ Genuinely app-specific — asset selection/hover broadcast automatically now via the
     /// framework's typed `PresencePeer.interaction` (`"assets"` domain, ticket
@@ -19,6 +20,8 @@ pub struct ShootingPresence {
     #[dsl(block)]
     pub camera: ShootingCamera,
 }
+
+impl store::ArtifactPresenceSnapshot for ShootingPresence {}
 
 
 

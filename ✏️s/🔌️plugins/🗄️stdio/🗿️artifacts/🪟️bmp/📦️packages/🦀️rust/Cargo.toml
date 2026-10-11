@@ -46,6 +46,7 @@ semio-s-artifact-stdio-contract = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 hex = "0.4.3"
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
@@ -54,3 +55,8 @@ semio-s-artifact-stdio-bmp-test-oracle = { path = "../../🔮️oracles/📦️p
 
 [package.metadata.semio.composition]
 manifest = "../../🧩️composition/🔣️.json"
+
+[[test]]
+name = "preparation_law"
+path = "../../🧪️tests/⚙️preparation/🦀️.rs"
+required-features = ["component-app-assembly"]

@@ -17,7 +17,8 @@ use framework_schema::ArtifactSchema;
 /// 🧩 A real CommonMark inline node. `MdInline` is a WEAK entity (recipe: weak entities are
 /// whole-value replaced, never sub-diffed) -- `MdBlockDiff`'s `inlines`/`text` fields are always
 /// `Option<Vec<MdInline>>`/`Option<String>` whole-value slots, never a nested inline-level triple.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum MdInline {
     /// 🔤️ Literal text run.
@@ -55,7 +56,8 @@ pub enum MdInline {
 /// 🧱 A real CommonMark block. `MdBlock` is a STRONG-like entity: block collections (top-level
 /// `MdSnapshot.blocks`, `List.items[n]`, `BlockQuote.blocks`) are all index-keyed and each gets
 /// its own per-field diff (`MdBlockDiff`) rather than whole-value replacement.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum MdBlock {
     Heading {
@@ -97,7 +99,7 @@ pub enum MdBlock {
 }
 
 /// 📸️ Persisted `stdio.md` snapshot: the complete top-level block sequence.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.md")]
 pub struct MdSnapshot {

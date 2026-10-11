@@ -25,7 +25,7 @@ pub(crate) fn resolve_reorder_target(document: &DrawingSnapshot, target_row_id: 
 }
 //#endregion 🔖️DocumentHelpers
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "move-layer")]
 pub struct MoveLayer {
     pub layer_id: String,

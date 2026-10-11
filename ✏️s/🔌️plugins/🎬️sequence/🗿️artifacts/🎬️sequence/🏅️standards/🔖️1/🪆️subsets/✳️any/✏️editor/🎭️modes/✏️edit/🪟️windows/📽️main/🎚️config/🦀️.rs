@@ -3,7 +3,7 @@
 use crate::SequenceCamera;
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.sequence.sequence.mainwindowconfig", extension = "sequencemainwindowcfg")]
@@ -62,20 +62,129 @@ impl store::ArtifactPack for SequenceMainWindowConfig {
     }
 }
 
-semio_framework_os_kernel::config_record! {
+semio_framework_os_kernel::config_diff! {
     record: SequenceMainWindowConfig,
     diff: SequenceMainWindowConfigDiff,
-    set: SequenceMainWindowConfigMutation,
-    owner: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main",
-    payload_schema: "sequence.mainwindowconfig",
-    emoji: "🎚️",
     fields: {
-        orientation: String => SetOrientation "set-orientation",
-        camera: SequenceCamera => SetCamera "set-camera",
+        orientation: String,
+        camera: SequenceCamera,
     },
 }
 
+/// 🎚️ The field-set mutations of [`SequenceMainWindowConfig`]: exactly one field each.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "kind", content = "value", rename_all = "kebab-case")]
+pub enum SequenceMainWindowConfigMutation {
+    SetOrientation(String),
+    SetCamera(SequenceCamera),
+}
 
+impl SequenceMainWindowConfigMutation {
+    /// 🎚️ The set mutations that turn `base` into `next`: one per field where they differ, in field order.
+    pub fn setting(base: &SequenceMainWindowConfig, next: &SequenceMainWindowConfig) -> Vec<Self> {
+        let mut mutations = Vec::new();
+        if base.orientation != next.orientation {
+            mutations.push(Self::SetOrientation(next.orientation.clone()));
+        }
+        if base.camera != next.camera {
+            mutations.push(Self::SetCamera(next.camera.clone()));
+        }
+        mutations
+    }
+}
+
+impl protocol::Mutation<SequenceMainWindowConfig> for SequenceMainWindowConfigMutation {
+    type Diff = SequenceMainWindowConfigDiff;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/set-orientation",
+            semantic_kind: "set-orientation",
+            display_name: "set-orientation",
+            emoji: "🎚️",
+            aggregate_variant: "SetOrientation",
+            payload_schema: "sequence.mainwindowconfig",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/set-camera",
+            semantic_kind: "set-camera",
+            display_name: "set-camera",
+            emoji: "🎚️",
+            aggregate_variant: "SetCamera",
+            payload_schema: "sequence.mainwindowconfig",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+    ];
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Self::SetOrientation(_) => &Self::DESCRIPTORS[0],
+            Self::SetCamera(_) => &Self::DESCRIPTORS[1],
+        }
+    }
+    fn diff(&self, base: &SequenceMainWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+        match self {
+            Self::SetOrientation(orientation) if base.orientation == *orientation => protocol::MutationOutcome::empty(),
+            Self::SetOrientation(orientation) => protocol::MutationOutcome::new(SequenceMainWindowConfigDiff { orientation: Some(orientation.clone()), ..Default::default() }),
+            Self::SetCamera(camera) if base.camera == *camera => protocol::MutationOutcome::empty(),
+            Self::SetCamera(camera) => protocol::MutationOutcome::new(SequenceMainWindowConfigDiff { camera: Some(camera.clone()), ..Default::default() }),
+        }
+    }
+    fn inverse(&self, base: &SequenceMainWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        Ok(vec![match self {
+            Self::SetOrientation(_) => Self::SetOrientation(base.orientation.clone()),
+            Self::SetCamera(_) => Self::SetCamera(base.camera.clone()),
+        }])
+    }
+}
+
+impl store::snapshot_clone_preparation::ConfigApplyMutation<SequenceMainWindowConfig> for SequenceMainWindowConfigMutation {
+    fn exchange(self, post: &mut SequenceMainWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetOrientation(orientation) => Self::SetOrientation(std::mem::replace(&mut post.orientation, orientation)),
+            Self::SetCamera(camera) => Self::SetCamera(std::mem::replace(&mut post.camera, camera)),
+        })
+    }
+    fn payload_bytes(&self) -> usize {
+        match self {
+            Self::SetOrientation(orientation) => orientation.len(),
+            Self::SetCamera(_) => 0,
+        }
+    }
+}
+
+impl protocol::OpText for SequenceMainWindowConfigMutation {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
+    }
+    fn print_op(&self) -> String {
+        semio_framework_pack_json::to_json_string(self)
+    }
+}
+
+impl protocol::OpBinary for SequenceMainWindowConfigMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(protocol::OpText::print_op(self).into_bytes())
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+    }
+}
 
 pub struct SequenceMainWindowConfigOwner;
 
@@ -85,6 +194,11 @@ impl semio_framework_plugin::WindowConfigOwner for SequenceMainWindowConfigOwner
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = SequenceMainWindowConfig;
     type Mutation = SequenceMainWindowConfigMutation;
+    type Edit = store::snapshot_clone_preparation::ConfigApplyEdit<SequenceMainWindowConfig, SequenceMainWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+        std::sync::Arc::new(store::snapshot_clone_preparation::ConfigApplyEdit::new())
+    }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }

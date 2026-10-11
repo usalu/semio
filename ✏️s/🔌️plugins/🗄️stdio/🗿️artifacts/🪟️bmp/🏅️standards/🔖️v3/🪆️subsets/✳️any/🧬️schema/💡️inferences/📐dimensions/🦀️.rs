@@ -6,7 +6,7 @@ use crate::BmpSnapshot;
 
 //#region 🔖️Dimensions
 /// 📐️ Exact raster geometry and alpha lane presence from the owned native image.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BmpDimensions {
     pub width: u32,

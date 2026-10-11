@@ -14,10 +14,10 @@
         "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
-          "moduleId": "spatial-shape",
-          "label": "Spatial Shape",
+          "computersJson": "{\"modelDefinitionIds\":[\"spatial.shape\"],\"statComputers\":[\"spatial.shape.geometry\"],\"propertyComputers\":[\"spatial.shape.volume\"],\"importProfiles\":[],\"transformationAppliers\":[]}",
           "iconId": "box",
-          "computersJson": "{\"modelDefinitionIds\":[\"spatial.shape\"],\"statComputers\":[\"spatial.shape.geometry\"],\"propertyComputers\":[\"spatial.shape.volume\"],\"importProfiles\":[],\"transformationAppliers\":[]}"
+          "label": "Spatial Shape",
+          "moduleId": "spatial-shape"
         }
       }
     ],
@@ -41,17 +41,17 @@
         "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
-          "moduleId": "spatial-shape",
-          "label": "Spatial Shape",
+          "computersJson": "{\"modelDefinitionIds\":[\"spatial.shape\"],\"statComputers\":[\"spatial.shape.geometry\"],\"propertyComputers\":[\"spatial.shape.volume\"],\"importProfiles\":[],\"transformationAppliers\":[]}",
           "iconId": "box",
-          "computersJson": "{\"modelDefinitionIds\":[\"spatial.shape\"],\"statComputers\":[\"spatial.shape.geometry\"],\"propertyComputers\":[\"spatial.shape.volume\"],\"importProfiles\":[],\"transformationAppliers\":[]}"
+          "label": "Spatial Shape",
+          "moduleId": "spatial-shape"
         }
       }
     ]
   },
   "hashes": {
-    "wasmSha256": "68771de18438ba298c4b26d14342e0fe8277064823b20efaadaa242c9176398f",
-    "coreWasmSha256": "e9211ad440df21b35b048697979d616f5f99e0fc70e1126218d88b34667cb03a",
-    "descriptorSha256": "12d6e21600f0cdd37a63380b230130c26ddc26717ea3debf3430ed2e64a6c042"
+    "wasmSha256": "5b73383e31781b8489ca8c1cd8bbe953c85f9a7f0ff242f4500f773ba50a3c40",
+    "coreWasmSha256": "f5c88941ef54f0ed7fbfab6ae461922c564b6eeefcc4241744d1912cd2d89adc",
+    "descriptorSha256": "9866536b14c0ed9f2fabb3f1bbc390f5f5f5ee726c3a7328eeffb1bf340c67c4"
   }
 }

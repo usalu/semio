@@ -28,7 +28,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// exactly one inert variant — real per-command payload modules the way `✏️editor/🎮️commands/*` carries
 /// them would be pure ceremony for a surface that never dispatches anything through `handle`. Derives
 /// `Default` (`#[default]` on the sole variant) — required by `artifact_app_laws::assert_viewer_never_mutates`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, semio_framework_value::RetireOwned)]
 pub enum RasterViewCommand {
     #[default]
     Noop,
@@ -72,8 +72,14 @@ impl ArtifactViewer for RasterViewer {
 
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::owned::raster_document_store_owners())
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::host::owned::raster_document_store_owners_source_demands()
+    }
+
+    fn build_document_store_owners(
+        grant: semio_framework_value::retained_clone::RetainedCloneGrant,
+    ) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::host::owned::raster_document_store_owners_admission(grant))
     }
 
     /// 📄️ Boots on the constant empty shell `empty_raster_snapshot()`, like the editor: the store's

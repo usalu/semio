@@ -17,6 +17,10 @@ workspace = true
 name = "protocol"
 path = "🦀️.rs"
 
+[[test]]
+name = "paged_seal_digest"
+path = "../../🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/📄️paged-digest/🦀️.rs"
+
 [features]
 history-index-serde = []
 default = []

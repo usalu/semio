@@ -59,7 +59,7 @@ impl Default for Puzzle5dWindowConfig {
 /// requires `dsl::DslField`, emitted by `#[derive(dsl::DslArtifact)]` together with the `__dsl_*`
 /// helpers the record-backed `ArtifactDsl`/`ArtifactPack` below call; `id`/`extension` are stated
 /// explicitly so the derived constants reproduce the envelope identity this kind already carried.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.puzzle.puzzle5d.boardwindowconfig", extension = "puzzle5dboardwindowcfg")]
@@ -92,7 +92,7 @@ impl Default for Puzzle5dBoardWindowConfig {
 
 /// 🎚️ ONE exact Puzzle 5D world pane's persisted-local options — same `dsl::DslArtifact` completion
 /// as [`Puzzle5dBoardWindowConfig`], with its own envelope identity.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.puzzle.puzzle5d.worldwindowconfig", extension = "puzzle5dworldwindowcfg")]
@@ -139,10 +139,18 @@ impl Default for Puzzle5dWorldWindowConfig {
 }
 
 macro_rules! config_mutation {
-    ($mutation:ident, $state:ty, $diff:ident, $display:literal, $schema:literal) => {
-        #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    ($mutation:ident, $set:ident, $state:ty, $diff:ident, $display:literal, $schema:literal) => {
+        /// 🧩️ Payload of the mutation's `Set`: the absolute value of exactly the diff's named fields.
+        #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+        #[canonical_json(owner = semio_framework_pack_json)]
+        pub struct $set {
+            pub patch: $diff,
+        }
+
+        #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+        #[canonical_json(owner = semio_framework_pack_json)]
         pub enum $mutation {
-            Set { patch: $diff },
+            Set($set),
         }
         impl protocol::Mutation<$state> for $mutation {
             type Diff = $diff;
@@ -166,7 +174,7 @@ macro_rules! config_mutation {
                 &Self::DESCRIPTORS[0]
             }
             fn diff(&self, base: &$state) -> protocol::MutationOutcome<$diff> {
-                let Self::Set { patch } = self;
+                let Self::Set($set { patch }) = self;
                 let diff = patch.changed(base);
                 if protocol::DiffAlgebra::<$state>::is_empty(&diff) {
                     return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window configuration already holds these values.");
@@ -174,15 +182,102 @@ macro_rules! config_mutation {
                 protocol::MutationOutcome::new(diff)
             }
             fn inverse(&self, base: &$state) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-                let Self::Set { patch } = self;
-                Ok(vec![Self::Set { patch: patch.restoring(base) }])
+                let Self::Set($set { patch }) = self;
+                Ok(vec![Self::Set($set { patch: patch.restoring(base) })])
             }
         }
     };
 }
 
-config_mutation!(Puzzle5dBoardWindowConfigMutation, Puzzle5dBoardWindowConfig, Puzzle5dBoardWindowConfigDiff, "Set Puzzle 5D Board Window Configuration", "puzzle.5dboardwindowconfig");
-config_mutation!(Puzzle5dWorldWindowConfigMutation, Puzzle5dWorldWindowConfig, Puzzle5dWorldWindowConfigDiff, "Set Puzzle 5D World Window Configuration", "puzzle.5dworldwindowconfig");
+config_mutation!(Puzzle5dBoardWindowConfigMutation, Puzzle5dBoardWindowConfigMutationSet, Puzzle5dBoardWindowConfig, Puzzle5dBoardWindowConfigDiff, "Set Puzzle 5D Board Window Configuration", "puzzle.5dboardwindowconfig");
+config_mutation!(Puzzle5dWorldWindowConfigMutation, Puzzle5dWorldWindowConfigMutationSet, Puzzle5dWorldWindowConfig, Puzzle5dWorldWindowConfigDiff, "Set Puzzle 5D World Window Configuration", "puzzle.5dworldwindowconfig");
+
+impl semio_framework_plugin::WindowConfigApplyMutation<Puzzle5dBoardWindowConfig> for Puzzle5dBoardWindowConfigMutation {
+    fn exchange(self, post: &mut Puzzle5dBoardWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        let Self::Set(Puzzle5dBoardWindowConfigMutationSet { mut patch }) = self;
+        if let Some(value) = patch.camera2d.as_mut() {
+            std::mem::swap(value, &mut post.camera2d);
+        }
+        if let Some(value) = patch.lod_mode.as_mut() {
+            std::mem::swap(value, &mut post.lod_mode);
+        }
+        if let Some(value) = patch.suggestion_offset.as_mut() {
+            std::mem::swap(value, &mut post.suggestion_offset);
+        }
+        if let Some(value) = patch.grid_snap_enabled.as_mut() {
+            std::mem::swap(value, &mut post.grid_snap_enabled);
+        }
+        if let Some(value) = patch.grid_factor.as_mut() {
+            std::mem::swap(value, &mut post.grid_factor);
+        }
+        if let Some(value) = patch.grid_visible.as_mut() {
+            std::mem::swap(value, &mut post.grid_visible);
+        }
+        if let Some(value) = patch.selectable_kinds.as_mut() {
+            std::mem::swap(value, &mut post.selectable_kinds);
+        }
+        Ok(Self::Set(Puzzle5dBoardWindowConfigMutationSet { patch }))
+    }
+
+    fn payload_bytes(&self) -> usize {
+        let Self::Set(Puzzle5dBoardWindowConfigMutationSet { patch }) = self;
+        0 + patch.lod_mode.as_ref().map_or(0, String::len)
+    }
+}
+
+impl semio_framework_plugin::WindowConfigApplyMutation<Puzzle5dWorldWindowConfig> for Puzzle5dWorldWindowConfigMutation {
+    fn exchange(self, post: &mut Puzzle5dWorldWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        let Self::Set(Puzzle5dWorldWindowConfigMutationSet { mut patch }) = self;
+        if let Some(value) = patch.camera3d.as_mut() {
+            std::mem::swap(value, &mut post.camera3d);
+        }
+        if let Some(value) = patch.sun.as_mut() {
+            std::mem::swap(value, &mut post.sun);
+        }
+        if let Some(value) = patch.grid_visible.as_mut() {
+            std::mem::swap(value, &mut post.grid_visible);
+        }
+        if let Some(value) = patch.grid_snap_enabled.as_mut() {
+            std::mem::swap(value, &mut post.grid_snap_enabled);
+        }
+        if let Some(value) = patch.grid_spacing.as_mut() {
+            std::mem::swap(value, &mut post.grid_spacing);
+        }
+        if let Some(value) = patch.lod_automatic.as_mut() {
+            std::mem::swap(value, &mut post.lod_automatic);
+        }
+        if let Some(value) = patch.lod_depth_variable.as_mut() {
+            std::mem::swap(value, &mut post.lod_depth_variable);
+        }
+        if let Some(value) = patch.lod_manual.as_mut() {
+            std::mem::swap(value, &mut post.lod_manual);
+        }
+        if let Some(value) = patch.selectable_kinds.as_mut() {
+            std::mem::swap(value, &mut post.selectable_kinds);
+        }
+        if let Some(value) = patch.grip_show.as_mut() {
+            std::mem::swap(value, &mut post.grip_show);
+        }
+        if let Some(value) = patch.grip_direction.as_mut() {
+            std::mem::swap(value, &mut post.grip_direction);
+        }
+        if let Some(value) = patch.transform_move.as_mut() {
+            std::mem::swap(value, &mut post.transform_move);
+        }
+        if let Some(value) = patch.transform_rotate.as_mut() {
+            std::mem::swap(value, &mut post.transform_rotate);
+        }
+        if let Some(value) = patch.voxel_dims.as_mut() {
+            std::mem::swap(value, &mut post.voxel_dims);
+        }
+        Ok(Self::Set(Puzzle5dWorldWindowConfigMutationSet { patch }))
+    }
+
+    fn payload_bytes(&self) -> usize {
+        let Self::Set(Puzzle5dWorldWindowConfigMutationSet { patch }) = self;
+        0 + patch.grip_show.as_ref().map_or(0, String::len) + patch.grip_direction.as_ref().map_or(0, String::len)
+    }
+}
 
 /// 🎣️ The grip suggestion menu one window has open — puzzle 3d's record verbatim, because the world host's
 /// suggestion protocol (`suggestionMenu` on the interaction lane, `openVortexSuggestions`) is shared.
@@ -280,7 +375,8 @@ record_store!(Puzzle5dBoardWindowConfig, "valid Puzzle 5D board-window envelope"
 impl store::ConfigRecord for Puzzle5dBoardWindowConfig {}
 
 /// 🔺️ Sparse typed delta of one Puzzle 5D board window's persisted-local options: names only the fields a mutation changes.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dBoardWindowConfigDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -378,7 +474,8 @@ record_store!(Puzzle5dWorldWindowConfig, "valid Puzzle 5D world-window envelope"
 impl store::ConfigRecord for Puzzle5dWorldWindowConfig {}
 
 /// 🔺️ Sparse typed delta of one Puzzle 5D world window's persisted-local options: names only the fields a mutation changes.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dWorldWindowConfigDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -653,6 +750,9 @@ macro_rules! owners {
             const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
             type State = $state;
             type Mutation = $mutation;
+            type Edit = semio_framework_plugin::WindowConfigApplyEdit<$state, $mutation>;
+            const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+            fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new()) }
             fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
             fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
@@ -839,8 +939,8 @@ pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle
     match kind_for_view(view) {
         Some(board2d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dBoardWindowConfigOwner>(
             id,
-            Puzzle5dBoardWindowConfigMutation::Snapshot {
-                config: Puzzle5dBoardWindowConfig {
+            Puzzle5dBoardWindowConfigMutation::Set(Puzzle5dBoardWindowConfigMutationSet {
+                patch: Puzzle5dBoardWindowConfigDiff::of(&Puzzle5dBoardWindowConfig {
                     camera2d: config.camera2d,
                     lod_mode: config.lod_mode,
                     suggestion_offset: config.suggestion_offset,
@@ -848,13 +948,13 @@ pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle
                     grid_factor: config.grid_factor,
                     grid_visible: config.grid_visible,
                     selectable_kinds: config.selectable_kinds,
-                },
-            },
+                }),
+            }),
         )),
         Some(world3d::WINDOW_KIND_ID) => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle5dWorldWindowConfigOwner>(
             id,
-            Puzzle5dWorldWindowConfigMutation::Snapshot {
-                config: Puzzle5dWorldWindowConfig {
+            Puzzle5dWorldWindowConfigMutation::Set(Puzzle5dWorldWindowConfigMutationSet {
+                patch: Puzzle5dWorldWindowConfigDiff::of(&Puzzle5dWorldWindowConfig {
                     camera3d: config.camera3d,
                     sun: config.sun,
                     voxel_dims: config.voxel_dims,
@@ -869,8 +969,8 @@ pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle
                     grip_direction: config.grip_direction,
                     transform_move: config.transform_move,
                     transform_rotate: config.transform_rotate,
-                },
-            },
+                }),
+            }),
         )),
         _ => Err(semio_framework_plugin::Fault::from("puzzle5d-window-kind-required")),
     }

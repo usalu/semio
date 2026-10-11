@@ -18,6 +18,8 @@ pub struct BimPresence {
     pub camera: store::Viewport2d,
 }
 
+impl store::ArtifactPresenceSnapshot for BimPresence {}
+
 impl Default for BimPresence {
     fn default() -> Self {
         Self { engagement_input: String::new(), storey: String::new(), owned_worksets: Vec::new(), camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }

@@ -63,6 +63,7 @@ impl DslValueRetainedCloneCursor {
         if self.state.spent{return Err(Self::refusal("dynamic clone cursor has transferred its output"));}
         if self.state.phase==2{return Ok(Default::default());}
         let s=&self.state;
+        if s.source.is_none(){return Ok(RetirementDemand {copy_bytes:source.binding_copy_bytes(),depth:1,..Default::default()});}
         if s.phase==0 {
             return Ok(match source.get(){
                 DslValue::Null=>RetirementDemand {depth:1,..Default::default()},
@@ -121,7 +122,7 @@ impl RetainedCloneCursor<DslValue> for DslValueRetainedCloneCursor {
         let demand=self.demands(source,grant.maximum_copy_bytes)?;
         if !Self::admitted(demand,grant)?{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.state.phase==2{return Ok(RetainedCloneStep::Complete(Default::default()));}
-        source.bind(&mut self.state.source)?;
+        if let Some(progress)=source.bind(&mut self.state.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
         if self.state.draining{return self.close_child(grant);}
         if let Some(child)=self.state.child.as_mut(){
             if child.state.phase!=2 {let projected=self.child_source(source)?;let step=self.state.child.as_mut().unwrap().advance(projected,RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant})?;return Ok(RetainedCloneStep::Progress(step.progress()));}

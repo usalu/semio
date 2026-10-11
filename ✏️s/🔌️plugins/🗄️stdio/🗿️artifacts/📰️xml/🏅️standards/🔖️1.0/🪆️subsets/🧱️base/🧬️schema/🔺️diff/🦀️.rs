@@ -28,7 +28,8 @@ use semio_s_artifact_stdio_contract::deserialize_double_option;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.xml`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xml.diff")]
 pub struct XmlDiff {
@@ -59,7 +60,8 @@ pub struct XmlDiff {
 
 //#region 🔖️NodeDiff
 /// 🌳 Recursive per-node diff, shaped like the `XmlNode` it targets.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum XmlNodeDiff {
     Element(XmlElementDiff),
@@ -80,7 +82,8 @@ pub enum XmlNodeDiff {
 }
 
 /// 🏷️ Per-element diff.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XmlElementDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -94,7 +97,8 @@ pub struct XmlElementDiff {
 /// 🏷️ Name-keyed, ORDER-preserving attribute triple. Deliberately a Vec-based triple (not a
 /// `HashMap`) -- XML attribute order is not semantically meaningful per the spec but IS
 /// significant for byte-preserving round-trips; `order` is the sole final placement authority.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XmlAttributesDiff {
     /// 🧭 Complete final attribute identity order for every nonempty edit.
@@ -108,14 +112,16 @@ pub struct XmlAttributesDiff {
     pub added: Vec<XmlAttrAdded>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XmlAttrModified {
     pub name: String,
     pub value: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XmlAttrAdded {
     pub name: String,
@@ -124,7 +130,8 @@ pub struct XmlAttrAdded {
 
 /// 🌳 Index-keyed, recursive children triple. `removed`/`modified` indices refer to BASE state
 /// (descending removal order on apply); `added` indices refer to FINAL state (ascending insert).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XmlChildrenDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -155,14 +162,16 @@ impl XmlChildrenDiff {
 
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XmlChildModified {
     pub index: usize,
     pub diff: XmlNodeDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XmlChildAdded {
     pub index: usize,

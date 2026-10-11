@@ -10,6 +10,7 @@ import Ajv from "ajv";
 import ts from "typescript";
 import { build, type Plugin } from "esbuild";
 import { BundleScript, findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import corpus from "../../🧫️fixtures/🧭️router-ownership/🔣️.json";
 
 
@@ -89,14 +90,14 @@ test("all original workspace census declarations retain their exact TypeScript A
   }
 });
 
-test("the original Storybook handlers preserve root commands, caller arguments and UI environment", async () => {
+test("the original Storybook handlers preserve root commands, caller arguments and UI environment", () => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "router-ownership-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async (invocation) => {
   const source = parse(corpus.repoScript);
   const declarations = source.statements.filter(node => (ts.isClassDeclaration(node) && corpus.storybookCases.some(row => node.name?.text === row.declaration)) || (ts.isVariableStatement(node) && node.declarationList.declarations.some(row => row.name.getText(source) === "storybookEnv")));
   expect(declarations).toHaveLength(3);
   const calls: { command: string; args: string[]; options: { cwd: string; env: Record<string, string> } }[] = [];
   const environment = { WATCHPACK_POLLING: "explicit-watch", CHOKIDAR_USEPOLLING: "explicit-chokidar" };
-  const context = { BundleScript, process: { env: environment }, devToolingEnv: (env: Record<string, string>) => ({ ...environment, ...env }), runCmd: (command: string, args: string[], options: { cwd: string; env: Record<string, string> }) => calls.push({ command, args, options }), root };
-  const executable = ts.transpileModule(declarations.map(row => row.getText(source)).join("\n") + "\nglobalThis.handlers = [new DevScript(root), new BuildScript(root)];", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const context = { BundleScript, process: { env: environment }, devToolingEnv: (env: Record<string, string>) => ({ ...environment, ...env }), runCmd: (command: string, args: string[], options: { cwd: string; env: Record<string, string> }) => calls.push({ command, args, options }), root, invocation };
+  const executable = ts.transpileModule(declarations.map(row => row.getText(source)).join("\n") + "\nglobalThis.handlers = [new DevScript(root, root, invocation), new BuildScript(root, root, invocation)];", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   const handlers = runInNewContext(executable + "\nhandlers;", context) as BundleScript[];
   for (let index = 0; index < corpus.storybookCases.length; index++) {
     const row = corpus.storybookCases[index]!;
@@ -110,7 +111,7 @@ test("the original Storybook handlers preserve root commands, caller arguments a
     if (row.scope === null) expect(call.options.env.STORYBOOK_SCOPE ?? null).toBeNull();
     else expect(call.options.env.STORYBOOK_SCOPE).toBe(row.scope);
   }
-});
+}));
 
 test("independent esbuild and native Node load the generic router while refusing every product area", async () => {
   mkdirSync(artifacts, { recursive: true });

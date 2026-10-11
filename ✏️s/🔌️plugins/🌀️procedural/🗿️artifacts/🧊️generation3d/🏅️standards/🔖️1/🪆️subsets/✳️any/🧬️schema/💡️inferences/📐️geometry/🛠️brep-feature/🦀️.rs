@@ -2,12 +2,13 @@
 //!
 //! Face and edge selections carry the persistent labels of the input shape value; they resolve through the imported session and fault with `generation3d.geometry.selection-stale` when a label no longer exists.
 
-use super::phased_job::{launch, Pipeline, Work};
+use super::brep_curve::guarded;
+use super::phased_job::{Pipeline, Work};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
 use semio_framework_3d::brep::engine::BrepOperation;
 
 fn feature<P: Send + 'static>(kind: &Kind, inputs: &WidgetInputs, port: &'static str, read: impl FnOnce(&WidgetInputs) -> Result<P, WidgetFault>, plan: impl FnOnce(&mut Work, P) -> Result<BrepOperation, WidgetFault> + Send + 'static) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let shape = inputs.shape(port)?.clone();
         let parameters = read(inputs)?;
         Ok(Pipeline::new(kind).import(&shape).operation(move |work| plan(work, parameters)).exported("shape"))

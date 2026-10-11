@@ -15,7 +15,7 @@ import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRo
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
-import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import type { PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
 import {
   ensurePreview2ShimVendorAt,
@@ -57,7 +57,7 @@ function assertPluginOutputChildren(outDir: string, componentBase: string): void
  * `fetchDescriptorManifest()` deliberately reads this sibling before any actor is instantiated, so
  * leaving descriptors only at their owner roots makes every otherwise-valid module appear app-less
  * at runtime. Unmigrated crates remain honest: no source descriptor means no staged descriptor. */
-function stagePluginDescriptor(target: DeployedRegistryEntryV1, outDir: string, root: string = repoRoot): boolean {
+function stagePluginDescriptor(target: PluginBuildTargetV1, outDir: string, root: string = repoRoot): boolean {
   const ownerRoot = join(root, target.cratePath, "..", "..");
   const descriptorJson = join(ownerRoot, "🔣️.json");
   if (!existsSync(descriptorJson)) {
@@ -73,7 +73,7 @@ function stagePluginDescriptor(target: DeployedRegistryEntryV1, outDir: string, 
 }
 
 /** 🔁️ Refreshes descriptor siblings for already-materialized modules on zero-build starts. */
-function syncBuiltPluginDescriptors(entries: readonly DeployedRegistryEntryV1[]): void {
+function syncBuiltPluginDescriptors(entries: readonly PluginBuildTargetV1[]): void {
   for (const target of entries) {
     const outDir = join(pluginOutRoot, moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]})));
     if (existsSync(outDir)) stagePluginDescriptor(target, outDir);
@@ -88,7 +88,7 @@ async function pluginFileDigest(path: string): Promise<string> {
 }
 
 /** 🛂️ Describes the freshly materialized component with the same JSPI engine as web actors. */
-async function describeBuiltPlugin(target: DeployedRegistryEntryV1, artifact: string, componentModule: string): Promise<void> {
+async function describeBuiltPlugin(target: PluginBuildTargetV1, artifact: string, componentModule: string): Promise<void> {
   const probe = runProbe("node", ["--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, componentModule], { cwd: repoRoot, budgetMs: 60_000 });
   if (probe.status !== 0) throw new Error(`Plugin descriptor failed for ${target.pluginId}: ${probe.stderr}`);
   const base64 = probe.stdout.trim();

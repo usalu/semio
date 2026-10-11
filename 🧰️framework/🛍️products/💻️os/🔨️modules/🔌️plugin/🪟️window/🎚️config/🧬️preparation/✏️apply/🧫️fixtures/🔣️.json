@@ -1,0 +1,317 @@
+{
+  "maximumTurns": 4096,
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    12,
+    20
+  ],
+  "grants": [
+    {
+      "name": "one",
+      "items": 1,
+      "copyExtra": 0
+    },
+    {
+      "name": "seven",
+      "items": 7,
+      "copyExtra": 7
+    },
+    {
+      "name": "large",
+      "items": 1048576,
+      "copyExtra": 1048576
+    }
+  ],
+  "cases": [
+    {
+      "name": "copy camera",
+      "state": "copy",
+      "base": {
+        "camera": {
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 3.0
+        },
+        "eye": [
+          4.0,
+          5.0,
+          6.0
+        ],
+        "selected": 0
+      },
+      "mutation": {
+        "kind": "set-camera",
+        "camera": {
+          "x": 7.0,
+          "y": 8.0,
+          "zoom": 9.0
+        }
+      },
+      "post": {
+        "camera": {
+          "x": 7.0,
+          "y": 8.0,
+          "zoom": 9.0
+        },
+        "eye": [
+          4.0,
+          5.0,
+          6.0
+        ],
+        "selected": 0
+      },
+      "inverse": {
+        "kind": "set-camera",
+        "camera": {
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 3.0
+        }
+      }
+    },
+    {
+      "name": "copy eye",
+      "state": "copy",
+      "base": {
+        "camera": {
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 3.0
+        },
+        "eye": [
+          4.0,
+          5.0,
+          6.0
+        ],
+        "selected": 0
+      },
+      "mutation": {
+        "kind": "set-eye",
+        "eye": [
+          -1.5,
+          0.0,
+          2.25
+        ]
+      },
+      "post": {
+        "camera": {
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 3.0
+        },
+        "eye": [
+          -1.5,
+          0.0,
+          2.25
+        ],
+        "selected": 0
+      },
+      "inverse": {
+        "kind": "set-eye",
+        "eye": [
+          4.0,
+          5.0,
+          6.0
+        ]
+      }
+    },
+    {
+      "name": "copy selected",
+      "state": "copy",
+      "base": {
+        "camera": {
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 3.0
+        },
+        "eye": [
+          4.0,
+          5.0,
+          6.0
+        ],
+        "selected": 2
+      },
+      "mutation": {
+        "kind": "set-selected",
+        "selected": 5
+      },
+      "post": {
+        "camera": {
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 3.0
+        },
+        "eye": [
+          4.0,
+          5.0,
+          6.0
+        ],
+        "selected": 5
+      },
+      "inverse": {
+        "kind": "set-selected",
+        "selected": 2
+      }
+    },
+    {
+      "name": "text active register",
+      "state": "text",
+      "base": {
+        "activeRegister": "main",
+        "label": "l",
+        "ids": [
+          "a",
+          "bc"
+        ],
+        "zoom": 1.5
+      },
+      "mutation": {
+        "kind": "set-active-register",
+        "activeRegister": "é中🐚\u0000register"
+      },
+      "post": {
+        "activeRegister": "é中🐚\u0000register",
+        "label": "l",
+        "ids": [
+          "a",
+          "bc"
+        ],
+        "zoom": 1.5
+      },
+      "inverse": {
+        "kind": "set-active-register",
+        "activeRegister": "main"
+      }
+    },
+    {
+      "name": "text label from null",
+      "state": "text",
+      "base": {
+        "activeRegister": "main",
+        "label": null,
+        "ids": [
+          "a",
+          "bc"
+        ],
+        "zoom": 1.5
+      },
+      "mutation": {
+        "kind": "set-label",
+        "label": "x"
+      },
+      "post": {
+        "activeRegister": "main",
+        "label": "x",
+        "ids": [
+          "a",
+          "bc"
+        ],
+        "zoom": 1.5
+      },
+      "inverse": {
+        "kind": "set-label",
+        "label": null
+      },
+      "requiresOptionNone": true
+    },
+    {
+      "name": "text label to null",
+      "state": "text",
+      "base": {
+        "activeRegister": "",
+        "label": "was é",
+        "ids": [],
+        "zoom": 1.5
+      },
+      "mutation": {
+        "kind": "set-label",
+        "label": null
+      },
+      "post": {
+        "activeRegister": "",
+        "label": null,
+        "ids": [],
+        "zoom": 1.5
+      },
+      "inverse": {
+        "kind": "set-label",
+        "label": "was é"
+      },
+      "requiresOptionNone": true
+    },
+    {
+      "name": "text ids",
+      "state": "text",
+      "base": {
+        "activeRegister": "main",
+        "label": "l",
+        "ids": [
+          "a",
+          "bc"
+        ],
+        "zoom": 1.5
+      },
+      "mutation": {
+        "kind": "set-ids",
+        "ids": [
+          "",
+          "zz",
+          "ú🐚"
+        ]
+      },
+      "post": {
+        "activeRegister": "main",
+        "label": "l",
+        "ids": [
+          "",
+          "zz",
+          "ú🐚"
+        ],
+        "zoom": 1.5
+      },
+      "inverse": {
+        "kind": "set-ids",
+        "ids": [
+          "a",
+          "bc"
+        ]
+      }
+    },
+    {
+      "name": "text zoom",
+      "state": "text",
+      "base": {
+        "activeRegister": "main",
+        "label": "l",
+        "ids": [
+          "a"
+        ],
+        "zoom": 1.5
+      },
+      "mutation": {
+        "kind": "set-zoom",
+        "zoom": 2.5
+      },
+      "post": {
+        "activeRegister": "main",
+        "label": "l",
+        "ids": [
+          "a"
+        ],
+        "zoom": 2.5
+      },
+      "inverse": {
+        "kind": "set-zoom",
+        "zoom": 1.5
+      }
+    }
+  ]
+}

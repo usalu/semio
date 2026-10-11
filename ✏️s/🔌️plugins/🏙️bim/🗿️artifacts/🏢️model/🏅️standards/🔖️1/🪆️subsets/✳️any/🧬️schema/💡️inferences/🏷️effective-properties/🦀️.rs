@@ -23,7 +23,7 @@ pub const READS: &[&str] = &[
 
 //#region 🔖️Values
 /// 🧭️ Where an effective value comes from.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum Source {
     Own,
     Type,
@@ -31,7 +31,7 @@ pub enum Source {
 }
 
 /// 🏷️ One effective value: the value, where it comes from and the template (id) that defines its property, when one does.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct EffectiveValue {
     pub value: PropertyValue,
     pub source: Source,
@@ -40,7 +40,8 @@ pub struct EffectiveValue {
 }
 
 /// 🚫️ What is wrong with one property: no value although required, or a value that breaks its definition.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Issue {
     Missing,
     KindMismatch,
@@ -61,7 +62,7 @@ impl From<Violation> for Issue {
 }
 
 /// 🚫️ One finding about one property of one holder.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct Finding {
     pub template: String,
     pub set: String,
@@ -70,7 +71,7 @@ pub struct Finding {
 }
 
 /// 🏷️ The effective properties of one holder: property set → property → value, and the findings against the templates that apply.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct EffectiveProperties {
     #[value(default)]
     pub values: BTreeMap<String, BTreeMap<String, EffectiveValue>>,

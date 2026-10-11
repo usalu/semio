@@ -37,8 +37,8 @@ impl Puzzle2dCreateNodePreparationCursor {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, CreateNode>, grant: RetainedCloneGrant) -> Result<Puzzle2dCreateNodePreparationStep, ValueError> {
         if self.closing || self.spent { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "create preparation is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Puzzle2dCreateNodePreparationStep::Pending(Default::default())); }
-        source.bind(&mut self.source)?;
-        mutation.bind(&mut self.mutation)?;
+        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(Puzzle2dCreateNodePreparationStep::Pending(progress))}
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(Puzzle2dCreateNodePreparationStep::Pending(progress))}
         if let Some(plan) = self.output { return Ok(Puzzle2dCreateNodePreparationStep::Complete { plan, progress: Default::default() }); }
         let node = &mutation.get().node;
         if self.phase < 7 || self.phase == 7 && self.handle < node.handles.len() {

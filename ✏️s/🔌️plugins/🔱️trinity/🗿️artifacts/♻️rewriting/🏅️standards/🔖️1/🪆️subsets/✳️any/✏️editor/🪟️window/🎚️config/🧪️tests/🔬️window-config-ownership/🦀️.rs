@@ -149,8 +149,8 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
     if let Err(error) = &outcome {
         eprintln!("Rewriting window configuration runtime failure before close: {error}");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut reopened);
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_trinity_jack::trinity_mounted_owner_policy());
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_trinity_jack::trinity_mounted_owner_policy());
     outcome.expect("retained Rewriting window configuration isolation and persistence");
 }
 

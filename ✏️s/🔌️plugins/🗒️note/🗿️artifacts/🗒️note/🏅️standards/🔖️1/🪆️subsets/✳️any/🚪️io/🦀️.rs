@@ -17,13 +17,13 @@
 //! `note_document_bounds`/`note_document_to_svg`/`note_document_json_from_dwg` and friends below
 //! (unchanged, relocated nowhere) are real domain-mapping helpers the foreign leaves in
 //! `📥️import`/`📤️export` call — `note_document_to_svg` still bridges through the OLD
-//! `semio_framework_plugin::io_dispatch`/`ComposerEntry` mechanism to reach stdio's registered
+//! `semio_framework_plugin::app::io_dispatch`/`ComposerEntry` mechanism to reach stdio's registered
 //! semio/drawing→svg composer, because stdio's own `drawing` subset has not yet migrated onto the
 //! new `io_mechanism` registry (ticket status.md wave W2, not this plugin's boundary) — a real,
 //! documented cross-plugin limitation, not an oversight (see `## openQuestions`).
 
 use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
-use {semio_framework_plugin::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoDirection,semio_framework_plugin::IoKey,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_framework_plugin::app::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_plugin::app::ErasedComposeSource,semio_framework_plugin::app::IoDirection,semio_framework_plugin::app::IoKey,semio_framework_plugin::app::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io as semio_drawing_composer;

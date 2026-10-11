@@ -810,12 +810,12 @@
         let mut released = 0usize;
         for turn in 0.. {
             assert!(turn < 64, "ingress close reaches terminal-empty");
-            let release = ingress.next_close_release_bytes();
+            let release = ingress.next_close_release_byte_demand();
             let exact = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: release, maximum_depth: 1, ..Default::default() };
             let under = [Some(RetainedCloneGrant { maximum_items: 0, ..exact }), Some(RetainedCloneGrant { maximum_depth: 0, ..exact }), (release > 0).then(|| RetainedCloneGrant { maximum_release_bytes: release - 1, ..exact })];
             for grant in under.into_iter().flatten() {
                 assert_eq!(ingress.close_step(grant), InteractiveJobCloseStep::Pending { progress: Default::default() });
-                assert_eq!(ingress.next_close_release_bytes(), release, "a yield never mutates the owner");
+                assert_eq!(ingress.next_close_release_byte_demand(), release, "a yield never mutates the owner");
             }
             let (InteractiveJobCloseStep::Pending { progress } | InteractiveJobCloseStep::Complete { progress }) = ingress.close_step(exact) else { panic!("ingress close was refused or blocked") };
             assert!(progress.fits(exact));

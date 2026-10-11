@@ -42,7 +42,7 @@ use semio_framework_plugin::EphemeralEmit;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::FaultCode;
 use semio_framework_plugin::FaultOrigin;
-use semio_framework_plugin::GlbExporter;
+use semio_framework_plugin::mesh_io::GlbExporter;
 use semio_framework_plugin::GranularityDefinition;
 use semio_framework_plugin::HierarchyProvider;
 use semio_framework_plugin::HoverSpec;
@@ -60,7 +60,7 @@ use semio_framework_plugin::MediaPortDirection;
 use semio_framework_plugin::MediaPortSpec;
 use semio_framework_plugin::MediaType;
 use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::MeshExporter;
+use semio_framework_plugin::mesh_io::MeshExporter;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::NoDraft;
@@ -822,19 +822,7 @@ impl ArtifactEditor for RemodelingPlayApp {
     /// publication contract and stays dispatch-dead, no matter how it is classified. Item-count
     /// admission (`REMODELING_RETAINED_WORK_ITEMS`) is `remodeling_retained_extent`'s at dispatch.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("remodeling-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
-    }
-
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -943,6 +931,7 @@ impl ArtifactEditor for RemodelingPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

@@ -43,14 +43,14 @@ fn the_transient_round_trips_and_absorbs_wholesale() {
 #[test]
 fn a_config_mutation_inverts_to_the_base_it_replaced() {
     let base = Grid2dWindowConfig::default();
-    let mutation = Grid2dWindowConfigMutation::SetGridFactor { factor: 16.0 };
+    let mutation = Grid2dWindowConfigMutation::SetGridFactor(Grid2dWindowConfigSetGridFactor { factor: 16.0 });
     let inverse = protocol::Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse, vec![Grid2dWindowConfigMutation::SetGridFactor { factor: base.grid_factor }]);
+    assert_eq!(inverse, vec![Grid2dWindowConfigMutation::SetGridFactor(Grid2dWindowConfigSetGridFactor { factor: base.grid_factor })]);
 }
 
 #[test]
 fn a_config_write_without_a_window_is_refused() {
     let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    assert!(addressed_config(&view, Grid2dWindowConfigMutation::SetGridFactor { factor: 1.0 }).is_err(), "an unaddressed config write would land in the wrong pane's store");
+    assert!(addressed_config(&view, Grid2dWindowConfigMutation::SetGridFactor(Grid2dWindowConfigSetGridFactor { factor: 1.0 })).is_err(), "an unaddressed config write would land in the wrong pane's store");
     assert_eq!(kind_for_view(&view), None);
 }

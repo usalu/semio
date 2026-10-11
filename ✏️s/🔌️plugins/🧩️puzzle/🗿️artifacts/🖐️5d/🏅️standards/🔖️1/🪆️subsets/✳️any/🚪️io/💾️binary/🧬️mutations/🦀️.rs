@@ -51,6 +51,7 @@ mod wire_format_guard;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
+use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;

@@ -56,7 +56,8 @@ pub mod set_entry_data;
 /// 📐️ Typed content mutation for `stdio.zip` 2.0/🌐️iso21320. `NoMutation` was dropped:
 /// `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one leaf payload and a unit
 /// variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = ZipSnapshot, diff = ZipDiff, schema = "ZipIso21320Mutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum ZipIso21320Mutation {

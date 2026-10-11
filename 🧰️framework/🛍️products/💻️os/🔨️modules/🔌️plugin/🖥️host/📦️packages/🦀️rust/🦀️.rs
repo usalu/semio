@@ -21,6 +21,13 @@ pub use semio_framework_os_kernel::os_vcs;
 #[path="../../../🚪️io/🛂️authority/🦀️.rs"]
 pub mod operation_authority;
 
+/// 🎭️ Mounts the plugin reactor's original actor-context vocabulary, the only reactor module the host names.
+#[path="../../../⚛️reactor/🎟️context/🦀️.rs"]
+pub mod original_actor_context;
+pub mod reactor {
+    pub use super::original_actor_context;
+}
+
 /// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the one world's contract-parity
 /// test (effect ↔ host-async import parity, plus the collapsed shape itself) — mounted here rather than inside `🦀️.rs` (other packets are live
 /// in that file). The test uses a narrow owned WIT source inspector and adds no external parser to

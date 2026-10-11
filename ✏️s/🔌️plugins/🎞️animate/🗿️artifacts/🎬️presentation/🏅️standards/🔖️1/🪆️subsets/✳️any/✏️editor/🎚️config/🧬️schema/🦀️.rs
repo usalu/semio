@@ -4,7 +4,7 @@ use schema::ArtifactSchema;
 
 //#region 🔖️Config
 /// 🎚️ Animate presentation app config — unshared local app state.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.animate.presentation.config")]
 pub struct PresentationConfig {

@@ -37,7 +37,7 @@ fn mounted_owned_child_original_preparation_preserves_actual_operation_schema() 
 async fn mounted_owned_child_actual_publisher_commits_original_parent_and_children_before_result_ack() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
-        let mut app = contract_composed_app_raw().await;
+        let mut app = contract_composed_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
         let count = row["children"].as_u64().unwrap() as usize;
         for index in 0..count { register_test_child(&mut app, &format!("child-{}", index + 1)).await; }
         let mut emit: Emit<TestMutation, TestConfigMutation> = Emit::default();
@@ -74,7 +74,7 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
         println!("[DEBUG] actual mounted original owned group parent={} children={count} operations={} memberEdits={} Child page stable until exact ACK", row["parentTouched"], mutations.len(), inverse_group.member_edits.len());
         drop(mutations);
         drop(inverse_group);
-        drain_and_close_composed_fixture(&mut app);
+        drain_and_close_composed_fixture(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
     }
 }
 

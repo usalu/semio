@@ -46,6 +46,21 @@ impl store::ConfigRecord for JackGraphWindowConfig {}
 mod mutations;
 pub use mutations::*;
 
+impl semio_framework_plugin::app::WindowConfigApplyMutation<JackGraphWindowConfig> for JackGraphWindowConfigMutation {
+    fn exchange(self, post: &mut JackGraphWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetCamera(SetCamera { camera }) => Self::SetCamera(SetCamera { camera: std::mem::replace(&mut post.camera, camera) }),
+            Self::SetLodMode(SetLodMode { value }) => Self::SetLodMode(SetLodMode { value: std::mem::replace(&mut post.lod_mode, value) }),
+        })
+    }
+    fn payload_bytes(&self) -> usize {
+        match self {
+            Self::SetCamera(_) => 0,
+            Self::SetLodMode(SetLodMode { value }) => value.len(),
+        }
+    }
+}
+
 pub struct JackGraphWindowConfigOwner;
 
 impl semio_framework_plugin::WindowConfigOwner for JackGraphWindowConfigOwner {
@@ -54,6 +69,12 @@ impl semio_framework_plugin::WindowConfigOwner for JackGraphWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 4096;
     type State = JackGraphWindowConfig;
     type Mutation = JackGraphWindowConfigMutation;
+    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<JackGraphWindowConfig, JackGraphWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+        std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new())
+    }
 
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()

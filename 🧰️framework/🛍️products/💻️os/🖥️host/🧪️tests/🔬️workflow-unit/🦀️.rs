@@ -26,7 +26,7 @@ mod tests {
         /// own export path -- a genuinely independent check of the OLD pack format's header.
         const PACK_MAGIC: [u8; 8] = [0x89, b'S', b'E', b'M', 0x0D, 0x0A, 0x1A, 0x0A];
 
-        fn run(payload: &NewIoPayload) -> semio_framework::io_schema::IoResult<NewIoPayload> {
+        fn run(payload: &NewIoPayload, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> semio_framework::io_schema::IoResult<NewIoPayload> {
             let NewIoPayload::Text(json) = payload else {
                 return Err(semio_framework::io_schema::IoError { cause: semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a text native payload"), diagnostics: Vec::new() });
             };
@@ -76,7 +76,7 @@ mod tests {
 
         let source_document = serde_json::json!({ "value": "RAW-FILE-CONTENT-not-a-pack" });
         let outcome =
-            registry_export_media(TEST_KIND, "stdio.__w1b_export_bug_proof_fmt", &source_document).expect("io-mechanism export path must find the registered route, not fall through to the legacy/handler-map paths").expect("export must succeed");
+            registry_export_media(TEST_KIND, "stdio.__w1b_export_bug_proof_fmt", &source_document, &semio_framework_async::CancelToken::root_now()).expect("io-mechanism export path must find the registered route, not fall through to the legacy/handler-map paths").expect("export must succeed");
 
         let bytes = base64_codec::base64_standard_decode(&outcome.data).expect("OsMediaExportResult base64-encodes binary payloads");
         assert_eq!(bytes, b"RAW-FILE-CONTENT-not-a-pack".to_vec(), "exported bytes must be exactly the raw content the io-mechanism route produced, byte for byte");
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn mesh_exporter_registrar_round_trips_a_box_through_glb() {
-        crate::media_export_raster::register_mesh_exporter("3d.__mesh_exporter_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
+        crate::media_export_raster::register_mesh_exporter("3d.__mesh_exporter_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework::mesh_io::GlbExporter));
         let result = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_handler_key("3d.__mesh_exporter_test", "glb")).expect("glb handler registered")(&serde_json::json!({})).expect("export glb");
         let bytes = base64_codec::base64_standard_decode(result.data).expect("decode base64");
         let mesh = semio_framework::mesh_io::binary::mesh_from_glb(&bytes).expect("glb decodes back to a mesh");
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     fn mesh_importer_registrar_round_trips_a_box_through_obj() {
-        crate::media_export_raster::register_mesh_importer("3d.__mesh_importer_test", |mesh| Ok(serde_json::json!({ "vertexCount": mesh.vertex_count() })), Box::new(semio_framework_plugin::ObjImporter));
+        crate::media_export_raster::register_mesh_importer("3d.__mesh_importer_test", |mesh| Ok(serde_json::json!({ "vertexCount": mesh.vertex_count() })), Box::new(semio_framework::mesh_io::ObjImporter));
         let obj_bytes = semio_framework::mesh_io::text::mesh_to_obj(&semio_framework_plugin::mesh_from_kind("box"), "box").into_bytes();
         let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let handler = handlers.get(&os_media_handler_key("3d.__mesh_importer_test", "obj")).expect("obj handler registered");

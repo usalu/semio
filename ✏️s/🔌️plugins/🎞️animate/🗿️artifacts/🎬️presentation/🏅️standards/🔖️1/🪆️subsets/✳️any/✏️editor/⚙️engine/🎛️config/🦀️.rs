@@ -10,7 +10,7 @@ pub mod config {
     use std::path::{Path, PathBuf};
 
     /// 🎞️ Output quality preset mirroring Manim quality flags.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     pub enum QualityPreset {
         Low,
         Medium,
@@ -43,7 +43,7 @@ pub mod config {
     }
 
     /// 💾️ Cache settings for partial movies and hashed assets.
-    #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     pub struct CacheConfig {
         pub enabled: bool,
         pub max_entries: usize,
@@ -57,7 +57,7 @@ pub mod config {
     }
 
     /// 🎬️ Root configuration for animate scenes and renderers.
-    #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     pub struct AnimateConfig {
         pub quality: QualityPreset,
         pub frame_rate: f64,
@@ -144,7 +144,7 @@ pub mod hash {
     use framework_hash::{format_number_for_hash, hash_parts, merkle_node};
 
     /// 🧾️ Serializable animation fingerprint input.
-    #[derive(Clone, Debug, value_derive::ToValue)]
+    #[derive(Clone, Debug, value_derive::ToValue, semio_framework_value::RetireOwned)]
     pub struct AnimationHashInput {
         pub kind: String,
         pub run_time: f64,

@@ -2,7 +2,9 @@
 
 use super::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::host::{JackEffectRetirementFactory, JackSnapshotCloneAuthority, JackSnapshotCloneStep, JackSnapshotRetirementFactory};
+use crate::host::{admit_demand, JackSnapshotCloneAuthority, JackSnapshotCloneStep};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::RetirementDemand;
 use crate::{port_key, JackSnapshot, Port, PortDirection, PropertyBag};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use std::collections::{BTreeSet, VecDeque};
@@ -167,6 +169,24 @@ fn graph_result_metadata_owned_bytes(graph: &Graph, maximum: usize) -> Result<us
     Ok(bytes)
 }
 
+/// ♻️ The one typed owner a closing query cursor holds between its extraction turn and its funded retirement birth.
+#[derive(semio_framework_value::RetireOwned)]
+enum QueryClosingOwner {
+    Effect(GraphEffect),
+    Query(Query),
+    Metadata(JackSnapshot),
+}
+
+/// 📤️ The graph metadata the working graph still owns once its entities are gone, moved into a snapshot shell that retires it.
+fn graph_metadata_owner(graph: &mut Graph) -> JackSnapshot {
+    JackSnapshot { name: std::mem::take(&mut graph.name), manifest_id: graph.manifest_id.take(), manifest: std::mem::take(&mut graph.manifest), camera: graph.camera.clone(), root_node_id: graph.root_node_id.take(), query: std::mem::take(&mut graph.query), ..Default::default() }
+}
+
+/// 🧹️ Drives one small displaced value to its terminal witness inside the step that displaced it.
+fn retire_displaced(effect: GraphEffect) -> Result<(), ValueError> {
+    crate::retire_owned_to_terminal(effect)
+}
+
 /// 🧱 One preparation turn clones one snapshot metadata field or one working-scene entity.
 pub enum QueryPreparationStep {
     Pending,
@@ -177,7 +197,8 @@ pub enum QueryPreparationStep {
 pub struct QueryExecutionPreparation {
     query: Option<Query>,
     metadata: JackSnapshotCloneAuthority,
-    metadata_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    closing_owner: Option<QueryClosingOwner>,
+    retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     graph: Option<Graph>,
     node: usize,
     edge: usize,
@@ -190,7 +211,7 @@ impl QueryExecutionPreparation {
     pub fn new(query: Query) -> Self { Self::with_result_grant(query, QUERY_RESULT_MAXIMUM_OWNED_BYTES) }
 
     pub fn with_result_grant(query: Query, maximum_result_owned_bytes: usize) -> Self {
-        Self { query: Some(query), metadata: JackSnapshotCloneAuthority::metadata_only(), metadata_retirement: None, graph: None, node: 0, edge: 0, maximum_result_owned_bytes, closing: false, terminal: false }
+        Self { query: Some(query), metadata: JackSnapshotCloneAuthority::metadata_only(), closing_owner: None, retirement: None, graph: None, node: 0, edge: 0, maximum_result_owned_bytes, closing: false, terminal: false }
     }
 
     pub fn step(&mut self, snapshot: &JackSnapshot, scene: &SemioGraphSnapshot, maximum_bytes: usize) -> Result<QueryPreparationStep, ValueError> {
@@ -207,7 +228,7 @@ impl QueryExecutionPreparation {
             let mut metadata = self.metadata.take_value().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated,"query metadata clone did not transfer its owner"))?;
             if metadata.schema != JackSnapshot::SCHEMA {
                 let error = ValueError::new(ValueRefusalKind::InvalidValue,format!("query snapshot schema '{}' is invalid", metadata.schema));
-                self.metadata_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackSnapshotRetirementFactory, metadata));
+                self.closing_owner = Some(QueryClosingOwner::Metadata(metadata));
                 return Err(error);
             }
             let graph = Graph {
@@ -220,19 +241,9 @@ impl QueryExecutionPreparation {
                 root_node_id: metadata.root_node_id.take(),
                 query: std::mem::take(&mut metadata.query),
             };
-            self.metadata_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackSnapshotRetirementFactory, metadata));
+            crate::retire_owned_to_terminal(metadata)?;
             self.graph = Some(graph);
             return Ok(QueryPreparationStep::Pending);
-        }
-        if let Some(retirement) = self.metadata_retirement.as_mut() {
-            match retirement.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    self.metadata_retirement = None;
-                    return Ok(QueryPreparationStep::Pending);
-                }
-                store::SnapshotRetirementStep::Complete => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query metadata retirement reported a false terminal")),
-                _ => return Ok(QueryPreparationStep::Pending),
-            }
         }
         if scene.nodes.len() > QUERY_ENTITY_MAXIMUM || scene.edges.len() > QUERY_ENTITY_MAXIMUM {
             return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query snapshot exceeds its entity admission"));
@@ -267,47 +278,71 @@ impl QueryExecutionPreparation {
         self.closing = true;
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
-        if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(store::SnapshotRetirementStep::Blocked);
+    /// 📏️ Quotes the next close turn: the retained child cursor, a staged typed owner, the partial metadata clone, else one extraction move.
+    pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if let Some(owner) = self.retirement.as_ref() {
+            return store::artifact_retirement_box_demands(owner, body);
         }
-        if let Some(retirement) = self.metadata_retirement.as_mut() {
-            match retirement.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => self.metadata_retirement = None,
-                store::SnapshotRetirementStep::Complete => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query preparation metadata retirement reported a false terminal")),
-                step => return Ok(step),
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        if self.closing_owner.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&self.closing_owner);
         }
         if !self.metadata.terminal_is_empty() {
-            return match self.metadata.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if self.metadata.terminal_is_empty() => Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }),
-                store::SnapshotRetirementStep::Complete => Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query preparation metadata clone reported a false terminal")),
-                step => Ok(step),
-            };
+            return self.metadata.close_demands(body);
         }
-        if let Some(graph) = self.graph.as_mut() {
+        if self.graph.is_some() || self.query.is_some() {
+            return Ok(RetirementDemand { copy_bytes: size_of::<QueryClosingOwner>(), depth: 1, ..Default::default() });
+        }
+        Ok(Default::default())
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() {
+            return Ok(RetainedCloneStep::Complete(empty));
+        }
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(RetainedCloneStep::Progress(empty));
+        }
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if !admit_demand(grant, demand, "query preparation close exceeds admitted depth")? {
+            return Ok(RetainedCloneStep::Progress(empty));
+        }
+        if self.retirement.is_some() {
+            return store::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+        }
+        if self.closing_owner.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.closing_owner, &mut self.retirement, grant);
+        }
+        if !self.metadata.terminal_is_empty() {
+            return self.metadata.close_step(grant);
+        }
+        let extracted = if let Some(graph) = self.graph.as_mut() {
             if let Some((_, node)) = graph.nodes.pop_first() {
-                self.metadata_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::CreateNode(node)));
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                Some(QueryClosingOwner::Effect(GraphEffect::CreateNode(node)))
+            } else if let Some((_, edge)) = graph.edges.pop_first() {
+                Some(QueryClosingOwner::Effect(GraphEffect::CreateEdge(edge)))
+            } else {
+                let metadata = graph_metadata_owner(graph);
+                self.graph = None;
+                Some(QueryClosingOwner::Metadata(metadata))
             }
-            if let Some((_, edge)) = graph.edges.pop_first() {
-                self.metadata_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::CreateEdge(edge)));
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        } else {
+            self.query.take().map(QueryClosingOwner::Query)
+        };
+        match extracted {
+            Some(owner) => {
+                self.closing_owner = Some(owner);
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }))
             }
-            self.graph = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            None => {
+                self.terminal = true;
+                Ok(RetainedCloneStep::Complete(empty))
+            }
         }
-        if self.query.is_some() {
-            drop(self.query.take());
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: maximum_bytes });
-        }
-        self.terminal = true;
-        Ok(store::SnapshotRetirementStep::Complete)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.terminal && self.query.is_none() && self.graph.is_none() && self.metadata_retirement.is_none() && self.metadata.terminal_is_empty()
+        self.terminal && self.query.is_none() && self.graph.is_none() && self.closing_owner.is_none() && self.retirement.is_none() && self.metadata.terminal_is_empty()
     }
 }
 
@@ -592,6 +627,7 @@ pub struct QueryExecution {
     pending_clause_advance: bool,
     finished: bool,
     closing: bool,
+    closing_owner: Option<QueryClosingOwner>,
     retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     metadata_retired: bool,
     terminal: bool,
@@ -619,6 +655,7 @@ impl QueryExecution {
             pending_clause_advance: false,
             finished: false,
             closing: false,
+            closing_owner: None,
             retirement: None,
             metadata_retired: false,
             terminal: false,
@@ -639,15 +676,6 @@ impl QueryExecution {
         Ok(())
     }
     fn mutation_step(&mut self) -> Result<bool, ValueError> {
-        if let Some(retirement) = self.retirement.as_mut() {
-            match retirement.close_step(1, 4_096)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => self.retirement = None,
-                store::SnapshotRetirementStep::Complete => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query mutation retirement reported a false terminal")),
-                store::SnapshotRetirementStep::Pending { .. } => return Ok(true),
-                store::SnapshotRetirementStep::Blocked => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query mutation retirement unexpectedly blocked")),
-            }
-            return Ok(true);
-        }
         if let Some(deleting) = self.deleting.as_mut() {
             let next = match deleting.edge.as_ref() {
                 Some(previous) => self
@@ -662,13 +690,13 @@ impl QueryExecution {
                 deleting.edge = Some(edge.clone());
                 if incident {
                     if let Some(removed) = self.graph.edges.remove(&edge) {
-                        self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::CreateEdge(removed)));
+                        retire_displaced(GraphEffect::CreateEdge(removed))?;
                     }
                 }
                 return Ok(true);
             }
             if let Some(removed) = self.graph.nodes.remove(&deleting.id) {
-                self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::CreateNode(removed)));
+                retire_displaced(GraphEffect::CreateNode(removed))?;
             }
             if self.graph.root_node_id.as_deref() == Some(deleting.id.as_str()) {
                 self.graph.root_node_id = None;
@@ -707,14 +735,14 @@ impl QueryExecution {
             }
             GraphEffect::DeleteEdge(id) => {
                 if let Some(removed) = self.graph.edges.remove(id) {
-                    self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::CreateEdge(removed)));
+                    retire_displaced(GraphEffect::CreateEdge(removed))?;
                 }
                 Ok(())
             }
             GraphEffect::RenameNode { id, name } => match self.graph.nodes.get_mut(id) {
                 Some(node) => {
                     let previous = std::mem::replace(&mut node.name, name.clone());
-                    self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::DeleteNode(previous)));
+                    retire_displaced(GraphEffect::DeleteNode(previous))?;
                     Ok(())
                 }
                 None => Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("node {id} not found"))),
@@ -735,7 +763,7 @@ impl QueryExecution {
                 match bag {
                     Some(bag) => {
                         if let Some(previous) = bag.insert(key.clone(), value.clone()) {
-                            self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::SetProperty { entity: EntityRef::Node(String::new()), key: String::new(), value: previous }));
+                            retire_displaced(GraphEffect::SetProperty { entity: EntityRef::Node(String::new()), key: String::new(), value: previous })?;
                         }
                         Ok(())
                     }
@@ -750,7 +778,7 @@ impl QueryExecution {
                 match bag {
                     Some(bag) => {
                         if let Some(previous) = bag.remove(key) {
-                            self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, GraphEffect::SetProperty { entity: EntityRef::Node(String::new()), key: String::new(), value: previous }));
+                            retire_displaced(GraphEffect::SetProperty { entity: EntityRef::Node(String::new()), key: String::new(), value: previous })?;
                         }
                         Ok(())
                     }
@@ -862,119 +890,9 @@ impl QueryExecution {
     pub fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn retire_effect(&mut self, effect: GraphEffect) {
-        self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackEffectRetirementFactory, effect));
-    }
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, ValueError> {
-        if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if let Some(retirement) = self.retirement.as_mut() {
-            match retirement.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => self.retirement = None,
-                store::SnapshotRetirementStep::Complete => return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query owner retirement reported a false terminal")),
-                step => return Ok(step),
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(deleting) = self.deleting.as_mut() {
-            if let Some(value) = deleting.edge.take() {
-                self.retire_effect(GraphEffect::DeleteNode(value));
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            if !deleting.id.is_empty() {
-                let value = std::mem::take(&mut deleting.id);
-                self.retire_effect(GraphEffect::DeleteNode(value));
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-        }
-        if let Some(deleting) = self.deleting.take() {
-            self.retire_effect(deleting.operation);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(mutation) = self.pending.pop_front().or_else(|| self.operations.pop()) {
-            self.retire_effect(mutation);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(filtering) = self.filtering.as_mut() {
-            if let Some(binding) = filtering.next() {
-                self.bindings.push(binding);
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            self.filtering = None;
-        }
-        if let Some(matching) = self.matching.as_mut() {
-            if let Some(binding) = matching.bindings.pop().or_else(|| matching.next.pop()) {
-                self.bindings.push(binding);
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            if let Some(value) = matching.node.take().or_else(|| matching.edge.take()) {
-                self.retire_effect(GraphEffect::DeleteNode(value));
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            self.matching = None;
-        }
-        if let Some(returning) = self.returning.as_mut() {
-            if let Some(node) = returning.nodes.pop() {
-                self.retire_effect(GraphEffect::CreateNode(node));
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            if let Some(edge) = returning.edges.pop() {
-                self.retire_effect(GraphEffect::CreateEdge(edge));
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            if let Some(value) = returning.rows.last_mut().and_then(Vec::pop) {
-                self.retire_effect(GraphEffect::SetProperty { entity: EntityRef::Node(String::new()), key: String::new(), value });
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            if returning.rows.pop().is_some() {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            if let Some(value) = returning.columns.pop().or_else(|| returning.node_ids.pop_first()).or_else(|| returning.edge_ids.pop_first()) {
-                self.retire_effect(GraphEffect::DeleteNode(value));
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            self.returning = None;
-        }
-        if let Some(binding) = self.bindings.last_mut() {
-            if let Some((key, value)) = binding.nodes.pop_first().or_else(|| binding.edges.pop_first()) {
-                self.retire_effect(GraphEffect::RemoveProperty { entity: EntityRef::Node(value), key });
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            self.bindings.pop();
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some((_, node)) = self.graph.nodes.pop_first() {
-            self.retire_effect(GraphEffect::CreateNode(node));
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some((_, edge)) = self.graph.edges.pop_first() {
-            self.retire_effect(GraphEffect::CreateEdge(edge));
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if !self.metadata_retired {
-            let metadata = JackSnapshot {
-                name: std::mem::take(&mut self.graph.name),
-                manifest_id: self.graph.manifest_id.take(),
-                manifest: std::mem::take(&mut self.graph.manifest),
-                camera: self.graph.camera.clone(),
-                root_node_id: self.graph.root_node_id.take(),
-                ..Default::default()
-            };
-            self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackSnapshotRetirementFactory, metadata));
-            self.metadata_retired = true;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.query.is_some() {
-            drop(self.query.take());
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: maximum_bytes });
-        }
-        self.terminal = true;
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-    pub fn terminal_is_empty(&self) -> bool {
-        self.terminal
-            && self.query.is_none()
+    /// 🧹️ Whether any owner other than the staged one and its retirement cursor remains in the cursor's own fields.
+    fn residual_is_empty(&self) -> bool {
+        self.query.is_none()
             && self.graph.nodes.is_empty()
             && self.graph.edges.is_empty()
             && self.bindings.is_empty()
@@ -984,7 +902,130 @@ impl QueryExecution {
             && self.pending.is_empty()
             && self.deleting.is_none()
             && self.operations.is_empty()
-            && self.retirement.is_none()
+            && self.metadata_retired
+    }
+
+    /// 📏️ Quotes the next close turn: the retained child cursor, a staged typed owner, else one extraction move.
+    pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if let Some(owner) = self.retirement.as_ref() {
+            return store::artifact_retirement_box_demands(owner, body);
+        }
+        if self.closing_owner.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&self.closing_owner);
+        }
+        if !self.residual_is_empty() {
+            return Ok(RetirementDemand { copy_bytes: size_of::<QueryClosingOwner>().max(size_of::<Binding>()), depth: 1, ..Default::default() });
+        }
+        Ok(Default::default())
+    }
+
+    /// 📤️ Moves the next owned piece into a typed closing owner; `Ok(None)` is a pure move that stages nothing.
+    fn extract_closing_owner(&mut self) -> Option<Option<QueryClosingOwner>> {
+        let effect = |effect: GraphEffect| Some(Some(QueryClosingOwner::Effect(effect)));
+        if let Some(deleting) = self.deleting.as_mut() {
+            if let Some(value) = deleting.edge.take() {
+                return effect(GraphEffect::DeleteNode(value));
+            }
+            if !deleting.id.is_empty() {
+                let value = std::mem::take(&mut deleting.id);
+                return effect(GraphEffect::DeleteNode(value));
+            }
+        }
+        if let Some(deleting) = self.deleting.take() {
+            return effect(deleting.operation);
+        }
+        if let Some(mutation) = self.pending.pop_front().or_else(|| self.operations.pop()) {
+            return effect(mutation);
+        }
+        if let Some(filtering) = self.filtering.as_mut() {
+            if let Some(binding) = filtering.next() {
+                self.bindings.push(binding);
+                return Some(None);
+            }
+            self.filtering = None;
+            return Some(None);
+        }
+        if let Some(matching) = self.matching.as_mut() {
+            if let Some(binding) = matching.bindings.pop().or_else(|| matching.next.pop()) {
+                self.bindings.push(binding);
+                return Some(None);
+            }
+            if let Some(value) = matching.node.take().or_else(|| matching.edge.take()) {
+                return effect(GraphEffect::DeleteNode(value));
+            }
+            self.matching = None;
+            return Some(None);
+        }
+        if let Some(returning) = self.returning.as_mut() {
+            if let Some(node) = returning.nodes.pop() {
+                return effect(GraphEffect::CreateNode(node));
+            }
+            if let Some(edge) = returning.edges.pop() {
+                return effect(GraphEffect::CreateEdge(edge));
+            }
+            if let Some(value) = returning.rows.last_mut().and_then(Vec::pop) {
+                return effect(GraphEffect::SetProperty { entity: EntityRef::Node(String::new()), key: String::new(), value });
+            }
+            if returning.rows.pop().is_some() {
+                return Some(None);
+            }
+            if let Some(value) = returning.columns.pop().or_else(|| returning.node_ids.pop_first()).or_else(|| returning.edge_ids.pop_first()) {
+                return effect(GraphEffect::DeleteNode(value));
+            }
+            self.returning = None;
+            return Some(None);
+        }
+        if let Some(binding) = self.bindings.last_mut() {
+            if let Some((key, value)) = binding.nodes.pop_first().or_else(|| binding.edges.pop_first()) {
+                return effect(GraphEffect::RemoveProperty { entity: EntityRef::Node(value), key });
+            }
+            self.bindings.pop();
+            return Some(None);
+        }
+        if let Some((_, node)) = self.graph.nodes.pop_first() {
+            return effect(GraphEffect::CreateNode(node));
+        }
+        if let Some((_, edge)) = self.graph.edges.pop_first() {
+            return effect(GraphEffect::CreateEdge(edge));
+        }
+        if !self.metadata_retired {
+            self.metadata_retired = true;
+            return Some(Some(QueryClosingOwner::Metadata(graph_metadata_owner(&mut self.graph))));
+        }
+        self.query.take().map(|query| Some(QueryClosingOwner::Query(query)))
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() {
+            return Ok(RetainedCloneStep::Complete(empty));
+        }
+        if !self.closing || grant.maximum_items == 0 {
+            return Ok(RetainedCloneStep::Progress(empty));
+        }
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if !admit_demand(grant, demand, "query execution close exceeds admitted depth")? {
+            return Ok(RetainedCloneStep::Progress(empty));
+        }
+        if self.retirement.is_some() {
+            return store::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+        }
+        if self.closing_owner.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.closing_owner, &mut self.retirement, grant);
+        }
+        match self.extract_closing_owner() {
+            Some(staged) => {
+                self.closing_owner = staged;
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }))
+            }
+            None => {
+                self.terminal = true;
+                Ok(RetainedCloneStep::Complete(empty))
+            }
+        }
+    }
+    pub fn terminal_is_empty(&self) -> bool {
+        self.terminal && self.residual_is_empty() && self.closing_owner.is_none() && self.retirement.is_none()
     }
 }
 

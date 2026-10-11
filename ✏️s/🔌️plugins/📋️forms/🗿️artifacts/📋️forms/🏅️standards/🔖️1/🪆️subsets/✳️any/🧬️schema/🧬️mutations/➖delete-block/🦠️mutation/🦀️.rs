@@ -8,7 +8,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 //#region ✂️DeleteBlock
 /// ✂️ Removes a block by id from `step_id`'s `blocks`. Inverse recreates it (with its captured base
 /// position) via `create-block`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct DeleteBlock {

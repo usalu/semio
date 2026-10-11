@@ -732,7 +732,7 @@ fn prepared_surface_export_scope_uses_the_existing_graph_connections() {
 /// 📄️ The real registry preserves imported graph documents and retires its rebuilt roots.
 #[test]
 fn imported_graph_text_registry_round_trip_preserves_graph_and_retires_rebuilt_snapshot() {
-    use {semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::{import, io_registry};
     let contract = fixture()["registryText"].clone();
     assert_eq!(contract["source"], "imported-unit-cube");
@@ -950,11 +950,11 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
 
 #[test]
 fn document_io_retained_envelope_resumes_bytes_cancels_and_retires_without_publication() {
-    use semio_framework_value::{NativeEncodeControl,retirement::owned_retirement};
+    use semio_framework_value::NativeEncodeControl;
     use std::{io::Write,process::{Command,Stdio}};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let continuation=&fixture["documentContinuation"];let law=&continuation["envelope"];let text=law["text"].as_str().unwrap().repeat(law["textRepeats"].as_u64().unwrap()as usize);let binary=(0..law["binaryLength"].as_u64().unwrap()).map(|i|i as u8).collect::<Vec<_>>();let text_row=document_io::EXPORT_FORMATS.iter().find(|r|r.id=="txt").unwrap();let binary_row=document_io::EXPORT_FORMATS.iter().find(|r|r.id=="las").unwrap();
     let mut child=Command::new("bun").args(["-e","await Bun.write(Bun.stdout,Buffer.from(await Bun.stdin.arrayBuffer()).toString('base64'));"]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&binary).unwrap();let oracle=child.wait_with_output().unwrap();assert!(oracle.status.success());let encoded=String::from_utf8(oracle.stdout).unwrap();
-    let retire=|envelope:document_io::Generation3dDocumentEnvelope|{let mut retirement=owned_retirement(envelope);while !retirement.terminal_is_empty() {if let semio_framework_value::SnapshotRetirementStep::Pending {released_bytes,..}=retirement.close_step(1,law["retirementBytes"].as_u64().unwrap()as usize).unwrap() {assert!(released_bytes<=3);}}};
+    let retire=|envelope:document_io::Generation3dDocumentEnvelope|{let mut retirement=crate::retirement_driver::retire_owned_for_test(envelope,"document envelope");crate::retirement_driver::drive_erased_released(retirement.as_mut(),"document envelope");};
     for budget in continuation["budgets"].as_array().unwrap() {for (row,bytes,expected) in [(text_row,text.as_bytes().to_vec(),text.as_str()),(binary_row,binary.clone(),encoded.as_str())] {
         let pointer=bytes.as_ptr();let mut envelope=document_io::Generation3dDocumentEnvelope::new(row,bytes);let mut accepted=|_|true;let mut control=NativeEncodeControl::new(1000000,&mut accepted);let mut turns=0;let output=loop {let before=(envelope.position(),control.owned_bytes());assert!(envelope.step(0,&mut control).unwrap().is_none());assert_eq!((envelope.position(),control.owned_bytes()),before);turns+=1;assert!(turns<100000);if let Some(output)=envelope.step(budget.as_u64().unwrap()as usize,&mut control).unwrap() {break output;}};assert_eq!(output.data,expected);if row.id=="txt" {assert_eq!(output.data.as_ptr(),pointer);}assert!(envelope.step(1,&mut control).unwrap().is_none());retire(envelope);
     }}

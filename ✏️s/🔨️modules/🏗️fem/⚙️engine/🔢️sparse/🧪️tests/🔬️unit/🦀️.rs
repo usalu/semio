@@ -1,5 +1,37 @@
 use super::*;
-use crate::engine_test_vectors::payload_bytes;
+use crate::engine_test_vectors::{close_payload, close_payload_page_bytes, close_job, close_writer, close_writer_released, pages_bytes, payload_from_pages, seen_of, Seen, TEST_GRANT};
+
+fn accounted_close<C>(owner: &mut C, step: impl Fn(&mut C) -> InteractiveJobCloseStep, physical: impl Fn(&C) -> usize) -> (usize, bool, bool, bool) {
+    let (mut retired, mut exact, mut bounded, mut complete) = (0, true, true, false);
+    for _ in 0..10_000 {
+        let before = physical(owner);
+        let turn = step(owner);
+        let delta = before - physical(owner);
+        let progress = turn.progress();
+        exact &= progress.released_bytes == delta || delta == 0;
+        bounded &= progress.copied_items <= 1 && progress.released_bytes <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+        retired += delta;
+        match turn {
+            InteractiveJobCloseStep::Complete { .. } => { complete = true; break; }
+            InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. } => { bounded = false; break; }
+            InteractiveJobCloseStep::Pending { .. } => {}
+        }
+    }
+    (retired, exact, bounded, complete)
+}
+
+fn checkpoint_payload(operation: Operation, pages: &[Vec<u8>]) -> RetainedJobPayload {
+    payload_from_pages(operation, JobPayloadStream::CheckpointState, pages)
+}
+
+fn tuple_of(step: InteractiveJobCloseStep) -> (bool, usize, usize) {
+    let progress = step.progress();
+    (matches!(step, InteractiveJobCloseStep::Complete { .. }), progress.copied_items, progress.released_bytes)
+}
+
+fn grant_of(items: usize, bytes: usize) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: items, maximum_release_bytes: bytes, ..TEST_GRANT }
+}
 
 #[test]
 fn numerical_page_subspace_work_persists_solver_state_without_physical_retirement_cursor() {
@@ -16,7 +48,8 @@ fn numerical_page_subspace_work_persists_solver_state_without_physical_retiremen
             retiring.close_lane = lane.as_u64().unwrap() as u8;
             job.state.retiring_work = Some(retiring);
             let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState);
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
             writer.begin_staged_page(&mut context).unwrap();
             let mut cursor = NumericalPageCursor { field, owner: 0, item: 0 };
             for _ in 0..64 {
@@ -25,11 +58,7 @@ fn numerical_page_subspace_work_persists_solver_state_without_physical_retiremen
             }
             let mut payload = writer.finish().unwrap_or_else(|_| panic!("work control page committed"));
             pages.push(payload.page(0).unwrap().to_vec());
-            for _ in 0..16 {
-                let _ = payload.close_step(1, NUMERICAL_OWNER_PAGE_BYTES);
-                if payload.terminal_is_empty() { break; }
-            }
-            assert!(payload.terminal_is_empty());
+            close_payload(payload);
         }
         let counts: Vec<_> = pages.iter().map(|bytes| {
             let page = parse_numerical_page(bytes, b"FEMSCP1\0").unwrap();
@@ -138,16 +167,16 @@ fn numerical_page_subspace_restore_close_preserves_every_ungranted_backing() {
         restore.payload = None;
         restore.state = Some(job.state);
         let before = physical(restore.state.as_ref());
-        let first = restore.close_step(1, grant);
+        let first = restore.close_step(grant_of(1, grant));
         let after = physical(restore.state.as_ref());
         let retired = 2 - inner_owners(restore.state.as_ref());
-        let reported = match first { semio_framework_job::InteractiveJobCloseStep::Pending { released_bytes, .. } => released_bytes, _ => 0 };
+        let reported = match first { semio_framework_job::InteractiveJobCloseStep::Pending { progress } => progress.released_bytes, _ => 0 };
         let mut released = reported;
         let mut exact = before - after == reported && reported <= grant;
         for _ in 0..128 {
             let before = physical(restore.state.as_ref());
-            let step = restore.close_step(1, NUMERICAL_OWNER_PAGE_BYTES);
-            let reported = match step { semio_framework_job::InteractiveJobCloseStep::Pending { released_bytes, .. } => released_bytes, _ => 0 };
+            let step = restore.close_step(grant_of(1, NUMERICAL_OWNER_PAGE_BYTES));
+            let reported = match step { semio_framework_job::InteractiveJobCloseStep::Pending { progress } => progress.released_bytes, _ => 0 };
             exact &= before - physical(restore.state.as_ref()) == reported;
             released += reported;
             if restore.terminal_is_empty() { break; }
@@ -175,15 +204,17 @@ fn numerical_page_restore_fault_is_sticky_before_later_input_or_allocation() {
     subspace.fault = Some(expected);
     let mut observations = Vec::new();
     for _ in 0..2 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         let left = ldlt.step(&mut context).err();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         let right = subspace.step(&mut context).err();
         observations.push((left, right, ldlt.page_slot, ldlt.page_entry, subspace.page_slot, subspace.page_entry));
     }
     for _ in 0..16 {
-        let _ = ldlt.close_step(1, NUMERICAL_OWNER_PAGE_BYTES);
-        let _ = subspace.close_step(1, NUMERICAL_OWNER_PAGE_BYTES);
+        let _ = ldlt.close_step(grant_of(1, NUMERICAL_OWNER_PAGE_BYTES));
+        let _ = subspace.close_step(grant_of(1, NUMERICAL_OWNER_PAGE_BYTES));
         if ldlt.terminal_is_empty() && subspace.terminal_is_empty() { break; }
     }
     assert!(ldlt.terminal_is_empty() && subspace.terminal_is_empty());
@@ -215,7 +246,8 @@ fn numerical_page_matrix_restore_retains_dimensions_and_partial_capacity_across_
         let mut completed = false;
         for _ in 0..length * 3 + 64 {
             let result = if writer.staged_page_len().is_none() {
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+                let mut sequence_receipt = RetainedCloneProgress::default();
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
                 writer.begin_staged_page(&mut context).map(|_| false)
             } else {
                 match advance_numerical_page_header(&mut writer, b"FEMSCP1\0", 12, write_cursor) {
@@ -249,11 +281,10 @@ fn numerical_page_matrix_restore_retains_dimensions_and_partial_capacity_across_
                 }
                 if restore_fault.is_some() { break; }
             }
-            for _ in 0..64 { if matches!(payload.close_step(1, NUMERICAL_OWNER_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) { break; } }
-            assert!(payload.terminal_is_empty());
+            close_payload(payload);
         } else {
             writer.begin_close();
-            for _ in 0..64 { if matches!(writer.close_step(1, NUMERICAL_OWNER_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) { break; } }
+            close_writer(&mut writer);
             assert!(writer.terminal_is_empty());
         }
         let values = restored.data.clone();
@@ -307,16 +338,16 @@ fn numerical_page_restore_close_preserves_ungranted_backing_and_retires_one_owne
         restore.payload = None;
         restore.state = Some(job.state);
         let before = physical(restore.state.as_ref());
-        let first = restore.close_step(1, grant);
+        let first = restore.close_step(grant_of(1, grant));
         let after = physical(restore.state.as_ref());
         let retired = 2 - inner_owners(restore.state.as_ref());
-        let reported = match first { semio_framework_job::InteractiveJobCloseStep::Pending { released_bytes, .. } => released_bytes, _ => 0 };
+        let reported = match first { semio_framework_job::InteractiveJobCloseStep::Pending { progress } => progress.released_bytes, _ => 0 };
         let mut released = reported;
         let mut exact = before - after == reported && reported <= grant;
         for _ in 0..128 {
             let before = physical(restore.state.as_ref());
-            let step = restore.close_step(1, NUMERICAL_OWNER_PAGE_BYTES);
-            let reported = match step { semio_framework_job::InteractiveJobCloseStep::Pending { released_bytes, .. } => released_bytes, _ => 0 };
+            let step = restore.close_step(grant_of(1, NUMERICAL_OWNER_PAGE_BYTES));
+            let reported = match step { semio_framework_job::InteractiveJobCloseStep::Pending { progress } => progress.released_bytes, _ => 0 };
             exact &= before - physical(restore.state.as_ref()) == reported;
             released += reported;
             if restore.terminal_is_empty() { break; }
@@ -453,18 +484,17 @@ fn numerical_page_ldlt_checkpoint_restores_maximum_admitted_matrix() {
     let mut checkpoint = None;
     let mut write_fault = false;
     for _ in 0..100_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match job.step(&mut context) {
-            StepOutcome::CheckpointReady(value) => { checkpoint = Some(value.state); break; }
-            StepOutcome::Yield => {}
-            StepOutcome::Fault(fault) => { close_payload(fault.detail); write_fault = true; break; }
-            StepOutcome::PreviewReady(payload) => close_payload(payload),
-            StepOutcome::Complete(candidate) => { close_payload(candidate.state); close_payload(candidate.output); write_fault = true; break; }
-            _ => { write_fault = true; break; }
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        match seen_of(job.step(&mut context)) {
+            Seen::Checkpoint(pages) => { checkpoint = Some(pages); break; }
+            Seen::Yield | Seen::Preview(_) => {}
+            Seen::Fault(_) | Seen::Complete(_) | Seen::Cancelled => { write_fault = true; break; }
         }
     }
     let mut pages = Vec::new();
-    let mut restore = checkpoint.map(|payload| {
+    let mut restore = checkpoint.map(|checkpoint_pages| {
+        let payload = payload_from_pages(operation, JobPayloadStream::CheckpointState, &checkpoint_pages);
         for slot in 0..payload.page_count() {
             let page = parse_numerical_page(payload.page(slot).unwrap(), b"FEMLCP1\0").unwrap();
             if page.field == 3 {
@@ -478,7 +508,8 @@ fn numerical_page_ldlt_checkpoint_restores_maximum_admitted_matrix() {
     let mut restore_fault = None;
     if let Some(restore) = restore.as_mut() {
         for _ in 0..100_000 {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
             match restore.step(&mut context) {
                 Ok(Some(value)) => { restored = Some(value); break; }
                 Ok(None) => {}
@@ -488,9 +519,9 @@ fn numerical_page_ldlt_checkpoint_restores_maximum_admitted_matrix() {
     }
     let actual = restored.as_ref().map(|value| (value.state.a.colptr.clone(), value.state.a.rowind.clone(), value.state.a.vals.clone()));
     for _ in 0..10_000 {
-        if let Some(restore) = restore.as_mut() { let _ = restore.close_step(1, NUMERICAL_OWNER_PAGE_BYTES); }
-        if let Some(restored) = restored.as_mut() { let _ = InteractiveJob::close_step(restored, 1, NUMERICAL_OWNER_PAGE_BYTES); }
-        let _ = InteractiveJob::close_step(&mut job, 1, NUMERICAL_OWNER_PAGE_BYTES);
+        if let Some(restore) = restore.as_mut() { let _ = restore.close_step(grant_of(1, NUMERICAL_OWNER_PAGE_BYTES)); }
+        if let Some(restored) = restored.as_mut() { let _ = InteractiveJob::close_step(restored, grant_of(1, NUMERICAL_OWNER_PAGE_BYTES)); }
+        let _ = InteractiveJob::close_step(&mut job, grant_of(1, NUMERICAL_OWNER_PAGE_BYTES));
         if restore.as_ref().is_none_or(LdltRestoreCursor::terminal_is_empty) && restored.as_ref().is_none_or(InteractiveJob::terminal_is_empty) && InteractiveJob::terminal_is_empty(&job) { break; }
     }
     let closed = restore.as_ref().is_none_or(LdltRestoreCursor::terminal_is_empty) && restored.as_ref().is_none_or(InteractiveJob::terminal_is_empty) && InteractiveJob::terminal_is_empty(&job);
@@ -521,7 +552,8 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
         for _ in 0..count * 3 + 32 {
             let writer = writer.as_mut().unwrap();
             let result = if writer.staged_page_len().is_none() {
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+                let mut sequence_receipt = RetainedCloneProgress::default();
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
                 writer.begin_staged_page(&mut context).map(|_| false)
             } else {
                 match advance_numerical_page_header(writer, b"FEMPGT1\0", 41, cursor) {
@@ -557,25 +589,13 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
                         pages.push(serde_json::json!({ "owner": owner, "item": item, "bytes": bytes.len(), "scalars": scalars }));
                         for bytes in bytes[start..].chunks_exact(8) { decoded.push(f64::from_bits(u64::from_le_bytes(bytes.try_into().unwrap()))); }
                     }
-                    for _ in 0..32 {
-                        match payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES) {
-                            semio_framework_job::JobPayloadCloseStep::Pending { released_bytes, .. } => released += released_bytes,
-                            semio_framework_job::JobPayloadCloseStep::Complete => break,
-                        }
-                    }
-                    assert!(payload.terminal_is_empty());
+                    released += close_payload_page_bytes(payload);
                 }
                 Err(returned) => { writer = Some(returned); complete = false; }
             }
         }
         if let Some(writer) = writer.as_mut() {
-            writer.begin_close();
-            for _ in 0..32 {
-                match writer.close_step(1, JOB_PAYLOAD_PAGE_BYTES) {
-                    semio_framework_job::JobPayloadCloseStep::Pending { released_bytes, .. } => released += released_bytes,
-                    semio_framework_job::JobPayloadCloseStep::Complete => break,
-                }
-            }
+            released += close_writer_released(writer);
             assert!(writer.terminal_is_empty());
         }
         eprintln!("numerical page {} complete={complete}, fault={fault:?}, cursor={cursor:?}, pages={pages:?}, released={released}", row["id"]);
@@ -625,7 +645,8 @@ fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
         let operation = test_operation(5_000 + index as u64);
         let mut sequence = 0;
         let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState);
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut sequence_receipt);
         writer.begin_staged_page(&mut context).unwrap();
         writer.write_staged(&[0; JOB_PAYLOAD_PAGE_BYTES][..JOB_PAYLOAD_PAGE_BYTES - remaining]).unwrap();
         let mut cursor = NumericalPageCursor { field: 0, owner: usize::from(kind != "length" && kind != "matrix-shape"), item: 0 };
@@ -634,7 +655,8 @@ fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
         let committed = writer.staged_page_len().is_none();
         let held = !committed || cursor == before;
         if committed && fault.is_none() {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut sequence_receipt);
             writer.begin_staged_page(&mut context).unwrap();
             advance_numerical_page_header(&mut writer, b"FEMPGT1\0", 42, cursor).unwrap();
             fault = advance(kind, &mut writer, &mut cursor, &matrix, &integers, &scalars).err();
@@ -645,14 +667,7 @@ fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
         let last = payload.page(page_count - 1).unwrap();
         let entry = last[last.len() - width..].to_vec();
         let actual = serde_json::json!({ "committed": committed, "owner": cursor.owner, "item": cursor.item, "entry": entry });
-        let mut released = 0;
-        for _ in 0..32 {
-            match payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_bytes, .. } => released += released_bytes,
-                semio_framework_job::JobPayloadCloseStep::Complete => break,
-            }
-        }
-        assert!(payload.terminal_is_empty());
+        let released = close_payload_page_bytes(payload);
         observations.push((format!("{kind}/{remaining}"), actual, row["expected"].clone(), fault.is_none(), held, released == page_count * JOB_PAYLOAD_PAGE_BYTES));
     }
     integers.pop();
@@ -999,7 +1014,7 @@ fn pcg_job_construction_checks_order_before_backing_allocation() {
         let initialized = construction.b.len();
         let mut closed = false;
         for _ in 0..20_000 {
-            let step = construction.close_step(ceiling.max(allocated));
+            let step = tuple_of(construction.close_step(grant_of(1, ceiling.max(allocated))));
             if step.0 { closed = true; break; }
         }
         observations.push((case.clone(), result, allocated, initialized, closed));
@@ -1049,7 +1064,7 @@ fn pcg_job_construction_uses_actual_rhs_norm() {
             let solved = result.map(|job| drive_pcg_job(job, operation));
             let mut closed = false;
             for _ in 0..20_000 {
-                if construction.close_step(PCG_SCALAR_BACKING_BYTES).0 { closed = true; break; }
+                if tuple_of(construction.close_step(grant_of(1, PCG_SCALAR_BACKING_BYTES))).0 { closed = true; break; }
             }
             observations.push((row.clone(), mounted, rhs.clone(), observed, solved, turns, closed));
         }
@@ -1105,7 +1120,7 @@ fn pcg_job_construction_rejects_nonfinite_rhs_without_losing_owners() {
             let mut closed = false;
             let mut released = 0;
             for _ in 0..20_000 {
-                let step = construction.close_step(PCG_SCALAR_BACKING_BYTES);
+                let step = tuple_of(construction.close_step(grant_of(1, PCG_SCALAR_BACKING_BYTES)));
                 assert!(step.2 <= PCG_SCALAR_BACKING_BYTES);
                 released += step.2;
                 if step.0 { closed = true; break; }
@@ -1146,34 +1161,26 @@ fn pcg_job_publication_matches_canonical_wire_pages() {
         let mut pages = None;
         let mut turns = 0;
         for turn in 1..10_000 {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            let payload = match job.step(&mut context) {
-                StepOutcome::CheckpointReady(checkpoint) => Some(checkpoint.state),
-                StepOutcome::PreviewReady(payload) => Some(payload),
-                StepOutcome::Complete(candidate) => { close_payload(candidate.state); Some(candidate.output) }
-                StepOutcome::Fault(fault) => { close_payload(fault.detail); break; }
-                StepOutcome::Cancelled => break,
-                StepOutcome::Yield => None,
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+            let lent = match seen_of(job.step(&mut context)) {
+                Seen::Checkpoint(lent) | Seen::Preview(lent) | Seen::Complete(lent) => Some(lent),
+                Seen::Fault(_) | Seen::Cancelled => break,
+                Seen::Yield => None,
             };
-            if let Some(payload) = payload {
-                pages = Some((0..payload.page_count()).map(|index| payload.page(index).unwrap().iter().map(|byte| format!("{byte:02x}")).collect::<String>()).collect::<Vec<_>>());
-                close_payload(payload);
+            if let Some(lent) = lent {
+                pages = Some(lent.iter().map(|page| page.iter().map(|byte| format!("{byte:02x}")).collect::<String>()).collect::<Vec<_>>());
                 turns = turn;
                 break;
             }
         }
         let mut delivered_again = false;
         if kind == "complete" {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            match job.step(&mut context) {
-                StepOutcome::Complete(candidate) => { close_payload(candidate.state); close_payload(candidate.output); delivered_again = true; }
-                StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
-                StepOutcome::PreviewReady(payload) => close_payload(payload),
-                StepOutcome::Fault(fault) => close_payload(fault.detail),
-                StepOutcome::Cancelled | StepOutcome::Yield => {}
-            }
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+            delivered_again = matches!(seen_of(job.step(&mut context)), Seen::Complete(_));
         }
-        for _ in 0..10_000 { if job.close_step(NUMERICAL_OWNER_PAGE_BYTES).0 { break; } }
+        close_job(&mut job);
         let closed = InteractiveJob::terminal_is_empty(&job);
         eprintln!("PCG canonical {kind}: turns={turns}, pages={}, delivered_again={delivered_again}, closed={closed}", pages.as_ref().map_or(0, Vec::len));
         observations.push((case.clone(), pages, turns, delivered_again, closed));
@@ -1204,14 +1211,14 @@ fn pcg_job_checkpoint_rejects_foreign_operation_identity() {
     for identity in identities {
         match restore_pcg(identity, pcg_checkpoint_payload(&job)) {
             Ok(mut resumed) => {
-                for _ in 0..1_024 { if resumed.close_step(NUMERICAL_OWNER_PAGE_BYTES).0 { break; } }
+                close_job(&mut resumed);
                 assert!(InteractiveJob::terminal_is_empty(&resumed));
                 rejected.push(false);
             }
             Err(_) => rejected.push(true),
         }
     }
-    for _ in 0..1_024 { if job.close_step(NUMERICAL_OWNER_PAGE_BYTES).0 { break; } }
+    close_job(&mut job);
     assert!(InteractiveJob::terminal_is_empty(&job));
     assert_eq!(rejected, vec![true; 4]);
 }
@@ -1235,20 +1242,21 @@ fn pcg_job_publication_grants_preserve_pending_state_and_work_cursor() {
         job.state.preview_due = kind == "preview";
         if kind == "complete" { job.state.stage = PcgStage::Complete; }
         let mut sequence = 0;
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(case["fuel"].as_u64().unwrap(), case["deadline"].as_u64().unwrap()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        let outcome = match job.step(&mut context) {
-            StepOutcome::Yield => "yield",
-            StepOutcome::PreviewReady(payload) => { close_payload(payload); "preview" }
-            StepOutcome::CheckpointReady(checkpoint) => { close_payload(checkpoint.state); "checkpoint" }
-            StepOutcome::Complete(candidate) => { close_payload(candidate.state); close_payload(candidate.output); "complete" }
-            StepOutcome::Fault(fault) => { close_payload(fault.detail); "fault" }
-            StepOutcome::Cancelled => "cancelled",
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(case["fuel"].as_u64().unwrap(), case["deadline"].as_u64().unwrap(), TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        let outcome = match seen_of(job.step(&mut context)) {
+            Seen::Yield => "yield",
+            Seen::Preview(_) => "preview",
+            Seen::Checkpoint(_) => "checkpoint",
+            Seen::Complete(_) => "complete",
+            Seen::Fault(_) => "fault",
+            Seen::Cancelled => "cancelled",
         };
         let pending = match kind { "checkpoint" => job.state.checkpoint_due, "preview" => job.state.preview_due, _ => job.state.stage == PcgStage::Complete };
         let mut observed = serde_json::json!({ "pending": pending, "cursor": job.state.entry_cursor, "fuelRemaining": context.fuel_remaining(), "outcome": outcome });
         let mut closed = false;
         for _ in 0..1_024 {
-            let (terminal, items, bytes) = job.close_step(NUMERICAL_OWNER_PAGE_BYTES);
+            let (terminal, items, bytes) = tuple_of(InteractiveJob::close_step(&mut job, grant_of(1, NUMERICAL_OWNER_PAGE_BYTES)));
             assert!(items <= 1 && bytes <= NUMERICAL_OWNER_PAGE_BYTES);
             if terminal { closed = true; break; }
         }
@@ -1281,12 +1289,13 @@ fn pcg_job_initial_precondition_preserves_admitted_direction_backing() {
     let mut sequence = 0;
     let mut observed = Vec::new();
     for _ in 0..3 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        assert!(matches!(job.step(&mut context), StepOutcome::Yield));
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        assert!(matches!(seen_of(job.step(&mut context)), Seen::Yield));
         assert_eq!(context.fuel_remaining(), 0);
         observed.push((job.state.p.0.clone(), job.state.p.0.as_ptr() == pointer && job.state.p.0.capacity() == capacity));
     }
-    for _ in 0..1_024 { if job.close_step(NUMERICAL_OWNER_PAGE_BYTES).0 { break; } }
+    close_job(&mut job);
     assert!(InteractiveJob::terminal_is_empty(&job));
     for (index, (direction, retained)) in observed.into_iter().enumerate() {
         assert_eq!(direction, expected[index], "precondition scalar {index}");
@@ -1331,9 +1340,7 @@ fn subspace_factor_cursor_matches_numpy_for_three_nondiagonal_right_hand_sides()
     }
     let terminal = job.state.work.stage == SubspaceStage::OrthogonalizePairElement;
     let observed: Vec<Vec<f64>> = (0..3).map(|row| (0..3).map(|column| job.state.work.solved.get(row, column)).collect()).collect();
-    for _ in 0..1_024 {
-        if matches!(InteractiveJob::close_step(&mut job, 1, NUMERICAL_OWNER_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) { break; }
-    }
+    close_job(&mut job);
     assert!(InteractiveJob::terminal_is_empty(&job));
     assert!(terminal && scalar_steps && retained);
     assert_eq!(observed, expected);
@@ -1367,14 +1374,13 @@ fn subspace_publication_restarts_at_zero_and_commits_convergence_after_the_last_
         let mut sequence = 0;
         let mut observations = Vec::new();
         for fuel in [0, 1, 0, 1, 1, 1, 1, 1] {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            let yielded = matches!(job.step(&mut context), StepOutcome::Yield);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+            let yielded = matches!(seen_of(job.step(&mut context)), Seen::Yield);
             observations.push((yielded && context.fuel_remaining() == 0, job.state.final_theta.clone(), job.state.converged, job.state.work.first, job.state.iteration, job.state.final_theta.as_ptr() == pointer && job.state.final_theta.capacity() == capacity, job.terminal_writer.is_none()));
         }
         let solution = job.solution();
-        for _ in 0..1_024 {
-            if matches!(InteractiveJob::close_step(&mut job, 1, NUMERICAL_OWNER_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) { break; }
-        }
+        close_job(&mut job);
         assert!(InteractiveJob::terminal_is_empty(&job));
         for (index, (yielded, values, converged, cursor, iteration, retained, no_terminal)) in observations.into_iter().enumerate() {
             assert!(yielded && retained && no_terminal, "publication opportunity {index}, modes {modes}: yielded={yielded}, retained={retained}, no_terminal={no_terminal}");
@@ -1410,15 +1416,9 @@ fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
             let mut sequence = 0;
             let mut yielded = true;
             for _ in 0..cut {
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-                match job.step(&mut context) {
-                    StepOutcome::Yield => {}
-                    StepOutcome::PreviewReady(payload) => { yielded = false; close_payload(payload); }
-                    StepOutcome::CheckpointReady(checkpoint) => { yielded = false; close_payload(checkpoint.state); }
-                    StepOutcome::Complete(candidate) => { yielded = false; close_payload(candidate.state); close_payload(candidate.output); }
-                    StepOutcome::Fault(fault) => { yielded = false; close_payload(fault.detail); }
-                    StepOutcome::Cancelled => yielded = false,
-                }
+                let mut sequence_receipt = RetainedCloneProgress::default();
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+                yielded &= matches!(seen_of(job.step(&mut context)), Seen::Yield);
             }
             let snapshot = |job: &PcgJob| (
                 job.state.checkpoint_control(operation), job.state.checkpoint_due, job.state.preview_due, job.terminal_published,
@@ -1427,38 +1427,27 @@ fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
             );
             let before = snapshot(&job);
             for (fuel, deadline) in [(0, u64::MAX), (1, 0)] {
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, deadline), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-                yielded &= matches!(job.step(&mut context), StepOutcome::Yield) && snapshot(&job) == before;
+                let mut sequence_receipt = RetainedCloneProgress::default();
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, deadline, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+                yielded &= matches!(seen_of(job.step(&mut context)), Seen::Yield) && snapshot(&job) == before;
             }
             let token = semio_framework_job::root_cancel_token();
             semio_framework_async::block_on(token.cancel());
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
-            let cancelled = matches!(job.step(&mut context), StepOutcome::Cancelled) && snapshot(&job) == before;
-            let zero_items = matches!(InteractiveJob::close_step(&mut job, 0, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }) && snapshot(&job) == before;
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
+            let cancelled = matches!(seen_of(job.step(&mut context)), Seen::Cancelled) && snapshot(&job) == before;
+            let zero_items = matches!(InteractiveJob::close_step(&mut job, grant_of(0, usize::MAX)), semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress == RetainedCloneProgress::default()) && snapshot(&job) == before;
             let has_pages = job.publication.as_ref().is_some_and(|publication| publication.writer.page_count() != 0 || publication.writer.staged_page_len().is_some());
-            // 💰️ `charge_payload_page` (`🧰️framework/🔨️modules/🧵️job/🦀️.rs`) ACCRUES a page's charge
-            // across turns instead of refusing every sub-page grant — the repair for the close spin
-            // of ticket 26/09/18. So a sub-page turn still frees NOTHING (no item, backing intact,
-            // `snapshot == before`) but it SPENDS its grant, and those bytes are part of the page's
-            // one-time charge. The law is the ledger, so the probe's spend is folded into it rather
-            // than asserted to be zero.
-            let (subexact, probe_bytes) = if has_pages {
-                let (terminal, items, bytes) = job.close_step(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1);
-                (!terminal && items == 0 && bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES && snapshot(&job) == before, bytes)
+            let subexact = if has_pages || job.desk.lent.is_some() {
+                matches!(InteractiveJob::close_step(&mut job, grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1)), semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress.copied_items <= 1 && progress.released_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) && snapshot(&job) == before
             } else {
-                (true, 0)
+                true
             };
-            let mut released = probe_bytes;
-            let mut bounded = true;
-            for _ in 0..10_000 {
-                let (terminal, items, bytes) = job.close_step(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                bounded &= items <= 1 && bytes <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
-                released += bytes;
-                if terminal { break; }
-            }
+            job.begin_close();
+            let (released, exact, bounded, complete) = accounted_close(&mut job, |job| InteractiveJob::close_step(job, grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)), pcg_physical_bytes);
             let terminal = InteractiveJob::terminal_is_empty(&job) && pcg_physical_bytes(&job) == 0;
-            if !(yielded && cancelled && zero_items && subexact && bounded && terminal && released == before.5) {
-                failures.push(format!("{kind}/{cut}: yield={yielded}, cancel={cancelled}, zero={zero_items}, subexact={subexact}, bounded={bounded}, terminal={terminal}, physical={}/{released}", before.5));
+            if !(yielded && cancelled && zero_items && subexact && bounded && exact && complete && terminal && released == before.5) {
+                failures.push(format!("{kind}/{cut}: yield={yielded}, cancel={cancelled}, zero={zero_items}, subexact={subexact}, bounded={bounded}, exact={exact}, complete={complete}, terminal={terminal}, physical={}/{released}", before.5));
             }
             cuts += 1;
         }
@@ -1481,14 +1470,15 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
     let mut fields = 0u16;
     for turn in 1..10_000 {
         if baseline.expected_field < 11 { fields |= 1 << baseline.expected_field; }
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         match baseline.step(&mut context) {
             Ok(Some(mut job)) => { close_pcg_job(&mut job); turns = turn; break; }
             Ok(None) => {}
             Err(_) => break,
         }
     }
-    while !baseline.terminal_is_empty() { let _ = baseline.close_step(1, usize::MAX); }
+    while !baseline.terminal_is_empty() { let _ = baseline.close_step(grant_of(1, usize::MAX)); }
     assert!(turns > 0 && fields == 0x7ff);
     let retained = |cursor: &PcgRestoreCursor| cursor.payload.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) + cursor.job.as_ref().map_or(0, pcg_physical_bytes);
     let snapshot = |cursor: &PcgRestoreCursor| (cursor.page_slot, cursor.page_entry, cursor.expected_field, format!("{:?}", cursor.owner_cursor), retained(cursor));
@@ -1497,7 +1487,8 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
         let mut restore = PcgRestoreCursor::new(operation, pcg_payload_from_pages(operation, &pages));
         let mut pending = true;
         for _ in 0..cut {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
             match restore.step(&mut context) {
                 Ok(None) => {}
                 Ok(Some(mut job)) => { close_pcg_job(&mut job); pending = false; }
@@ -1506,7 +1497,8 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
         }
         let before = snapshot(&restore);
         for (fuel, deadline) in [(0, u64::MAX), (1, 0)] {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, deadline), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, deadline, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
             match restore.step(&mut context) {
                 Ok(None) => {}
                 Ok(Some(mut job)) => { close_pcg_job(&mut job); pending = false; }
@@ -1516,37 +1508,22 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
         }
         let token = semio_framework_job::root_cancel_token();
         semio_framework_async::block_on(token.cancel());
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
         let cancelled = match restore.step(&mut context) {
             Err(NumericalCheckpointFault::Cancelled) => true,
             Ok(Some(mut job)) => { close_pcg_job(&mut job); false }
             _ => false,
         };
-        let mut later = StepContext::new(semio_framework_job::OperationId(operation.operation.0 + 1), operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut later = StepContext::new(semio_framework_job::OperationId(operation.operation.0 + 1), operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         let sticky = restore.step(&mut later).err() == Some(NumericalCheckpointFault::Cancelled) && snapshot(&restore) == before;
-        let zero = matches!(restore.close_step(0, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }) && snapshot(&restore) == before;
-        // 💰️ Accrued page charge (see `charge_payload_page`): a sub-page grant frees no ITEM and
-        // leaves the retained backing exactly as it was, but it SPENDS its grant into the page's
-        // one-time charge — so the spend belongs in the ledger below, not asserted away as zero.
-        let (held, probe_bytes) = match restore.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1) {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes } => (released_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES && retained(&restore) == before.4, released_bytes),
-            _ => (false, 0),
-        };
-        let mut released = probe_bytes;
-        let mut bounded = true;
-        for _ in 0..10_000 {
-            match restore.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                    bounded &= released_items <= 1 && released_bytes <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
-                    released += released_bytes;
-                }
-                semio_framework_job::InteractiveJobCloseStep::Complete => break,
-                semio_framework_job::InteractiveJobCloseStep::Blocked => { bounded = false; break; }
-            }
-        }
+        let zero = matches!(restore.close_step(grant_of(0, usize::MAX)), semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress == RetainedCloneProgress::default()) && snapshot(&restore) == before;
+        let held = matches!(restore.close_step(grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1)), semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress.copied_items <= 1 && progress.released_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) && retained(&restore) == before.4;
+        let (released, exact, bounded, complete) = accounted_close(&mut restore, |restore| restore.close_step(grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)), |restore| retained(restore));
         let terminal = restore.terminal_is_empty() && retained(&restore) == 0;
-        if !(pending && cancelled && sticky && zero && held && bounded && terminal && released == before.4) {
-            failures.push(format!("cut={cut}, pending={pending}, cancel={cancelled}, sticky={sticky}, zero={zero}, held={held}, bounded={bounded}, terminal={terminal}, physical={}/{released}", before.4));
+        if !(pending && cancelled && sticky && zero && held && bounded && exact && complete && terminal && released == before.4) {
+            failures.push(format!("cut={cut}, pending={pending}, cancel={cancelled}, sticky={sticky}, zero={zero}, held={held}, bounded={bounded}, exact={exact}, complete={complete}, terminal={terminal}, physical={}/{released}", before.4));
         }
     }
     eprintln!("PCG restore cancellation: {turns} cuts, fields={fields:#x}, failures={}", failures.len());
@@ -1604,18 +1581,11 @@ fn pcg_physical_bytes(job: &PcgJob) -> usize {
     let vectors = [&state.b.0, &state.x.0, &state.diag.0, &state.r.0, &state.z.0, &state.p.0, &state.ap.0];
     state.a.physical_backing_bytes().into_iter().sum::<usize>() + vectors.into_iter().map(|owner| owner.capacity() * size_of::<f64>()).sum::<usize>()
         + job.publication.as_ref().map_or(0, |publication| (publication.writer.page_count() + usize::from(publication.writer.staged_page_len().is_some())) * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)
+        + job.desk.lent.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)
 }
 
 fn pcg_payload_from_pages(operation: Operation, pages: &[Vec<u8>]) -> RetainedJobPayload {
-    let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState);
-    let mut sequence = 0;
-    for page in pages {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        writer.begin_staged_page(&mut context).unwrap();
-        writer.write_staged(page).unwrap();
-        writer.commit_staged_page().unwrap();
-    }
-    writer.finish().unwrap()
+    payload_from_pages(operation, JobPayloadStream::CheckpointState, pages)
 }
 
 /// 🧯 Every malformed PCG owner retains its first fault and physically drains the exact candidate.
@@ -1646,7 +1616,8 @@ fn pcg_job_restore_rejects_malformed_owners_and_closes_exact_backing() {
         let mut sequence = 0;
         let mut error = None;
         for _ in 0..10_000 {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
             match restore.step(&mut context) {
                 Ok(None) => {}
                 Ok(Some(mut job)) => { close_pcg_job(&mut job); break; }
@@ -1655,33 +1626,17 @@ fn pcg_job_restore_rejects_malformed_owners_and_closes_exact_backing() {
         }
         let retained = |cursor: &PcgRestoreCursor| cursor.payload.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) + cursor.job.as_ref().map_or(0, pcg_physical_bytes);
         let before = (restore.page_slot, restore.page_entry, restore.expected_field, retained(&restore));
-        let mut later = StepContext::new(semio_framework_job::OperationId(operation.operation.0 + 1), operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut later = StepContext::new(semio_framework_job::OperationId(operation.operation.0 + 1), operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         let sticky = restore.step(&mut later).err() == error;
         let unchanged = before == (restore.page_slot, restore.page_entry, restore.expected_field, retained(&restore));
-        let zero_items = matches!(restore.close_step(0, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }) && retained(&restore) == before.3;
-        // 💰️ Accrued page charge (see `charge_payload_page`): a sub-page grant frees no ITEM and
-        // leaves the retained backing exactly as it was, but it SPENDS its grant into the page's
-        // one-time charge — so the spend belongs in the ledger below, not asserted away as zero.
-        let (subexact, probe_bytes) = if restore.payload.as_ref().is_some_and(|payload| payload.page_count() != 0) {
-            match restore.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1) {
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes } => (released_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES && retained(&restore) == before.3, released_bytes),
-                _ => (false, 0),
-            }
-        } else { (true, 0) };
-        let mut released = probe_bytes;
-        let mut bounded = true;
-        for _ in 0..100_000 {
-            match restore.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                    bounded &= released_items <= 1 && released_bytes <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
-                    released += released_bytes;
-                }
-                semio_framework_job::InteractiveJobCloseStep::Complete => break,
-                semio_framework_job::InteractiveJobCloseStep::Blocked => { bounded = false; break; }
-            }
-        }
+        let zero_items = matches!(restore.close_step(grant_of(0, usize::MAX)), semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress == RetainedCloneProgress::default()) && retained(&restore) == before.3;
+        let subexact = if restore.payload.as_ref().is_some_and(|payload| payload.page_count() != 0) {
+            matches!(restore.close_step(grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1)), semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress.copied_items <= 1 && progress.released_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) && retained(&restore) == before.3
+        } else { true };
+        let (released, exact, bounded, complete) = accounted_close(&mut restore, |restore| restore.close_step(grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)), |restore| retained(restore));
         let terminal = restore.terminal_is_empty() && retained(&restore) == 0;
-        observations.push((case.clone(), error, sticky, unchanged, zero_items, subexact, bounded, terminal, before.3, released));
+        observations.push((case.clone(), error, sticky, unchanged, zero_items, subexact, bounded && exact && complete, terminal, before.3, released));
     }
     for (case, error, sticky, unchanged, zero_items, subexact, bounded, terminal, retained, released) in observations {
         assert!(sticky && unchanged && zero_items && subexact && bounded && terminal, "{}", case["id"]);
@@ -1691,22 +1646,22 @@ fn pcg_job_restore_rejects_malformed_owners_and_closes_exact_backing() {
 }
 
 fn close_pcg_job(job: &mut PcgJob) {
-    for _ in 0..200_000 { if job.close_step(usize::MAX).0 { return; } }
-    panic!("PCG fixture closes all actual owners");
+    close_job(job);
 }
 
 fn pcg_checkpoint_payload(job: &PcgJob) -> RetainedJobPayload {
     let mut publication = PcgPublication::new(PcgPublicationKind::Checkpoint);
     let mut sequence = 0;
     for _ in 0..2_000_000 {
-        let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         if publication.writer.staged_page_len().is_none() {
             publication.writer.begin_staged_page(&mut context).unwrap();
         } else if publication.advance(job.operation, &job.state).unwrap() {
             return publication.writer.finish().unwrap();
         }
     }
-    while !publication.writer.terminal_is_empty() { let _ = publication.writer.close_step(1, usize::MAX); }
+    close_writer(&mut publication.writer);
     panic!("PCG fixture checkpoint completes");
 }
 
@@ -1722,35 +1677,33 @@ fn restore_pcg(operation: Operation, payload: RetainedJobPayload) -> Result<PcgJ
     let mut sequence = 0;
     let mut fault = NumericalCheckpointFault::Truncated;
     for _ in 0..2_000_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         match restore.step(&mut context) {
             Ok(Some(job)) => { assert!(restore.terminal_is_empty()); return Ok(job); }
             Ok(None) => {}
             Err(error) => { fault = error; break; }
         }
     }
-    while !restore.terminal_is_empty() { let _ = restore.close_step(1, usize::MAX); }
+    while !restore.terminal_is_empty() { let _ = restore.close_step(grant_of(1, usize::MAX)); }
     Err(fault)
 }
 
 fn drive_pcg_job(mut job: PcgJob, operation: Operation) -> (VecD, PcgStats) {
     let mut sequence = 0;
     loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match job.step(&mut context) {
-            StepOutcome::Complete(candidate) => {
-                close_payload(candidate.state);
-                close_payload(candidate.output);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        match seen_of(job.step(&mut context)) {
+            Seen::Complete(_) => {
                 let (solution, stats) = job.solution();
                 let solution = solution.clone();
                 close_pcg_job(&mut job);
                 return (solution, stats);
             }
-            StepOutcome::PreviewReady(payload) => close_payload(payload),
-            StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
-            StepOutcome::Fault(fault) => panic!("pcg fault: {}", String::from_utf8_lossy(&payload_bytes(fault.detail))),
-            StepOutcome::Cancelled => panic!("pcg unexpectedly cancelled"),
-            _ => {}
+            Seen::Fault(detail) => panic!("pcg fault: {}", String::from_utf8_lossy(&pages_bytes(&detail))),
+            Seen::Cancelled => panic!("pcg unexpectedly cancelled"),
+            Seen::Preview(_) | Seen::Checkpoint(_) | Seen::Yield => {}
         }
     }
 }
@@ -1759,13 +1712,14 @@ fn restore_ldlt(operation: Operation, payload: RetainedJobPayload) -> Result<Ldl
     let mut restore = LdltRestoreCursor::new(operation, payload);
     let mut sequence = 0;
     for _ in 0..200_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         match restore.step(&mut context) {
             Ok(Some(job)) => return Ok(job),
             Ok(None) => {}
             Err(fault) => {
                 while !restore.terminal_is_empty() {
-                    let _ = restore.close_step(1, usize::MAX);
+                    let _ = restore.close_step(grant_of(1, usize::MAX));
                 }
                 return Err(fault);
             }
@@ -1778,25 +1732,20 @@ fn restore_subspace(operation: Operation, payload: RetainedJobPayload) -> Result
     let mut restore = SubspaceRestoreCursor::new(operation, payload);
     let mut sequence = 0;
     for _ in 0..400_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         match restore.step(&mut context) {
             Ok(Some(job)) => return Ok(job),
             Ok(None) => {}
             Err(fault) => {
                 while !restore.terminal_is_empty() {
-                    let _ = restore.close_step(1, usize::MAX);
+                    let _ = restore.close_step(grant_of(1, usize::MAX));
                 }
                 return Err(fault);
             }
         }
     }
     Err(NumericalCheckpointFault::Truncated)
-}
-
-fn close_payload(mut payload: RetainedJobPayload) {
-    while !payload.terminal_is_empty() {
-        let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
 }
 
 #[test]
@@ -1827,18 +1776,18 @@ fn pcg_job_checkpoint_resume_is_exact() {
     let mut job = PcgJob::new(operation, csr, b, VecD::zeros(n), 1e-12, 200, 7);
     let mut sequence = 0;
     let checkpoint = loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match job.step(&mut context) {
-            StepOutcome::CheckpointReady(checkpoint) => break checkpoint.state,
-            StepOutcome::PreviewReady(payload) => close_payload(payload),
-            StepOutcome::Complete(candidate) => { close_payload(candidate.state); close_payload(candidate.output); panic!("PCG completes before the required checkpoint"); }
-            StepOutcome::Fault(fault) => panic!("PCG checkpoint fault: {}", String::from_utf8_lossy(&payload_bytes(fault.detail))),
-            StepOutcome::Cancelled => panic!("PCG checkpoint unexpectedly cancelled"),
-            StepOutcome::Yield => {}
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        match seen_of(job.step(&mut context)) {
+            Seen::Checkpoint(pages) => break pages,
+            Seen::Preview(_) | Seen::Yield => {}
+            Seen::Complete(_) => panic!("PCG completes before the required checkpoint"),
+            Seen::Fault(detail) => panic!("PCG checkpoint fault: {}", String::from_utf8_lossy(&pages_bytes(&detail))),
+            Seen::Cancelled => panic!("PCG checkpoint unexpectedly cancelled"),
         }
     };
-    let expected_pages: Vec<Vec<u8>> = (0..checkpoint.page_count()).map(|index| checkpoint.page(index).unwrap().to_vec()).collect();
-    let resumed = restore_pcg(operation, checkpoint).expect("pcg checkpoint restores");
+    let expected_pages = checkpoint.clone();
+    let resumed = restore_pcg(operation, payload_from_pages(operation, JobPayloadStream::CheckpointState, &checkpoint)).expect("pcg checkpoint restores");
     let actual_pages = pcg_checkpoint_pages(&resumed);
     close_pcg_job(&mut job);
     let actual = drive_pcg_job(resumed, operation);
@@ -1856,24 +1805,23 @@ fn pcg_job_publishes_coarse_preview_before_final_tolerance() {
     let mut job = PcgJob::new(operation, csr, b, VecD::zeros(n), 1e-12, 200, 512);
     let mut sequence = 0;
     loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match job.step(&mut context) {
-            StepOutcome::PreviewReady(bytes) => {
-                let page = parse_numerical_page(bytes.page(0).unwrap(), b"FEMPCG1\0").unwrap();
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        match seen_of(job.step(&mut context)) {
+            Seen::Preview(pages) => {
+                let page = parse_numerical_page(&pages[0], b"FEMPCG1\0").unwrap();
                 let quality = read_checkpoint_u64(page.bytes, 8 + 6 * 8).unwrap();
                 let residual_norm = f64::from_bits(read_checkpoint_u64(page.bytes, 8 + 8 * 8).unwrap());
-                close_payload(bytes);
                 close_pcg_job(&mut job);
                 assert_eq!(quality, 1);
                 assert!(residual_norm < 1e-3);
                 assert!(residual_norm >= 1e-12);
                 break;
             }
-            StepOutcome::Complete(candidate) => { close_payload(candidate.state); close_payload(candidate.output); panic!("pcg reached final tolerance before publishing coarse quality"); }
-            StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
-            StepOutcome::Fault(fault) => panic!("PCG preview fault: {}", String::from_utf8_lossy(&payload_bytes(fault.detail))),
-            StepOutcome::Cancelled => panic!("PCG preview unexpectedly cancelled"),
-            StepOutcome::Yield => {}
+            Seen::Complete(_) => panic!("pcg reached final tolerance before publishing coarse quality"),
+            Seen::Fault(detail) => panic!("PCG preview fault: {}", String::from_utf8_lossy(&pages_bytes(&detail))),
+            Seen::Cancelled => panic!("PCG preview unexpectedly cancelled"),
+            Seen::Checkpoint(_) | Seen::Yield => {}
         }
     }
 }
@@ -1889,16 +1837,18 @@ fn solver_jobs_reject_stale_and_cancelled_steps_without_mutation() {
     let mut stale = PcgJob::new(operation, csr.clone(), VecD::from_vec(vec![1.0; 8]), VecD::zeros(8), 1e-9, 20, 8);
     let before = pcg_checkpoint_pages(&stale);
     let mut sequence = 0;
-    let mut context = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), StepBudget::new(100, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-    assert!(matches!(stale.step(&mut context), StepOutcome::Fault(_)));
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), StepBudget::new(100, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+    assert!(matches!(seen_of(stale.step(&mut context)), Seen::Fault(_)));
     assert_eq!(pcg_checkpoint_pages(&stale), before);
 
     let mut cancelled = PcgJob::new(operation, csr, VecD::from_vec(vec![1.0; 8]), VecD::zeros(8), 1e-9, 20, 8);
     let before = pcg_checkpoint_pages(&cancelled);
     let token = semio_framework_job::root_cancel_token();
     semio_framework_async::block_on(token.cancel());
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(100, u64::MAX), token, || Some(0), &mut sequence);
-    assert_eq!(cancelled.step(&mut context), StepOutcome::Cancelled);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(100, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
+    assert_eq!(seen_of(cancelled.step(&mut context)), Seen::Cancelled);
     assert_eq!(pcg_checkpoint_pages(&cancelled), before);
     close_pcg_job(&mut stale);
     close_pcg_job(&mut cancelled);
@@ -1914,33 +1864,25 @@ fn ldlt_job_checkpoint_resume_matches_reference() {
     let mut job = LdltJob::new(operation, matrix, 3);
     let mut sequence = 0;
     let checkpoint = loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match job.step(&mut context) {
-            StepOutcome::CheckpointReady(checkpoint) => break checkpoint.state,
-            StepOutcome::Yield => {}
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        match seen_of(job.step(&mut context)) {
+            Seen::Checkpoint(pages) => break pages,
+            Seen::Yield => {}
             outcome => panic!("unexpected LDLT checkpoint outcome: {outcome:?}"),
         }
     };
-    let mut resumed = restore_ldlt(operation, checkpoint).expect("retained LDLT checkpoint restores");
+    let mut resumed = restore_ldlt(operation, payload_from_pages(operation, JobPayloadStream::CheckpointState, &checkpoint)).expect("retained LDLT checkpoint restores");
     loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match resumed.step(&mut context) {
-            StepOutcome::Complete(candidate) => {
-                close_payload(candidate.state);
-                close_payload(candidate.output);
-                break;
-            }
-            StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
-            _ => {}
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(2, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        if matches!(seen_of(resumed.step(&mut context)), Seen::Complete(_)) {
+            break;
         }
     }
     assert_eq!(resumed.factor(), Some(expected));
-    while !InteractiveJob::terminal_is_empty(&job) {
-        let _ = InteractiveJob::close_step(&mut job, 1, usize::MAX);
-    }
-    while !InteractiveJob::terminal_is_empty(&resumed) {
-        let _ = InteractiveJob::close_step(&mut resumed, 1, usize::MAX);
-    }
+    close_job(&mut job);
+    close_job(&mut resumed);
 }
 
 #[test]
@@ -1954,20 +1896,12 @@ fn p6h_ldlt_microcursor_max_plus_one_cancel_deadline_stale_replay_and_numerical_
         let mut job = LdltJob::new(operation, matrix.clone(), 1);
         let mut sequence = 0;
         loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            match job.step(&mut context) {
-                StepOutcome::Complete(candidate) => {
-                    close_payload(candidate.state);
-                    close_payload(candidate.output);
-                    let factor = job.factor().expect("completed factor owner");
-                    while !InteractiveJob::terminal_is_empty(&job) {
-                        let _ = InteractiveJob::close_step(&mut job, 1, usize::MAX);
-                    }
-                    return factor;
-                }
-                StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
-                StepOutcome::PreviewReady(preview) => close_payload(preview),
-                _ => {}
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+            if matches!(seen_of(job.step(&mut context)), Seen::Complete(_)) {
+                let factor = job.factor().expect("completed factor owner");
+                close_job(&mut job);
+                return factor;
             }
         }
     };
@@ -1978,28 +1912,32 @@ fn p6h_ldlt_microcursor_max_plus_one_cancel_deadline_stale_replay_and_numerical_
     let mut zero_fuel = LdltJob::new(operation, matrix.clone(), 1);
     let before = zero_fuel.state.clone();
     let mut sequence = 0;
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-    assert_eq!(zero_fuel.step(&mut context), StepOutcome::Yield);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+    assert_eq!(seen_of(zero_fuel.step(&mut context)), Seen::Yield);
     assert!(zero_fuel.state == before);
 
     let mut deadline = LdltJob::new(operation, matrix.clone(), 1);
     let before = deadline.state.clone();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-    assert_eq!(deadline.step(&mut context), StepOutcome::Yield);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+    assert_eq!(seen_of(deadline.step(&mut context)), Seen::Yield);
     assert!(deadline.state == before);
 
     let mut stale = LdltJob::new(operation, matrix.clone(), 1);
     let before = stale.state.clone();
-    let mut context = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-    assert!(matches!(stale.step(&mut context), StepOutcome::Fault(_)));
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+    assert!(matches!(seen_of(stale.step(&mut context)), Seen::Fault(_)));
     assert!(stale.state == before);
 
     let mut cancelled = LdltJob::new(operation, matrix, 1);
     let before = cancelled.state.clone();
     let token = semio_framework_job::root_cancel_token();
     semio_framework_async::block_on(token.cancel());
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
-    assert_eq!(cancelled.step(&mut context), StepOutcome::Cancelled);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
+    assert_eq!(seen_of(cancelled.step(&mut context)), Seen::Cancelled);
     assert!(cancelled.state == before);
 
     let mut lookup = LdltJob::new(operation, deadline.state.a.clone(), 1);
@@ -2007,101 +1945,97 @@ fn p6h_ldlt_microcursor_max_plus_one_cancel_deadline_stale_replay_and_numerical_
     for _ in 0..200_000 {
         if lookup.state.cursor.stage == LdltColumnStage::ContributorLookup && lookup.state.cursor.lookup_initialized && lookup.state.cursor.lookup_lower < lookup.state.cursor.lookup_upper {
             let before = lookup.state.clone();
-            let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            assert_eq!(lookup.step(&mut expired), StepOutcome::Yield);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+            assert_eq!(seen_of(lookup.step(&mut expired)), Seen::Yield);
             assert!(lookup.state == before);
-            let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            assert_eq!(lookup.step(&mut one), StepOutcome::Yield);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+            assert_eq!(seen_of(lookup.step(&mut one)), Seen::Yield);
             assert_eq!(lookup.state.cursor.contributor, before.cursor.contributor);
             assert!(lookup.state.cursor.lookup_lower != before.cursor.lookup_lower || lookup.state.cursor.lookup_upper != before.cursor.lookup_upper);
             observed_lookup = true;
             break;
         }
-        let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        if let StepOutcome::CheckpointReady(checkpoint) = lookup.step(&mut one) {
-            close_payload(checkpoint.state);
-        }
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        let _ = seen_of(lookup.step(&mut one));
     }
     assert!(observed_lookup, "adversarial LDLT reaches retained contributor comparison");
-    while !InteractiveJob::terminal_is_empty(&lookup) {
-        let _ = InteractiveJob::close_step(&mut lookup, 1, usize::MAX);
-    }
+    close_job(&mut lookup);
 
     let refused = CscSym { n: LDLT_MAXIMUM_ORDER + 1, colptr: vec![0; LDLT_MAXIMUM_ORDER + 2], rowind: Vec::new(), vals: Vec::new() };
     let mut maximum_plus_one = LdltJob::new(operation, refused, 1);
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-    assert!(matches!(maximum_plus_one.step(&mut context), StepOutcome::Fault(_)));
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+    assert!(matches!(seen_of(maximum_plus_one.step(&mut context)), Seen::Fault(_)));
 
     let mut publishing = LdltJob::new(operation, deadline.state.a.clone(), 1);
     for _ in 0..200_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        if let StepOutcome::CheckpointReady(checkpoint) = publishing.step(&mut context) {
-            close_payload(checkpoint.state);
-        }
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        let _ = seen_of(publishing.step(&mut context));
         if publishing.output_writer.is_some() {
             break;
         }
     }
     assert!(publishing.output_writer.is_some(), "retained LDLT result writer becomes interruptible before publication");
     InteractiveJob::begin_close(&mut publishing);
-    for _ in 0..200_000 {
-        if matches!(InteractiveJob::close_step(&mut publishing, 1, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            break;
-        }
-    }
+    close_job(&mut publishing);
     assert!(InteractiveJob::terminal_is_empty(&publishing));
 
     let checkpoint = loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        if let StepOutcome::CheckpointReady(checkpoint) = zero_fuel.step(&mut context) {
-            break checkpoint.state;
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        if let Seen::Checkpoint(pages) = seen_of(zero_fuel.step(&mut context)) {
+            break pages;
         }
     };
-    let mut roundtrip = restore_ldlt(operation, checkpoint).expect("LDLT retained checkpoint roundtrip");
+    let mut roundtrip = restore_ldlt(operation, checkpoint_payload(operation, &checkpoint)).expect("LDLT retained checkpoint roundtrip");
     assert_eq!(roundtrip.state.identity, zero_fuel.state.identity);
-    while !InteractiveJob::terminal_is_empty(&roundtrip) {
-        let _ = InteractiveJob::close_step(&mut roundtrip, 1, usize::MAX);
-    }
+    close_job(&mut roundtrip);
     assert!(matches!(restore_ldlt(operation, RetainedJobPayload::empty(JobPayloadStream::CheckpointState)), Err(NumericalCheckpointFault::Truncated)));
     let wrong_revision = Operation::new(operation.operation, semio_framework_job::RevisionId(operation.base_revision.0 + 1), operation.generation, operation.seed);
     let wrong_seed = Operation::new(operation.operation, operation.base_revision, operation.generation, operation.seed + 1);
     let fresh_checkpoint = |id: u64| {
         let mut source = LdltJob::new(operation, graph_laplacian_plus_identity(6, &[(0, 1), (1, 2)]).to_csc_sym_upper(), 1);
         let mut local_sequence = id;
-        loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut local_sequence);
-            if let StepOutcome::CheckpointReady(checkpoint) = source.step(&mut context) {
-                break checkpoint.state;
+        let pages = loop {
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut local_sequence, &mut sequence_receipt);
+            if let Seen::Checkpoint(pages) = seen_of(source.step(&mut context)) {
+                break pages;
             }
-        }
+        };
+        close_job(&mut source);
+        pages
     };
-    assert!(matches!(restore_ldlt(wrong_revision, fresh_checkpoint(1)), Err(NumericalCheckpointFault::Stale)));
-    assert!(matches!(restore_ldlt(wrong_seed, fresh_checkpoint(2)), Err(NumericalCheckpointFault::Stale)));
-    let mut interrupted_restore = LdltRestoreCursor::new(operation, fresh_checkpoint(3));
-    let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+    assert!(matches!(restore_ldlt(wrong_revision, checkpoint_payload(operation, &fresh_checkpoint(1))), Err(NumericalCheckpointFault::Stale)));
+    assert!(matches!(restore_ldlt(wrong_seed, checkpoint_payload(operation, &fresh_checkpoint(2))), Err(NumericalCheckpointFault::Stale)));
+    let mut interrupted_restore = LdltRestoreCursor::new(operation, checkpoint_payload(operation, &fresh_checkpoint(3)));
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
     assert!(matches!(interrupted_restore.step(&mut restore_context), Ok(None)));
     while !interrupted_restore.terminal_is_empty() {
-        match interrupted_restore.close_step(1, usize::MAX) {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
-            semio_framework_job::InteractiveJobCloseStep::Complete => {}
-            semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("LDLT restore close cannot block"),
+        match interrupted_restore.close_step(grant_of(1, usize::MAX)) {
+            semio_framework_job::InteractiveJobCloseStep::Pending { progress } => assert!(progress.copied_items <= 1),
+            semio_framework_job::InteractiveJobCloseStep::Complete { .. } => {}
+            semio_framework_job::InteractiveJobCloseStep::Blocked | semio_framework_job::InteractiveJobCloseStep::Refused { .. } => panic!("LDLT restore close cannot block"),
         }
     }
 
     for owner in [&mut deadline, &mut stale, &mut cancelled, &mut maximum_plus_one] {
-        while !InteractiveJob::terminal_is_empty(owner) {
-            let _ = InteractiveJob::close_step(owner, 1, usize::MAX);
-        }
+        close_job(owner);
     }
 
     let mut closing = zero_fuel;
     let mut close_turns = 0;
     loop {
         close_turns += 1;
-        match InteractiveJob::close_step(&mut closing, 1, usize::MAX) {
-            semio_framework_job::InteractiveJobCloseStep::Complete => break,
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
-            semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("fixed LDLT close cannot block"),
+        match InteractiveJob::close_step(&mut closing, grant_of(1, usize::MAX)) {
+            semio_framework_job::InteractiveJobCloseStep::Complete { .. } => break,
+            semio_framework_job::InteractiveJobCloseStep::Pending { progress } => assert!(progress.copied_items <= 1),
+            semio_framework_job::InteractiveJobCloseStep::Blocked | semio_framework_job::InteractiveJobCloseStep::Refused { .. } => panic!("fixed LDLT close cannot block"),
         }
         assert!(close_turns < 20_000);
     }
@@ -2123,55 +2057,39 @@ fn subspace_job_resume_and_scheduling_are_deterministic() {
     let mut uninterrupted = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 4, 30);
     let mut sequence = 0;
     let expected = loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match uninterrupted.step(&mut context) {
-            StepOutcome::Complete(candidate) => {
-                close_payload(candidate.state);
-                close_payload(candidate.output);
-                break uninterrupted.solution();
-            }
-            StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
-            StepOutcome::PreviewReady(preview) => close_payload(preview),
-            _ => {}
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        if matches!(seen_of(uninterrupted.step(&mut context)), Seen::Complete(_)) {
+            break uninterrupted.solution();
         }
     };
 
     let mut interrupted = SubspaceIterationJob::new(operation, factor, mass, n, 4, 30);
     let checkpoint = loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match interrupted.step(&mut context) {
-            StepOutcome::CheckpointReady(checkpoint) => break checkpoint.state,
-            StepOutcome::Yield | StepOutcome::PreviewReady(_) => {}
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        match seen_of(interrupted.step(&mut context)) {
+            Seen::Checkpoint(pages) => break pages,
+            Seen::Yield | Seen::Preview(_) => {}
             outcome => panic!("unexpected subspace checkpoint outcome: {outcome:?}"),
         }
     };
-    let mut resumed = restore_subspace(operation, checkpoint).expect("subspace retained checkpoint restores");
-    while !InteractiveJob::terminal_is_empty(&interrupted) {
-        let _ = InteractiveJob::close_step(&mut interrupted, 1, usize::MAX);
-    }
+    let mut resumed = restore_subspace(operation, checkpoint_payload(operation, &checkpoint)).expect("subspace retained checkpoint restores");
+    close_job(&mut interrupted);
     loop {
-        let mut yielded = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        assert!(matches!(resumed.step(&mut yielded), StepOutcome::Yield));
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match resumed.step(&mut context) {
-            StepOutcome::Complete(candidate) => {
-                close_payload(candidate.state);
-                close_payload(candidate.output);
-                break;
-            }
-            StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
-            StepOutcome::PreviewReady(preview) => close_payload(preview),
-            _ => {}
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut yielded = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        assert!(matches!(seen_of(resumed.step(&mut yielded)), Seen::Yield));
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+        if matches!(seen_of(resumed.step(&mut context)), Seen::Complete(_)) {
+            break;
         }
     }
     assert_eq!(resumed.solution(), expected);
     assert_eq!(resumed.preview().converged_count, 4);
-    while !InteractiveJob::terminal_is_empty(&uninterrupted) {
-        let _ = InteractiveJob::close_step(&mut uninterrupted, 1, usize::MAX);
-    }
-    while !InteractiveJob::terminal_is_empty(&resumed) {
-        let _ = InteractiveJob::close_step(&mut resumed, 1, usize::MAX);
-    }
+    close_job(&mut uninterrupted);
+    close_job(&mut resumed);
 }
 
 // #region 🔖️LongTests
@@ -2196,20 +2114,15 @@ mod long {
             let mut replay = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 3);
             let mut replay_sequence = 0;
             for _ in 0..200_000 {
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut replay_sequence);
-                match replay.step(&mut context) {
-                    StepOutcome::Complete(candidate) => {
-                        close_payload(candidate.state);
-                        close_payload(candidate.output);
+                let mut sequence_receipt = RetainedCloneProgress::default();
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut replay_sequence, &mut sequence_receipt);
+                match seen_of(replay.step(&mut context)) {
+                    Seen::Complete(_) => {
                         let solution = replay.solution();
-                        while !InteractiveJob::terminal_is_empty(&replay) {
-                            let _ = InteractiveJob::close_step(&mut replay, 1, usize::MAX);
-                        }
+                        close_job(&mut replay);
                         return solution;
                     }
-                    StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
-                    StepOutcome::PreviewReady(preview) => close_payload(preview),
-                    StepOutcome::Fault(fault) => panic!("subspace replay fault: {:?}", fault.detail),
+                    Seen::Fault(detail) => panic!("subspace replay fault: {detail:?}"),
                     _ => {}
                 }
             }
@@ -2222,15 +2135,15 @@ mod long {
         let mut validating = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
         let before = validating.state.clone();
         let mut validation_sequence = 0;
-        let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence);
-        assert_eq!(validating.step(&mut expired), StepOutcome::Yield);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence, &mut sequence_receipt);
+        assert_eq!(seen_of(validating.step(&mut expired)), Seen::Yield);
         assert!(validating.state == before);
-        let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence);
-        assert_eq!(validating.step(&mut one), StepOutcome::Yield);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut validation_sequence, &mut sequence_receipt);
+        assert_eq!(seen_of(validating.step(&mut one)), Seen::Yield);
         assert_eq!(validating.state.factor_validation_cursor, 1, "one construction grant validates one factor owner");
-        while !InteractiveJob::terminal_is_empty(&validating) {
-            let _ = InteractiveJob::close_step(&mut validating, 1, usize::MAX);
-        }
+        close_job(&mut validating);
 
         let mut oversized = Vec::<(u32, f64)>::new();
         oversized.try_reserve_exact(NUMERICAL_OWNER_PAGE_BYTES / size_of::<(u32, f64)>() + 1).expect("hostile factor backing");
@@ -2239,42 +2152,35 @@ mod long {
         columns[0] = oversized;
         let mut refused_owner = SubspaceIterationJob::new(operation, LdltFactor { n, l_cols: columns, d: vec![1.0; n] }, mass.clone(), n, 3, 1);
         let mut refused_sequence = 0;
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut refused_sequence);
-        assert!(matches!(refused_owner.step(&mut context), StepOutcome::Fault(_)));
-        while !InteractiveJob::terminal_is_empty(&refused_owner) {
-            let _ = InteractiveJob::close_step(&mut refused_owner, 1, usize::MAX);
-        }
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut refused_sequence, &mut sequence_receipt);
+        assert!(matches!(seen_of(refused_owner.step(&mut context)), Seen::Fault(_)));
+        close_job(&mut refused_owner);
 
         for refused_order in [0, SUBSPACE_MAXIMUM_ORDER + 1] {
             let factor = LdltFactor { n: refused_order, l_cols: vec![Vec::new(); refused_order], d: vec![1.0; refused_order] };
             let mass = Csr::from_owned_parts(refused_order, vec![0; refused_order + 1], Vec::new(), Vec::new());
             let mut refused = SubspaceIterationJob::new(operation, factor, mass, refused_order, usize::from(refused_order != 0), 1);
             let mut refused_sequence = 0;
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut refused_sequence);
-            assert!(matches!(refused.step(&mut context), StepOutcome::Fault(_)));
-            while !InteractiveJob::terminal_is_empty(&refused) {
-                let _ = InteractiveJob::close_step(&mut refused, 1, usize::MAX);
-            }
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut refused_sequence, &mut sequence_receipt);
+            assert!(matches!(seen_of(refused.step(&mut context)), Seen::Fault(_)));
+            close_job(&mut refused);
         }
 
         let mut publishing = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
         let mut publishing_sequence = 0;
         for _ in 0..200_000 {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut publishing_sequence);
-            if let StepOutcome::CheckpointReady(checkpoint) = publishing.step(&mut context) {
-                close_payload(checkpoint.state);
-            }
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut publishing_sequence, &mut sequence_receipt);
+            let _ = seen_of(publishing.step(&mut context));
             if publishing.preview_writer.is_some() {
                 break;
             }
         }
         assert!(publishing.preview_writer.is_some(), "retained preview page writer becomes interruptible before publication");
         InteractiveJob::begin_close(&mut publishing);
-        for _ in 0..200_000 {
-            if matches!(InteractiveJob::close_step(&mut publishing, 1, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Complete) {
-                break;
-            }
-        }
+        close_job(&mut publishing);
         assert!(InteractiveJob::terminal_is_empty(&publishing));
 
         let mut job = SubspaceIterationJob::new(operation, factor, mass, n, 3, 3);
@@ -2287,24 +2193,31 @@ mod long {
             seen.insert(job.state.work.stage as u8);
             job.state.checkpoint_due = true;
             let checkpoint = loop {
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-                if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-                    break checkpoint.state;
+                let mut sequence_receipt = RetainedCloneProgress::default();
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+                if let Seen::Checkpoint(pages) = seen_of(job.step(&mut context)) {
+                    break pages;
                 }
             };
-            let mut cancelled = restore_subspace(operation, checkpoint).expect("stage retained checkpoint");
+            let mut cancelled = restore_subspace(operation, checkpoint_payload(operation, &checkpoint)).expect("stage retained checkpoint");
             let before = cancelled.state.clone();
             let token = semio_framework_job::root_cancel_token();
             semio_framework_async::block_on(token.cancel());
-            let mut cancelled_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
-            assert_eq!(cancelled.step(&mut cancelled_context), StepOutcome::Cancelled);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut cancelled_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
+            assert_eq!(seen_of(cancelled.step(&mut cancelled_context)), Seen::Cancelled);
             assert!(cancelled.state == before);
-            while !InteractiveJob::terminal_is_empty(&cancelled) {
-                let _ = InteractiveJob::close_step(&mut cancelled, 1, usize::MAX);
-            }
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            if let StepOutcome::Fault(fault) = job.step(&mut context) {
-                panic!("subspace stage walk fault: {:?}", fault.detail);
+            close_job(&mut cancelled);
+            let walked = job.state.work.stage;
+            for _ in 0..100_000 {
+                let mut sequence_receipt = RetainedCloneProgress::default();
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+                if let Seen::Fault(detail) = seen_of(job.step(&mut context)) {
+                    panic!("subspace stage walk fault: {detail:?}");
+                }
+                if job.state.work.stage != walked {
+                    break;
+                }
             }
         }
         assert_eq!(seen.len(), 16);
@@ -2313,37 +2226,40 @@ mod long {
         let wrong_generation = Operation::new(operation.operation, operation.base_revision, semio_framework_job::Generation(operation.generation.0 + 1), operation.seed);
         job.state.checkpoint_due = true;
         let checkpoint = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-                break checkpoint.state;
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+            if let Seen::Checkpoint(pages) = seen_of(job.step(&mut context)) {
+                break pages;
             }
         };
-        assert!(matches!(restore_subspace(wrong_generation, checkpoint), Err(NumericalCheckpointFault::Stale)));
+        assert!(matches!(restore_subspace(wrong_generation, checkpoint_payload(operation, &checkpoint)), Err(NumericalCheckpointFault::Stale)));
         job.state.checkpoint_due = true;
         let checkpoint = loop {
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-                break checkpoint.state;
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
+            if let Seen::Checkpoint(pages) = seen_of(job.step(&mut context)) {
+                break pages;
             }
         };
-        let mut interrupted_restore = SubspaceRestoreCursor::new(operation, checkpoint);
-        let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut interrupted_restore = SubspaceRestoreCursor::new(operation, checkpoint_payload(operation, &checkpoint));
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         assert!(matches!(interrupted_restore.step(&mut restore_context), Ok(None)));
         while !interrupted_restore.terminal_is_empty() {
-            match interrupted_restore.close_step(1, usize::MAX) {
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
-                semio_framework_job::InteractiveJobCloseStep::Complete => {}
-                semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("subspace restore close cannot block"),
+            match interrupted_restore.close_step(grant_of(1, usize::MAX)) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => assert!(progress.copied_items <= 1),
+                semio_framework_job::InteractiveJobCloseStep::Complete { .. } => {}
+                semio_framework_job::InteractiveJobCloseStep::Blocked | semio_framework_job::InteractiveJobCloseStep::Refused { .. } => panic!("subspace restore close cannot block"),
             }
         }
         let mut closing = job;
         let mut close_turns = 0;
         loop {
             close_turns += 1;
-            match InteractiveJob::close_step(&mut closing, 1, usize::MAX) {
-                semio_framework_job::InteractiveJobCloseStep::Complete => break,
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
-                semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("fixed subspace close cannot block"),
+            match InteractiveJob::close_step(&mut closing, grant_of(1, usize::MAX)) {
+                semio_framework_job::InteractiveJobCloseStep::Complete { .. } => break,
+                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => assert!(progress.copied_items <= 1),
+                semio_framework_job::InteractiveJobCloseStep::Blocked | semio_framework_job::InteractiveJobCloseStep::Refused { .. } => panic!("fixed subspace close cannot block"),
             }
             assert!(close_turns < 200_000);
         }
@@ -2362,7 +2278,8 @@ fn adversarial_solver_steps_stay_below_eight_milliseconds() {
     let operation = test_operation(106);
     let mut pcg = PcgJob::new(operation, coo.to_csr(), VecD::from_vec(vec![1.0; n]), VecD::zeros(n), 1e-9, 20, 1);
     let mut sequence = 0;
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
     let started = std::time::Instant::now();
     let _ = pcg.step(&mut context);
     assert!(started.elapsed() < std::time::Duration::from_millis(8));
@@ -2382,18 +2299,18 @@ fn pcg_construction_initializes_one_scalar_per_opportunity_and_closes_interrupti
     assert_eq!(job.state.a.n, 3);
     assert!(construction.take_complete().is_none());
     close_pcg_job(&mut job);
-    assert!(construction.close_step(PCG_SCALAR_BACKING_BYTES).0);
+    assert!(tuple_of(construction.close_step(grant_of(1, PCG_SCALAR_BACKING_BYTES))).0);
 
     let matrix = Csr::from_owned_parts(3, vec![0, 1, 2, 3], vec![0, 1, 2], vec![2.0, 3.0, 4.0]);
     let mut interrupted = PcgJobConstruction::new(test_operation(108), matrix);
     assert!(!interrupted.step_one().expect("one reservation"));
     let before = interrupted.matrix.as_ref().expect("matrix retained").vals.len();
-    let (terminal, _, _) = interrupted.close_step(4_096);
+    let (terminal, _, _) = tuple_of(interrupted.close_step(grant_of(1, 4_096)));
     assert!(!terminal);
     assert_eq!(interrupted.matrix.as_ref().expect("matrix shell retained").vals.len() + 1, before);
     let mut closed = false;
     for _ in 0..128 {
-        if interrupted.close_step(PCG_SCALAR_BACKING_BYTES).0 { closed = true; break; }
+        if tuple_of(interrupted.close_step(grant_of(1, PCG_SCALAR_BACKING_BYTES))).0 { closed = true; break; }
     }
     assert!(closed);
 }

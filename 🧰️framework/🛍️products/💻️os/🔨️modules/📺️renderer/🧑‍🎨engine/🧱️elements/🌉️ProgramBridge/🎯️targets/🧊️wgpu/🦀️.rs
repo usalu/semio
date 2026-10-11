@@ -1870,7 +1870,11 @@ async fn read_native_json_pages(path: &std::path::Path, max_bytes: u64) -> Resul
 #[cfg(not(target_arch = "wasm32"))]
 fn close_native_json_pages(pages: &mut Vec<semio_framework_job::RetainedJobPayload>) {
     for page in pages.iter_mut() {
-        while !matches!(page.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+        while !page.terminal_is_empty() {
+            let demand = page.retirement_demands().expect("native JSON page retirement demand");
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            page.close_step(grant).expect("native JSON page retirement turn");
+        }
     }
     pages.clear();
 }

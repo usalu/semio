@@ -6,8 +6,8 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::schema::snapshot::{Wfc2dTileMedia, Wfc2dSnapshot};
-use store::{ErasedSnapshotRetirement, PackError, SnapshotRetirementStep};
+use crate::schema::snapshot::{Wfc2dBitmapMedia, Wfc2dTileMedia, Wfc2dSnapshot};
+use store::{ErasedSnapshotRetirement, PackError};
 
 /// 📦️ Encodes a `Wfc2dSnapshot` to its binary pack form.
 pub fn encode(document: &Wfc2dSnapshot) -> Vec<u8> {
@@ -20,78 +20,20 @@ pub fn decode(bytes: &[u8]) -> Result<Wfc2dSnapshot, PackError> {
 }
 
 //#region ♻️Retirement
-/// 🧮️ One retirement step's budget unit — the bytes one displaced collection is charged, so a caller
-/// with a small `maximum_bytes` makes progress across several turns instead of stalling.
-const WFC_2D_RETIREMENT_STEP_BYTES: usize = 4_096;
-
-/// ♻️ The four collections a displaced `Wfc2dSnapshot` releases, in release order. `tiles` goes
-/// FIRST: a tile's media can carry an inline bitmap payload or an `ArtifactChild` handle, so it is
-/// by far the heaviest row and the only one that can outlive the document that named it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Wfc2dRetirementStage {
-    Tiles,
-    Rules,
-    Edges,
-    Slots,
-}
-
-impl Wfc2dRetirementStage {
-    const ORDER: [Self; 4] = [Self::Tiles, Self::Rules, Self::Edges, Self::Slots];
-}
-
-/// ♻️ A snapshot displaced by a decode-in-place, released in bounded steps rather than dropped in one
-/// unbounded `Drop` — the discipline `store::ArtifactStore` asks of every artifact whose decode can
-/// overwrite a live projection. `Drop` asserts the terminal state was actually reached, so a caller
-/// that abandons a retirement mid-way fails loudly instead of leaking silently.
-pub struct Wfc2dSnapshotRetirement {
-    displaced: std::mem::ManuallyDrop<Wfc2dSnapshot>,
-    stage: usize,
-}
-
-impl Wfc2dSnapshotRetirement {
-    fn new(displaced: Wfc2dSnapshot) -> Self {
-        Self { displaced: std::mem::ManuallyDrop::new(displaced), stage: 0 }
-    }
-}
-
-impl ErasedSnapshotRetirement for Wfc2dSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.stage >= Wfc2dRetirementStage::ORDER.len() {
-            return Ok(SnapshotRetirementStep::Complete);
-        }
-        if maximum_items == 0 || maximum_bytes < WFC_2D_RETIREMENT_STEP_BYTES {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        let released = match Wfc2dRetirementStage::ORDER[self.stage] {
-            Wfc2dRetirementStage::Tiles => std::mem::take(&mut self.displaced.tiles).len(),
-            Wfc2dRetirementStage::Rules => std::mem::take(&mut self.displaced.rules).len(),
-            Wfc2dRetirementStage::Edges => std::mem::take(&mut self.displaced.edges).len(),
-            Wfc2dRetirementStage::Slots => std::mem::take(&mut self.displaced.slots).len(),
-        };
-        self.stage += 1;
-        Ok(SnapshotRetirementStep::Pending { released_items: released.max(1).min(maximum_items), released_bytes: WFC_2D_RETIREMENT_STEP_BYTES })
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.stage >= Wfc2dRetirementStage::ORDER.len()
-    }
-}
-
-impl Drop for Wfc2dSnapshotRetirement {
-    /// ⚠️ `ManuallyDrop` exists so the collections above are released by `close_step`, never by an
-    /// unbounded `Drop`; what is left at this point is the emptied husk, and dropping it is O(1).
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.terminal_is_empty(), "WFC 2D snapshot displacement reached Drop before terminal-empty close");
-        unsafe { std::mem::ManuallyDrop::drop(&mut self.displaced) };
-    }
-}
-
-/// 📖️ Decodes into a LIVE projection and hands back the displaced document as a bounded retirement —
-/// the only decode entry point a mounted store may call, because it never drops the old snapshot
-/// inline.
-pub fn decode_into(target: &mut Wfc2dSnapshot, bytes: &[u8]) -> Result<Box<dyn ErasedSnapshotRetirement>, PackError> {
+/// 📖️ Decodes into a LIVE projection and hands back the displaced document as a bounded retirement
+/// admitted under the caller's own five-currency grant — the only decode entry point a mounted store
+/// may call, because it never drops the old snapshot inline. A refused admission restores the exact
+/// displaced document into `target` and drops only the freshly decoded, never-published one.
+pub fn decode_into(target: &mut Wfc2dSnapshot, bytes: &[u8], grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), PackError> {
     let next = decode(bytes)?;
-    Ok(Box::new(Wfc2dSnapshotRetirement::new(std::mem::replace(target, next))))
+    let displaced = std::mem::replace(target, next);
+    match semio_framework_value::retirement::admit_owned_retirement(displaced, grant) {
+        Ok(admitted) => Ok(admitted),
+        Err((error, displaced)) => {
+            drop(std::mem::replace(target, displaced));
+            Err(PackError::from(error))
+        }
+    }
 }
 //#endregion ♻️Retirement
 
@@ -110,7 +52,7 @@ pub fn decode_into(target: &mut Wfc2dSnapshot, bytes: &[u8]) -> Result<Box<dyn E
 /// decoded length is not exactly `width * height` — a malformed tile draws its outline rather than
 /// failing the whole surface refresh.
 pub fn tile_media_png_data_url(media: &Wfc2dTileMedia) -> Option<String> {
-    let Wfc2dTileMedia::Bitmap { width, height, palette, pixels } = media else { return None };
+    let Wfc2dTileMedia::Bitmap(Wfc2dBitmapMedia { width, height, palette, pixels }) = media else { return None };
     let (width, height) = (*width, *height);
     if width == 0 || height == 0 || palette.is_empty() {
         return None;

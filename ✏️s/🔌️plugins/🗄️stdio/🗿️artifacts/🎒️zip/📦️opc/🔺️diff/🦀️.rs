@@ -12,7 +12,7 @@ use semio_s_artifact_stdio_contract::list_delta::{compose_optional, Composable};
 
 //#region 🔖️Rows
 /// 🏷️ One `[Content_Types].xml` entry as a list row: the extension (default) or part name (override) and its content type.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct OpcContentTypeRow {
     pub name: String,
@@ -20,7 +20,7 @@ pub struct OpcContentTypeRow {
 }
 
 /// 🗂️ One relationship owner as a list row: the owner part name (empty for the package root) and the relationships it owns.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct OpcOwnerRow {
     pub owner: String,
@@ -45,7 +45,7 @@ fn owner_rows(owners: &OpcRelationshipOwners) -> Vec<OpcOwnerRow> {
 
 //#region 🔖️Patches
 /// 🩹 The sparse patch of one `[Content_Types].xml` entry: the content type it is given.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct OpcContentTypePatch {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -53,7 +53,7 @@ pub struct OpcContentTypePatch {
 }
 
 /// 🩹 The sparse patch of one part: its content type and its bytes.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct OpcPartPatch {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -63,7 +63,7 @@ pub struct OpcPartPatch {
 }
 
 /// 🩹 The sparse patch of one relationship: its type, target and target mode.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct OpcRelationshipPatch {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -75,7 +75,7 @@ pub struct OpcRelationshipPatch {
 }
 
 /// 🩹 The sparse patch of one relationship owner: the positional delta of its relationship list.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct OpcOwnerPatch {
     #[value(default)]
@@ -213,7 +213,7 @@ semio_s_artifact_stdio_contract::stdio_list_delta! {
 
 //#region 🔖️PackageDiff
 /// 🔺️ The `[Content_Types].xml` part of an [`OpcDiff`]: the deltas of its two entry lists.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct OpcContentTypesDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -223,7 +223,7 @@ pub struct OpcContentTypesDiff {
 }
 
 /// 🔺️ The sparse diff of an [`OpcPackage`]: its archive comment, content types, parts and relationship owners.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct OpcDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]

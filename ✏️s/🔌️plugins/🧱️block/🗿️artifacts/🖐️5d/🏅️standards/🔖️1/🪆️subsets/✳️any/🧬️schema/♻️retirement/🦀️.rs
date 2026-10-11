@@ -4,8 +4,7 @@
 
 use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, Block5dSnapshot};
 use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
-use std::sync::Arc;
-use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, SharedValueRetirementFactory};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 
 //#region 🖐️Block5dRows
 semio_framework_value::artifact_retire_struct!(Block5dPart2d { shape, radius, width, height, color, icon_kind });
@@ -77,17 +76,3 @@ impl RetireOwned for Block5dMutation {
 }
 //#endregion 🧬️Mutations
 
-//#region 🗃️Owners
-/// 🗃️ Block5d's exact document root, initial root and retained mutation retirement authorities — the
-/// catalog a retained publication folds against (without it every batched fold faults with
-/// `batched fold lacks exact snapshot or mutation retirement authority`) and a document replacement
-/// or close retires through.
-pub fn document_store_owners() -> store::DocumentStoreOwners<Block5dSnapshot, Block5dMutation> {
-    store::DocumentStoreOwners::new(
-        Arc::new(SharedValueRetirementFactory::<Block5dSnapshot>::default()),
-        Arc::new(OwnedValueRetirementFactory::<Block5dSnapshot>::default()),
-        Arc::new(OwnedValueRetirementFactory::<Block5dMutation>::default()),
-        Box::new(store::ArtifactStoreCursorDisposer::<Block5dSnapshot, Block5dMutation>::new()),
-    )
-}
-//#endregion 🗃️Owners

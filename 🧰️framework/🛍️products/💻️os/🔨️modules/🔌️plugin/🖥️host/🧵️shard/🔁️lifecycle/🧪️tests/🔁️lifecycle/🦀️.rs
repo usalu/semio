@@ -5,7 +5,10 @@ fn lane() -> semio_framework_actor::Lane {
     semio_framework_actor::Lane::Interactive
 }
 fn grant() -> semio_framework_actor::Budget {
-    semio_framework_actor::lane_defaults::budget_for(lane())
+    semio_framework_actor::lane_defaults::budget_for(lane(), original_retained_turn())
+}
+fn issued_grant() -> IssuedShardTurn {
+    IssuedShardTurn::new(original_retained_turn(), grant(), 1).expect("declared original single envelope")
 }
 fn event(sequence: u64) -> Event {
     let Event::InstanceClose(mut request) = fixture_instance_close_event() else { unreachable!() };
@@ -23,9 +26,9 @@ async fn setup() -> (ShardLoop, Arc<MockGuestRuntime>, Arc<Mutex<Vec<Vec<u8>>>>)
     let package = PackageRef { package: PackageId("lifecycle-retry".into()), hash: PackageHash([0; 32]) };
     let compiled = mock.compile(&package, &[]).await.unwrap();
     for actor in [ActorId(1), ActorId(2)] {
-        let instance = mock.instantiate(&compiled, actor, &[], &turn_budget_from_grant(grant()).await).await.unwrap();
+        let instance = mock.instantiate(&compiled, actor, &[], &turn_budget_from_grant(issued_grant()).await).await.unwrap();
         assert!(shard.register(actor, instance).is_ok());
-        shard.granted_budgets.insert(actor.0, IssuedShardTurn::new(grant(), 1).expect("declared original single envelope"));
+        shard.granted_budgets.insert(actor.0, issued_grant());
     }
     (shard, mock, outbound)
 }
@@ -62,7 +65,7 @@ async fn retry_keeps_exact_event_budget_credit_and_one_peer_order() {
     let (mut shard, mock, outbound) = setup().await;
     mock.script_guest_fault(ActorId(1), deadline()).await;
     for actor in [ActorId(1), ActorId(1), ActorId(2)] {
-        mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
+        mock.script_turn(actor, MockGuestRuntime::idle_turn(original_retained_turn()).await).await;
     }
     enqueue(&mut shard, 1, 1, 101);
     enqueue(&mut shard, 1, 2, 202);
@@ -71,7 +74,7 @@ async fn retry_keeps_exact_event_budget_credit_and_one_peer_order() {
     assert!(outbound.lock().unwrap().is_empty());
     assert!(shard.has_lifecycle_retry() && shard.can_accept_primed_frame());
     assert_eq!((shard.pending_interactive.len, shard.pending_interactive.bytes), (3, 606));
-    shard.granted_budgets.insert(1, IssuedShardTurn::new(semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance), 1).expect("declared original single envelope"));
+    shard.granted_budgets.insert(1, IssuedShardTurn::new(original_retained_turn(), semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance, original_retained_turn()), 1).expect("declared original single envelope"));
     for _ in 0..3 {
         shard.pump().await.unwrap();
     }
@@ -94,7 +97,7 @@ async fn retry_refuses_replacement_and_stale_queue_cannot_reach_same_id_successo
     let allocation = shard.current_allocation(1).unwrap();
     let package = PackageRef { package: PackageId("replacement".into()), hash: PackageHash([0; 32]) };
     let compiled = mock.compile(&package, &[]).await.unwrap();
-    let fresh = mock.instantiate(&compiled, ActorId(1), &[], &turn_budget_from_grant(grant()).await).await.unwrap();
+    let fresh = mock.instantiate(&compiled, ActorId(1), &[], &turn_budget_from_grant(issued_grant()).await).await.unwrap();
     let rejected = match shard.register(ActorId(1), fresh) {
         Err(rejected) => rejected,
         Ok(_) => panic!("same raw actor cannot overwrite a live instance"),
@@ -103,7 +106,7 @@ async fn retry_refuses_replacement_and_stale_queue_cannot_reach_same_id_successo
     shard.unregister(ActorId(1)).await;
     assert!(shard.register(ActorId(1), rejected.instance).is_ok());
     assert_ne!(shard.current_allocation(1), Some(allocation));
-    mock.script_turn(ActorId(1), MockGuestRuntime::idle_turn().await).await;
+    mock.script_turn(ActorId(1), MockGuestRuntime::idle_turn(original_retained_turn()).await).await;
     enqueue(&mut shard, 1, 3, 303);
     for _ in 0..3 {
         shard.pump().await.unwrap();
@@ -169,7 +172,7 @@ async fn unknown_transport_actors_never_allocate_host_bookkeeping() {
     let before = (shard.granted_budgets.len(), shard.actor_lanes.len(), shard.allocations.len());
     for raw in 3..3 + count {
         let mut bytes = Vec::new();
-        ShardFrame::Grant { actor: ActorId(raw), budget: grant(), envelopes: Vec::new() }.pack_encode(&mut bytes).await.expect("declared original frame authority");
+        ShardFrame::Grant { actor: ActorId(raw), retained: original_retained_turn(), budget: grant(), envelopes: Vec::new() }.pack_encode(&mut bytes).await.expect("declared original frame authority");
         assert!(shard.consume_frame(bytes).await.is_ok());
     }
     assert_eq!((shard.granted_budgets.len(), shard.actor_lanes.len(), shard.allocations.len()), before);

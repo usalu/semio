@@ -17,7 +17,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod set_camera {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "camera")]
     pub struct SetCamera {
         pub pane: Option<String>,
@@ -38,7 +38,7 @@ pub mod set_camera {
 pub mod set_projection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "projection")]
     pub struct SetProjection {
         pub pane: Option<String>,
@@ -77,7 +77,7 @@ pub mod set_projection {
 pub mod set_projection_param {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "projection-param")]
     pub struct SetProjectionParam {
         pub pane: Option<String>,

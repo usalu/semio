@@ -6141,13 +6141,16 @@ pub fn examples_for_app<'a>(examples: &'a [ExampleDefinition], app: &AppDefiniti
 
 /// 🧩️ One host-aggregated plugin contribution entry — the element shape of the paged
 /// `setContributions` command payload, never a view-state field.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct ProgramContributionEntry {
     pub plugin_id: String,
     #[value(default)]
     pub topic_contribution: Option<TopicContribution>,
 }
+
+#[path="🌲️canonical/🦀️.rs"]
+mod program_contribution_tree;
 
 /// 📕️ Parses one assembled `setContributions` payload into typed entries — the ONE route
 /// contributions reach a guest by.
@@ -6162,7 +6165,7 @@ pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
 /// `"flow.extension"`, `"playbook.blockKind"`, `"cad.computer"`) — each producer/consumer picks its
 /// own topic string; this type does not enumerate them. See `component.ts`'s `TopicContribution` for
 /// the mirror.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct TopicContribution {
     pub topic: String,
     pub payload: DslValue,
@@ -7768,7 +7771,8 @@ pub struct HostedArtifactKind {
 // embed `MediaType`/`MediaClass`/`MediaForm` by value inside plain `#[derive(Serialize,
 // Deserialize)]` types — dropping serde here breaks `cargo check -p semio-framework` today. Both
 // derive families stay load-bearing simultaneously until those crates migrate; revisit once they do.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum MediaClass {
@@ -7784,7 +7788,8 @@ pub enum MediaClass {
 
 /// 🧬️ The shape/representation a `MediaClass` payload takes, orthogonal to `class` — e.g. `ThreeD` × `Brep` vs `ThreeD` × `Mesh`. `Any` only ever appears on the accepting side of a port (see `media_types_compatible`).
 // 🚧️ BLOCKED: see `MediaClass` above — same cross-crate serde dependency.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum MediaForm {
@@ -7808,7 +7813,8 @@ pub enum MediaForm {
 
 /// 🧬️ A port or wire's declared media type — the pair a producer offers or a consumer accepts.
 // 🚧️ BLOCKED: see `MediaClass` above — same cross-crate serde dependency.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct MediaType {
@@ -7824,7 +7830,8 @@ pub struct MediaType {
 // 🚧️ BLOCKED: see `MediaClass` above — `🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️.rs`'s
 // `WorkflowMediaPort`/`MediaContract` (owned by another agent this pass) still embed this by value
 // inside plain `#[derive(Serialize, Deserialize)]` types.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", tag = "kind")]
 pub enum MediaWireFormat {
@@ -7835,7 +7842,8 @@ pub enum MediaWireFormat {
 
 /// 🔀️ Which side of a wire a `MediaPortSpec` sits on.
 // 🚧️ BLOCKED: see `MediaWireFormat` above — same cross-crate serde dependency (`WorkflowMediaPort`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum MediaPortDirection {
@@ -7845,7 +7853,8 @@ pub enum MediaPortDirection {
 
 /// 🔢️ Whether a `MediaPortSpec` accepts/produces exactly one media value or a stream/collection of them — e.g. a mesh-array input that fans in from several upstream producers.
 // 🚧️ BLOCKED: see `MediaWireFormat` above — same cross-crate serde dependency (`WorkflowMediaPort`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum PortMultiplicity {
@@ -7856,7 +7865,8 @@ pub enum PortMultiplicity {
 /// 🔌️ A single port an app exposes on the workflow — `kind_id` optionally pins it to one `ArtifactKindSpec.id` when the port is more specific than its `media_type` alone conveys.
 // 🚧️ BLOCKED: see `MediaWireFormat` above — `WorkflowMediaPort.spec` embeds this by value inside a
 // plain `#[derive(Serialize, Deserialize)]` type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct MediaPortSpec {

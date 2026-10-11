@@ -4,7 +4,8 @@ use crate::standards::v1::subsets::any::schema::{diff::PlaygroundDiff, mutations
 
 //#region 🔖️Mutation
 /// ✒️ Changes the playground document's schema identity.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeSchema {
     pub new_schema: String,

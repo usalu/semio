@@ -10,7 +10,8 @@ pub use set_lint_generation::SetLintGeneration;
 mod set_engagement_input;
 pub use set_engagement_input::SetEngagementInput;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 #[mutations(snapshot = WriterMainWindowTransient, diff = WriterMainWindowTransientDiff, schema = "writer.mainwindowtransient")]
 pub enum WriterMainWindowTransientMutation {

@@ -17,7 +17,7 @@ use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️FieldDiff
 /// 🔺️ Sparse diff for a single [`CsvField`].
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct CsvFieldDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -71,7 +71,7 @@ impl CsvFieldDiff {
 /// crate). Same root cause as the recon report's §3b tri-state finding (`Option<Option<T>>`), one
 /// `Vec` layer removed. `DiffBinary,DiffCodec,DiffText` for `CsvDiff` is hand-rolled below instead; see
 /// `f6-recon-report.md` §3b and this ticket's `f6-csv-report.md` for the full citation.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct CsvRecordDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -137,7 +137,7 @@ impl CsvRecordDiff {
 
 //#region 🔖️RecordsDiff
 /// 🧩 One record apply_patch-in-place at a BASE index.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct CsvRecordModified {
     pub index: usize,
@@ -145,7 +145,7 @@ pub struct CsvRecordModified {
 }
 
 /// 🧩 One record inserted at a FINAL index.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct CsvRecordAdded {
     pub index: usize,
@@ -154,7 +154,7 @@ pub struct CsvRecordAdded {
 
 /// 🔺️ Index-keyed removed/modified/added triple over `CsvSnapshot::records`
 /// (`.claude/plans/the-current-schemas-are-scalable-journal.md` `## Diff`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct CsvRecordsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -222,7 +222,7 @@ fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.csv`. No `snapshot: Option<CsvSnapshot>` full-replace slot — every diff is sparse.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv.diff")]
 pub struct CsvDiff {

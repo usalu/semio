@@ -3,8 +3,9 @@
 //! A mesh compute describes its work as a closure that runs inside the first step, so cloning the input mesh and building the kernel job are charged to the grant like every other unit. A machine advances in batches of [`BATCH`] kernel units per fuel, reports monotone progress, turns a kernel panic into a fault and drops its kernel job on cancel.
 
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::mesh::{HalfedgeMesh, MeshKernelError, MeshModelingJob, MeshModelingProgress, MeshModelingStep, MeshSurfaceJob, Vec3};
+use semio_framework_3d::mesh::{HalfedgeMesh, MeshKernelError, MeshModelingJob, MeshModelingProgress, MeshModelingStep, MeshSurfaceJob, MeshTessellationJob, MeshTessellationStep, Vec3};
 use semio_framework_mesh_engine::PolygonMeshSource;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
 #[cfg(test)]
@@ -48,6 +49,7 @@ pub fn mesh_fault(error: &MeshKernelError) -> WidgetFault {
         MeshKernelError::DegenerateOperation => WidgetFault::new(MESH_DEGENERATE, "The operation degenerates: an input is zero, collinear, not finite or leaves nothing to do.", "Die Operation entartet: Eine Eingabe ist null, kollinear, nicht endlich oder lässt nichts zu tun übrig."),
         MeshKernelError::EmptySelection => WidgetFault::new(MESH_EMPTY_SELECTION, "The selection is empty.", "Die Auswahl ist leer."),
         MeshKernelError::InvalidInput(detail) => WidgetFault::new(MESH_KERNEL, format!("The mesh kernel refused the input: {detail}."), format!("Der Netzkern hat die Eingabe abgelehnt: {detail}.")),
+        MeshKernelError::Retained(detail) => WidgetFault::new(MESH_KERNEL, format!("The mesh kernel refused the retained work: {detail}."), format!("Der Netzkern hat die gehaltene Arbeit abgelehnt: {detail}.")),
     }
 }
 
@@ -281,9 +283,29 @@ pub trait Stepper: Send {
     fn cancel(&mut self);
 }
 
+/// 🎟️ Advances a kernel modeling job by up to `budget` units under the same funding the kernel's own synchronous drivers grant it.
+pub fn modeling_slice(job: &mut MeshModelingJob, budget: usize) -> Result<MeshModelingStep, MeshKernelError> {
+    let grant = RetainedCloneGrant { maximum_items: budget.max(1), maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+    job.step(budget, grant, &mut RetainedCloneProgress::default())
+}
+
+/// 🎟️ Advances a kernel tessellation by up to `events` producer events, each under the exact grant its own quote asks for.
+pub fn tessellation_slice(job: &mut MeshTessellationJob, events: usize) -> Result<MeshTessellationStep, MeshKernelError> {
+    let mut last = MeshTessellationStep::Working(job.progress());
+    for _ in 0..events.max(1) {
+        let copy = job.next_normal_copy_byte_demand().map_err(MeshKernelError::Retained)?.max(128);
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: job.next_normal_capacity_byte_demand(copy).map_err(MeshKernelError::Retained)?, maximum_release_bytes: job.next_normal_release_byte_demand().map_err(MeshKernelError::Retained)?, maximum_depth: job.next_normal_depth_demand().map_err(MeshKernelError::Retained)? };
+        last = job.step(grant).map_err(MeshKernelError::Retained)?.0;
+        if !matches!(last, MeshTessellationStep::Working(_)) {
+            break;
+        }
+    }
+    Ok(last)
+}
+
 impl Stepper for MeshModelingJob {
     fn step(&mut self, budget: usize) -> Result<MeshModelingStep, MeshKernelError> {
-        MeshModelingJob::step(self, budget)
+        modeling_slice(self, budget)
     }
 
     fn cancel(&mut self) {
@@ -343,7 +365,7 @@ impl Machine for FromSource {
             }
         }
         let Some(job) = self.job.as_mut() else { return Ok(Flow::Working(0.05)) };
-        match job.step(fuel.saturating_mul(BATCH)).kernel()? {
+        match modeling_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
             MeshModelingStep::Working(progress) => Ok(Flow::Working(0.05 + 0.9 * ratio(progress))),
             MeshModelingStep::Done(mesh) => Ok(Flow::Done(mesh_output(mesh))),
             MeshModelingStep::Cancelled(_) => Err(cancelled_fault()),

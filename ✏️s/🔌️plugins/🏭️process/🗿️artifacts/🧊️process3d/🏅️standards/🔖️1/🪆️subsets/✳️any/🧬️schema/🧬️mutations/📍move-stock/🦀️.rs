@@ -12,7 +12,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🧱 Absolute spatial reposition of the document's single [`crate::Stock`]
 /// workpiece — the `stock` field's `pose` sub-value, addressed implicitly (the document has exactly
 /// one stock, so `target()` is empty per `MutationKind::target`'s whole-artifact-scope default).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct MoveStock {

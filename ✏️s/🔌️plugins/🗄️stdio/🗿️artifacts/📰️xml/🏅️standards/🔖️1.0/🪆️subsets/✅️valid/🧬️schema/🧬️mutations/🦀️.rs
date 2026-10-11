@@ -84,7 +84,8 @@ pub mod set_standalone;
 pub mod set_text;
 //#endregion 🔖️Leaves
 
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = XmlSnapshot, diff = XmlDiff, schema = "XmlValidMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum XmlValidMutation {

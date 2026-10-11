@@ -15,7 +15,8 @@ use std::collections::HashSet;
 /// `Boolean` (`t="b"`), `Formula` (a `<f>` child present; `cached` is the cell's own `<v>`,
 /// re-typed by ITS `t` attribute, `None` when the workbook has no cached value), `Empty` (no
 /// `<v>` at all).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 #[derive(Default)]
 pub enum XlsxCellValue {
@@ -37,7 +38,8 @@ pub enum XlsxCellValue {
 /// 1-based (the literal SpreadsheetML `<row r="N">` index), `col` is 0-based (matches
 /// `schema::vocabulary::column_letter`'s `0 -> "A"` convention). `row`/`col` are this cell's IDENTITY (the
 /// key `XlsxCellsDiff` diffs by) and are never themselves diffed — only `value` is.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XlsxCell {
     pub row: u32,
@@ -51,7 +53,8 @@ pub struct XlsxCell {
 /// `XlsxSheetsDiff` diffs by, per the recipe's name-keyed-collection convention); renaming a
 /// sheet is therefore a remove-old-name + add-new-name at the diff level (documented — same
 /// category as docx's OPC-part-rename gotcha), never a `name` field mutation.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XlsxSheet {
     pub name: String,
@@ -75,7 +78,7 @@ pub struct XlsxWorkbook {
 
 //#region 🔖️XmlParts
 /// 📄️ One authoritative XML-bearing OPC part. `OpcPackage.parts` contains only non-XML payloads.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct XlsxXmlPart {
     pub path: String,
@@ -92,7 +95,7 @@ pub fn xlsx_part_is_xml(path: &str, content_type: &str) -> bool {
 //#endregion 🔖️XmlParts
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xlsx")]
 pub struct XlsxSnapshot {

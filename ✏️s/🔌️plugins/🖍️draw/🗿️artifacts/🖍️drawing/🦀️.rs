@@ -37,7 +37,8 @@ pub const DRAWING_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "sele
 // these types is itself `#[dsl(block)]`, which already supplies the bare leading keyword from the
 // FIELD's own name — an inner keyword too would double it (`transform { transform x=0 ... }`),
 // same reasoning as `note`'s `NoteImageAsset`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -56,7 +57,8 @@ pub struct DrawingTransform {
 // No keyword either: reached only through `semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>` (a plain, un-tagged list) —
 // `parse_record_body` self-terminates on the first unrecognized key regardless, the same reasoning
 // verified for `note`'s `NoteImageAsset` nested inside a `Map` value slot.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -65,7 +67,8 @@ pub struct GradientStop {
     pub color: [f64; 4],
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
@@ -90,7 +93,8 @@ pub enum FillStyle {
     },
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -104,7 +108,8 @@ pub struct StrokeStyle {
     pub dash: Option<semio_framework_value::list::PagedList<f64, {usize::MAX}>>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -125,7 +130,8 @@ pub struct DrawingAttributes {
     pub stroke: Option<StrokeStyle>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -134,7 +140,8 @@ pub struct DrawingTraceParams {
     pub simplify_epsilon: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -144,7 +151,8 @@ pub struct DrawingImageAsset {
     pub samples: semio_framework_value::list::PagedList<[u8; 4], {usize::MAX}>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -163,7 +171,8 @@ pub struct DrawingLayerBase {
     pub attributes: DrawingAttributes,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -174,7 +183,8 @@ pub struct DrawingRect {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -185,7 +195,8 @@ pub struct DrawingEllipse {
     pub ry: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -195,7 +206,8 @@ pub struct DrawingCircle {
     pub r: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -206,7 +218,8 @@ pub struct DrawingLine {
     pub y2: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -347,7 +360,46 @@ pub struct DrawingTraceBody {
     pub params: DrawingTraceParams,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+/// 🌿️ Projects a layer body whose `base` is flattened into the body object, in the exact field order of the `ToValue` wire (base fields first, then the own fields that are present).
+macro_rules! flattened_layer_body_tree {
+    (@present $body:ident) => { true };
+    (@present $body:ident, $present:expr) => { ($present)($body) };
+    ($body:ty { $($field:ident: $key:literal $(if $present:expr)?),* $(,)? }) => {
+        impl semio_framework_pack_json::ArtifactCanonicalJsonTree for $body {
+            fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+                let semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(base) = semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_node(&self.base)? else { return Err(flattened_layer_body_absent()); };
+                Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(base $(+ usize::from(flattened_layer_body_tree!(@present self $(, $present)?)))*))
+            }
+            fn canonical_tree_child(&self, mut ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
+                let semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(base) = semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_node(&self.base)? else { return Err(flattened_layer_body_absent()); };
+                if ordinal < base { return semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_child(&self.base, ordinal); }
+                ordinal -= base;
+                $(if flattened_layer_body_tree!(@present self $(, $present)?) { if ordinal == 0 { return Ok(&self.$field); } ordinal -= 1; })*
+                Err(flattened_layer_body_absent())
+            }
+            fn canonical_tree_key(&self, mut ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+                let semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(base) = semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_node(&self.base)? else { return Err(flattened_layer_body_absent()); };
+                if ordinal < base { return semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_key(&self.base, ordinal); }
+                ordinal -= base;
+                $(if flattened_layer_body_tree!(@present self $(, $present)?) { if ordinal == 0 { return Ok($key.into()); } ordinal -= 1; })*
+                Err(flattened_layer_body_absent())
+            }
+        }
+    };
+}
+
+fn flattened_layer_body_absent() -> semio_framework_value::ValueError { semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical layer body ordinal is absent") }
+
+flattened_layer_body_tree!(DrawingShapeBody { shape_kind: "shapeKind", rect: "rect" if |body: &DrawingShapeBody| body.rect.is_some(), ellipse: "ellipse" if |body: &DrawingShapeBody| body.ellipse.is_some(), circle: "circle" if |body: &DrawingShapeBody| body.circle.is_some(), line: "line" if |body: &DrawingShapeBody| body.line.is_some(), polygon: "polygon" if |body: &DrawingShapeBody| body.polygon.is_some() });
+flattened_layer_body_tree!(DrawingPathBody { segments: "segments" });
+flattened_layer_body_tree!(DrawingTextBody { x: "x", y: "y", content: "content", size: "size", font_family: "fontFamily" });
+flattened_layer_body_tree!(DrawingImageBody { image_key: "imageKey", width: "width", height: "height" });
+flattened_layer_body_tree!(DrawingGroupBody { isolation: "isolation" if |body: &DrawingGroupBody| !group_isolation_disabled(&body.isolation), children: "children" });
+flattened_layer_body_tree!(DrawingBooleanBody { operation: "operation", children: "children" });
+flattened_layer_body_tree!(DrawingTraceBody { source_key: "sourceKey", params: "params" });
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind")]
 #[cfg_attr(test, serde(tag = "kind"))]
@@ -381,7 +433,8 @@ pub enum DrawingLayerNode {
 // Field order per variant mirrors the SVG spec's own argument order (e.g. `A rx ry rotation
 // large-arc-flag sweep-flag x,y`) so it reads as real SVG path syntax, just space- instead of
 // comma/space-mixed-delimited between commands.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
@@ -1067,7 +1120,7 @@ pub mod schema {
 }
 
 pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::{drawing_op_for_layer_field,DrawingMutation};
+    pub use crate::standards::v1::subsets::any::schema::mutations::{drawing_op_for_layer_field,inverse_drawing_mutation,DrawingMutation};
 
 }
 
@@ -1266,4 +1319,6 @@ pub use standards::v1::subsets::any::examples;
 pub mod host {
 #[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
 pub mod owned;
+#[path = "🔨️modules/🏠️host/📬️outcome/🦀️.rs"]
+pub mod outcome;
 }

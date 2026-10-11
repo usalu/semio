@@ -34,7 +34,7 @@ fn duplicate_blocks(document: &NoteSnapshot, ids: &[String], id_owner: &mut crat
 }
 //#endregion 🔖️Helpers
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "duplicate-selection")]
 pub struct DuplicateSelection {}
 

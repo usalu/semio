@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — sequence is a
 /// genuine step DAG (`steps` + `edges`), so `topology` here is a real Kahn's-algorithm topological
 /// sort, not a degenerate stand-in.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sequence.sequence.inference")]

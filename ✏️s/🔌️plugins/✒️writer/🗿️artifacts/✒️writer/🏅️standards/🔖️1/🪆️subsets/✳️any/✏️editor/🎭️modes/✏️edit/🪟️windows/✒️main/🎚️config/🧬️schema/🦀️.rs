@@ -1,5 +1,6 @@
 /// 📷️ Persisted local viewport transform for one concrete Writer main window.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WriterCamera {
@@ -21,7 +22,8 @@ impl Default for WriterCamera {
 }
 
 /// ⚙️ Persisted local editor chrome for one concrete Writer main window.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
 pub struct WriterEditorSettings {
@@ -45,7 +47,7 @@ pub fn default_camera() -> WriterCamera {
     WriterCamera { x: 0.0, y: 0.0, zoom: 1.0 }
 }
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "writer.mainwindowconfig")]

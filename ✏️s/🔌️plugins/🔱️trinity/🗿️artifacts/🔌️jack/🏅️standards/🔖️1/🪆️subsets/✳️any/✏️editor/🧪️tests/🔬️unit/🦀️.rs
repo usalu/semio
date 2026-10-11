@@ -66,6 +66,8 @@ async fn new_app() -> JackTestApp {
 }
 
 const JACK_TEST_INSTANCE: u32 = 1;
+
+}
 const JACK_LIVE_LOAD_STEP_BYTES: usize = 32 * 1_024;
 
 pub(crate) struct JackTestApp {
@@ -77,7 +79,7 @@ impl JackTestApp {
     fn close(&mut self) {
         if !self.closed {
             self.closed = true;
-            artifact_app_laws::close_registered_fixture_app(&mut self.app);
+            artifact_app_laws::close_registered_fixture_app(&mut self.app, crate::trinity_mounted_owner_policy());
         }
     }
 }
@@ -134,22 +136,8 @@ fn jack_envelope_wire_of(snapshot: crate::JackSnapshot) -> Vec<u8> {
     }))
     .into_bytes();
     let envelope = store::create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-live-load", snapshot, None);
-    let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::jack_envelope_decode_owner_bundle().retire_envelope(envelope);
-    for _ in 0..100_000 {
-        match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Jack fixture envelope retirement") {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                drop(retirement);
-                return wire;
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("unshared Jack fixture envelope retirement blocked"),
-        }
-    }
-    panic!("Jack fixture envelope retirement did not reach terminal")
+    crate::drive_retirement_to_terminal(crate::standards::v1::subsets::any::io::binary::mutations::jack_envelope_decode_owner_bundle().retire_envelope(envelope)).expect("Jack fixture envelope retirement");
+    wire
 }
 
 fn admit_jack_envelope(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {

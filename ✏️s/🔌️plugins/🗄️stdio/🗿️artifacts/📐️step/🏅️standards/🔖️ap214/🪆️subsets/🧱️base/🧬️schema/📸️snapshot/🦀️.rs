@@ -20,7 +20,8 @@ pub use crate::engine::brep::{BrepFace, BrepMesh, BrepVertex};
 /// `Reference` = a `#456` instance pointer, `Enum` = `.T.`/`.F.`/`.UNKNOWN.`-shaped enumeration or
 /// domain-select literal, `Aggregate` = a parenthesized list, `TypedValue` = a simple/complex
 /// defined-type wrapper (`IFCLENGTHMEASURE(3000.)`-shaped).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[derive(Default)]
 pub enum StepValue {
@@ -33,10 +34,16 @@ pub enum StepValue {
     Enum(String),
     Reference(u64),
     Aggregate(Vec<StepValue>),
-    TypedValue {
-        type_name: String,
-        value: Box<StepValue>,
-    },
+    TypedValue(StepTypedValue),
+}
+
+/// 🏷️ The payload record of [`StepValue::TypedValue`]: the defined-type keyword plus its wrapped value.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct StepTypedValue {
+    pub type_name: String,
+    pub value: Box<StepValue>,
 }
 
 //#endregion 🔖️Value
@@ -60,7 +67,8 @@ pub const ISO_10303_21_IMPLEMENTATION_LEVEL: &str = "2;1";
 /// 📇️ `FILE_DESCRIPTION(description, implementation_level)` — ISO 10303-21 §8.2.2. `description`
 /// is `LIST[1:?] OF STRING`, hence the hand-written [`Default`]: a derived one would give the
 /// empty list the standard forbids.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct StepFileDescription {
     #[value(default = "unpopulated_string_list")]
@@ -79,7 +87,8 @@ impl Default for StepFileDescription {
 /// originating_system, authorization)` — ISO 10303-21 §8.2.3. `author` and `organization` are
 /// `LIST[1:?] OF STRING`, so this carries the same hand-written [`Default`] as
 /// [`StepFileDescription`] for the same reason.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct StepFileName {
     #[value(default)]
@@ -108,7 +117,8 @@ impl Default for StepFileName {
 /// is a real (and diagnosable) state — `check_ccN_conformance` reports it as a hard `CODE_FILE_
 /// SCHEMA` violation — but an empty LIST is not a state the exchange structure can even carry, so
 /// the default is the one unpopulated entry rather than none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct StepFileSchema {
     #[value(default = "unpopulated_string_list")]
@@ -124,7 +134,7 @@ impl Default for StepFileSchema {
 /// 📇️ The full typed `HEADER;` section — all three standard records. Its `Default` is ISO
 /// 10303-21 §8.2's conformant minimum, so `StepSnapshot::default()` writes an exchange structure a
 /// conformant reader accepts instead of one it refuses.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct StepHeader {
     #[value(default)]
@@ -141,7 +151,8 @@ pub struct StepHeader {
 /// (`#N=(TYPE1(...)TYPE2(...))`) — spec-legal (ISO 10303-21 §4.2), rare in real AP214 exports
 /// (far more common in IFC's select-type disambiguation), never silently dropped: a plain
 /// single-typed instance leaves this empty; a complex one keeps every extra type here.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct StepComplexType {
     pub name: String,
@@ -150,7 +161,8 @@ pub struct StepComplexType {
 }
 
 /// 🧩️ One `#N = TYPE(args...)` instance — id-keyed identity, positional argument list.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct StepEntity {
     pub id: u64,
@@ -168,7 +180,7 @@ pub struct StepEntity {
 /// positions default gracefully; complex instances retain every constituent type via
 /// `StepEntity::complex`). BrepMesh is a derived analyzer view
 /// (`crate::engine::brep::analyze_brep_mesh`), not stored here.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.step")]
 pub struct StepSnapshot {
@@ -232,7 +244,7 @@ fn value_from_part21(v: &Part21Value) -> StepValue {
         Part21Value::List(items) => StepValue::Aggregate(items.iter().map(value_from_part21).collect()),
         Part21Value::Typed { name, items } => {
             let value = if items.len() == 1 { value_from_part21(&items[0]) } else { StepValue::Aggregate(items.iter().map(value_from_part21).collect()) };
-            StepValue::TypedValue { type_name: name.clone(), value: Box::new(value) }
+            StepValue::TypedValue(StepTypedValue { type_name: name.clone(), value: Box::new(value) })
         }
     }
 }
@@ -248,7 +260,7 @@ fn value_to_part21(v: &StepValue) -> Part21Value {
         StepValue::Enum(s) => Part21Value::Enum(s.clone()),
         StepValue::Reference(id) => Part21Value::Ref(*id),
         StepValue::Aggregate(items) => Part21Value::List(items.iter().map(value_to_part21).collect()),
-        StepValue::TypedValue { type_name, value } => Part21Value::Typed { name: type_name.clone(), items: vec![value_to_part21(value)] },
+        StepValue::TypedValue(StepTypedValue { type_name, value }) => Part21Value::Typed { name: type_name.clone(), items: vec![value_to_part21(value)] },
     }
 }
 

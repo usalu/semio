@@ -33,6 +33,9 @@ path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-trace]
+path = "../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-tool-machine]
 path = "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust"
 

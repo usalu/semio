@@ -8,7 +8,7 @@ use std::cmp::Ordering;
 #[path = "🚦️frontiers/🦀️.rs"]
 pub(crate) mod frontiers;
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone)]
 pub struct CadReferenceIndex {
     entries: Vec<(String, CadReferenceList)>,
 }
@@ -73,8 +73,14 @@ impl RetireOwned for CadReferenceIndex {
 
 pub(crate) fn invalid(message: &'static str) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 pub(crate) fn close<T: RetireOwned>(value: T) {
-    let mut retirement = semio_framework_value::retirement::owned_retirement(value);
-    while !retirement.terminal_is_empty() { retirement.close_step(256, 65536).expect("CAD native cold retirement grant"); }
+    let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|(error, _)| panic!("CAD native cold retirement refused: {error}"));
+    while !owner.terminal_is_empty() {
+        let copy = owner.next_copy_byte_demand().expect("CAD native cold copy demand");
+        let release = owner.next_release_byte_demand().expect("CAD native cold release demand");
+        let capacity = owner.next_capacity_byte_demand(if copy == 0 { release } else { copy }).expect("CAD native cold capacity demand");
+        let depth = owner.next_depth_demand().expect("CAD native cold depth demand");
+        owner.step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: depth }).expect("CAD native cold grant");
+    }
 }
 
 impl semio_framework_dsl_record::BorrowedDslField for CadReferenceIndex {

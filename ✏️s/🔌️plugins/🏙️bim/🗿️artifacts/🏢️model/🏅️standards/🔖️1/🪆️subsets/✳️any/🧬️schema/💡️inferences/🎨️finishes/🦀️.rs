@@ -33,7 +33,7 @@ pub const FLATTEN_TOLERANCE: f64 = 1e-6;
 
 //#region 🔖️Values
 /// 🎨️ Which surface of a room a finish covers.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum FinishSurface {
     #[default]
     Floor,
@@ -53,7 +53,7 @@ impl FinishSurface {
 }
 
 /// 🎨️ The finish of one surface of a room: the material the space names (empty when unfinished) and the area it covers.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct FinishQuantity {
     pub surface: FinishSurface,
     pub material: String,

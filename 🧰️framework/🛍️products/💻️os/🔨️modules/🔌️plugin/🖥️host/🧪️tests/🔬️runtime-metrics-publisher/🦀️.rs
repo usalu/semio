@@ -8,6 +8,7 @@ async fn env(to: semio_framework_actor::ActorId, lane: Lane, seq: u64) -> Envelo
 
 async fn ok_turn() -> TurnResult {
     TurnResult {
+        retained_receipt: crate::test_native_authority::idle_receipt(),
         ui_patches: vec![],
         effects: vec![],
         lifecycle_receipt: None,
@@ -26,7 +27,7 @@ async fn ok_turn() -> TurnResult {
 #[semio_framework_async_macros::async_test]
 async fn maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host() {
     let mut kernel = Kernel::new(ShardKind::Native, 1, 0, 4).await;
-    let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+    let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, crate::test_native_authority::original_retained_turn()).await;
     kernel.submit(&env(actor, Lane::Interactive, 1).await).await;
     kernel.tick(0).await;
     kernel.complete(actor, &ok_turn().await, 0).await.unwrap();
@@ -123,7 +124,7 @@ async fn runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_regist
         } else {
             (PackageId(plugin_id.to_string()), ActorKind::Extension { plugin: PackageId(plugin_id.to_string()), extension_id: record.id.clone() })
         };
-        let actor = kernel.activate(package, ordinal.await, kind, lane.await, None, ActivationEvent::Manual).await;
+        let actor = kernel.activate(package, ordinal.await, kind, lane.await, None, ActivationEvent::Manual, crate::test_native_authority::original_retained_turn()).await;
         if record.scale_fixture.profile == "crash" && crash_profile_actor.is_none() {
             crash_profile_actor = Some(actor);
         }
@@ -141,6 +142,7 @@ async fn runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_regist
     kernel.submit(&env(crash_actor, Lane::UserVisible, 1).await).await;
     kernel.tick(1).await;
     let faulted = TurnResult {
+        retained_receipt: crate::test_native_authority::idle_receipt(),
         ui_patches: vec![],
         effects: vec![],
         lifecycle_receipt: None,

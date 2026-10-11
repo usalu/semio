@@ -7,7 +7,7 @@ use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
 
 //#region 🔖️Duration
 /// ⏱️ mp4's movie-clock and edit-list-aware presentation duration.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Mp4Duration {
     pub duration_seconds: f64,

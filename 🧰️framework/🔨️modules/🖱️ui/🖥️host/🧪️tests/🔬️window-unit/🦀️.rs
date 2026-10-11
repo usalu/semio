@@ -2,31 +2,7 @@
 use super::*;
 
 #[cfg(not(target_arch = "wasm32"))]
-thread_local! { static CLIPBOARD_HEAP: std::cell::Cell<Option<(usize, usize)>> = const { std::cell::Cell::new(None) }; }
-#[cfg(not(target_arch = "wasm32"))]
-struct ClipboardHeap;
-#[cfg(not(target_arch = "wasm32"))]
-unsafe impl std::alloc::GlobalAlloc for ClipboardHeap {
-    unsafe fn alloc(&self, layout: std::alloc::Layout) -> *mut u8 {
-        let pointer = unsafe { std::alloc::GlobalAlloc::alloc(&std::alloc::System, layout) };
-        if !pointer.is_null() { let _ = CLIPBOARD_HEAP.try_with(|state| if let Some((born, freed)) = state.get() { state.set(Some((born + layout.size(), freed))); }); }
-        pointer
-    }
-    unsafe fn dealloc(&self, pointer: *mut u8, layout: std::alloc::Layout) {
-        let _ = CLIPBOARD_HEAP.try_with(|state| if let Some((born, freed)) = state.get() { state.set(Some((born, freed + layout.size()))); });
-        unsafe { std::alloc::GlobalAlloc::dealloc(&std::alloc::System, pointer, layout) }
-    }
-}
-#[cfg(not(target_arch = "wasm32"))]
-#[global_allocator]
-static CLIPBOARD_ALLOCATOR: ClipboardHeap = ClipboardHeap;
-#[cfg(not(target_arch = "wasm32"))]
-fn measured<T>(body: impl FnOnce() -> T) -> (T, usize, usize) {
-    CLIPBOARD_HEAP.with(|state| { assert!(state.get().is_none()); state.set(Some((0, 0))); });
-    let result = body();
-    let (born, freed) = CLIPBOARD_HEAP.with(|state| state.replace(None).unwrap());
-    (result, born, freed)
-}
+use crate::observed_allocator::measured;
 
 //#region 📐️Metrics tests
 
@@ -491,7 +467,7 @@ fn native_clipboard_original_string_close_requires_whole_capacity_and_depth(){
   assert_eq!(job.next_close_copy_byte_demand().unwrap(),0);assert_eq!(job.next_close_capacity_byte_demand(0).unwrap(),0);assert_eq!(job.next_close_release_byte_demand().unwrap(),capacity);assert_eq!(job.next_close_depth_demand().unwrap(),1);
   for short in [Grant{maximum_items:0,..exact},Grant{maximum_release_bytes:capacity-1,..exact},Grant{maximum_depth:0,..exact}]{
    assert_eq!(job.close_step(short),Close::Pending{progress:Progress::default()});
-   let Some(super::NativeClipboardOperation::Write(text))=&job.operation else{panic!("original clipboard owner survived refusal")};assert_eq!(text.as_ptr(),pointer);assert_eq!(text.capacity(),capacity);
+   let Some(super::NativeClipboardOperation::Write(text))=job.operation.as_ref() else{panic!("original clipboard owner survived refusal")};assert_eq!(text.as_ptr(),pointer);assert_eq!(text.capacity(),capacity);
   }
   let progress=Progress{copied_items:1,released_bytes:capacity,..Progress::default()};assert_eq!(job.close_step(exact),Close::Complete{progress});assert!(progress.fits(exact));assert!(job.terminal_is_empty());assert_eq!(job.close_step(exact),Close::Complete{progress:Progress::default()});
   eprintln!("[DEBUG] original clipboard close sameString=true empty={} wholeCapacity={} exactRelease={} depth=1",text.as_str().unwrap().is_empty(),capacity,progress.released_bytes);

@@ -3,7 +3,8 @@ use crate::editor::remodeling::engine::images as remodeling_image;
 
 // #region 🔖️Bytes
 /// 🧭️ Four-character box/chunk code (ISO-BMFF box types, RIFF FourCCs); compared and hashed by raw bytes.
-#[derive(Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct FourCc(pub [u8; 4]);
 
 impl FourCc {
@@ -83,7 +84,8 @@ impl From<H264Error> for VideoError {
 
 /// 🎞️ Video codec identified from a container's sample description; `Unknown` carries the raw fourcc for
 /// diagnostics even when this crate cannot decode it (routing the caller to a host decoder).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "kind", content = "fourcc", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum VideoCodec {
     Avc,

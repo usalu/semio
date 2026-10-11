@@ -82,6 +82,63 @@ pub fn evaluate_invoke(registry: &Registry, request: &[u8]) -> Result<Vec<u8>, S
     Ok(evaluate_json(registry, kind_id, &input_json).into_bytes())
 }
 // #endregion 🔖️Evaluate
+// #region 🔖️Owner
+/// 🧳️ The retained resource family of an imperative path extension: the module registry factory is the only captured resource, and every evaluation is one bounded turn, so close is shallow.
+pub struct ImperativeEvaluationResources {
+    make_registry: fn() -> Registry,
+    closing: bool,
+}
+
+impl ImperativeEvaluationResources {
+    pub fn new(make_registry: fn() -> Registry) -> Self {
+        Self { make_registry, closing: false }
+    }
+}
+
+impl semio_framework_plugin::ExtensionResourceOwner for ImperativeEvaluationResources {
+    fn invoke(&self, _capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::ExtensionInvokeStep, semio_framework::Fault> {
+        use semio_framework_plugin::ExtensionInvokeStep;
+        use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
+        let refused = |error: ValueError| ExtensionInvokeStep { payload: None, retained_progress: RetainedCloneProgress::default(), refusal: Some(error) };
+        let grant = cx.retained_grant();
+        if self.closing {
+            return Ok(refused(ValueError::literal(ValueRefusalKind::InvariantViolated, "imperative evaluation resource is closing")));
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || cx.should_yield() {
+            return Ok(ExtensionInvokeStep { payload: None, retained_progress: RetainedCloneProgress::default(), refusal: None });
+        }
+        let registry = neural_engine::ColdOwner::new((self.make_registry)());
+        let bytes = evaluate_invoke(&registry, request).map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate"), message))?;
+        let receipt = RetainedCloneProgress { copied_items: 1, copied_bytes: bytes.len(), retained_capacity_bytes: bytes.capacity(), released_bytes: 0 };
+        if !receipt.fits(grant) {
+            return Ok(refused(ValueError::literal(ValueRefusalKind::OwnershipLimit, "imperative evaluation reply exceeds the admitted grant")));
+        }
+        let mut refusal = None;
+        if let Err(error) = cx.consume_retained(receipt) {
+            refusal = Some(error);
+        }
+        cx.consume_fuel(1);
+        Ok(ExtensionInvokeStep { payload: Some(bytes), retained_progress: receipt, refusal })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework::Fault> {
+        Ok(semio_framework_plugin::PluginLifecycleStep::Complete(Default::default()))
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+    }
+
+    fn retirement_demands(&self, _maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(Default::default())
+    }
+}
+// #endregion 🔖️Owner
+
 
 // #region 🔖️Constants
 /// 🎯️ Imperative play host app id for the `"imperative.module"` topic contribution's `appId` field.

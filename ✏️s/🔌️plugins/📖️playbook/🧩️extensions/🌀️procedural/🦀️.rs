@@ -1,10 +1,14 @@
 //! 🧩️ Playbook procedural block-kind module — flow-backed building component params + live 3D preview.
 
 use semio_framework_plugin::UiAssemblyResult;
+
+/// 🧯️ Surfaces a retained-ownership refusal as a plugin fault carrying its message.
+fn module_value_fault(error: semio_framework_value::ValueError) -> Fault { Fault::new(semio_framework_plugin::FaultOrigin::Plugin, semio_framework_plugin::FaultCode::new("playbook.module.procedural.retained"), error.into_message()) }
+use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress}, RetirementDemand, ValueError};
 use semio_framework_ui_contract::{ActionId as UiActionId, Buildable, HasBase, HasChildren};
 
 use flow::{forms_bridge::flow_host_snapshot_to_form_spec, FlowHost};
-use neural_engine::{Registry, RegistryRetirement, SharedRegistry, ValueRetirement, ValueRetirementStep};
+use neural_engine::{Registry, RegistryRetirement, SharedRegistry, ValueRetirement};
 use semio_s_spatial_kernel_semio_session::{Session, SessionCapture};
 use protocol::MutationDiff;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
@@ -17,7 +21,7 @@ use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactory, Too
 use semio_framework_job::Operation;
 use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionHoverState};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::{bounded_config_store_one_item_preparation_factory, ArtifactInstanceOperationOwner, ArtifactInstanceOperationOwnerHandle, HistoryView, PluginCloseStep};
+use semio_framework_plugin::{ArtifactInstanceOperationOwner, ArtifactInstanceOperationOwnerHandle, HistoryView, PluginLifecycleStep};
 use semio_framework_ui_locale::app_labels;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_plugin::mesh_from_kind;
@@ -136,7 +140,8 @@ app_labels! {
 //#endregion 🔖️Terminology
 
 //#region 🔖️Payload
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "procmodule")]
 pub struct ModuleRenderPayload {
@@ -453,10 +458,13 @@ struct ModuleGeometryOwner {
     registry_retirement: RegistryRetirement,
     closing: bool,
     imported: Option<ModuleImportedGeometry>,
+    stale: Vec<ModuleStaleGeometry>,
     retirement: ValueRetirement,
 }
 
 struct ModuleImportedGeometry { source: String, handles: Vec<String> }
+
+enum ModuleStaleGeometry { Text(String), Handles(Vec<String>) }
 
 impl ModuleGeometryOwner {
     fn new() -> Self {
@@ -466,14 +474,29 @@ impl ModuleGeometryOwner {
         semio_s_plugin_flow_extension_brep::register(&mut registry, &session);
         registry.finalize();
         let (registry, registry_retirement) = SharedRegistry::new(registry);
-        Self { session: session.capture(), registry: Some(registry), registry_retirement, closing: false, imported: None, retirement: ValueRetirement::default() }
+        Self { session: session.capture(), registry: Some(registry), registry_retirement, closing: false, imported: None, stale: Vec::new(), retirement: ValueRetirement::default() }
     }
 
     fn retire_import_cache(&mut self) {
         if let Some(cache) = self.imported.take() {
-            self.retirement.text(cache.source);
-            self.retirement.push_strings(cache.handles);
+            self.stale.push(ModuleStaleGeometry::Handles(cache.handles));
+            self.stale.push(ModuleStaleGeometry::Text(cache.source));
         }
+    }
+
+    fn admit_stale(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+        match self.stale.pop().expect("observed stale geometry owner") {
+            ModuleStaleGeometry::Text(value) => self.retirement.text(value, grant).map_err(|(error, value)| { self.stale.push(ModuleStaleGeometry::Text(value)); error }),
+            ModuleStaleGeometry::Handles(value) => self.retirement.push_strings(value, grant).map_err(|(error, value)| { self.stale.push(ModuleStaleGeometry::Handles(value)); error }),
+        }
+    }
+
+    fn stale_demand(&self) -> RetirementDemand {
+        RetirementDemand { capacity_bytes: ValueRetirement::domain_frame_birth_bytes(), depth: 1, ..Default::default() }
+    }
+
+    fn retirement_cursor_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand { copy_bytes: self.retirement.next_copy_byte_demand()?, capacity_bytes: self.retirement.next_capacity_byte_demand(body)?, release_bytes: self.retirement.next_release_byte_demand()?, depth: self.retirement.next_depth_demand()? })
     }
 
     fn retain_current(&self, handles: &[String]) {
@@ -493,44 +516,47 @@ impl ModuleGeometryOwner {
 impl ArtifactInstanceOperationOwner for ModuleGeometryOwner {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 
-    fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        Ok(match self.retirement.close_step(maximum_items, maximum_bytes) {
-            ValueRetirementStep::Blocked => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
-            ValueRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-            ValueRetirementStep::Complete => PluginCloseStep::Complete,
-        })
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if !self.closing { return Ok(if self.stale.is_empty() { RetirementDemand::default() } else { self.stale_demand() }); }
+        if !self.stale.is_empty() { return Ok(self.stale_demand()); }
+        if !self.retirement.terminal_is_empty() { return self.retirement_cursor_demand(body); }
+        if !self.registry_retirement.terminal_is_empty() {
+            return Ok(RetirementDemand { copy_bytes: self.registry_retirement.next_copy_byte_demand()?, capacity_bytes: self.registry_retirement.next_capacity_byte_demand(body)?, release_bytes: self.registry_retirement.next_release_byte_demand()?, depth: self.registry_retirement.next_depth_demand()? });
+        }
+        Ok(RetirementDemand { copy_bytes: self.session.next_close_copy_byte_demand()?, capacity_bytes: self.session.next_close_capacity_byte_demand(body)?, release_bytes: self.session.next_close_release_byte_demand()?, depth: self.session.next_close_depth_demand()? })
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        if self.terminal_is_empty() { return Ok(PluginCloseStep::Complete); }
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+    fn maintenance_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(PluginLifecycleStep::Progress(Default::default())); }
+        if !self.stale.is_empty() { return Ok(PluginLifecycleStep::Progress(self.admit_stale(grant).map_err(module_value_fault)?)); }
+        if self.retirement.terminal_is_empty() { return Ok(PluginLifecycleStep::Progress(Default::default())); }
+        let step = self.retirement.close_step(grant).map_err(module_value_fault)?;
+        Ok(PluginLifecycleStep::Progress(step.progress()))
+    }
+
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(Default::default())); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(PluginLifecycleStep::Progress(Default::default())); }
         if !self.closing {
             self.closing = true;
             drop(self.registry.take());
             self.retire_import_cache();
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
-        if !self.retirement.terminal_is_empty() {
-            return Ok(match self.maintenance_step(maximum_items, maximum_bytes)? {
-                PluginCloseStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
-                step => step,
-            });
-        }
+        if !self.stale.is_empty() { return Ok(PluginLifecycleStep::Progress(self.admit_stale(grant).map_err(module_value_fault)?)); }
+        if !self.retirement.terminal_is_empty() { return self.maintenance_step(grant); }
         let step = if !self.registry_retirement.terminal_is_empty() {
-            self.registry_retirement.close_step(maximum_items, maximum_bytes).map_err(Fault::from)?
+            self.registry_retirement.close_step(grant)
         } else {
-            self.session.close_step(maximum_items, maximum_bytes).map_err(Fault::from)?
-        };
-        Ok(match step {
-            ValueRetirementStep::Blocked => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
-            ValueRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-            ValueRetirementStep::Complete if self.terminal_is_empty() => PluginCloseStep::Complete,
-            ValueRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
-        })
+            self.session.close_step(grant)
+        }
+        .and_then(|step| semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, self.registry_retirement.terminal_is_empty() && self.session.terminal_is_empty(), "original procedural geometry owner"))
+        .map_err(module_value_fault)?;
+        Ok(PluginLifecycleStep::retained(step, self.terminal_is_empty()))
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.registry.is_none() && self.imported.is_none() && self.retirement.terminal_is_empty() && self.registry_retirement.terminal_is_empty() && self.session.terminal_is_empty()
+        self.registry.is_none() && self.imported.is_none() && self.stale.is_empty() && self.retirement.terminal_is_empty() && self.registry_retirement.terminal_is_empty() && self.session.terminal_is_empty()
     }
 }
 
@@ -811,7 +837,7 @@ fn embedded_payload(input: &str, body_key: &str) -> UiAssemblyResult<(ModuleRend
 //#region 🔖️Command
 /// 🎯️ B1: this module's `ArtifactApp::Command` — the SOLE dispatch surface for the solid
 /// import/export behavior previously routed through the deleted stringly-typed `handle_action`.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum Command {
     #[dsl(key = "export-solid")]
     ExportSolid { format: String },
@@ -995,7 +1021,7 @@ impl ArtifactApp for ModuleApp {
     /// closed with `interactive-job.publication-authority-missing`, so the `Migrated` classification
     /// alone would move the refusal one stage later instead of curing it.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("playbook-module-procedural-artifact-retained", MODULE_RETAINED_OUTPUT_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     /// 🗃️ The artifact store needs its own retirement catalog before it may fold a batched item:
@@ -1006,10 +1032,6 @@ impl ArtifactApp for ModuleApp {
     /// same `importSolidGeometry`. This module's snapshot and mutation are both bounded values, so
     /// the framework's own one-page catalog is exactly right — 🖨️raster, 🌊️flow, 🔱️trinity and
     /// 📕️norm each declare this hook for the same reason.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
     /// 🧍 A presence DISPOSER is not a presence retirement OWNER. `PresenceStore::local_read` fails
     /// closed with `presence local read requires a live exact local retirement owner` while
     /// `local_retirement_factory` is `None`, so the first command whose ephemeral leg reads local
@@ -1050,6 +1072,7 @@ impl ArtifactApp for ModuleApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

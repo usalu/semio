@@ -19,7 +19,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️ViewCamera
 /// 📷️ The read-only preview viewport camera — orbit/pan/zoom write the whole facet at once, the
 /// way a viewport camera is never meaningfully set one field at a time.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Generation3dViewCamera {
     #[value(default = "default_view_camera_position")]
@@ -64,7 +65,7 @@ pub fn default_view_sun_json() -> String {
 //#region 🔖️Config
 /// 🎚️ `Generation3dViewer`'s real `ArtifactViewer::Config` — persisted local view state that
 /// round-trips through the config `ArtifactStore` with a true `inverse` per leaf.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "generation3dviewcfg")]
 #[artifact(id = "procedural.generation3dviewcfg")]

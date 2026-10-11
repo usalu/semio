@@ -5,7 +5,7 @@ use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of lowpoly camera and paint state.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "lowpoly.presence")]
 #[dsl(layout = "lines")]
@@ -15,6 +15,8 @@ pub struct LowpolyPresence {
     pub world_camera_fov: f64,
     pub paint_utility: String,
 }
+
+impl store::ArtifactPresenceSnapshot for LowpolyPresence {}
 
 impl Default for LowpolyPresence {
     fn default() -> Self {
@@ -130,7 +132,7 @@ impl ArtifactPack for LowpolyPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum LowpolyPresenceMutation {
     #[dsl(key = "world-camera")]

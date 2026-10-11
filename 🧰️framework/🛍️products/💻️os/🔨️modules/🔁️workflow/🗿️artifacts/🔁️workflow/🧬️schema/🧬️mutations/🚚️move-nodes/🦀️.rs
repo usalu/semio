@@ -5,7 +5,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Payload
 /// 🚚️ One node-graph drag as intent (the node-graph gesture record of design §13.3): the canvas offset every addressed
 /// workflow node moves by from its BASE position, so editing the drag in history replays it on any base.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "move-nodes")]

@@ -98,9 +98,9 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
     try {
       await observation;
       if (provenanceRoot) {
-        const { writeCompletedCargoInvocationProvenanceV1 } = await import("../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts");
+        const { writeCompletedCargoInvocationProvenanceV1, cargoProvenancePhysicalControlV1 } = await import("../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts");
         const manifest = cargoInvocationManifestV1(args, cwd);
-        const observedAt=performance.now(),physical=new CurrentPhysicalOwnerV1(cwd,{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>Boolean(stopped),remainingMs:()=>60000-(performance.now()-observedAt),onProgress:row=>console.log("[cargo-provenance] "+JSON.stringify(row))});
+        const physical=new CurrentPhysicalOwnerV1(cwd,cargoProvenancePhysicalControlV1({cancelled:()=>Boolean(stopped),onProgress:row=>console.log("[cargo-provenance] "+JSON.stringify(row))}));
         await writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot, `cargo-unit-provenance-cargo-relay-${randomUUID()}.json`), { manifest, cwd, command: "cargo", args: [...args], buildDirectory: buildDirectory!, builtAtMs, status, cancelled: Boolean(stopped), units, buildScripts },new Map(),resolve(env.CARGO_HOME??join(homedir(),".cargo")),physical);
       }
     } finally {

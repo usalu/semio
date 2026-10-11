@@ -7,7 +7,7 @@ fn pinned() -> BimSheetWindowConfig {
 }
 
 fn replace(config: BimSheetWindowConfig) -> BimSheetWindowConfigMutation {
-    BimSheetWindowConfigMutation::Replace { config }
+    BimSheetWindowConfigMutation::Replace(Replace { config })
 }
 
 #[semio_framework_async_macros::async_test]

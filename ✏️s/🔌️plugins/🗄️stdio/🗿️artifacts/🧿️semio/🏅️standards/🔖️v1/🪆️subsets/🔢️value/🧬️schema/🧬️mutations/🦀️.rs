@@ -34,7 +34,8 @@ use protocol::{Mutation};
 /// 🧭️ One step of a [`SemioValuePath`] — a map key or a list position. Struct (named-field)
 /// variants throughout, never bare tuple variants — same internally-tagged runtime-serialization
 /// hazard `SemioValue`'s own doc comment cites.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum SemioValuePathSegment {
     Key { key: String },
@@ -95,7 +96,8 @@ pub mod set_value;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioValueSnapshot, diff = SemioValueTreeDiff, schema = "SemioValueMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioValueMutation {

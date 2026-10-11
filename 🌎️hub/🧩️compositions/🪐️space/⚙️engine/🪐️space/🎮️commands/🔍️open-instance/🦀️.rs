@@ -1,11 +1,11 @@
 //! 🔍️ 🔍️ S Studio app command — `open-instance`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting, FocusedNodeSetting};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Effect, Emit, Fault};
 
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "open-instance")]
 pub struct OpenInstance {
     pub node_id: Option<String>,
@@ -22,7 +22,7 @@ pub async fn open_with_selection(payload: &OpenInstance, doc: &ArtifactView<'_, 
     match resolved_node_id {
         Some(node_id) => match doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id) {
             Some(node) => Emit {
-                config_mutations: vec![SpaceConfigMutation::SetFocusedNode { node_id: Some(node_id.clone()) }, SpaceConfigMutation::SetActiveNode { node_id: Some(node_id.clone()) }],
+                config_mutations: vec![SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: Some(node_id.clone()) }), SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: Some(node_id.clone()) })],
                 effects: vec![Effect::OpenPluginInstance { plugin_id: node.plugin_id.clone(), app_id: node.app_id.clone(), os_instance_id: Some(node.id.clone()) }],
                 ..Default::default()
             },

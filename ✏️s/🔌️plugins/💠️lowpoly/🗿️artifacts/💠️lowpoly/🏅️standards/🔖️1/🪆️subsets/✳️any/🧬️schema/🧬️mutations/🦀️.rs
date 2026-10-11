@@ -254,7 +254,8 @@ mod normal_channels;
 //#endregion 🧭️NormalChannels
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = LowpolySnapshot, diff = LowpolyDiff, schema = "s.lowpoly.lowpoly")]
 pub enum LowpolyMutation {
     CreateObject(super::create_object::CreateObject),

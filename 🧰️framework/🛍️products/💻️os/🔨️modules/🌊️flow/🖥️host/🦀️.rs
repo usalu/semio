@@ -9,6 +9,7 @@ use semio_framework_artifact_infinite_dag::io::text::snapshot::dag_host_snapshot
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 use protocol::causal::transition::HistoryFoldIndex;
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{controlled::ControlledRetirement,queue::RetirementQueue}};
 
 use semio_framework_os_infinite::board::schema::layout::{DagLayoutOptions};
@@ -54,8 +55,9 @@ pub enum FlowEvaluationStep{Working,Complete}
 //// 🪪️ Admits one caller-owned identity authority over the plugin observer and runs `operation` under it; the receipt returns only after the call finished.
 macro_rules! history_identity {
     (|$identity:ident| $operation:expr) => {{
-        let mut observer = semio_framework_plugin::authoring_identity::identity_observer();
-        let mut $identity = crate::os_store::EntityIdentityAuthority::new(semio_framework_plugin::authoring_identity::ARTIFACT_IDENTITY_CEILING_BYTES, &mut observer).unwrap_or_else(|_| unreachable!("plugin identity ceiling is a declared nonzero constant"));
+        let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+        let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
+        let mut $identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).unwrap_or_else(|_| unreachable!("flow authoring identity ceiling is a declared nonzero constant"));
         let result = $operation;
         drop($identity.pause().unwrap_or_else(|_| unreachable!("identity authority retains its receipt through one authoring call")));
         result
@@ -722,13 +724,18 @@ impl FlowHost {
         self.current_channels.as_deref().or(self.previous_channels.as_deref()).into_iter().flat_map(|channels|channels.outputs.iter())
     }
 
+    fn displace_dictionary(&mut self, value: Dictionary) {
+        let grant = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 4096 };
+        if let Err((_, value)) = self.displaced.push_dictionary(value, grant) { value.retire_cold(); }
+    }
+
     /// 🧹️ Hands every value displaced since the last drain to the artifact's bounded retirement
     /// ladder. Called at the START of an evaluation tick, so a root the CURRENT tick's `NeuralCache`
     /// or `previous_channels` still reads is never torn down under it — the frontier therefore holds
     /// at most one tick's displacement, and what is left when the host closes is taken over by
     /// [`FlowHostRetirement::new`].
     fn drain_displaced(&mut self) {
-        while !matches!(self.displaced.close_step(64, 65_536), neural::ValueRetirementStep::Complete) {}
+        neural::retirement::retire_value_cold(std::mem::take(&mut self.displaced));
     }
 
     /// 📥️ Retains the original baseline and export arenas inline before funded retirement.
@@ -1479,8 +1486,8 @@ impl FlowHost {
             Some(_) => Err(FlowCoreError::NotNeuron(widget_id.to_string())),
             None => Err(FlowCoreError::UnknownWidget(widget_id.to_string())),
         };
-        self.displaced.push_dictionary(patch);
-        self.displaced.push_dictionary(merged?);
+        self.displace_dictionary(patch);
+        self.displace_dictionary(merged?);
         let changed = self.changed_widget_leaf(widget_id);
         self.note_leaves(changed);
         self.sync_dag_display_from_widgets();
@@ -3829,7 +3836,7 @@ impl FlowEvalSession {
         if self.state.tick_evaluation_ready==2{self.state.tick_evaluation_ready=0;self.state.tick_display_progress=RetainedCloneProgress{copied_items:1,..Default::default()};return Ok(FlowEvaluationStep::Complete)}
         if self.state.pending_tick_display.as_ref().is_some_and(SessionLivePublication::published){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original session cursor handoff requires depth"))}let original=self.state.pending_tick_display.take().unwrap();self.state.retirement.root=Some(ControlledRetirement::new(SessionCollectionOwner::LivePublication(original)).unwrap_or_else(|_|unreachable!("original session publication declares full retirement")));self.state.tick_display_progress=RetainedCloneProgress{copied_items:1,..Default::default()};self.state.tick_evaluation_ready=2;return Ok(FlowEvaluationStep::Working)}
         if self.state.pending_tick_display.is_none(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original session display intake requires depth"))}let text=&self.state.pending_host.as_ref().unwrap().last_eval_json;self.state.pending_tick_display=Some(SessionLivePublication::new(text));self.state.tick_display_progress=RetainedCloneProgress{copied_items:1,..Default::default()};return Ok(FlowEvaluationStep::Working)}
-        if !self.state.pending_tick_display.as_ref().unwrap().ready(){let host=self.state.pending_host.as_ref().unwrap();let result=self.state.pending_tick_display.as_mut().unwrap().step(&host.last_eval_json,grant);match result{Ok(progress)=>self.state.tick_display_progress=progress,Err(error)=>{self.state.tick_display_progress=error.retained_progress();return Err(error)}}return Ok(FlowEvaluationStep::Working)}
+        if !self.state.pending_tick_display.as_ref().unwrap().ready(){let state=&mut *self.state;let host=state.pending_host.as_ref().unwrap();let result=state.pending_tick_display.as_mut().unwrap().step(&host.last_eval_json,grant);match result{Ok(progress)=>state.tick_display_progress=progress,Err(error)=>{state.tick_display_progress=error.retained_progress();return Err(error)}}return Ok(FlowEvaluationStep::Working)}
         self.state.retirement.preflight(grant)?;
         let shared=self.state.pending_tick_display.as_mut().unwrap().take_shared().unwrap();
         match self.publish_eval_json(shared,grant){Ok(progress)=>self.state.tick_display_progress=progress,Err((error,shared))=>{self.state.pending_tick_display.as_mut().unwrap().restore_shared(shared);return Err(error)}}
@@ -4461,10 +4468,11 @@ impl FlowEvalSession {
             },
             3=>{if let Some(port)=self.geometry_port.as_mut(){port.begin_cancel()?;self.state.preview_cancellation_phase=4;}else{self.state.preview_cancellation_phase=5;}},
             4=>{
-                let port=self.geometry_port.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original cancelling geometry source disappeared"))?;
-                let result=port.cancel_step(grant);progress=port.cancel_step_progress();self.state.preview_cancellation_progress=progress;let step=result.map_err(|error|error.with_retained_progress(progress))?;
+                let state=&mut *self.state;
+                let port=state.geometry_port.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original cancelling geometry source disappeared"))?;
+                let result=port.cancel_step(grant);progress=port.cancel_step_progress();state.preview_cancellation_progress=progress;let step=result.map_err(|error|error.with_retained_progress(progress))?;
                 semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,port.cancel_terminal_is_empty(),"Flow session original geometry cancellation")?;
-                if port.cancel_terminal_is_empty(){self.state.preview_cancellation_phase=5;}
+                if port.cancel_terminal_is_empty(){state.preview_cancellation_phase=5;}
             },
             5=>{let result=self.retirement.step(grant);progress=self.retirement.step_progress();self.state.preview_cancellation_progress=progress;let step=result?;progress=step.progress();if self.retirement.terminal_is_empty(){self.state.preview_cancellation_cursor=None;}},
             _=>unreachable!("original preview cancellation phase"),
@@ -4489,7 +4497,7 @@ impl FlowEvalSession {
 
     /// 🧊️ Decodes the explicit diagnostic envelope; normal response work retains its original source.
     pub fn resolve_preview_eval_cold(&mut self,node_hash:u64,envelope_json:&str)->Result<PreviewEvalOutcome,ValueError>{
-        let envelope=semio_framework_pack_json::parse(envelope_json,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(ValueError::from)?;
+        let envelope=semio_framework_pack_json::parse(envelope_json,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(semio_framework_pack_json::JsonError::into_value_error)?;
         if let Some(pending)=envelope.get("pending"){
             let text=|key|pending.get(key).and_then(semio_framework_pack_json::Value::as_str).map(str::to_owned).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original pending response metadata is absent"));
             let hash=pending.get("nodeHash").and_then(semio_framework_pack_json::Value::as_u64).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original pending response hash is absent"))?;

@@ -17,7 +17,7 @@ use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutat
 use semio_framework_os_kernel::os_directory::{fold_all, DirectoryEvent, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "fold-directory-events")]
 pub struct FoldDirectoryEvents {
     pub events_json: String,
@@ -53,7 +53,7 @@ pub fn handle(payload: &FoldDirectoryEvents, doc: &ArtifactView<'_, SSpaceSnapsh
         members: space.members.iter().map(|member| SpaceIndexMember { user_id: member.user_id.clone(), email: member.email.clone(), display_name: member.display_name.clone(), role: role_str(member.role).into() }).collect(),
         indexed_artifacts: space.indexed_documents.iter().filter_map(SpaceIndexConfig::indexed_artifact_from_directory).collect(),
     };
-    Ok(Emit { config_mutations: vec![SpaceIndexConfigMutation::ReplaceDirectoryProjection { projection }], ..Default::default() })
+    Ok(Emit { config_mutations: vec![SpaceIndexConfigMutation::ReplaceDirectoryProjection(crate::editor::space_index::config::DirectoryProjectionReplacement { projection })], ..Default::default() })
 }
 
 //#region 🧪️Tests

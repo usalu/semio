@@ -11,7 +11,7 @@ use crate::MdSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ One `sectionOutline` entry — a heading's level + flattened text.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct MdHeadingEntry {
     pub level: u8,
@@ -19,7 +19,7 @@ pub struct MdHeadingEntry {
 }
 
 /// 🧾️ `Md` document outline.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct MdOutline {
     pub section_outline: Vec<MdHeadingEntry>,

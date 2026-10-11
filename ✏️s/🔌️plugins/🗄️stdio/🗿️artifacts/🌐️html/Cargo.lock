@@ -481,6 +481,7 @@ name = "semio-framework-artifact-reference"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-pack-json",
  "semio-framework-schema-registry",
  "semio-framework-value",
 ]
@@ -491,6 +492,7 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework-trace",
+ "semio-framework-value",
  "wasm-bindgen",
 ]
 
@@ -591,7 +593,9 @@ name = "semio-framework-job"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async",
+ "semio-framework-diagnostic",
  "semio-framework-trace",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -623,6 +627,8 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-replication",
+ "semio-framework-value",
  "semio-framework-value-derive",
 ]
 
@@ -713,6 +719,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-actor",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
@@ -725,6 +732,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
+ "semio-framework-plugin-mounted-owner",
  "semio-framework-replication",
  "semio-framework-schema",
  "semio-framework-schema-composition",
@@ -747,6 +755,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-mounted-owner"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-replication"
 version = "0.1.0"
 dependencies = [
@@ -755,6 +771,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack-error",
+ "semio-framework-pack-json",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-trace",
@@ -832,6 +849,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-machine",
  "semio-framework-replication",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -900,10 +918,12 @@ name = "semio-framework-ui-scene"
 version = "0.1.0"
 dependencies = [
  "semio-framework-geometry",
+ "semio-framework-mesh-engine",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-ui-contract",
  "semio-framework-ui-viewport",
+ "semio-framework-value",
  "serde",
 ]
 
@@ -916,6 +936,7 @@ name = "semio-framework-ui-viewport"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-pack-json",
  "semio-framework-value",
  "serde",
 ]

@@ -1,7 +1,7 @@
 //! 🎟️ The named callback prepares the same decoded request under original outer authority.
 use super::*;
 use semio_framework_pack_json::{JsonBorrowedWriteCursor,JsonWriteNode,JsonWriteSource};
-use semio_framework_value::{NativeEncodeControl,NativeEncodeContinuation};
+use semio_framework_value::{DslValue as Value,Number,NativeEncodeControl,NativeEncodeContinuation};
 
 /// 🫴️ Borrows the actual retained gateway source for one paid preparation turn.
 pub struct EvaluationRequestContextInput<'a>{pub cancellation_id:&'a str,pub policy:&'a[u8],pub dependencies:&'a[(String,Vec<u8>)],pub work_units:u64,pub wait_terminal:bool}

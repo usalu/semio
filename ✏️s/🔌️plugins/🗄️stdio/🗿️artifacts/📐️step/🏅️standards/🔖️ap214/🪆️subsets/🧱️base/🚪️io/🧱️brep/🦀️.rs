@@ -11,7 +11,8 @@ use std::collections::HashMap;
 
 //#region 🔖️Model
 /// 📍️ B-rep vertex.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepVertex {
     pub x: f64,
@@ -20,7 +21,8 @@ pub struct BrepVertex {
 }
 
 /// 🔺️ B-rep face as ordered polygon vertex indices (planar; not triangulated).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrepFace {
     #[value(default)]

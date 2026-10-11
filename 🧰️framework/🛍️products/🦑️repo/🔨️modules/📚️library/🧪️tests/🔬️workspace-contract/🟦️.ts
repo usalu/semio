@@ -6115,8 +6115,9 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
     const fixture = normalizationFixture("scoped-cli-purity", { "🧪️subject/🟦️.ts": "export const value = true;\n" });
     try {
       const scriptPath = join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts");
-      const child = 'const [scriptPath,repoRoot,scope]=process.argv.slice(1);const {pathToFileURL}=await import("node:url");const {CleanScript}=await import(pathToFileURL(scriptPath).href);new CleanScript(repoRoot,repoRoot).run(["taxonomy","inventory","--scope",scope,"--workers","1","--format","json"]);';
-      const result = spawnSync("bun", ["-e", child, scriptPath, fixture.repoRoot, fixture.scope], { encoding: "utf8" });
+      const processPath = join(getWorkspaceRoot(), "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts");
+      const child = 'const [scriptPath,repoRoot,scope,processPath]=process.argv.slice(1);const {pathToFileURL}=await import("node:url");const {CleanScript}=await import(pathToFileURL(scriptPath).href);const {createScriptProcessEnvelope,withScriptProcessEnvelope}=await import(pathToFileURL(processPath).href);await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"workspace-contract-test",maximumElapsedMilliseconds:0},{},Date.now()),async invocation=>{await new CleanScript(repoRoot,repoRoot,invocation).run(["taxonomy","inventory","--scope",scope,"--workers","1","--format","json"]);});';
+      const result = spawnSync("bun", ["-e", child, scriptPath, fixture.repoRoot, fixture.scope, processPath], { encoding: "utf8" });
       expect(result.status).toBe(0);
       const parsed = JSON.parse(result.stdout);
       expect(result.stdout).toBe(`${canonicalJson(parsed)}\n`);

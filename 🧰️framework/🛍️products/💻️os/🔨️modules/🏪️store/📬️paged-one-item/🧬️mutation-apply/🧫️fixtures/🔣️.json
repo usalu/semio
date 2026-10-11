@@ -1,0 +1,39 @@
+{
+  "maximumTurns": 100000,
+  "cancelAt": [0, 1, 2, 3, 4, 5, 6, 8, 11, 15, 22, 40],
+  "base": {
+    "title": "t",
+    "nodes": [
+      { "id": "a", "text": "alpha" },
+      { "id": "b", "text": "beta é" },
+      { "id": "c", "text": "gamma" },
+      { "id": "d", "text": "delta" }
+    ]
+  },
+  "cases": [
+    {
+      "name": "insert",
+      "mutation": { "kind": "insert", "index": 2, "id": "x", "text": "new 🐚" },
+      "post": [["a", "alpha"], ["b", "beta é"], ["x", "new 🐚"], ["c", "gamma"], ["d", "delta"]],
+      "inverse": [{ "kind": "remove", "index": 2 }]
+    },
+    {
+      "name": "remove",
+      "mutation": { "kind": "remove", "index": 1 },
+      "post": [["a", "alpha"], ["c", "gamma"], ["d", "delta"]],
+      "inverse": [{ "kind": "insert", "index": 1, "id": "b", "text": "beta é" }]
+    },
+    {
+      "name": "set text",
+      "mutation": { "kind": "set-text", "index": 3, "text": "DELTA" },
+      "post": [["a", "alpha"], ["b", "beta é"], ["c", "gamma"], ["d", "DELTA"]],
+      "inverse": [{ "kind": "set-text", "index": 3, "text": "delta" }]
+    },
+    {
+      "name": "remove range",
+      "mutation": { "kind": "remove-range", "start": 1, "count": 2 },
+      "post": [["a", "alpha"], ["d", "delta"]],
+      "inverse": [{ "kind": "insert", "index": 1, "id": "b", "text": "beta é" }, { "kind": "insert", "index": 2, "id": "c", "text": "gamma" }]
+    }
+  ]
+}

@@ -18,7 +18,7 @@ pub const PDF14A_DIALECT: Dialect = Dialect { artifact_kind: PDF_ARTIFACT_SCHEMA
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel replaces one explicitly addressed page's faithful
 /// Unicode text projection after its optimistic revision matches.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Pdf14AEditorCommand {
     #[dsl(key = "set-page")]
     SetPage { page: u32, item: u32, revision: String, text: String },

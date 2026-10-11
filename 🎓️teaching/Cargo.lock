@@ -725,6 +725,7 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework-trace",
+ "semio-framework-value",
  "wasm-bindgen",
 ]
 
@@ -763,6 +764,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-pack-json"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-quiz"
 version = "0.1.0"
 dependencies = [
@@ -777,6 +785,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack-error",
+ "semio-framework-pack-json",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-trace",

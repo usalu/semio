@@ -263,6 +263,12 @@ const DESCRIBE_FUEL_BUDGET: u64 = 8_000_000_000;
 /// fuel.
 const DESCRIBE_DEADLINE_MS: u32 = 1_800_000;
 
+/// 🎟️ The one fixed turn a descriptor emission runs under: a describe call retains nothing, so its five-axis grant stays small and explicit.
+fn describe_budget() -> semio_framework::kernel::Budget {
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 4_096, maximum_release_bytes: 4_096, maximum_depth: 8 };
+    semio_framework::kernel::Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant }, fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+}
+
 /// 🛡️ Ceiling for the build artifacts the emitter reads — the raw `wasm32-wasip2` component and
 /// jco's extracted core, both built with the UNOPTIMIZED `wasm-dev` profile. This is a build-time
 /// input bound and deliberately NOT the strict catalog's runtime ceiling
@@ -424,7 +430,7 @@ async fn execute_describe_owned(wasm_bytes: &[u8], source: &Path) -> Result<(Vec
     let descriptor = runtime
         .describe_observed(
             &compiled,
-            semio_framework::kernel::Budget { fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 },
+            describe_budget(),
             |fuel, elapsed| eprintln!("[describe] owned phase=execute fuel={fuel} elapsed_ms={}", elapsed.as_millis()),
         )
         .await
@@ -490,7 +496,7 @@ pub fn declared_artifact_kind_pairs(descriptor: &PackageDescriptor) -> Vec<(Stri
 /// Unowned kinds are expected (inputs, companions); the faults of every kind probed before the first owned one are
 /// returned so a refusal names them.
 async fn first_owned_codec(runtime: &OwnedRuntime, compiled: &CompiledHandle, pairs: &[(String, String)]) -> Result<(), Vec<String>> {
-    let budget = semio_framework::kernel::Budget { fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
+    let budget = describe_budget();
     let mut faults = Vec::new();
     for (kind, schema) in pairs {
         match runtime.codec_pack_schema_hash(compiled, schema, budget).await {
@@ -604,7 +610,7 @@ pub async fn component_codec_rows(wasm_path: &Path, pairs: &[(String, String)]) 
     let runtime = OwnedRuntime::new();
     let package = PackageRef { package: PackageId(wasm_path.display().to_string()), hash: PackageHash([0; 32]) };
     let compiled = runtime.compile(&package, &wasm_bytes).await.map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", wasm_path.display())))?;
-    let budget = semio_framework::kernel::Budget { fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
+    let budget = describe_budget();
     let mut rows = ComponentCodecRows { owned: Vec::with_capacity(pairs.len()), unowned: Vec::new() };
     for (kind, schema) in pairs {
         if kind.is_empty() || schema.is_empty() || kind.len() > 256 || schema.len() > 256 {

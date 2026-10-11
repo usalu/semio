@@ -1,6 +1,6 @@
 //! 🪜️ Process 3d play app commands — process-step lifecycle (add / remove / move / update / enable).
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation, Process3dConfigSetCursor};
 use crate::standards::v1::subsets::any::schema::mutations::change_step_enabled::ChangeStepEnabled;
 use crate::standards::v1::subsets::any::schema::mutations::change_step_origin::ChangeStepOrigin;
 use crate::standards::v1::subsets::any::schema::mutations::rename_step::RenameStep;
@@ -18,7 +18,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod add_step {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "add-step")]
     pub struct AddStep {
         pub measure: Option<String>,
@@ -59,7 +59,7 @@ pub mod add_step {
 pub fn insert_step_emit(fixture: &Process3dSnapshot, config: &Process3dConfig, step: ProcessStep) -> Emit<Process3dMutation, Process3dConfigMutation> {
     let cursor = config.resolved_up_to;
     let next = process3d_cursor_after_insert(fixture, cursor);
-    let config_mutations = if next == cursor { Vec::new() } else { vec![Process3dConfigMutation::SetCursor { value: next }] };
+    let config_mutations = if next == cursor { Vec::new() } else { vec![Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: next })] };
     Emit { artifact_mutations: insert_step_mutations(fixture, step, cursor), config_mutations, ..Default::default() }
 }
 
@@ -77,7 +77,7 @@ pub fn remove_step_emit(fixture: &Process3dSnapshot, config: &Process3dConfig, i
 pub mod remove_step {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "remove-step")]
     pub struct RemoveStep {
         pub id: String,
@@ -93,7 +93,7 @@ pub mod remove_step {
 pub mod remove_selected_step {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "remove-selected-step")]
     pub struct RemoveSelectedStep {}
 
@@ -116,7 +116,7 @@ pub mod remove_selected_step {
 pub mod move_step {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "move-step")]
     pub struct MoveStep {
         pub id: String,
@@ -140,7 +140,7 @@ pub mod update_step {
     /// `dsl` derives (now an ephemeral working-scene type containing `WorkingSolid`, itself never
     /// `dsl::DslField` — see the artifact root file's `🔖️WorkingScene` doc comment), so this
     /// carries the step as JSON text now, parsed at the handler.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "update-step")]
     pub struct UpdateStep {
         pub step_json: String,
@@ -169,7 +169,7 @@ pub mod update_step {
 pub mod set_step_enabled {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "set-step-enabled")]
     pub struct SetStepEnabled {
         pub id: String,

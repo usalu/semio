@@ -328,7 +328,7 @@ impl GestureChart for select_tool::SelectTool {
 /// admission's `authoring_seed`, the clock and `<appId>#<verb>`, and the yielded mutations in order. `None` when no
 /// record moves anything: an all-locked, all-missing or empty request leaves zero trace.
 pub fn puzzle2d_select_tool_commit(verb: &str, authoring_seed: &str, clock: protocol::HybridLogicalTimestamp, request: SelectToolRequest) -> Option<(protocol::TransactionRef, Vec<Puzzle2dMutation>)> {
-    let mut runner = ToolMachineRunner::<select_tool::SelectTool, SelectToolHost>::start(format!("{PUZZLE2D_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), SelectToolContext::default(), SelectToolHost).ok()?;
+    let mut runner = ToolMachineRunner::<select_tool::SelectTool, SelectToolHost>::start(format!("{PUZZLE2D_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.into()), SelectToolContext::default(), SelectToolHost).ok()?;
     match runner.send(select_tool::Event::Records(request), clock).ok()? {
         ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
         ToolStep::Idle | ToolStep::Open | ToolStep::Aborted(..) | ToolStep::Empty(_) => None,
@@ -356,7 +356,7 @@ pub fn puzzle2d_selection_yields(base: &Puzzle2dSnapshot, records: &[Puzzle2dSel
         if record.proximity.is_empty() && !record.connect {
             continue;
         }
-        let mut scratch = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(semio_framework_value::ToValue::to_value(&state))));
+        let mut scratch = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&state));
         let mut pairs: Vec<(String, String)> = Vec::new();
         for (source, target) in &record.proximity {
             if puzzle2d_handles_open(&scratch, source, target) {

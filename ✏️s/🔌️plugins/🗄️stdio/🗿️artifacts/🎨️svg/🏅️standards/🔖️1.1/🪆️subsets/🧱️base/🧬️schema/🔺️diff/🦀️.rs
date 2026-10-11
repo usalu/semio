@@ -24,7 +24,7 @@ use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration
 /// `DslScalar`-derived UNIT-only enums implement `DslField`); (2) `declaration`/`doctype` are
 /// tri-state `Option<Option<T>>` fields — same blocker as `GifDiff` (see that file). `DiffCodec`
 /// is hand-rolled below.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.svg.diff")]
 pub struct SvgDiff {
@@ -55,7 +55,7 @@ pub struct SvgDiff {
 
 //#region 🔖️NodeDiff
 /// 🌳 Recursive per-node diff, shaped like the `SvgNode` it targets.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum SvgNodeDiff {
     Element(SvgElementDiff),
@@ -72,7 +72,7 @@ pub enum SvgNodeDiff {
 }
 
 /// 🏷️ Per-element diff.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SvgElementDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -86,7 +86,7 @@ pub struct SvgElementDiff {
 /// 🏷️ Name-keyed, ORDER-preserving attribute triple. Deliberately a Vec-based triple (not a
 /// `HashMap`) -- attribute order carries no SVG/XML-spec meaning but IS significant for
 /// byte-preserving round-trips.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SvgAttributesDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -97,14 +97,14 @@ pub struct SvgAttributesDiff {
     pub added: Vec<SvgAttrAdded>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SvgAttrModified {
     pub name: String,
     pub value: crate::schema::snapshot::SvgAttributeValue,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SvgAttrAdded {
     pub index: usize,
@@ -114,7 +114,7 @@ pub struct SvgAttrAdded {
 
 /// 🌳 Index-keyed, recursive children triple. `removed`/`modified` indices refer to BASE state
 /// (descending removal order on apply); `added` indices refer to FINAL state (ascending insert).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SvgChildrenDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -125,14 +125,14 @@ pub struct SvgChildrenDiff {
     pub added: Vec<SvgChildAdded>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SvgChildModified {
     pub index: usize,
     pub diff: SvgNodeDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SvgChildAdded {
     pub index: usize,

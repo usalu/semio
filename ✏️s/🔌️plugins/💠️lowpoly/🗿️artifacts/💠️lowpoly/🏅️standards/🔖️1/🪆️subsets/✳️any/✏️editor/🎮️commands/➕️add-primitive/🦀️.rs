@@ -2,7 +2,7 @@
 //! command in its group, so (per TEMPLATE.md §5.7's `module_inception` rule) the payload lives directly
 //! at this file's top level rather than in a same-named inner `pub mod`.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
+use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::view::{build_doc, primitive_kind};
 use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
@@ -12,7 +12,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddPrimitive
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[dsl(keyword = "add-primitive")]
 pub struct AddPrimitive {
@@ -39,7 +39,7 @@ pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, c
     // `interactionSelect` handling, never by an app command's `Emit::config_mutations`.
     Ok(Emit {
         artifact_mutations: vec![LowpolyMutation::CreateObject(crate::mutations::create_object::CreateObject { index, object: new_object })],
-        config_mutations: vec![LowpolyConfigMutation::SetActiveObject { object_id: new_id }],
+        config_mutations: vec![LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id: new_id })],
         ..Default::default()
     })
 }

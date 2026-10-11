@@ -207,10 +207,11 @@ fn retained_work_refuses_an_unpaged_large_owner_without_publication() {
             &mut semio_framework_job::StepContext::new(
                 semio_framework_job::allocate_operation_id(),
                 semio_framework_job::Generation(1),
-                semio_framework_job::StepBudget::new(256, u64::MAX),
+                semio_framework_job::StepBudget::new(256, u64::MAX, semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }),
                 semio_framework_job::root_cancel_token(),
                 || Some(0),
-                &mut 0
+                &mut 0,
+                &mut semio_framework_value::retained_clone::RetainedCloneProgress::default()
             )
         )
         .is_err());
@@ -225,7 +226,7 @@ fn canonical_preparation_route_is_mounted() {
 
 #[test]
 fn canonical_preparation_recognizes_and_encodes_every_addressed_xml_mutation() {
-    use semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJson;
+    use semio_framework_plugin::plugin_app_close_prelude::store::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonTree};
     use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📬️preparation/🧫️fixtures/🧵️admission/🔣️.json")).expect("language-neutral admission fixture");
@@ -247,7 +248,7 @@ fn canonical_preparation_recognizes_and_encodes_every_addressed_xml_mutation() {
         assert_eq!(*name, expected.as_str().expect("recognized mutation name"));
         assert!(preparation::recognizes(mutation));
         preparation::measure_mutation(mutation).expect("addressed mutation fits neutral envelope");
-        assert!(ArtifactCanonicalJson::canonical_json_borrowed_root(mutation).expect("borrowed canonical mutation").is_some());
+        assert!(matches!(ArtifactCanonicalJsonTree::canonical_tree_node(mutation).expect("canonical mutation tree root"), ArtifactCanonicalJsonNode::Object(fields) if fields >= 2));
     }
 }
 

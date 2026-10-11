@@ -1,7 +1,8 @@
 //! ⏯️ Shared deformation playback transport of every FEM results window (2D and 3D).
 
 /// 🔁️ How the deformation playback clock wraps when the phase leaves `0..=1`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum FemLoopMode {
     #[default]
@@ -27,7 +28,8 @@ impl TryFrom<&str> for FemLoopMode {
 
 /// 〰️ The curve the phase is read through before it scales the deformation: `Ramp` grows straight
 /// from nothing to the full displacement, `Sine` swings the structure through both signs.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum FemWaveform {
     #[default]
@@ -51,7 +53,8 @@ impl TryFrom<&str> for FemWaveform {
 /// 🎛️ Deformation playback state of ONE results window — view state, never a document field: the
 /// solved displacement field is what the document owns, and this only says how much of it is drawn
 /// this frame. `reverse` is the `PingPong` direction (`speed` stays positive in every loop mode).
-#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FemResultsAnimation {
     pub phase: f64,

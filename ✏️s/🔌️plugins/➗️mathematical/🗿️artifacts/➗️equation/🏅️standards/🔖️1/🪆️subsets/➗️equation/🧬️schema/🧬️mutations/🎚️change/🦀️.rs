@@ -12,7 +12,8 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 /// 🪧 `numer`/`denom` are `Integer` decimal lexemes (never a bare `f64` — matches
 /// `EquationNodeKind::{Integer,Rational}`'s own round-trip-exact representation); `denom == "1"`
 /// is how a plain integer coefficient is expressed.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct ChangeCoefficient {

@@ -16,6 +16,24 @@ pub type DagStore = store::ArtifactStore<DagSnapshot, DagMutation>;
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub enum DagMutation {}
 
+impl semio_framework_value::retirement::RetireOwned for DagMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        match self {}
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        match *self {}
+    }
+    fn controlled_retirement_supported() -> bool {
+        true
+    }
+}
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for DagMutation {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+        match *self {}
+    }
+}
+
 impl protocol::Mutation<DagSnapshot> for DagMutation {
     type Diff = DagDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[];

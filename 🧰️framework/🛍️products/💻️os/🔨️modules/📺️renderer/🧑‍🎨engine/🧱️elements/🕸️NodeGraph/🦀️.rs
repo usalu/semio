@@ -330,7 +330,7 @@ impl GraphHost {
         if let Some(status_json) = &payload.status_json {
             let mut observe=|progress:semio_framework_value::NativeDecodeProgress|progress.total<=64*1024;
             let mut control=semio_framework_value::NativeDecodeControl::new(256*1024,&mut observe);
-            if let Ok(statuses)=crate::infinite::board::io::text::dag_input::decode_dag_node_statuses_json(status_json,&mut control){self.dag.set_node_statuses(&statuses);}
+            if let Ok(statuses)=semio_framework_os_infinite::board::io::text::dag_input::decode_dag_node_statuses_json(status_json,&mut control){self.dag.set_node_statuses(&statuses);}
         } else if let Some(computing_json) = &payload.computing_json {
             if let Ok(value) = serde_json::from_str::<Value>(computing_json) {
                 let active = value.get("active").and_then(|v| v.as_str()).map(str::to_string);
@@ -388,7 +388,7 @@ impl GraphHost {
     }
 
     /// 🖱️ Projects channel hover and live wire refusal facts.
-    pub fn hover_facts(&self)->crate::infinite::board::schema::dag_input::DagHoverFacts{self.dag.hover_facts()}
+    pub fn hover_facts(&self)->semio_framework_os_infinite::board::schema::dag_input::DagHoverFacts{self.dag.hover_facts()}
 
     pub fn label_overlay_paint_state_json(&self) -> Result<String, NodeGraphError> {
         Ok(self.dag.label_overlay_paint_state_json()?)
@@ -595,12 +595,20 @@ impl GraphHostRetirement {
             return false;
         }
         if let Some(dag) = self.dag.as_mut() {
-            if dag.close_step(1, 1) == dag::DagRetirementStep::Complete {
-                if !dag.terminal_is_empty() {
-                    return false;
-                }
+            if dag.terminal_is_empty() {
                 self.dag = None;
+                context.consume_fuel(1);
+                return false;
             }
+            let copy = dag.next_close_copy_byte_demand().expect("graph host DAG copy demand");
+            let grant = semio_framework_value::RetainedCloneGrant {
+                maximum_items: 1,
+                maximum_copy_bytes: copy,
+                maximum_capacity_bytes: dag.next_close_capacity_byte_demand(copy).expect("graph host DAG capacity demand"),
+                maximum_release_bytes: dag.next_close_release_byte_demand().expect("graph host DAG release demand"),
+                maximum_depth: dag.next_close_depth_demand().expect("graph host DAG depth demand"),
+            };
+            dag.close_step(grant).expect("graph host DAG retirement");
             context.consume_fuel(1);
             return false;
         }
@@ -729,7 +737,11 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = setCanvasThemeJson)]
         pub fn set_canvas_theme_json(&mut self, json: &str) {
-            let _ = self.state.borrow_mut().host.dag.set_canvas_theme_from_json(json);
+            let mut accepted = |_| true;
+            let mut control = semio_framework_value::NativeDecodeControl::new(64 * 1024, &mut accepted);
+            if let Ok(overlay) = semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control) {
+                self.state.borrow_mut().host.dag.set_canvas_palette(&overlay);
+            }
         }
 
         #[wasm_bindgen(js_name = renderFrame)]
@@ -801,9 +813,9 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = selectedNodeIdsJson)]
         pub fn selected_node_ids_json(&self) -> Result<String,JsValue> {
-            let mut observe=|progress:semio_framework_value::NativeEncodeProgress|progress.owned_bytes<=256*1024;
+            let mut observe=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|progress.owned_bytes<=256*1024;
             let mut control=semio_framework_value::NativeEncodeControl::new(256*1024,&mut observe);
-            crate::infinite::board::io::text::dag_input::encode_dag_node_ids_json(&self.state.borrow().host.selected_node_ids(),&mut control).map_err(|error|JsValue::from_str(&error.to_string()))
+            semio_framework_os_infinite::board::io::text::dag_input::encode_dag_node_ids_json(&self.state.borrow().host.selected_node_ids(),&mut control).map_err(|error|JsValue::from_str(&error.to_string()))
         }
 
         #[wasm_bindgen(js_name = hoveredNodeId)]
@@ -813,9 +825,9 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = hoveredChannelJson)]
         pub fn hovered_channel_json(&self) -> Result<String,JsValue> {
-            let mut observe=|progress:semio_framework_value::NativeEncodeProgress|progress.owned_bytes<=256*1024;
+            let mut observe=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|progress.owned_bytes<=256*1024;
             let mut control=semio_framework_value::NativeEncodeControl::new(256*1024,&mut observe);
-            crate::infinite::board::io::text::dag_input::encode_dag_hover_json(&self.state.borrow().host.hover_facts(),&mut control).map_err(|error|JsValue::from_str(&error.to_string()))
+            semio_framework_os_infinite::board::io::text::dag_input::encode_dag_hover_json(&self.state.borrow().host.hover_facts(),&mut control).map_err(|error|JsValue::from_str(&error.to_string()))
         }
 
         #[wasm_bindgen(js_name = viewport)]

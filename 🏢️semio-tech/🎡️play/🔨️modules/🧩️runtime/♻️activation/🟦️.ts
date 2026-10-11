@@ -122,7 +122,7 @@ export type PlayActivationMergeOptions = {
 
 type PlayActivationCandidate = { readonly lane: string; readonly row: ActivationReceipt["plugins"][number]; readonly receiptMtimeMs: number };
 
-/** ⚖️ Picks the row a component is SERVED from when its lanes disagree. All 28 lanes stage into one
+/** ⚖️ Picks the row a component is SERVED from when its lanes disagree. Every lane stages into one
  * `🔌️plugin-modules` root, so a disagreement never means two artifacts — it means one lane re-activated
  * (a peer running `activate-<lane>-react-dev` after the coordinator's full activation) and its siblings
  * still carry the previous sha. Refusing the whole merge there killed :6033 at three serve starts in two

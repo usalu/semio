@@ -1,10 +1,36 @@
 {
   "schema": "controlled-retirement-copy-demand/v1",
-  "grants": [0, 1, 3, 4, 64],
+  "grants": [
+    0,
+    1,
+    3,
+    4,
+    64
+  ],
   "cases": [
-    {"kind": "u32", "value": 17, "minimumCopyBytes": 1, "totalCopyBytes": 4},
-    {"kind": "text", "value": "Grüße\u0000🧬", "minimumCopyBytes": 1, "totalCopyBytes": 12},
-    {"kind": "u32-list", "value": [17, 1, 65535, 9], "minimumCopyBytes": 4, "totalCopyBytes": 16}
+    {
+      "kind": "u32",
+      "value": 17,
+      "minimumCopyBytes": 0,
+      "totalCopyBytes": 0
+    },
+    {
+      "kind": "text",
+      "value": "Grüße\u0000🧬",
+      "minimumCopyBytes": 0,
+      "totalCopyBytes": 0
+    },
+    {
+      "kind": "u32-list",
+      "value": [
+        17,
+        1,
+        65535,
+        9
+      ],
+      "minimumCopyBytes": 4,
+      "totalCopyBytes": 16
+    }
   ],
   "demandObservationAllocatesBytes": 0,
   "zeroOrBelowInert": true,

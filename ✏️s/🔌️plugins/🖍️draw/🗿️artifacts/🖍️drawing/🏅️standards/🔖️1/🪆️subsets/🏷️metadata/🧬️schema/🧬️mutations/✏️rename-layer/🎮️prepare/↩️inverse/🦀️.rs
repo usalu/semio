@@ -25,8 +25,8 @@ impl Deref for DrawingRenameInverseCursor { type Target = DrawingRenameInverseSt
 impl DerefMut for DrawingRenameInverseCursor { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.state } }
 
 impl DrawingRenameInverseCursor {
-    pub fn new(source: RetainedOwnedProjection<DrawingSnapshot>) -> Result<Self, ValueError> {
-        Ok(Self { state: ManuallyDrop::new(DrawingRenameInverseState { preparation: DrawingOwnedRenamePreparationCursor::new(source)?, identifier: PagedUtf8::retained_clone_cursor(), name: PagedUtf8::retained_clone_cursor(), plan: None, pending: None, inverse: PagedList::default(), pending_close: None, inverse_close: None, phase: 0, closing: false }) })
+    pub fn new(source: RetainedOwnedProjection<DrawingSnapshot>) -> Self {
+        Self { state: ManuallyDrop::new(DrawingRenameInverseState { preparation: DrawingOwnedRenamePreparationCursor::new(source), identifier: PagedUtf8::retained_clone_cursor(), name: PagedUtf8::retained_clone_cursor(), plan: None, pending: None, inverse: PagedList::default(), pending_close: None, inverse_close: None, phase: 0, closing: false }) }
     }
 
     pub fn advance(&mut self, payload: RetainedCloneRef<'_, RenameLayer>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -70,12 +70,12 @@ impl DrawingRenameInverseCursor {
                 Ok(payload_progress(size_of::<RenameLayer>()))
             }
             5 => {
-                let step = self.identifier.close_granted(grant)?;
+                let step = self.identifier.close_step(grant)?;
                 if self.identifier.terminal_is_empty() { self.phase = 6; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             6 => {
-                let step = self.name.close_granted(grant)?;
+                let step = self.name.close_step(grant)?;
                 if self.name.terminal_is_empty() { self.phase = 7; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
@@ -114,8 +114,8 @@ impl DrawingRenameInverseCursor {
         if !self.closing { return Err(refusal("Drawing rename inverse closure was not begun")); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.preparation.terminal_is_empty() { return self.preparation.close_granted(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if !self.identifier.terminal_is_empty() { return self.identifier.close_granted(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if !self.name.terminal_is_empty() { return self.name.close_granted(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if !self.identifier.terminal_is_empty() { return self.identifier.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if !self.name.terminal_is_empty() { return self.name.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(owner) = self.pending_close.as_mut() {
             let step = owner.step(grant)?;
             if owner.terminal_is_empty() { self.pending_close = None; }

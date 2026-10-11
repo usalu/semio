@@ -26,7 +26,7 @@ pub mod texts;
 
 //#region 🔖️Values
 /// 🎨️ The numbers of a style a drawing needs, copied into every layout so a drawing reads nothing but the layout: text height, line end mark and size, printed unit and decimals, extension gap and overshoot.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct StyleMarks {
     pub text_height: f64,
     pub terminator: Terminator,
@@ -44,14 +44,14 @@ impl Default for StyleMarks {
 }
 
 /// 〰️ A straight line from `start` to `end` in building coordinates.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct Line {
     pub start: Point2,
     pub end: Point2,
 }
 
 /// 🔤️ Where a text sits: the middle of its baseline in building coordinates (metres), its rotation (counter-clockwise radians) and the estimated advance width in metres.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct TextAnchor {
     pub at: Point2,
     pub rotation: f64,
@@ -60,7 +60,7 @@ pub struct TextAnchor {
 
 /// ⚓️ One resolved anchor of a dimension: why it has no geometry (else `None`), the foot on the anchored geometry nearest to the dimension line, the mark on the dimension line, the position of the mark
 /// along the measuring direction and the extension line from the foot to beyond the dimension line (absent when the anchor lies on it).
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct AnchorLayout {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub reason: Option<Reason>,
@@ -72,7 +72,7 @@ pub struct AnchorLayout {
 }
 
 /// 📏️ One measured span between two consecutive anchors: its end marks on the dimension line, its length in metres and the text printed for it.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct DimensionSegment {
     pub from: Point2,
     pub to: Point2,
@@ -82,7 +82,7 @@ pub struct DimensionSegment {
 }
 
 /// 📏️ The derived layout of a dimension. `complete` is false while an anchor has no geometry; the layout then has no segment and no total. `lock_difference` is the total minus the lock, when locked.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct DimensionLayout {
     pub style: StyleMarks,
     pub angle: f64,
@@ -96,7 +96,7 @@ pub struct DimensionLayout {
 }
 
 /// 🏷️ The derived layout of a tag: the reference point of its element, the text and where it sits. `complete` is false when the element is gone.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct TagLayout {
     pub style: StyleMarks,
     pub reference: Point2,
@@ -106,7 +106,7 @@ pub struct TagLayout {
 }
 
 /// 🗒️ The derived layout of a text note.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct NoteLayout {
     pub style: StyleMarks,
     pub at: TextAnchor,
@@ -114,7 +114,7 @@ pub struct NoteLayout {
 }
 
 /// ↗️ The derived layout of a leader: the tip on its anchor and the text. `reason` says why the anchor has no geometry, when it has none.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct LeaderLayout {
     pub style: StyleMarks,
     pub tip: Point2,
@@ -125,7 +125,7 @@ pub struct LeaderLayout {
 }
 
 /// 🪧️ Everything the annotations of one storey show, by annotation id, and the findings about them.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct StoreyAnnotations {
     pub storey: String,
     pub dimensions: BTreeMap<String, DimensionLayout>,

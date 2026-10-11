@@ -6,8 +6,9 @@
 //! - `colorspace` is always recorded as `Rgb` (JPEG/JFIF has no alpha channel; the canonical
 //!   `rgba8` buffer's alpha byte is a decode-time fabrication the jpg codec itself adds, not a
 //!   real source channel).
-//! - `icc`: not modeled by `JpgSnapshot` (only the JFIF APP0 thumbnail/density fields, SOF/DQT/
-//!   DHT, and verbatim `other_segments` are typed) — always `None` on import.
+//! - `icc`: not modeled by `JpgSnapshot` (only the JFIF APP0 thumbnail/density fields and verbatim
+//!   `other_segments` are typed) — always `None` on import.
+//! - `bit_depth` is always 8: the owned `JpgImage` carries decoded 8-bit pixels, not the frame header.
 //! - `metadata`: only `COM` (comment, marker `0xFE`) segments become metadata entries
 //!   (`key: "comment"`); every other `other_segments` entry (unrecognized APPn, etc.) has no
 //!   textual home on `SemioImageMetadataEntry` and is dropped.
@@ -32,18 +33,18 @@ impl ArtifactDeserializer for SemioImageFromJpg {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        if from.pixels.len() != (from.width as usize) * (from.height as usize) * 4 {
+        let image = &from.image;
+        if image.pixels.len() != (image.width as usize) * (image.height as usize) * 4 {
             return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "jpg→semio/image: pixels length does not match width*height*4")));
         }
-        let bit_depth = from.frame.as_ref().map_or(8, |f| f.precision);
-        let metadata = from.other_segments.iter().filter(|s: &&JpgSegment| s.marker == COM_MARKER).map(|s| SemioImageMetadataEntry { key: "comment".into(), value: String::from_utf8_lossy(&s.data).into_owned() }).collect();
+        let metadata = image.other_segments.iter().filter(|s: &&JpgSegment| s.marker == COM_MARKER).map(|s| SemioImageMetadataEntry { key: "comment".into(), value: String::from_utf8_lossy(&s.data).into_owned() }).collect();
         Ok(SemioImageSnapshot {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
-            width: from.width,
-            height: from.height,
+            width: image.width,
+            height: image.height,
             colorspace: SemioColorspace::Rgb,
-            bit_depth,
-            frames: vec![SemioImageFrame { delay_ms: 0, rgba8: from.pixels.clone() }],
+            bit_depth: 8,
+            frames: vec![SemioImageFrame { delay_ms: 0, rgba8: image.pixels.clone() }],
             icc: None,
             metadata,
         })

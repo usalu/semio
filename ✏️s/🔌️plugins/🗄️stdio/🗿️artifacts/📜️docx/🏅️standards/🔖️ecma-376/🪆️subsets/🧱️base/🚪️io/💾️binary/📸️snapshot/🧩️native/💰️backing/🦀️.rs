@@ -15,7 +15,7 @@ pub(super) fn preflight(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control
 pub(super) fn encode(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{let native_control=native_owner.native();
  let limits=control.limits();control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
   let native_before=native_control.owned_bytes();
-    let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
+    let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
 
   let result=(||{let total=measured(snapshot,encoding,limits,native)?;let mut bytes=native.allocate_vec::<u8>(total)?;native.begin_stage(total)?;
    let mut writer=OpcNativeWriter{control:native,output:Some(&mut bytes),count:0,rows:0,limits,encoding};super::write(snapshot,&mut writer)?;

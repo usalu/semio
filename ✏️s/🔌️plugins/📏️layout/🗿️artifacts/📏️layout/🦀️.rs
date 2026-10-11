@@ -49,7 +49,7 @@ pub const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", 
 /// confirmed by grep before this migration started); left schema/codec-complete but otherwise inert
 /// (no `LinkResolver` seam, no mutation dispatch) — same documented-gap posture the migration recipe
 /// sanctions for any composed slot a plugin agent can't wire a live resolver into yet.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields, retire_with="crate::standards::v1::subsets::any::schema::snapshot::drawing_child::retire")]
 pub struct LayoutDrawingChild {
     pub handle: store::ArtifactChild<SemioDrawingSnapshot>,
@@ -158,7 +158,8 @@ pub struct LayoutDropPreviewState {
 
 //#region 🔖️Types
 /// 📷️ Per-window camera pose shared by the exact Blueprint and Preview config owner records.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct LayoutCamera {
     pub x: f64,
     pub y: f64,
@@ -171,7 +172,8 @@ impl Default for LayoutCamera {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct LayoutRect {
@@ -185,7 +187,8 @@ pub struct LayoutRect {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct LayoutBounds {
@@ -200,7 +203,8 @@ pub struct LayoutBounds {
     pub rotation: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct PageMargins {
@@ -210,7 +214,8 @@ pub struct PageMargins {
     pub left: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct PageColumns {
@@ -218,7 +223,8 @@ pub struct PageColumns {
     pub gutter: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct Layer {
@@ -232,7 +238,8 @@ pub struct Layer {
     pub object_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "kind"))]
 #[value(tag = "kind", deny_unknown_fields)]
@@ -354,7 +361,8 @@ pub fn layer_locked(document: &LayoutSnapshot, page: &Page, layer_id: &str) -> b
     page.parent_page_id.as_ref().and_then(|id| document.parent_pages.iter().find(|parent| parent.id == *id)).is_some_and(|parent| parent.layers.iter().any(|layer| layer.id == layer_id && layer.locked))
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct TextStyleRun {
@@ -370,7 +378,8 @@ pub struct TextStyleRun {
     pub character_style_id: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct TextStory {
@@ -383,7 +392,7 @@ pub struct TextStory {
     pub style_runs: Vec<TextStyleRun>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct ParagraphStyle {
@@ -408,7 +417,7 @@ pub struct ParagraphStyle {
 /// {@link ParagraphStyle} via {@link TextStyleRun.character_style_id}. Unlike `ParagraphStyle`,
 /// every field besides `id` is optional: a character style typically overrides only one or two
 /// attributes and inherits the rest from the paragraph it's layered onto.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct CharacterStyle {
@@ -429,7 +438,8 @@ pub struct CharacterStyle {
     pub tracking: Option<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct ImageLink {
@@ -455,7 +465,8 @@ pub struct ImageLink {
     pub artifact_ref: String,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct PageOverride {
@@ -469,7 +480,7 @@ pub struct PageOverride {
     pub locked: Option<bool>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct ParentPage {
@@ -487,7 +498,8 @@ pub struct ParentPage {
     pub frames: Vec<Frame>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct Page {
@@ -520,7 +532,7 @@ pub struct Page {
     pub overrides: Vec<PageOverride>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct Spread {
@@ -532,7 +544,7 @@ pub struct Spread {
     pub page_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct GridSettings {
@@ -910,7 +922,7 @@ pub fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
 }
 
 /// 📝️ Sparse patch for a {@link TextStory}'s body content.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct TextStoryPatch {
@@ -931,7 +943,7 @@ impl Patchable<TextStoryPatch> for TextStory {
 }
 
 /// 🔗️ Sparse patch for an {@link ImageLink}'s file path.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct ImageLinkPatch {
@@ -972,7 +984,7 @@ impl Patchable<ImageLinkPatch> for ImageLink {
 /// `spr` (`FramePatchDsl`), so it lives here alongside the other `*Patch` records rather than in `op`
 /// itself. Frame patching is per-page nested rather than a flat collection-wide op, so unlike the
 /// patches above it has no `Patchable` impl.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct FramePatch {

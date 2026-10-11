@@ -34,7 +34,7 @@ const DRAWING_VIEW_PAYLOAD_SCHEMA: &str = "drawing.view-command.v1";
 const DRAWING_VIEW_RAW_BYTES: usize = 8_192;
 const DRAWING_VIEW_WORK_ITEMS: usize = 1;
 
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum)]
 pub enum DrawingViewCommand {
     #[dsl(key = "setCamera")]
     SetCamera { camera: String },
@@ -224,17 +224,10 @@ impl ArtifactViewer for DrawingViewer {
         store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("drawing.child-projection"), error.to_string()))
     }
 
-    /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
-    /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::drawing_document_store_owners())
-    }
-
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot,Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot,Self::Mutation>::new()))
     }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config,Self::ConfigMutation>> { Some(semio_framework_plugin::no_config_store_owners()) }
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config,Self::ConfigMutation>>>> { Some(semio_framework_plugin::no_config_store_disposer()) }
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence,Self::PresenceMutation>>>> { Some(semio_framework_plugin::no_presence_store_disposer()) }
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient,Self::TransientMutation>>>> { Some(semio_framework_plugin::no_transient_store_disposer()) }
@@ -290,6 +283,7 @@ impl ArtifactViewer for DrawingViewer {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

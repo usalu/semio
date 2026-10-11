@@ -6,6 +6,9 @@
 #[cfg(test)]
 use crate::standards::v2_0::subsets::any::io::text::snapshot::ordered_attr_map;
 
+#[path = "🌱️value/🧵️canonical/🦀️.rs"]
+mod canonical;
+
 
 use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
@@ -326,7 +329,8 @@ pub struct GltfNode {
 /// forwards straight to the raw `Vec<(String, usize)>` field's OWN `ToValue`/`FromValue` (a
 /// 2-element-array-per-entry encoding), bypassing the `ordered_attr_map` object-shaped encoding
 /// this type actually needs — same wire shape [`GltfPrimitive::attributes`] uses below.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(transparent))]
 pub struct GltfMorphTarget(#[cfg_attr(test, serde(with = "ordered_attr_map"))] pub Vec<(String, usize)>);
@@ -431,7 +435,8 @@ pub struct GltfSparseValues {
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct GltfSparseAccessor {
     pub count: usize,
     pub indices: GltfSparseIndices,
@@ -640,7 +645,8 @@ impl Default for GltfPbrMetallicRoughness {
 /// 🔀️ `material.alphaMode` (§5.23.1).
 #[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[derive(semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum GltfAlphaMode {
     #[default]
     #[cfg_attr(test, serde(rename = "OPAQUE"))]
@@ -842,7 +848,8 @@ pub struct GltfSkin {
 /// properties.
 #[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[derive(semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum GltfAnimationPath {
     #[cfg_attr(test, serde(rename = "translation"))]
     #[value(rename = "translation")]
@@ -897,7 +904,8 @@ pub struct GltfAnimationChannel {
 /// 📈️ `animations[i].samplers[j].interpolation` (§5.5.3), default `LINEAR`.
 #[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[derive(semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum GltfInterpolation {
     #[default]
     #[cfg_attr(test, serde(rename = "LINEAR"))]
@@ -1006,7 +1014,8 @@ pub struct GltfPerspective {
 
 /// 🔀️ A camera is EITHER `perspective` OR `orthographic` (§5.10) -- modeled as a tagged union on
 /// the sibling `type` string field.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum GltfCameraProjection {
     Perspective(GltfPerspective),
     Orthographic(GltfOrthographic),
@@ -1017,7 +1026,8 @@ pub enum GltfCameraProjection {
 
 /// 📷️ `cameras[i]` (§5.10).
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct GltfCamera {
     pub projection: GltfCameraProjection,
     pub name: Option<String>,
@@ -1210,7 +1220,8 @@ impl Default for GltfSnapshot {
 
 /// 🔢️ `accessor.componentType` — the 6 values glTF 2.0 permits (§5.1.1).
 #[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq)]
-#[derive(semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum GltfComponentType {
     Byte,
     UnsignedByte,
@@ -1221,7 +1232,8 @@ pub enum GltfComponentType {
 }
 /// 🔢️ `accessor.type` — the 7 shapes glTF 2.0 permits (§5.1.2).
 #[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq)]
-#[derive(semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum GltfAccessorType {
     Scalar,
     Vec2,

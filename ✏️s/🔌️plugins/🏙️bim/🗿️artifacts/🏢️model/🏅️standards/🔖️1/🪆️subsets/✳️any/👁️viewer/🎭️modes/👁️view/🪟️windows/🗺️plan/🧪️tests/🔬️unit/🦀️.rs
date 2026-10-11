@@ -10,7 +10,7 @@ fn demo() -> ModelSnapshot {
 }
 
 fn inferred(snapshot: &ModelSnapshot) -> ModelInference {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, snapshot, Clone::clone)
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, Clone::clone)
 }
 
 fn picker(config: &config::BimViewerPlanWindowConfig, locale: Locale) -> serde_json::Value {

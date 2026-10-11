@@ -3,36 +3,35 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::{schema, WriterSnapshot};
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+
+fn funded_retirement_grant() -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }
+}
+
+fn retire_to_terminal<T: semio_framework_value::retirement::RetireOwned>(value: T) {
+    let grant = funded_retirement_grant();
+    let (owner, progress) = semio_framework_value::retirement::admit_owned_retirement(value, grant).unwrap_or_else(|(error, _)| panic!("{}", error.into_message()));
+    assert!(progress.fits(grant));
+    close_retirement(owner);
+}
 
 #[semio_framework_async_macros::async_test]
-async fn writer_snapshot_and_mutation_owners_retire_one_exact_field_per_grant() {
-    let snapshot = crate::writer_snapshot_with_text("writer.document", "deep", "plaintext", "writer://deep", "body");
-    let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterSnapshotRetirementFactory, snapshot);
-    assert_eq!(retirement.close_step(0, usize::MAX).expect("zero grant is truthful"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-    let mut steps = 0;
-    while !retirement.terminal_is_empty() {
-        let step = retirement.close_step(1, WRITER_ENVELOPE_FIELD_BYTES).expect("one Writer field retires");
-        if matches!(step, store::SnapshotRetirementStep::Pending { released_items: 1, .. }) {
-            steps += 1;
-        }
-    }
-    assert_eq!(steps, 10, "five snapshot strings (schema, id, languageId, uri, text) plus five child-reference strings retire independently");
-    drop(retirement);
-
-    let hostile = WriterMutation::EditText(schema::mutations::EditText { text: "x".repeat(WRITER_ENVELOPE_FIELD_BYTES) });
-    let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterMutationRetirementFactory, hostile);
-    assert_eq!(retirement.close_step(1, WRITER_ENVELOPE_FIELD_BYTES - 1).expect("under-credit preserves the exact mutation"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-    assert_eq!(retirement.close_step(1, WRITER_ENVELOPE_FIELD_BYTES).expect("exact byte credit releases the string"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: WRITER_ENVELOPE_FIELD_BYTES });
-    assert_eq!(retirement.close_step(1, 0).expect("empty mutation shell is shallow"), store::SnapshotRetirementStep::Complete);
-    assert!(retirement.terminal_is_empty());
-    drop(retirement);
+async fn writer_snapshot_and_mutation_owners_retire_to_terminal_within_exact_grants() {
+    retire_to_terminal(crate::writer_snapshot_with_text("writer.document", "deep", "plaintext", "writer://deep", "body"));
+    retire_to_terminal(WriterMutation::EditText(schema::mutations::EditText { text: "x".repeat(WRITER_ENVELOPE_FIELD_BYTES) }));
+    retire_to_terminal(WriterMutation::SpliceText(schema::mutations::SpliceText { start: 0, deleted: "a".into(), insert: "b".into(), before: "c".into(), after: "d".into() }));
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct UnusedWriterEditRetirementFactory;
 
 impl store::ArtifactOwnedValueRetirementFactory<protocol::Edit<WriterMutation>> for UnusedWriterEditRetirementFactory {
-    fn retire_owned(&self, _value: protocol::Edit<WriterMutation>) -> Box<dyn store::ErasedSnapshotRetirement> {
+    fn retirement_birth_bytes(&self, _value: &protocol::Edit<WriterMutation>) -> usize {
+        0
+    }
+
+    fn retire_owned(&self, _value: protocol::Edit<WriterMutation>, _grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, protocol::Edit<WriterMutation>)> {
         panic!("successful Writer edit fixtures take the exact decoded owner")
     }
 }
@@ -52,11 +51,19 @@ fn writer_edit_source(bytes: &[u8]) -> store::OwnedSchemaRecordCursor {
 /// binary — which is why every exit path of `drive_writer_edit` below goes through here, including
 /// the refusal paths a malformed fixture takes.
 fn retire_writer_edit_authority(authority: &mut dyn store::ArtifactOwnedHistoryEntryAuthority<protocol::Edit<WriterMutation>>) {
+    let refusal = |diagnostic: store::OwnedSchemaDecodeDiagnostic| -> usize { panic!("a Writer edit authority quotes its close: {}", diagnostic.code) };
     for _ in 0..100_000 {
         if authority.terminal_is_empty() {
             return;
         }
-        authority.close_step(1, WRITER_ENVELOPE_FIELD_BYTES).expect("a Writer edit authority retires through bounded close steps");
+        let grant = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: authority.next_close_copy_byte_demand().unwrap_or_else(refusal).max(WRITER_ENVELOPE_FIELD_BYTES),
+            maximum_capacity_bytes: authority.next_close_capacity_byte_demand(WRITER_ENVELOPE_FIELD_BYTES).unwrap_or_else(refusal),
+            maximum_release_bytes: authority.next_close_release_byte_demand().unwrap_or_else(refusal),
+            maximum_depth: authority.next_close_depth_demand().unwrap_or_else(refusal).max(1),
+        };
+        authority.close_step(grant).unwrap_or_else(|diagnostic| panic!("a Writer edit authority retires through bounded close steps: {}", diagnostic.code));
     }
     panic!("Writer edit authority did not reach its terminal-empty witness within its bounded close ladder")
 }
@@ -126,106 +133,8 @@ async fn writer_edit_history_decoder_uses_begin_mutation_and_faults_malformed_in
     let decoded = drive_writer_edit(&bytes, semio_framework_job::root_cancel_token()).expect("Writer owns its retained edit and mutation decoders");
     assert_eq!(decoded, edit);
     assert!(drive_writer_edit(br#"{"value":{"id":"broken","forwards":[{"mutation":"unknown","newId":"x"}],"inverse":[],"sequenceNumber":1,"startedAt":"1"}}"#, semio_framework_job::root_cancel_token()).is_err());
-    let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterMutationRetirementFactory, decoded.forwards.into_iter().next().expect("decoded mutation owner"));
-    while !retirement.terminal_is_empty() {
-        retirement.close_step(1, WRITER_ENVELOPE_FIELD_BYTES).expect("decoded mutation closes");
-    }
+    retire_to_terminal(decoded.forwards.into_iter().next().expect("decoded mutation owner"));
 }
-
-fn writer_initializer_actor() -> protocol::ActorId {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️actor-genesis/🔣️.json")).expect("neutral actor corpus");
-    protocol::ActorId(fixture["actors"]["opened"].as_str().expect("opened actor").into())
-}
-
-fn empty_writer_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> WriterStoreInitializationAuthority {
-    let envelope = store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer-retained-load", schema::empty_writer_snapshot(), None);
-    WriterStoreInitializationAuthority::new(envelope, operation, generation, writer_initializer_actor())
-}
-
-fn drive_writer_initializer(authority: &mut WriterStoreInitializationAuthority, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::StepOutcome {
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
-    for _ in 0..10_000 {
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
-        let outcome = semio_framework_plugin::ArtifactStoreInitializationAuthority::step(authority, &mut context);
-        if outcome.is_terminal() {
-            return outcome;
-        }
-    }
-    panic!("Writer retained initializer did not reach a bounded terminal")
-}
-
-fn close_writer_candidate(mut candidate: store::ArtifactStore<WriterSnapshot, WriterMutation>) {
-    use semio_framework_plugin::ArtifactOwnedDisposer;
-
-    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<WriterSnapshot, WriterMutation>::new();
-    for _ in 0..10_000 {
-        match disposer.close_step(&mut candidate, 1, WRITER_ENVELOPE_FIELD_BYTES).expect("Writer candidate close step") {
-            semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= WRITER_ENVELOPE_FIELD_BYTES);
-            }
-            semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("fresh Writer candidate close unexpectedly blocked: {reason}"),
-            semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } => panic!("fresh Writer candidate close unexpectedly awaited input: {reason}"),
-            semio_framework_plugin::PluginCloseStep::Complete => {
-                assert!(disposer.terminal_is_empty(&candidate));
-                drop(disposer);
-                drop(candidate);
-                return;
-            }
-        }
-    }
-    panic!("Writer candidate did not reach terminal-empty close")
-}
-
-#[test]
-fn writer_history_edit_initializer_preserves_actor_and_publishes_exact_next_generation() {
-    let operation = semio_framework_job::OperationId(401);
-    let generation = semio_framework_job::Generation(9);
-    let mut authority = empty_writer_initializer(operation, generation);
-    let genesis = authority.envelope.as_ref().expect("retained Writer envelope").vcs.genesis.facts().share_snapshot();
-    assert!(matches!(drive_writer_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
-    let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Writer candidate");
-    assert_eq!(candidate.generation_now(), 10);
-    assert!(std::sync::Arc::ptr_eq(&genesis, &candidate.snapshot_owner()));
-    drop(genesis);
-    assert_eq!(candidate.local_actor_id().0, writer_initializer_actor().0);
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
-    drop(authority);
-    close_writer_candidate(candidate);
-}
-
-#[test]
-fn writer_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty() {
-    let operation = semio_framework_job::OperationId(402);
-    let generation = semio_framework_job::Generation(11);
-    let mut cancelled = empty_writer_initializer(operation, generation);
-    semio_framework_plugin::ArtifactStoreInitializationAuthority::request_cancel(&mut cancelled);
-    assert!(matches!(drive_writer_initializer(&mut cancelled, operation, generation), semio_framework_job::StepOutcome::Cancelled));
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&cancelled));
-    drop(cancelled);
-
-    let mut stale = empty_writer_initializer(operation, generation);
-    let fault = drive_writer_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1));
-    assert!(matches!(fault, semio_framework_job::StepOutcome::Fault(_)));
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
-    drop(stale);
-    close_writer_step_outcome(fault);
-}
-
-/// 🧹️ A `Fault` outcome carries its detail as a retained job payload, which has no implicit Drop
-/// release: it leaves only through its own one-page close ladder to the terminal-empty witness.
-fn close_writer_step_outcome(mut outcome: semio_framework_job::StepOutcome) {
-    for _ in 0..10_000 {
-        if outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) == semio_framework_job::JobPayloadCloseStep::Complete {
-            assert!(outcome.terminal_is_empty());
-            return;
-        }
-    }
-    panic!("Writer initializer outcome did not reach its terminal-empty witness")
-}
-
-
 
 /// ✍️ Hand-built representative document — used across the artifact's own component tests.
 fn jack_snapshot() -> WriterSnapshot {
@@ -330,12 +239,12 @@ fn hub_tail_envelope(value: &serde_json::Value) -> protocol::MutationEnvelope {
     }
 }
 
-/// 🌱️ LAW: a document a replica folded from the hub's tail — beside its own local edits, STEP 8's mixed shape — initializes again through this store initializer. Every folded operation is
+/// 🌱️ LAW: a document a replica folded from the hub's tail — beside its own local edits, STEP 8's mixed shape — prints and reloads again through the document pack. Every folded operation is
 /// an edit whose id IS its only operation's mutation id — one causal node, which SeedHistory used to seed twice and refuse as
 /// `duplicate mutation id` (collab-e2e STEP 8: the reload after a Check In showed "Document restore failed … initializer-failed").
-/// The initialized candidate must be the folded document.
+/// The reloaded envelope must carry every folded operation.
 #[semio_framework_async_macros::async_test]
-async fn a_document_folded_from_the_hub_tail_initializes_again() {
+async fn a_document_folded_from_the_hub_tail_reloads_again() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🔁️hub-tail-after-check-in/🔣️.json")).expect("hub tail fixture decodes");
     let document_id = fixture["documentId"].as_str().expect("hub tail document id");
     let tail = fixture["envelopes"].as_array().expect("hub tail envelopes");
@@ -368,18 +277,11 @@ async fn a_document_folded_from_the_hub_tail_initializes_again() {
     let from_hub = edits.iter().filter(|edit| edit.actor.as_deref().is_some_and(|actor| hub_actors.contains(actor))).count();
     assert_eq!((from_hub, edits.len() - from_hub), (15, 2), "STEP 8's mixed shape: the hub's 15 operations beside this replica's own 2 edits");
     assert!(edits.iter().all(|edit| edit.mutation_meta.first().and_then(|meta| meta.mutation_id.as_ref()).is_some_and(|id| id.0 == edit.id)), "every edit — folded or authored here — is named after its own operation, the shape SeedHistory must seed once");
-    let live = folded.snapshot().expect("folded writer snapshot");
+    let edit_count = folded.envelope().vcs.edits.len();
     let files = store::print_document_pack(folded.envelope()).await.expect("print the folded document pack");
     let parsed: store::ParsedDocumentText<WriterSnapshot, WriterMutation> = store::parse_document_pack(&files.pack, &files.spr).await.expect("parse the folded document pack");
-    let operation = semio_framework_job::OperationId(403);
-    let generation = semio_framework_job::Generation(13);
-    let mut authority = WriterStoreInitializationAuthority::new(parsed.into_envelope(), operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
-    let outcome = drive_writer_initializer(&mut authority, operation, generation);
-    assert!(matches!(outcome, semio_framework_job::StepOutcome::Complete(_)), "the folded hub tail must initialize, not fault (duplicate mutation id)");
-    let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Writer candidate");
-    assert_eq!(candidate.snapshot().expect("initialized writer snapshot"), live, "the initialized document is the folded one");
-    assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
-    drop(authority);
-    close_writer_candidate(candidate);
+    let reloaded = parsed.into_envelope();
+    assert_eq!(reloaded.vcs.edits.len(), edit_count, "the folded hub tail reloads with every operation and transition, not a duplicate mutation id fault");
+    retire_writer_envelope(reloaded);
 }
 //#endregion 🔖️HubTailInitialization

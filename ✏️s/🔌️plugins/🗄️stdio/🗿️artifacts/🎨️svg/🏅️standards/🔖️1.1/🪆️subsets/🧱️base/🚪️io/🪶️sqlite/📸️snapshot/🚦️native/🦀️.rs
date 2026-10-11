@@ -13,7 +13,7 @@ pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,n
  if length>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"SVG native input exceeds file ceiling"))}
  control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
   let native_before=native_control.owned_bytes();
-    let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
+    let result=native_control.scoped_maximum(match native_before.checked_add(remaining){Some(maximum)=>maximum,None=>return(Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)}, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
 
   let result=(||{
    let(bytes,binary)=match payload{
@@ -43,7 +43,7 @@ pub(crate) fn preflight(value:&SvgSnapshot,encoding:SnapshotEncoding,control:&mu
 pub(crate) fn encode(value:&SvgSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{let native_control=native_owner.native();
  let limits=control.limits();control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
   let native_before=native_control.owned_bytes();
-    let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
+    let result=native_control.scoped_maximum(match native_before.checked_add(remaining){Some(maximum)=>maximum,None=>return(Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)}, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
 
   let result=(||{
    let size=count(value,encoding,native,limits)?;let mut bytes=native.allocate_vec(size)?;let mut count=0;let mut rows=0;native.begin_stage(size)?;

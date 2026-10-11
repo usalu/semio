@@ -62,7 +62,7 @@ impl Mat2 {
 
 // #region 🔖️VecD
 /// 📏️ Heap-allocated f64 vector for element and system-level numerics (loads, displacements, residuals).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct VecD(pub Vec<f64>);
 
 impl VecD {
@@ -122,7 +122,7 @@ impl VecD {
 
 // #region 🔖️MatD
 /// 🧮️ Dynamic dense f64 matrix, row-major storage; sized for element stiffness matrices and small global systems.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct MatD {
     pub rows: usize,
     pub cols: usize,
@@ -253,7 +253,8 @@ impl MatD {
 
 // #region 🔖️Mat3d
 /// 🧊️ 3x3 f64 matrix for element local frames and rotation transforms, column-major storage.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Mat3d {
     pub cols: [[f64; 3]; 3],
 }

@@ -54,7 +54,7 @@ describe("OS development composition ownership", () => {
     expect(router).not.toContain("import.meta.vitest");
     expect(router).not.toContain("export { blake3Hex, Blake3Hasher }");
     expect(router).toContain("new ScriptRouter(import.meta.dir)");
-    expect(router).toContain("runScriptMain(router, import.meta.url");
+    expect(router).toContain("receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original");
   });
 
   test("resolves every owner through its complete registered semantic ancestry", () => {

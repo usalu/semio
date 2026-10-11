@@ -89,7 +89,7 @@ fn totals_of(totals: &ZoneTotals) -> BTreeMap<String, f64> {
 
 /// 🧾️ The table the third-party IfcOpenShell oracle reads back from the exported file: every zone with its members and totals, every area scheme with its rule and the covering names of every finished space.
 pub fn report_json(model: &ModelSnapshot) -> Result<String, String> {
-    let zone_totals = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::try_with_inference(None, model, |inferred| inferred.zone_totals.clone()).map_err(|error| error.to_string())?;
+    let zone_totals = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred.zone_totals.clone()).map_err(|error| error.to_string())?;
     let zones = model
         .zones
         .iter()

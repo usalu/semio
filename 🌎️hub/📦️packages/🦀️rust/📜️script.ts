@@ -4739,7 +4739,7 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
 }
 
 /** 🧪️ Compiles bounded positive/negative imports against one private metadata capture. */
-async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<ReturnType<typeof runRepositoryExactCargoLaws>>[number]): Promise<void> {
+async function proveHeadlessStdioImports(invocation: ScriptInvocation, repoRoot: string, receipt: Awaited<ReturnType<typeof runRepositoryExactCargoLaws>>[number]): Promise<void> {
   const fixtureRoot = join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🧪️imports.json"), "utf8")) as { features: string[]; cases: { id: string; source: string; accepted: boolean }[] };
   const reportPath = join(receipt.artifactDir, "build.stdout");
@@ -4788,8 +4788,8 @@ async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<Retu
       const input = join(runRoot, `${row.id}.rs`);
       writeFileSync(input, row.source + "\n", { flag: "wx", mode: 0o600 });
       const result = await captureOwnedProcess("rustc", headlessStdioImportArguments(capture, [capture.depsDirectory], input, join(runRoot, `${row.id}.rmeta`)), {
-        cwd: repoRoot, env: exactCargoStageEnvironments().env, budgetMs: 60_000, maxOutputBytes: 1024 * 1024,
-        stdoutPath: join(runRoot, `${row.id}.stdout`), stderrPath: join(runRoot, `${row.id}.stderr`), cancelled: () => cancelled,
+        invocation, cwd: repoRoot, env: exactCargoStageEnvironments().env, budgetMs: 60_000, maxOutputBytes: 1024 * 1024,
+        stdoutPath: join(runRoot, `${row.id}.stdout`), stderrPath: join(runRoot, `${row.id}.stderr`),
       });
       const errors = result.stderr.split("\n").filter(Boolean).map((line) => JSON.parse(line)).filter((diagnostic) => diagnostic.level === "error" && diagnostic.code);
       if (result.signal || result.reason !== "exit" || (row.accepted ? result.status !== 0 || errors.length !== 0 : result.status !== 1 || errors.length !== 1 || !["E0432", "E0433"].includes(errors[0].code.code))) throw new Error(`headless Stdio import law failed: ${row.id}; evidence=${runRoot}`);
@@ -4869,7 +4869,7 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
     const stdioReceipt = receipts[0];
     if (!stdioReceipt) throw new Error("native Stdio catalog receipt is absent");
     await proveNativeStdioCommitmentSchema(this.repoRoot, stdioReceipt);
-    await proveHeadlessStdioImports(this.repoRoot, stdioReceipt);
+    await proveHeadlessStdioImports(this.invocation, this.repoRoot, stdioReceipt);
     receipts.push(...await runRepositoryExactCargoLaws({ ...options, groups: remaining }));
     for (const receipt of receipts) console.log(`native-openable-provider-receipt: ${JSON.stringify(receipt)}`);
     console.log(`native-openable-catalog-provider-laws: passed=${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)}`);
@@ -6147,10 +6147,10 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
         { pluginId: "gis", cargoPackage: "semio-hub-gis", componentPackageId: "semio:gis", outputName: "semio_hub_gis.wasm", componentProfile: "wasm-release", rootCdylib: true },
         target,
         stage,
-        {...build.control,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(this.repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})},
+        {...build.control,invocation:this.invocation,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(this.repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})},
         (lease) =>
           lease.consume((component) =>
-            buildClosedBrowserActorArtifactV1(component, {
+            buildClosedBrowserActorArtifactV1(component, this.invocation, {
               cancelled: () => build.control.cancelled() || build.control.remainingMs() <= 0,
               progress: (phase, completed, total) => build.control.checkpoint("gis-child-" + phase, completed, total),
             }),
@@ -10247,7 +10247,7 @@ function bindTrustedCatalogFromPublished(dataRoot: string, sourceTrustedRoot: st
   return Object.freeze({ profileId: published.profileId, generationId: published.generationId, bundleSha256: published.bundleSha256, bundlePath });
 }
 
-export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[], hubBinary: string): Promise<TrustedBootstrapMaterializationV1> {
+export async function materializeTrustedCatalogBundle(invocation: ScriptInvocation, repoRoot: string, dataRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[], hubBinary: string): Promise<TrustedBootstrapMaterializationV1> {
   const bindSource = resolveTrustedCatalogBindSource();
   if (bindSource) {
     const bound = bindTrustedCatalogFromPublished(dataRoot, bindSource, selection);
@@ -10267,7 +10267,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
   const observationStage = join(trustedRoot, `provenance-staging-${nonce}`);
   mkdirSync(observationStage, { mode: 0o700 });
   const buildControl = trustedBootstrapBuildControl(buildBudgetMs());
-  const control={...buildControl.control,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})};
+  const control={...buildControl.control,invocation,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})};
   const checkBuild = () => {
     if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted catalog build cancelled");
   };
@@ -10348,7 +10348,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
         if (pluginOpensDocuments) {
           const componentBytes = trustedBootstrapReadRegular(join(stage, "component.wasm"), DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, `fresh ${request.pluginId} component for closed actor`, checkBuild);
           try {
-            derivedActor = await buildClosedBrowserActorArtifactV1(componentBytes, { cancelled: () => control.cancelled() || control.remainingMs() <= 0, progress: (phase, completed, total) => control.checkpoint(`actor-${phase}`, completed, total) });
+            derivedActor = await buildClosedBrowserActorArtifactV1(componentBytes, invocation, { cancelled: () => control.cancelled() || control.remainingMs() <= 0, progress: (phase, completed, total) => control.checkpoint(`actor-${phase}`, completed, total) });
           } finally {
             componentBytes.fill(0);
           }
@@ -12533,7 +12533,7 @@ async function proveGisMapProposalProcess(invocation: ScriptInvocation, repoRoot
   const dataRoot = join(artifactPath, `gis-map-proposal-process-${randomBytes(8).toString("hex")}`);
   mkdirSync(dataRoot, { mode: 0o700 });
   const binaryPath = hubBinaryPath(repoRoot);
-  const materialized = await materializeTrustedCatalogBundle(repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES), binaryPath);
+  const materialized = await materializeTrustedCatalogBundle(invocation, repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES), binaryPath);
   const validation = { binaryPath, cargoTargetDir: dirname(dirname(binaryPath)) };
   await validateAndPublishTrustedStdioGisCandidate(invocation, repoRoot, hubRoot, dataRoot, materialized, validation);
   const current = trustedBootstrapCurrent(dataRoot);
@@ -13084,7 +13084,7 @@ class DevScript extends BundleScript {
     if (!trustedCatalog) {
       runCargo(["build", "--manifest-path", "Cargo.toml"], this.root);
       const validationBinaryPath = hubBinaryPath(this.repoRoot);
-      const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, trustedBootstrapSelectPackages(LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES), validationBinaryPath);
+      const receipt = await materializeTrustedCatalogBundle(this.invocation, this.repoRoot, dataRoot, trustedBootstrapSelectPackages(LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES), validationBinaryPath);
       const validation = { binaryPath: validationBinaryPath, cargoTargetDir: dirname(dirname(validationBinaryPath)) };
       await validateAndPublishTrustedStdioGisCandidate(this.invocation, this.repoRoot, this.root, dataRoot, receipt, validation);
       trustedCatalog = trustedBootstrapCurrent(dataRoot);
@@ -13205,7 +13205,7 @@ class AdminRelayCheckScript extends BundleScript {
 }
 
 /** 🤝️ Pins one selected-current, private-owner Shell journey before any process is started. */
-async function proveGisMapSocketRetirement(repoRoot: string, fixture: { maximumMs: number; hostileDeadlineMs: number; cases: string[] }): Promise<void> {
+async function proveGisMapSocketRetirement(invocation: ScriptInvocation, repoRoot: string, fixture: { maximumMs: number; hostileDeadlineMs: number; cases: string[] }): Promise<void> {
   const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const observed: string[] = [];
   class HeldSocket extends EventTarget {
@@ -13267,8 +13267,8 @@ ${finishGisMapProcessDocumentSocket.toString()}
   process.stdout.write(JSON.stringify({ id: "ws-websocket-close", closed: true, frames: 0, receipt: "" }));
 })().catch(error => { process.stderr.write(String(error).slice(0, 1024)); process.exitCode = 1; });`;
     const result = await captureOwnedProcess("node", ["--eval", thirdParty], {
-      cwd: repoRoot, env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot }, budgetMs: fixture.maximumMs * 3, maxOutputBytes: 4_096,
-      stdoutPath: join(evidence, "ws.stdout"), stderrPath: join(evidence, "ws.stderr"), cancelled: () => false,
+      invocation, cwd: repoRoot, env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot }, budgetMs: fixture.maximumMs * 3, maxOutputBytes: 4_096,
+      stdoutPath: join(evidence, "ws.stdout"), stderrPath: join(evidence, "ws.stderr"),
     });
     assert.equal(result.status, 0, `third-party ws retirement failed: ${result.reason} ${result.stderr}`);
     assert.equal(result.signal, null);
@@ -13285,7 +13285,7 @@ ${finishGisMapProcessDocumentSocket.toString()}
 }
 
 /** 🪢️ Validates the neutral shared-current workflow and its private owner boundaries. */
-async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise<void> {
+async function proveGisMapTwoAuthorCompositionFixture(invocation: ScriptInvocation, repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub/🧫️fixtures/🤝️two-author-shell-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
@@ -13322,7 +13322,7 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
   assert.equal(fixture.hostiles.length, 11, "two-author composition hostile count");
   assert.equal(new Set(fixture.hostiles).size, 11, "two-author composition hostiles are not unique");
   const hostiles = fixture.hostiles;
-  await proveGisMapSocketRetirement(repoRoot, fixture.socketRetirement);
+  await proveGisMapSocketRetirement(invocation, repoRoot, fixture.socketRetirement);
   const source = readFileSync(import.meta.path, "utf8");
   const start = source.indexOf("\nasync function proveGisMapTwoAuthorShellProcess(");
   const end = source.indexOf("\n/** 🤝️ Drives the bounded two-Author Hub/MCP proposal", start);
@@ -13348,7 +13348,7 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
 class TrustedStdioGisBundleCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length === 1 && segments[0] === "--two-author-source") {
-      await proveGisMapTwoAuthorCompositionFixture(this.repoRoot);
+      await proveGisMapTwoAuthorCompositionFixture(this.invocation, this.repoRoot);
       return;
     }
     if (segments.length === 1 && segments[0] === "--publication-cli") {
@@ -13371,7 +13371,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     if (segments.length > 1 || (segments[0] !== undefined && !["--source", "--native", "--process", "--browser", "--two-author-shell"].includes(segments[0]))) throw new Error("usage: trusted-stdio-gis-bundle-check [--source|--two-author-source|--publication-source|--publication-native|--publication-cli|--native|--process|--browser|--two-author-shell]");
     await proveTrustedStdioGisBootstrapFixture(this.repoRoot);
     await proveGisComponentColdMapPatch(this.repoRoot);
-    await proveGisMapTwoAuthorCompositionFixture(this.repoRoot);
+    await proveGisMapTwoAuthorCompositionFixture(this.invocation, this.repoRoot);
     const describeSource = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"), "utf8");
     const producerStart = describeSource.indexOf("function freshStage(");
     const producerEnd = describeSource.indexOf("\n/** 🛂️ The ONE describe route", producerStart);
@@ -13498,13 +13498,13 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       try {
         const targets = segments[0] === "--two-author-shell" ? ["-p", "semio-hub", "--bins", "--features", "semio-hub/integration-fixtures"] : ["--bin", "os-hub"];
         const result = await captureOwnedProcess("cargo", ["build", "--manifest-path", "Cargo.toml", ...targets, "--message-format=json"], {
+          invocation: this.invocation,
           cwd: this.root,
           env: { ...hubEnv, CARGO_TERM_COLOR: "never" },
           budgetMs: buildBudgetMs(),
           maxOutputBytes: 64 * 1024 * 1024,
           stdoutPath: join(hubBuildRoot, "stdout.jsonl"),
           stderrPath: join(hubBuildRoot, "stderr.txt"),
-          cancelled: hubBuildControl.control.cancelled,
         });
         trustedBootstrapWriteNew(join(hubBuildRoot, "outcome.json"), Buffer.from(JSON.stringify({ status: result.status, signal: result.signal, reason: result.reason })), () => {});
         const errors = result.stdout.split("\n").flatMap((line) => {
@@ -13525,7 +13525,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       if (segments[0] === "--two-author-shell") await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.root, env: hubEnv, nativeEnv: { RUST_MIN_STACK: "268435456" }, artifactDir: artifactPath, groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], laws: ["check_in_process_fixture_emits_verified_gis_ledger_and_catalog"] }], progress(event) { console.log(`two-author Shell seed ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
       const dataRoot = join(resolve(artifactRoot), "server-owned-data");
       const binary = join(hubTarget, "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-      const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES), binary);
+      const receipt = await materializeTrustedCatalogBundle(this.invocation, this.repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES), binary);
       const validation = { binaryPath: binary, cargoTargetDir: hubTarget };
       const initialPlan = await validateAndPublishTrustedStdioGisCandidate(this.invocation, this.repoRoot, this.root, dataRoot, receipt, validation);
       if (segments[0] === "--browser" || segments[0] === "--two-author-shell") await proveTrustedGisClosedActorV1(this.repoRoot, dataRoot, receipt, artifactPath);
@@ -13594,7 +13594,7 @@ class TrustedCatalogBootstrapScript extends BundleScript {
     const dataRoot = trustedCatalogDataRootV1(this.repoRoot,"standalone");
     runCargo(["build", "--manifest-path", "Cargo.toml", "--bin", "os-hub"], this.root);
     const binaryPath = hubBinaryPath(this.repoRoot);
-    const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, selection, binaryPath);
+    const receipt = await materializeTrustedCatalogBundle(this.invocation, this.repoRoot, dataRoot, selection, binaryPath);
     const validation = { binaryPath, cargoTargetDir: dirname(dirname(binaryPath)) };
     await validateAndPublishTrustedStdioGisCandidate(this.invocation, this.repoRoot, this.root, dataRoot, receipt, validation);
     console.log(`trusted-catalog-bootstrap-receipt: ${JSON.stringify(receipt)}`);

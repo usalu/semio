@@ -80,7 +80,7 @@ pub const BITMAP_EDITOR_CONTROLLER_ID: &str = "s.wfc.bitmap@1/*#editor";
 /// ✏️ The editor's typed command channel — one variant per real `BitmapMutation` kind an editor UI
 /// can trigger, plus the non-document verbs this file's own doc comment accounts for. Row order IS
 /// the binary variant ordinal: appending is safe, reordering is a wire-format break.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum BitmapEditorCommand {
     #[dsl(key = "change-seed")]
     ChangeSeed { seed: u64 },
@@ -548,19 +548,17 @@ pub struct BitmapOneItemPreparationFactory {
 }
 
 struct BitmapOneItemPreparation {
-    maximum_bytes: usize,
-    base: Option<store::SnapshotRead<BitmapSnapshot>>,
-    mutation: Option<BitmapMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<BitmapSnapshot, BitmapMutation>>,
+    owners: store::OneItemOwners<BitmapSnapshot, BitmapMutation>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
-    failure: Option<String>,
     cancelled: bool,
-    closing: bool,
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<BitmapSnapshot, BitmapMutation> for BitmapOneItemPreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<BitmapMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<BitmapMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &BitmapMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err(format!("{BITMAP_STORE_PREFIX}-lane"));
@@ -568,123 +566,110 @@ impl store::ArtifactStoreOneItemPreparationFactory<BitmapSnapshot, BitmapMutatio
         bitmap_one_item_footprint(mutation, self.maximum_bytes)
     }
 
+    fn begin_demand(&self, _mutation: &BitmapMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        if lane != store::HistoryLane::Document {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "wfc-bitmap-artifact-retained-lane"));
+        }
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<BitmapOneItemPreparation>(), depth: 1 })
+    }
+
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<BitmapSnapshot, BitmapMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<BitmapSnapshot, BitmapMutation>>, store::ArtifactStoreOneItemPreparationRequest<BitmapSnapshot, BitmapMutation>> {
+        request: store::ArtifactStoreOneItemPreparationRequest<BitmapSnapshot, BitmapMutation, BitmapMutation>,
+        grant: store::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<BitmapSnapshot, BitmapMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<BitmapSnapshot, BitmapMutation, BitmapMutation>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         let retained_bytes = bitmap_mutation_retained_bytes(&request.mutation).unwrap_or(self.maximum_bytes.saturating_add(1));
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
+        if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || retained_bytes > self.maximum_bytes
         {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "wfc-bitmap-artifact-retained-request-refused"), request));
         }
-        Ok(Box::new(BitmapOneItemPreparation {
-            maximum_bytes: self.maximum_bytes,
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
+        Ok((Box::new(BitmapOneItemPreparation {
+            owners: store::OneItemOwners::from_request(request),
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             retained_bytes,
-            failure: None,
             cancelled: false,
-            closing: false,
-        }))
+        }), progress))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<BitmapSnapshot, BitmapMutation> for BitmapOneItemPreparation {
-    /// 📬️ Stages ONE document edit. Every fallible step runs while the mutation is still OWNED here,
-    /// and the first failure is remembered, so the store's retry reports the real cause instead of an
-    /// owner-missing artefact of the first attempt.
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if let Some(failure) = &self.failure {
-            return Err(failure.clone());
-        }
-        if !grant.permits_one() || self.cancelled {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        use protocol::Mutation as _;
+        let fault = |message: &'static str| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.refused.is_some() || self.owners.failure.is_some() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
-        match self.stage() {
-            Ok(step) => Ok(step),
-            Err(failure) => {
-                self.failure = Some(failure.clone());
-                Err(failure)
+        if self.owners.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress::default()));
+        }
+        let authority = self.owners.authority.as_ref().ok_or_else(|| fault("wfc-bitmap-artifact-retained-authority-missing"))?;
+        let base = self.owners.base.as_ref().ok_or_else(|| fault("wfc-bitmap-artifact-retained-base-owner-missing"))?;
+        let mutation = self.owners.mutation.take().ok_or_else(|| fault("wfc-bitmap-artifact-retained-mutation-owner-missing"))?;
+        let inverse = match mutation.inverse(base.get()) {
+            Ok(inverse) => inverse,
+            Err(error) => {
+                *self.owners.mutation = Some(mutation);
+                return Err(error);
             }
-        }
+        };
+        let post = match protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()) {
+            Ok(post) => post,
+            Err(_) => {
+                *self.owners.mutation = Some(mutation);
+                *self.owners.inverse = Some(inverse);
+                *self.owners.failure = Some(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retained the original mutation application refusal"));
+                return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retained the original mutation application refusal"));
+            }
+        };
+        let edit = authority.next_edit(mutation, inverse);
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => {
+                *self.owners.refused = Some((edit, post));
+                return Err(error);
+            }
+        };
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        *self.owners.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
-
     fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<BitmapSnapshot, BitmapMutation>> {
-        self.prepared.as_ref()
+        self.owners.prepared.as_ref()
     }
-
     fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<BitmapSnapshot, BitmapMutation>> {
-        self.prepared.take()
+        self.owners.prepared.take()
     }
-
     fn cancel(&mut self) {
         self.cancelled = true;
     }
-
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
-        }
-        if self.failure.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("{BITMAP_STORE_PREFIX}-base-retirement-rejected")));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.authority.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        self.owners.close_step(grant.retained_grant())
     }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none() && self.failure.is_none()
+        self.owners.terminal_is_empty()
     }
 }
-
-impl BitmapOneItemPreparation {
-    fn stage(&mut self) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        let base = self.base.as_ref().ok_or_else(|| format!("{BITMAP_STORE_PREFIX}-base-owner-missing"))?;
-        let mutation = self.mutation.as_ref().ok_or_else(|| format!("{BITMAP_STORE_PREFIX}-mutation-owner-missing"))?;
-        bitmap_one_item_footprint(mutation, self.maximum_bytes)?;
-        let inverse = protocol::Mutation::inverse(mutation, base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-        let diff = protocol::Mutation::diff(mutation, base.get()).into_parts().0;
-        let post = protocol::MutationDiff::apply(&diff, base.get()).map_err(|error| format!("{BITMAP_STORE_PREFIX}-diff-apply-failed:{error}"))?;
-        let authority = self.authority.as_ref().ok_or_else(|| format!("{BITMAP_STORE_PREFIX}-authority-missing"))?;
-        let forward = self.mutation.take().expect("the staged mutation was read above");
-        let edit = authority.next_edit(forward, inverse);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-    }
-}
-
 //#endregion 📬️StorePreparation
 
 //#region 🔖️Editor
@@ -744,17 +729,8 @@ impl ArtifactEditor for BitmapEditor {
     /// 🗃️ The bounded retirement catalog every store lane is released THROUGH: a store built without
     /// owners answers `artifact store has no owner-supplied bounded disposer` the moment the close
     /// ladder reaches it, so the owners and the disposers below are one declaration in two halves.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
 
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
-    }
 
     /// ♻️ The instance close ladder walks one owned store lane per stage and faults the whole close
     /// with `interactive-job.close-owned-disposer-missing` the moment a lane answers `None`, so an
@@ -854,6 +830,7 @@ impl ArtifactEditor for BitmapEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

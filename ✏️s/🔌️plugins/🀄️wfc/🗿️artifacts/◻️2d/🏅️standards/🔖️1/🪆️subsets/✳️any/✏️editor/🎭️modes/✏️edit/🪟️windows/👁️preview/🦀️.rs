@@ -13,7 +13,7 @@
 
 use crate::editor::wfc2d::modes::edit::tools::fill::{self, Wfc2dFillTickPayload};
 use crate::editor::wfc2d::transient::{assigned_tile, Wfc2dTransient};
-use crate::schema::snapshot::{Wfc2dColor, Wfc2dPathSegment, Wfc2dTile, Wfc2dTileMedia};
+use crate::schema::snapshot::{Wfc2dBitmapMedia, Wfc2dColor, Wfc2dImageMedia, Wfc2dPathSegment, Wfc2dSegmentCubic, Wfc2dSegmentQuad, Wfc2dSegmentTo, Wfc2dTile, Wfc2dTileMedia, Wfc2dVectorMedia};
 use crate::Wfc2dSnapshot;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
@@ -119,10 +119,10 @@ fn point(value: [f64; 2]) -> String {
 fn segment_json(segment: &Wfc2dPathSegment) -> String {
     match segment {
         Wfc2dPathSegment::Close => "{\"kind\":\"close\"}".to_string(),
-        Wfc2dPathSegment::Move { to } => format!("{{\"kind\":\"move\",\"to\":{}}}", point(*to)),
-        Wfc2dPathSegment::Line { to } => format!("{{\"kind\":\"line\",\"to\":{}}}", point(*to)),
-        Wfc2dPathSegment::Quad { ctrl, to } => format!("{{\"kind\":\"quad\",\"ctrl\":{},\"to\":{}}}", point(*ctrl), point(*to)),
-        Wfc2dPathSegment::Cubic { ctrl1, ctrl2, to } => format!("{{\"kind\":\"cubic\",\"ctrl1\":{},\"ctrl2\":{},\"to\":{}}}", point(*ctrl1), point(*ctrl2), point(*to)),
+        Wfc2dPathSegment::Move(Wfc2dSegmentTo { to }) => format!("{{\"kind\":\"move\",\"to\":{}}}", point(*to)),
+        Wfc2dPathSegment::Line(Wfc2dSegmentTo { to }) => format!("{{\"kind\":\"line\",\"to\":{}}}", point(*to)),
+        Wfc2dPathSegment::Quad(Wfc2dSegmentQuad { ctrl, to }) => format!("{{\"kind\":\"quad\",\"ctrl\":{},\"to\":{}}}", point(*ctrl), point(*to)),
+        Wfc2dPathSegment::Cubic(Wfc2dSegmentCubic { ctrl1, ctrl2, to }) => format!("{{\"kind\":\"cubic\",\"ctrl1\":{},\"ctrl2\":{},\"to\":{}}}", point(*ctrl1), point(*ctrl2), point(*to)),
     }
 }
 
@@ -141,7 +141,7 @@ fn slot_layers(slot: &crate::schema::snapshot::Wfc2dSlot, tile: Option<&Wfc2dTil
     ));
     let Some(tile) = tile else { return };
     match &tile.media {
-        Wfc2dTileMedia::Vector { paths } => {
+        Wfc2dTileMedia::Vector(Wfc2dVectorMedia { paths }) => {
             for (index, path) in paths.iter().enumerate() {
                 let segments: Vec<String> = path.segments.iter().map(segment_json).collect();
                 let fill = path.fill.as_ref().map_or_else(|| "null".to_string(), |color| format!("{{\"color\":{}}}", rgba(color)));
@@ -158,7 +158,7 @@ fn slot_layers(slot: &crate::schema::snapshot::Wfc2dSlot, tile: Option<&Wfc2dTil
                 ));
             }
         }
-        Wfc2dTileMedia::Bitmap { width, height, .. } => match crate::standards::v1::subsets::any::io::binary::snapshot::tile_media_png_data_url(&tile.media) {
+        Wfc2dTileMedia::Bitmap(Wfc2dBitmapMedia { width, height, .. }) => match crate::standards::v1::subsets::any::io::binary::snapshot::tile_media_png_data_url(&tile.media) {
             Some(data_url) => layers.push(format!(
                 "{{\"id\":\"tile-{}-{}-bitmap\",\"kind\":\"image\",\"dataUrl\":{},\"x\":{:.6},\"y\":{:.6},\"width\":{:.6},\"height\":{:.6}}}",
                 slot.id,
@@ -180,7 +180,7 @@ fn slot_layers(slot: &crate::schema::snapshot::Wfc2dSlot, tile: Option<&Wfc2dTil
                 slot.height
             )),
         },
-        Wfc2dTileMedia::Image { child } => layers.push(format!(
+        Wfc2dTileMedia::Image(Wfc2dImageMedia { child }) => layers.push(format!(
             "{{\"id\":\"tile-{}-{}-image\",\"kind\":\"rect\",\"name\":{},\"x\":{:.6},\"y\":{:.6},\"width\":{:.6},\"height\":{:.6}}}",
             slot.id,
             tile.id,

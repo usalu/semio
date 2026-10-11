@@ -5,7 +5,7 @@ use protocol::{Mutation, OpBinary, OpText};
 fn fem3d_window_config_model_matches_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document-contract/🔣️.json")).expect("FEM window fixture");
     let base: Fem3dModelWindowConfig = semio_framework_pack_json::from_json_str(&fixture["valid"][0].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM window config");
-    let mutation = Fem3dModelWindowConfigMutation::Update { patch: Box::new(Fem3dModelWindowConfigPatch::replacing(&base)) };
+    let mutation = Fem3dModelWindowConfigMutation::Update(Fem3dModelWindowConfigUpdate { patch: Box::new(Fem3dModelWindowConfigPatch::replacing(&base)) });
     let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("FEM window diff");
     assert_eq!(after, base);
     assert_eq!(Fem3dModelWindowConfigMutation::parse_op(&mutation.print_op()).expect("FEM text mutation"), mutation);

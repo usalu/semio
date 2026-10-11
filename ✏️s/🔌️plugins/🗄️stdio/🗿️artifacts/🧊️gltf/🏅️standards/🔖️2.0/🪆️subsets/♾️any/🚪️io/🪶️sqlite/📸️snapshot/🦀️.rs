@@ -55,7 +55,7 @@ use backing::Read;
 
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 impl ArtifactSqliteSnapshot for GltfSnapshot{
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{native::decode(payload,crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::controlled_spec_producer(),crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::reconstruct_record_controlled,control,native_control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native::decode(payload,crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::controlled_spec_producer(),crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::reconstruct_record_controlled,control,native_control.native())}
  fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encoding::native_footprint(self,control)?;crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::encode_native(self,encoding,control,native_owner)}
  fn retire_sqlite_snapshot(self){<GltfDocument as semio_framework_dsl_record::DslField>::retire_decoded(self.document);}
  const SQLITE_SCHEMA:&'static str=SQLITE_SCHEMA;

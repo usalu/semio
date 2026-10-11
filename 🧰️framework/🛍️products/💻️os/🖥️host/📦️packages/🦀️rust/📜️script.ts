@@ -596,10 +596,10 @@ class MemberHistoryFoundationScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-history-foundation-check accepts only --oracle-only");
     const replicationRoot = join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust");
     const { RetainedVerificationScript } = await import(join(replicationRoot, "📜️script.ts"));
-    await new RetainedVerificationScript(replicationRoot, this.repoRoot).run(["--oracle-only"]);
-    await new MemberHistoryInputScript(this.root, this.repoRoot).run(["--oracle-only"]);
-    await new MemberHistoryIdScript(this.root, this.repoRoot).run(["--oracle-only"]);
-    await new MemberHistoryIdentitySourceScript(this.root, this.repoRoot).run([]);
+    await new RetainedVerificationScript(replicationRoot, this.repoRoot, this.invocation).run(["--oracle-only"]);
+    await new MemberHistoryInputScript(this.root, this.repoRoot, this.invocation).run(["--oracle-only"]);
+    await new MemberHistoryIdScript(this.root, this.repoRoot, this.invocation).run(["--oracle-only"]);
+    await new MemberHistoryIdentitySourceScript(this.root, this.repoRoot, this.invocation).run([]);
     if (segments.includes("--oracle-only")) return;
     const mounts = [
       ["🧰️framework/🔨️modules/📡️replication/📐️format/🦀️.rs", "pub mod retained;"],

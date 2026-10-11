@@ -83,7 +83,7 @@ pub fn inferred_to_energy(model: &ModelSnapshot, inferred: &ModelInference) -> R
 
 /// 🏗️ The energy model of `model`, the inference coming from the shared session: an export after an edit recomputes only what the edit touched.
 pub fn model_to_energy(model: &ModelSnapshot) -> Result<(EnergyModel, Vec<String>), String> {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::try_with_inference(None, model, |inferred| inferred_to_energy(model, inferred)).map_err(|error| error.to_string())?
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred_to_energy(model, inferred)).map_err(|error| error.to_string())?
 }
 
 /// 📤️ The `.energy` text of `model` plus a note per item that could not be written as it is.
@@ -109,7 +109,7 @@ pub struct ModelIntoEnergy;
 impl Serializer<ModelSnapshot> for ModelIntoEnergy {
     const INTO: Dialect = ENERGY_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let (text, notes) = export_energy(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ModelIntoEnergy: {message}"))))?;
         Ok(IoOutcome { value: IoPayload::Text(text), diagnostics: notes.into_iter().map(warning).collect() })
     }

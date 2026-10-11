@@ -7,7 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️BitmapArtifact
 /// 🧬️ BitmapArtifact facet — the persisted problem spec is the artifact; the solved output bitmap,
 /// the contradiction verdict and the entropy map are inferences, never state.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.wfc.bitmap")]
 pub struct BitmapArtifact {

@@ -20,7 +20,7 @@ use crate::CadReferenceIndex;
 /// 🛡️ `deny_unknown_fields` closes that replacement: a snapshot still carrying the retired inline
 /// `objects`/`shapeGeometry`/`activeModelDefinitionId` keys must FAIL to decode, never decode with
 /// them silently dropped (`🧫️fixtures/🪪️document`'s `invalidDocuments`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(extension = "cad")]
 #[artifact_schema(id = "s.cad.cad")]

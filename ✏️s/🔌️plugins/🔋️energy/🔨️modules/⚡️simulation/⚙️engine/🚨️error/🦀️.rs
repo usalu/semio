@@ -5,7 +5,7 @@ use std::fmt;
 
 // #region 🔖️Severity
 /// 🚨️ Diagnostic severity aligned with BEM engine conventions.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum Severity {
     Fatal,
     Severe,
@@ -16,7 +16,7 @@ pub enum Severity {
 
 // #region 🔖️Error
 /// ❌️ Recoverable or fatal engine error with optional location context.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Error {
     pub severity: Severity,
     pub message: String,
@@ -57,7 +57,7 @@ impl std::error::Error for Error {}
 
 // #region 🔖️Diagnostics
 /// 📋️ Collected diagnostics from validation or simulation.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Diagnostics {
     pub messages: Vec<Error>,
 }

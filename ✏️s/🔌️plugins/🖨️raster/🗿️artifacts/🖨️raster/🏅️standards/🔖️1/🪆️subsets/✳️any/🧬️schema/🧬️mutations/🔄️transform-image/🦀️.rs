@@ -19,7 +19,8 @@ pub const RASTER_IMAGE_TRANSFORMS: [&str; 4] = ["rotateClockwise", "rotateCounte
 /// 🧮️ The longest side a transformed image may have, as the payload schema bounds it.
 pub const RASTER_IMAGE_MAXIMUM_SIDE: u32 = 16_384;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct TransformImage {

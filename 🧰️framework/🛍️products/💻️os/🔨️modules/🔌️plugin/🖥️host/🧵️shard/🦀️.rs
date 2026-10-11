@@ -159,7 +159,7 @@ const GRANT_BUDGET_DEFAULT_MAX_FRAMES: u32 = 8;
 /// [`semio_framework::kernel::Budget`] `GuestRuntime::execute_turn` actually takes.
 /// `wall_ms`→`deadline_ms` (both are "how long this turn may run", named differently per crate);
 /// `max_frames` has no source field yet (see [`GRANT_BUDGET_DEFAULT_MAX_FRAMES`]).
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 struct IssuedShardTurn {
     retained: semio_framework_actor::RetainedTurnInput,
     budget: semio_framework_actor::Budget,
@@ -1129,7 +1129,7 @@ impl ShardLoop {
 
     /// 🎟️ Borrows only the actor's original supplied grant.
     fn granted_budget(&self, actor: u64) -> Option<IssuedShardTurn> {
-        self.granted_budgets.get(&actor).copied()
+        self.granted_budgets.get(&actor).cloned()
     }
 
     /// 🚦 terra-shard-lane piece 1: true for the two lanes that must jump a shard's queue ahead of
@@ -1221,7 +1221,7 @@ impl ShardLoop {
                 refusal.phase = ReplaySpawnRefusalPhase::RetireShell;
                 if publish {
                     let lane = self.actor_lane(actor);
-                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, lane, self.allocations.get(&actor).copied(), self.granted_budgets.get(&actor).copied(), actor, Event::JobCompleted { job, result: RequestOutcome::Err(reason) })?;
+                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, lane, self.allocations.get(&actor).copied(), self.granted_budgets.get(&actor).cloned(), actor, Event::JobCompleted { job, result: RequestOutcome::Err(reason) })?;
                 }
             }
             ReplaySpawnRefusalPhase::RetireShell => {
@@ -1810,7 +1810,7 @@ impl ShardLoop {
             return Ok(1);
         }
         let mut selected_step = None;
-        if let Some(owner) = self.select_pending_authority() {
+        if let Some(mut owner) = self.select_pending_authority() {
             if matches!(owner.authority, DeferredAuthority::Register { .. }) {
                 return Ok(1);
             }
@@ -1820,7 +1820,7 @@ impl ShardLoop {
                 }
                 return Ok(1);
             }
-            let budget = owner.budget.expect("selected authority owns original issued grant");
+            let budget = owner.budget.take().expect("selected authority owns original issued grant");
             let lane = owner.lane;
             if let DeferredAuthority::Event { actor, event } = &owner.authority {
                 if self.execute_turn_for(*actor, event, budget, lane).await? {
@@ -1925,7 +1925,7 @@ impl ShardLoop {
                                     &mut self.terminal_authorities,
                                     actor_lane,
                                     self.allocations.get(&actor_id).copied(),
-                                    self.granted_budgets.get(&actor_id).copied(),
+                                    self.granted_budgets.get(&actor_id).cloned(),
                                     actor_id,
                                     Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) },
                                 )?;
@@ -1940,7 +1940,7 @@ impl ShardLoop {
                                     &mut self.terminal_authorities,
                                     actor_lane,
                                     self.allocations.get(&actor_id).copied(),
-                                    self.granted_budgets.get(&actor_id).copied(),
+                                    self.granted_budgets.get(&actor_id).cloned(),
                                     actor_id,
                                     Event::JobCompleted { job, result: RequestOutcome::Err(detail.clone()) },
                                 )?;
@@ -1955,7 +1955,7 @@ impl ShardLoop {
                                 &mut self.terminal_authorities,
                                 actor_lane,
                                 self.allocations.get(&actor_id).copied(),
-                                    self.granted_budgets.get(&actor_id).copied(),
+                                    self.granted_budgets.get(&actor_id).cloned(),
                                 actor_id,
                                 Event::JobCompleted { job, result: RequestOutcome::Err(error.clone()) },
                             )?;
@@ -1979,7 +1979,7 @@ impl ShardLoop {
                         &mut self.terminal_authorities,
                         actor_lane,
                         self.allocations.get(&actor_id).copied(),
-                                    self.granted_budgets.get(&actor_id).copied(),
+                                    self.granted_budgets.get(&actor_id).cloned(),
                         actor_id,
                         Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault)) },
                     )?;
@@ -2046,6 +2046,7 @@ impl ShardLoop {
     async fn execute_turn_for(&mut self, actor_id: u64, event: &Event, granted: IssuedShardTurn, actor_lane: semio_framework_actor::Lane) -> Result<bool, PluginHostError> {
         let in_flight = self.instances.get(&actor_id).is_some_and(GuestInstance::turn_in_flight);
         let events = turn_events(event, in_flight);
+        let original_input = *granted.original_input();
         let turn_budget = turn_budget_from_grant(granted);
         let watchdog_stage = interactive_stage_for(actor_lane);
         let Some(instance) = self.instances.get_mut(&actor_id) else {
@@ -2071,7 +2072,7 @@ impl ShardLoop {
                                     &mut self.terminal_authorities,
                                     actor_lane,
                                     self.allocations.get(&actor_id).copied(),
-                                    self.granted_budgets.get(&actor_id).copied(),
+                                    self.granted_budgets.get(&actor_id).cloned(),
                                     actor_id,
                                     Event::JobCompleted { job, result: RequestOutcome::Err(b"checked replay operation identity exhausted".to_vec()) },
                                 )?;
@@ -2130,8 +2131,11 @@ impl ShardLoop {
                 }
             }
             Err(TurnFault::DeadlineExceeded | TurnFault::FuelExhausted) if instance.turn_in_flight() => ShardOutcome::Preempted { actor: actor_id },
-            Err(TurnFault::DeadlineExceeded) => {
+            Err(TurnFault::DeadlineExceeded) => match original_input.return_original(semio_framework_value::RetainedCloneProgress::default()) {
+                Err(error) => ShardOutcome::Fault { actor: actor_id, message: error.to_string() },
+                Ok(retained_receipt) => {
                 let result = TurnResult {
+                    retained_receipt,
                     ui_patches: semio_framework::kernel::UiTurnPatches::default(),
                     effects: Vec::new(),
                     presence: Vec::new(),
@@ -2147,7 +2151,8 @@ impl ShardLoop {
                     Ok(result) => ShardOutcome::Turn { actor: actor_id, result, jobs: Vec::new() },
                     Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.message },
                 }
-            }
+                }
+            },
             Err(fault) if super::retryable_lifecycle_turn(&fault, events) => return Ok(true),
             Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault) },
         };
@@ -2676,7 +2681,9 @@ impl GuestRuntime for RecordingRuntime {
     async fn drop_instance(&self, _inst: GuestInstance) {}
     async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         *self.last_turn_budget.lock().expect("lock") = Some(budget);
+        let retained_receipt = budget.retained.return_original(semio_framework_value::RetainedCloneProgress::default()).expect("recorded idle turn spends nothing");
         Ok(TurnResult {
+            retained_receipt,
             ui_patches: semio_framework::kernel::UiTurnPatches::default(),
             effects: vec![],
             presence: vec![],

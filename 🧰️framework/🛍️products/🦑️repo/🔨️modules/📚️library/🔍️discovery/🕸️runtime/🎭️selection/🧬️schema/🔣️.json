@@ -975,7 +975,6 @@
         "package_id",
         "out_dir",
         "path",
-        "text",
         "sha256",
         "observedAtMs",
         "resources"
@@ -992,9 +991,6 @@
         "path": {
           "type": "string",
           "minLength": 1
-        },
-        "text": {
-          "type": "string"
         },
         "sha256": {
           "type": "string",
@@ -1039,24 +1035,39 @@
     },
     "RuntimeCargoDepInfoV1": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
         "path",
-        "text",
-        "baseDirectory"
+        "sha256",
+        "baseDirectory",
+        "sources",
+        "checksums"
       ],
-      "additionalProperties": false,
       "properties": {
         "path": {
           "type": "string",
           "minLength": 1
         },
-        "text": {
+        "sha256": {
           "type": "string",
-          "minLength": 1
+          "pattern": "^[0-9a-f]{64}$"
         },
         "baseDirectory": {
           "type": "string",
           "minLength": 1
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "checksums": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RuntimeCompilerChecksumV1"
+          }
         }
       }
     },
@@ -1888,7 +1899,6 @@
       "additionalProperties": false,
       "required": [
         "path",
-        "text",
         "sha256",
         "observedAtMs",
         "producerUnit",
@@ -1900,17 +1910,6 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 4096
-        },
-        "text": {
-          "anyOf": [
-            {
-              "type": "string",
-              "maxLength": 134217728
-            },
-            {
-              "type": "null"
-            }
-          ]
         },
         "sha256": {
           "anyOf": [

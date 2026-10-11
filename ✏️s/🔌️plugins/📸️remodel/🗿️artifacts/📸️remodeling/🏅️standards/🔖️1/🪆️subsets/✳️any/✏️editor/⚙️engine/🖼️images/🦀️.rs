@@ -2,7 +2,7 @@
 
 // #region 🔖️Types
 /// 🌫️ Row-major single-channel image with luma values in `[0, 1]`; pixel `(x, y)` lives at `data[y * width + x]`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct ImageGray {
     pub width: u32,
     pub height: u32,
@@ -55,7 +55,7 @@ impl ImageGray {
 }
 
 /// 🎨️ Row-major 8-bit RGBA image with interleaved channels; pixel `(x, y)` occupies `data[(y * width + x) * 4 ..][..4]`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct ImageRgba8 {
     pub width: u32,
     pub height: u32,
@@ -170,7 +170,7 @@ pub fn decode_jpeg(bytes: &[u8]) -> Result<ImageRgba8, ImageError> {
         semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgError::Unsupported(msg) => ImageError::UnsupportedJpeg(msg),
         semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgError::Malformed(msg) => ImageError::Decode(msg),
     })?;
-    Ok(ImageRgba8 { width: snapshot.width, height: snapshot.height, data: snapshot.pixels })
+    Ok(ImageRgba8 { width: snapshot.image.width, height: snapshot.image.height, data: snapshot.image.pixels })
 }
 
 //#region 🔖️BoundedDecode
@@ -195,6 +195,15 @@ struct CompressedRopeReadCounters {
     random_byte_reads: std::sync::atomic::AtomicUsize,
 }
 
+impl semio_framework_value::retirement::RetireOwned for CompressedRopeReadCounters {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        drop(self);
+        semio_framework_value::retirement::leaf(())
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(semio_framework_value::retirement::leaf_birth_bytes::<()>()) }
+    fn controlled_retirement_supported() -> bool { true }
+}
+
 #[cfg(test)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct CompressedRopeReadMetrics {
@@ -206,15 +215,15 @@ pub struct CompressedRopeReadMetrics {
 }
 
 /// 🧩️ Persistent bounded compressed-input rope with independently shared leaves.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, semio_framework_value::RetireOwned)]
 pub struct CompressedChunkRope {
-    chunks: Vec<std::sync::Arc<[u8]>>,
+    chunks: Vec<std::sync::Arc<Vec<u8>>>,
     len: usize,
     reads: std::sync::Arc<CompressedRopeReadCounters>,
 }
 
 impl CompressedChunkRope {
-    pub fn from_leaves(leaves: impl IntoIterator<Item = std::sync::Arc<[u8]>>, max_bytes: usize) -> Result<Self, ImageError> {
+    pub fn from_leaves(leaves: impl IntoIterator<Item = std::sync::Arc<Vec<u8>>>, max_bytes: usize) -> Result<Self, ImageError> {
         let mut rope = Self::default();
         for leaf in leaves {
             rope.push(leaf, max_bytes)?;
@@ -225,7 +234,7 @@ impl CompressedChunkRope {
         Ok(rope)
     }
 
-    pub fn push(&mut self, bytes: impl Into<std::sync::Arc<[u8]>>, max_bytes: usize) -> Result<(), ImageError> {
+    pub fn push(&mut self, bytes: impl Into<std::sync::Arc<Vec<u8>>>, max_bytes: usize) -> Result<(), ImageError> {
         let bytes = bytes.into();
         if bytes.is_empty() || bytes.len() > COMPRESSED_ROPE_LEAF_BYTES {
             return Err(ImageError::Decode("compressed input leaf exceeds 4 KiB".into()));
@@ -290,7 +299,7 @@ impl semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, semio_framework_value::RetireOwned)]
 struct ChunkRopeReader {
     rope: CompressedChunkRope,
     chunk: usize,
@@ -337,13 +346,35 @@ pub enum BoundedDecodeProgress {
     Failed(ImageError),
 }
 
+/// 🧳️ Foreign decoder state owned until its job closes: it retires by one drop whose frame is charged, because its crate owns no retirement cursor.
+struct OpaqueOwner<T>(T);
+
+impl<T> std::ops::Deref for OpaqueOwner<T> {
+    type Target = T;
+    fn deref(&self) -> &T { &self.0 }
+}
+
+impl<T> std::ops::DerefMut for OpaqueOwner<T> {
+    fn deref_mut(&mut self) -> &mut T { &mut self.0 }
+}
+
+impl<T: Send + 'static> semio_framework_value::retirement::RetireOwned for OpaqueOwner<T> {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        drop(self);
+        semio_framework_value::retirement::leaf(())
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(semio_framework_value::retirement::leaf_birth_bytes::<()>()) }
+    fn controlled_retirement_supported() -> bool { true }
+}
+
+#[derive(semio_framework_value::RetireOwned)]
 enum BoundedDecodeState {
     Probe { mime: String, rope: CompressedChunkRope },
     PngRead { reader: ChunkRopeReader, buffer: Vec<u8> },
     PngDecode { buffer: Vec<u8> },
-    PngRows { decoder: semio_framework_pixels::PngScanlineDecoder, width: u32, height: u32, pixels: Vec<u8> },
+    PngRows { decoder: OpaqueOwner<semio_framework_pixels::PngScanlineDecoder>, width: u32, height: u32, pixels: Vec<u8> },
     JpegProbe { rope: CompressedChunkRope, cursor: usize },
-    Jpeg { rope: CompressedChunkRope, decoder: Option<Box<semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgStepDecoder>> },
+    Jpeg { rope: CompressedChunkRope, decoder: Option<OpaqueOwner<Box<semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgStepDecoder>>> },
     Finished,
 }
 
@@ -352,6 +383,7 @@ enum BoundedDecodeState {
 /// as it completes). JPEG probing advances 4 KiB per call, then the shared baseline codec's
 /// resumable decoder reads the same rope directly (no whole-input join allocation): one call parses
 /// the marker segments, every later call decodes one MCU and then converts one output row.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct BoundedStillDecoder {
     state: BoundedDecodeState,
 }
@@ -404,7 +436,7 @@ impl BoundedStillDecoder {
                 Ok(decoder) => {
                     let width = decoder.width();
                     let height = decoder.height();
-                    self.state = BoundedDecodeState::PngRows { decoder, width, height, pixels: Vec::with_capacity((width as usize) * (height as usize) * 4) };
+                    self.state = BoundedDecodeState::PngRows { decoder: OpaqueOwner(decoder), width, height, pixels: Vec::with_capacity((width as usize) * (height as usize) * 4) };
                     BoundedDecodeProgress::Working
                 }
                 Err(error) => BoundedDecodeProgress::Failed(ImageError::Decode(error.to_string())),
@@ -456,16 +488,16 @@ impl BoundedStillDecoder {
                     // 🧾️ First unit: the marker segments up to SOS (tables, frame, scan header).
                     None => semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgStepDecoder::new(&rope).map(|decoder| Err(Box::new(decoder))),
                     // 🎞️ Every later unit: one MCU of the entropy-coded scan, then one output row.
-                    Some(mut decoder) => match decoder.step(&rope, JPEG_UNITS_PER_STEP) {
+                    Some(OpaqueOwner(mut decoder)) => match decoder.step(&rope, JPEG_UNITS_PER_STEP) {
                         Ok(Some(snapshot)) => Ok(Ok(snapshot)),
                         Ok(None) => Ok(Err(decoder)),
                         Err(error) => Err(error),
                     },
                 };
                 match outcome {
-                    Ok(Ok(snapshot)) => BoundedDecodeProgress::Complete(ImageRgba8 { width: snapshot.width, height: snapshot.height, data: snapshot.pixels }),
+                    Ok(Ok(snapshot)) => BoundedDecodeProgress::Complete(ImageRgba8 { width: snapshot.image.width, height: snapshot.image.height, data: snapshot.image.pixels }),
                     Ok(Err(decoder)) => {
-                        self.state = BoundedDecodeState::Jpeg { rope, decoder: Some(decoder) };
+                        self.state = BoundedDecodeState::Jpeg { rope, decoder: Some(OpaqueOwner(decoder)) };
                         BoundedDecodeProgress::Working
                     }
                     Err(semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgError::Unsupported(message)) => BoundedDecodeProgress::Failed(ImageError::UnsupportedJpeg(message)),
@@ -484,7 +516,7 @@ impl BoundedStillDecoder {
 /// `ImageRgba8` (its own invariants already guarantee `data.len() == width * height * 4`),
 /// matching this function's pre-extraction (non-`Result`) signature.
 pub fn encode_jpeg(image: &ImageRgba8, quality: u8) -> Vec<u8> {
-    let snapshot = semio_s_artifact_stdio_jpg::JpgSnapshot { width: image.width, height: image.height, pixels: image.data.clone(), ..Default::default() };
+    let snapshot = semio_s_artifact_stdio_jpg::JpgSnapshot { image: semio_s_artifact_stdio_jpg::JpgImage { width: image.width, height: image.height, pixels: image.data.clone(), ..Default::default() }, ..Default::default() };
     semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&snapshot, &semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions{quality:quality,..Default::default()}).expect("a valid ImageRgba8 always encodes")
 }
 // #endregion 🔖️JpegViaStdio
@@ -676,7 +708,7 @@ pub fn gradient_magnitude_orientation(g: &GradientField) -> (Vec<f32>, Vec<f32>)
 
 // #region 🔖️Pyramid
 /// 🗻️ Coarse-to-fine image pyramid; `levels[0]` is the original and each next level halves the resolution (`scale = 0.5`).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Pyramid {
     pub levels: Vec<ImageGray>,
     pub scale: f32,

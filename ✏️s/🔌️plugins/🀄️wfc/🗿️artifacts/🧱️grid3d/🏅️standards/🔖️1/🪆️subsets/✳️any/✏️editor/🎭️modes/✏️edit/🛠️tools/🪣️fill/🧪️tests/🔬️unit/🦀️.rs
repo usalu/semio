@@ -11,43 +11,64 @@ fn identity() -> ToolRunIdentity {
     ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [7; 32])
 }
 
-fn close_payload(payload: &mut semio_framework_job::RetainedJobPayload) {
-    while !matches!(payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+const TEST_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
+
+/// 🧭️ What one driven call of the fill run lent to its caller.
+#[derive(Debug)]
+enum Stepped {
+    Yield,
+    Tick(Vec<u8>),
+    Complete,
+    Fault,
+    Cancelled,
 }
 
-fn drive_once(job: &mut Grid3dFillRunJob, operation: OperationId, generation: Generation, cancel: &semio_framework_job::CancelToken, sequence: &mut u64, fuel: u64) -> StepOutcome {
+/// 🦶️ One fuel budget against a shared operation — the child `WfcJob` is bound to that operation for the whole run.
+fn drive_once(job: &mut Grid3dFillRunJob, operation: OperationId, generation: Generation, cancel: &semio_framework_job::CancelToken, sequence: &mut u64, fuel: u64) -> Stepped {
     let now = semio_framework_job::default_now_us().expect("clock");
-    let budget = StepBudget::new(fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4);
+    let budget = StepBudget::new(fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4, TEST_GRANT);
+    let mut receipt = semio_framework_job::RetainedCloneProgress::default();
+    let mut context = semio_framework_job::StepContext::new(operation, generation, budget, cancel.clone(), semio_framework_job::default_now_us, sequence, &mut receipt);
     let mut verdict = None;
-    semio_framework_job::drive_step(job, "wfc.grid3d.fill.run.test", operation, generation, semio_framework_job::InteractiveStage::InteractiveStep, budget, cancel.clone(), semio_framework_job::default_now_us, sequence, &mut verdict)
+    match semio_framework_job::drive_step(job, &mut context, "wfc.grid3d.fill.run.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("fill step admission") {
+        None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. } | semio_framework_job::JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Yield,
+        Some(semio_framework_job::JobOutcomeBorrow::PreviewReady { payload, .. }) => Stepped::Tick((0..payload.page_count()).flat_map(|index| payload.page(index).expect("page").to_vec()).collect()),
+        Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
+        Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
+        Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
+    }
 }
 
-fn tick_payload(outcome: StepOutcome) -> Option<Grid3dFillPayload> {
+fn tick_payload(outcome: Stepped) -> Option<Grid3dFillPayload> {
     match outcome {
-        StepOutcome::PreviewReady(mut payload) => {
-            let bytes: Vec<u8> = (0..payload.page_count()).flat_map(|index| payload.page(index).expect("page").to_vec()).collect();
-            close_payload(&mut payload);
+        Stepped::Tick(bytes) => {
             let tick = ToolRunTick::decode(&bytes).expect("tick decodes");
             tick.payload.as_ref().and_then(|bytes| Grid3dFillPayload::decode(bytes))
         }
-        other => {
-            let mut other = other;
-            while !matches!(other.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
-            None
-        }
+        _ => None,
     }
 }
 
 fn close(job: &mut Grid3dFillRunJob) {
     job.begin_close();
     for _ in 0..1_000_000 {
-        match job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-            InteractiveJobCloseStep::Complete => {
+        if job.terminal_is_empty() {
+            return;
+        }
+        let grant = semio_framework_job::RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: job.next_close_copy_byte_demand().expect("a locally owned fill quotes its copy demand"),
+            maximum_capacity_bytes: job.next_close_capacity_byte_demand(usize::MAX).expect("a locally owned fill quotes its capacity demand"),
+            maximum_release_bytes: job.next_close_release_byte_demand().expect("a locally owned fill quotes its release demand"),
+            maximum_depth: job.next_close_depth_demand().expect("a locally owned fill quotes its depth demand").max(1),
+        };
+        match job.close_step(grant) {
+            InteractiveJobCloseStep::Complete { .. } => {
                 assert!(job.terminal_is_empty());
                 return;
             }
             InteractiveJobCloseStep::Pending { .. } => {}
-            InteractiveJobCloseStep::Blocked => panic!("fill close blocked"),
+            InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. } => panic!("fill close blocked or refused"),
         }
     }
     panic!("fill close never completed");
@@ -143,7 +164,7 @@ fn aborting_mid_run_cancels_and_never_stores_residency() {
     assert!(saw_partial, "need a live partial before aborting");
     job.begin_close();
     let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, 1);
-    assert!(matches!(outcome, StepOutcome::Cancelled), "closing mid-run must cancel: {outcome:?}");
+    assert!(matches!(outcome, Stepped::Cancelled), "closing mid-run must cancel: {outcome:?}");
     assert!(preview::last_fill_commit().is_none(), "abort must not store residency");
     close(&mut job);
 }

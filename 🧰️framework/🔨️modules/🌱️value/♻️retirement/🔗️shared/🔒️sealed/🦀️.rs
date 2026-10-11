@@ -1,5 +1,5 @@
 //! 🔒️ Shared immutable values expose strong handles and retain their original issuer.
-use crate::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+use crate::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 use std::{mem::ManuallyDrop,sync::{Arc,atomic::{AtomicPtr,AtomicU8,AtomicU64,Ordering}}};
 
 static NEXT_ISSUANCE:AtomicU64=AtomicU64::new(1);

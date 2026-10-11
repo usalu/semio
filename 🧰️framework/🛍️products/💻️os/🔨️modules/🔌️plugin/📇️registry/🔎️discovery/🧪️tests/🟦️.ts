@@ -6,16 +6,16 @@ import { buildSync } from "esbuild";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { generatePluginRegistry, generatePluginRegistryReport, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, parseRegistryChannelDiagnosticsV1 } from "../🟦️.ts";
+import { discoverPluginBuildTargets, generatePluginRegistry, generatePluginRegistryReport, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, parseRegistryChannelDiagnosticsV1 } from "../🟦️.ts";
 import { REGISTRY_HOST_APP_CHANNEL_VERSION } from "../../🧬️schema/🟦️.ts";
 import contract from "../🧬️schema/🔣️.json";
 import corpus from "../🧫️fixtures/🔣️.json";
 import identity from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json";
-import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1 } from "../🧬️schema/🟦️.ts";
+import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, parsePluginBuildTargetV1 } from "../🧬️schema/🟦️.ts";
 
-const parsers = { source: parseComponentSourceRowV1, compiled: parseCompiledComponentRowV1, deployed: parseDeployedRegistryEntryV1 };
-const names = { source: "ComponentSourceOwnerV1", compiled: "CompiledComponentOwnerV1", deployed: "DeployedRegistryEntryV1" };
-test("source, compiled and deployed contracts agree with independent AJV", () => {
+const parsers = { source: parseComponentSourceRowV1, target: parsePluginBuildTargetV1, compiled: parseCompiledComponentRowV1, deployed: parseDeployedRegistryEntryV1 };
+const names = { source: "ComponentSourceOwnerV1", target: "PluginBuildTargetV1", compiled: "CompiledComponentOwnerV1", deployed: "DeployedRegistryEntryV1" };
+test("source, build target, compiled and deployed contracts agree with independent AJV", () => {
   const ajv = new Ajv({ strict: false }).addSchema(identity).addSchema(contract);
   
   for (const row of corpus.cases) {
@@ -29,7 +29,7 @@ test("source, compiled and deployed contracts agree with independent AJV", () =>
 
 
 test("independent Node executes every authored stage vector", () => {
-  const program = `import * as api from ${JSON.stringify(resolve(import.meta.dirname, "../🧬️schema/🟦️.ts"))}; const rows=${JSON.stringify(corpus.cases)}; const parsers={source:api.parseComponentSourceRowV1,compiled:api.parseCompiledComponentRowV1,deployed:api.parseDeployedRegistryEntryV1}; console.log(JSON.stringify(rows.map(row=>{try{parsers[row.stage](row.value);return true}catch{return false}})));`;
+  const program = `import * as api from ${JSON.stringify(resolve(import.meta.dirname, "../🧬️schema/🟦️.ts"))}; const rows=${JSON.stringify(corpus.cases)}; const parsers={source:api.parseComponentSourceRowV1,target:api.parsePluginBuildTargetV1,compiled:api.parseCompiledComponentRowV1,deployed:api.parseDeployedRegistryEntryV1}; console.log(JSON.stringify(rows.map(row=>{try{parsers[row.stage](row.value);return true}catch{return false}})));`;
   const result = buildSync({ stdin: { contents: program, resolveDir: import.meta.dirname }, bundle: true, platform: "node", format: "esm", write: false });
   const node = spawnSync("node", ["--input-type=module"], { input: result.outputFiles[0]!.text, encoding: "utf8" });
   expect(node.status, node.stderr).toBe(0);
@@ -66,21 +66,25 @@ test("real source and descriptor admission preserves compiled-only ownership", (
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
+const staleFixtureOwners = (root: string) => {
+  const owner = (id: string, channel: number, dependsOn: readonly string[] = []) => {
+    const manifestPath = `${id}/📦️packages/🦀️rust/Cargo.toml`;
+    mkdirSync(join(root, dirname(manifestPath)), { recursive: true });
+    const cargo = corpus.source.cargo.replace('name = "portable-component"', `name = "${id}-component"`).replace('package = "semio:portable"', `package = "semio:${id}"`);
+    writeFileSync(join(root, manifestPath), `${cargo}${dependsOn.length ? `depends-on = ${JSON.stringify(dependsOn)}\n` : ""}deployment-directory=${JSON.stringify(`🧪️${id}`)}\n`);
+    writeFileSync(join(root, id, "🔣️.json"), JSON.stringify({ ...corpus.source.descriptor, packageId: `semio:${id}`, manifest: { ...corpus.source.descriptor.manifest, pluginId: id }, executionProtocol: { appChannelVersion: channel } }));
+    return { lang: "🦀️rust", manifestPath };
+  };
+  return [owner("fresh", REGISTRY_HOST_APP_CHANNEL_VERSION), owner("stale", REGISTRY_HOST_APP_CHANNEL_VERSION - 1), owner("dependent", REGISTRY_HOST_APP_CHANNEL_VERSION, ["stale"])] as never;
+};
+
 test("dev generation withholds stale-channel plugins and their dependents while the refusing gate names them", () => {
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!output) throw Error("Stale-channel registry law requires ticket artifacts");
   mkdirSync(output, { recursive: true });
   const root = mkdtempSync(join(output, "stale-channel-"));
   try {
-    const owner = (id: string, channel: number, dependsOn: readonly string[] = []) => {
-      const manifestPath = `${id}/📦️packages/🦀️rust/Cargo.toml`;
-      mkdirSync(join(root, dirname(manifestPath)), { recursive: true });
-      const cargo = corpus.source.cargo.replace('name = "portable-component"', `name = "${id}-component"`).replace('package = "semio:portable"', `package = "semio:${id}"`);
-      writeFileSync(join(root, manifestPath), `${cargo}${dependsOn.length ? `depends-on = ${JSON.stringify(dependsOn)}\n` : ""}deployment-directory=${JSON.stringify(`🧪️${id}`)}\n`);
-      writeFileSync(join(root, id, "🔣️.json"), JSON.stringify({ ...corpus.source.descriptor, packageId: `semio:${id}`, manifest: { ...corpus.source.descriptor.manifest, pluginId: id }, executionProtocol: { appChannelVersion: channel } }));
-      return { lang: "🦀️rust", manifestPath };
-    };
-    const packages = [owner("fresh", REGISTRY_HOST_APP_CHANNEL_VERSION), owner("stale", REGISTRY_HOST_APP_CHANNEL_VERSION - 1), owner("dependent", REGISTRY_HOST_APP_CHANNEL_VERSION, ["stale"])] as never;
+    const packages = staleFixtureOwners(root);
     const report = generatePluginRegistryReport(root, { packages, staleChannel: "exclude" });
     expect(report.entries.map((entry) => entry.pluginId)).toEqual(["fresh"]);
     expect(report.diagnostics).toEqual([
@@ -92,6 +96,37 @@ test("dev generation withholds stale-channel plugins and their dependents while 
     expect(() => generatePluginRegistryReport(root, { packages, staleChannel: "refuse" })).toThrow(/stale-channel descriptors refused/);
     expect(() => parseRegistryChannelDiagnosticsV1(JSON.stringify([{ ...report.diagnostics[1], extra: true }]))).toThrow(/undeclared shape/);
   } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("a withheld stale-channel row is still a build target while deployment keeps refusing it", async () => {
+  const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!output) throw Error("Stale-channel build-target law requires ticket artifacts");
+  mkdirSync(output, { recursive: true });
+  const root = mkdtempSync(join(output, "stale-build-target-"));
+  const { resolvePluginBuildTargets } = await import("../../../🏗️build/📋️plan/🟦️.ts");
+  const previousOnly = process.env.SEMIO_PLUGIN_ONLY;
+  delete process.env.SEMIO_PLUGIN_ONLY;
+  try {
+    const packages = staleFixtureOwners(root);
+    const deployed = generatePluginRegistryReport(root, { packages, staleChannel: "exclude" }).entries.map((entry) => entry.pluginId);
+    const targets = discoverPluginBuildTargets(root, { packages });
+    expect(deployed).toEqual(["fresh"]);
+    expect(targets.map((target) => target.pluginId)).toEqual(["dependent", "fresh", "stale"]);
+    for (const target of targets) expect(String(target.directoryName), target.pluginId).toBe(`🧪️${target.pluginId}`);
+    const catalog = { entries: targets, playgrounds: [] };
+    expect(resolvePluginBuildTargets(undefined, catalog).map((target) => target.pluginId)).toEqual(["dependent", "fresh", "stale"]);
+    expect(resolvePluginBuildTargets("dependent", catalog).map((target) => target.pluginId)).toEqual(["dependent", "stale"]);
+    expect(resolvePluginBuildTargets("stale", catalog).map((target) => target.pluginId)).toEqual(["stale"]);
+    expect(() => resolvePluginBuildTargets("absent", catalog)).toThrow(/no program build targets/);
+    process.env.SEMIO_PLUGIN_ONLY = "stale";
+    expect(resolvePluginBuildTargets(undefined, catalog).map((target) => target.pluginId)).toEqual(["stale"]);
+    process.env.SEMIO_PLUGIN_ONLY = "absent";
+    expect(() => resolvePluginBuildTargets(undefined, catalog)).toThrow(/matched no plugin crates/);
+    expect(() => generatePluginRegistry(root, { packages })).toThrow(/stale-channel descriptors refused/);
+  } finally {
+    if (previousOnly === undefined) delete process.env.SEMIO_PLUGIN_ONLY; else process.env.SEMIO_PLUGIN_ONLY = previousOnly;
+    rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test("JSON-schema equality preserves array order and ignores object member order", () => {

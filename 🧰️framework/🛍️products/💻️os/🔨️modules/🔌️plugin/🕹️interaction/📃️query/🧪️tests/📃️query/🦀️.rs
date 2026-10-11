@@ -1,6 +1,7 @@
 //! 🧪️ Actual fixed-page query output, exact ACK authority, cancellation, and Store read return.
 
 use super::*;
+use crate::local_interaction::retirement::interaction_store_owners;
 use crate::app::InteractionConfigMutation;
 use protocol::InteractionState;
 use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
@@ -253,6 +254,13 @@ impl store::ArtifactCanonicalJson for HostileRoot {
         use store::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonObject as Object, ArtifactCanonicalJsonValue as Value};
         Ok(Some(Value::Object(Object::new([("first", Value::Scalar(Node::String(&self.first))), ("second", Value::Source(&self.second))].into_iter()))))
     }
+}
+
+struct HostileRetirementFactory;
+
+struct HostileRetirement {
+    root: Option<std::sync::Arc<HostileRoot>>,
+    bytes: Vec<u8>,
 }
 
 impl store::SnapshotRetirementFactory<HostileRoot> for HostileRetirementFactory {

@@ -4,7 +4,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
 /// 📌️ One workflow node's absolute canvas position.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WorkflowNodePosition {
     #[dsl(key = "id")]
@@ -15,7 +16,8 @@ pub struct WorkflowNodePosition {
 
 /// 📍️ Absolute canvas positions of a set of workflow nodes in ONE row: the exact undo of a `move-nodes` drag (every moved
 /// node back at its base position) and of itself, so a multi-node gesture stays one point-invertible row.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "set-node-positions")]

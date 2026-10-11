@@ -107,9 +107,9 @@ where
     let state = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::new();
     let context = page_context::<A>(transient);
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "s.home".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: "authoring-seed-test".into() };
+    let operation = AppOperationContext { retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 }, app_instance_id: 1, parent_document_id: "s.home".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: "authoring-seed-test".into() };
     let inputs = ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config, history: &history, interaction: &state, hover: &hover, context: Some(context.as_ref()), operation: &operation };
-    match work.step(&inputs, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut 0))? {
+    match work.step(&inputs, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(256, u64::MAX,semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 }), semio_framework_job::root_cancel_token(), || Some(0), &mut 0,&mut Default::default()))? {
         ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral } => {
             assert!(emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty() && emit.draft_mutations.is_empty(), "a directory page writes neither the document nor the config history");
             assert!(ephemeral.presence.is_empty() && ephemeral.window_transient.is_empty());

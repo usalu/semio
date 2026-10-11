@@ -23,7 +23,7 @@ pub const READS: &[&str] = &["spaces", "zones", "area_schemes", "walls", "wall_t
 
 //#region 🔖️Values
 /// 🏘️ What one zone adds up over the spaces that belong to it.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ZoneTotals {
     pub spaces: u32,
     pub resolved: u32,
@@ -37,7 +37,7 @@ pub struct ZoneTotals {
 }
 
 /// 🗃️ What one area scheme adds up over the spaces its rule counts.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct SchemeTotals {
     pub spaces: u32,
     pub resolved: u32,

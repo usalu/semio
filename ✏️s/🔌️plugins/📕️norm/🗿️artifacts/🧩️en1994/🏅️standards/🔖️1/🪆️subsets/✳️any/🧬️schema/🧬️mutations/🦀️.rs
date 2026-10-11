@@ -35,7 +35,8 @@ use super::change_slab_thickness_m;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = En1994Snapshot, diff = En1994Diff, schema = "s.norm.en1994")]
 pub enum En1994Mutation {

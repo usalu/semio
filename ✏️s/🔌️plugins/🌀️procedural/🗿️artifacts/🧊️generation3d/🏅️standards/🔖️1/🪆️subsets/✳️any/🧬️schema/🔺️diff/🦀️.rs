@@ -37,7 +37,7 @@ protocol::list_delta! {
 }
 
 /// 🩹 How one widget changes: replaced wholesale, or only the numeric fields of an input slider.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum Generation3dWidgetPatch {
     Replace { widget: Widget },
     Slider { value: f64, min: f64, max: f64, step: f64 },
@@ -69,21 +69,21 @@ protocol::list_delta! {
 }
 
 /// 🩹 Owned-field patch of one generation: its name and keyed answer rows.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Generation3dGenerationPatch {
     pub name: Option<String>,
     pub values: Option<Generation3dValuesDelta>,
 }
 
 /// 🧾️ One answer row of a generation.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Generation3dValueRow {
     pub question_id: String,
     pub value: DslValue,
 }
 
 /// 🧩 Question-keyed rows of the answers of one generation.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Generation3dValuesDelta {
     pub added: Vec<Generation3dValueRow>,
     pub removed: Vec<String>,
@@ -205,7 +205,7 @@ impl protocol::list_delta::KeyOf<FormGeneration> for Generation3dGenerationKeys 
 }
 
 /// 🩹 A synapse is patched by replacing it wholesale; the wire form is the synapse itself.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Generation3dSynapsePatch(pub SynapseSpec);
 
 impl protocol::list_delta::RowPatch<SynapseSpec> for Generation3dSynapsePatch {
@@ -365,7 +365,7 @@ fn rejection(code: &str, message: &str, at: [String; 2]) -> MutationApplyError {
 }
 
 fn is_empty_delta<D: Delta>(delta: &D) -> bool {
-    delta.added().is_empty() && delta.removed().is_empty() && delta.modified().is_empty()
+    delta.added().is_empty() && delta.removed().is_empty() && delta.patched().is_empty()
 }
 
 enum Net<T, P> {
@@ -515,8 +515,8 @@ fn apply_values(generation: &mut FormGeneration, delta: &Generation3dValuesDelta
     Ok(())
 }
 
-fn retire_displaced(value: Option<std::sync::Arc<DslValue>>) {
-    if let Some(value) = value.and_then(std::sync::Arc::into_inner) {
+fn retire_displaced(value: Option<DslValue>) {
+    if let Some(value) = value {
         <DslValue as semio_framework_value::FromValue>::retire_decoded(value);
     }
 }

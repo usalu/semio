@@ -26,7 +26,7 @@ fn store_read_terminal_registry_receipt_preserves_original_system_release() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../../../👥️presence/🧫️fixtures/🧹️retirement.json")).unwrap();
     let grant = crate::os_store::component::presence_test_retirement::CLOSE_GRANT;
     let registry = crate::os_store::SnapshotReadRegistryHandle::new();
-    let mut cursor = SnapshotReadRetirement::<String> { read: ManuallyDrop::new(None), alias: ManuallyDrop::new(None), registry: ManuallyDrop::new(Some(registry)), active_returned: ManuallyDrop::new(None) };
+    let mut cursor = SnapshotReadRetirement::<String> { read: ManuallyDrop::new(None), alias: ManuallyDrop::new(None), registry: ManuallyDrop::new(Some(crate::os_store::SnapshotReadRegistryAliasRetirement::new(registry))), active_returned: ManuallyDrop::new(None) };
     let mut final_release = 0;
     for _ in 0..16 {
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(grant));

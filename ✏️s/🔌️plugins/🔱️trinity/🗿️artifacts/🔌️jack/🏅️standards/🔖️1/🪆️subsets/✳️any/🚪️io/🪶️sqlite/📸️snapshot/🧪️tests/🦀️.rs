@@ -78,17 +78,7 @@ impl std::ops::Deref for Owned {
 impl Drop for Owned {
     fn drop(&mut self) {
         if let Some(v) = self.0.take() {
-            let mut cursor = store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::JackSnapshotRetirementFactory, v);
-            loop {
-                match cursor.close_step(1, 65536).unwrap() {
-                    store::SnapshotRetirementStep::Complete => {
-                        assert!(cursor.terminal_is_empty());
-                        break;
-                    }
-                    store::SnapshotRetirementStep::Blocked => panic!("Jack fixture retirement blocked"),
-                    store::SnapshotRetirementStep::Pending { .. } => {}
-                }
-            }
+            crate::retire_owned_to_terminal(v).expect("Jack fixture retirement");
         }
     }
 }

@@ -27,7 +27,7 @@ fn base_snapshot() -> DxfSnapshot {
         },
         other_tables: vec![],
         blocks: vec![DxfBlock { name: "B1".into(), base_point: [0.0, 0.0, 0.0], entities: vec![], unknown_group_codes: vec![] }],
-        entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }, DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 5.0, layer: "0".into(), unknown_group_codes: vec![] }],
+        entities: vec![DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }), DxfEntity::Circle(DxfCircle { center: [0.0, 0.0, 0.0], radius: 5.0, layer: "0".into(), unknown_group_codes: vec![] })],
     }
 }
 
@@ -64,9 +64,9 @@ fn sweep_a() -> DxfSnapshot {
         other_tables: vec![DxfOtherTable { name: "VPORT".into(), tags: vec![DxfTag { code: 2, value: "*ACTIVE".into() }] }],
         blocks: vec![
             DxfBlock { name: "B0".into(), base_point: [0.0, 0.0, 0.0], entities: vec![], unknown_group_codes: vec![] },
-            DxfBlock { name: "B1".into(), base_point: [1.0, 1.0, 1.0], entities: vec![DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] },
+            DxfBlock { name: "B1".into(), base_point: [1.0, 1.0, 1.0], entities: vec![DxfEntity::Circle(DxfCircle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] })], unknown_group_codes: vec![] },
         ],
-        entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }, DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }],
+        entities: vec![DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }), DxfEntity::Circle(DxfCircle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] })],
     }
 }
 
@@ -100,9 +100,9 @@ fn sweep_b() -> DxfSnapshot {
             DxfBlock { name: "B2".into(), base_point: [2.0, 2.0, 2.0], entities: vec![], unknown_group_codes: vec![] },
         ],
         entities: vec![
-            DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
-            DxfEntity::Text { position: [1.0, 1.0, 1.0], height: 2.0, value: "swapped-kind".into(), layer: "T".into(), unknown_group_codes: vec![] },
-            DxfEntity::Arc { center: [0.0, 0.0, 0.0], radius: 3.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] },
+            DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }),
+            DxfEntity::Text(DxfText { position: [1.0, 1.0, 1.0], height: 2.0, value: "swapped-kind".into(), layer: "T".into(), unknown_group_codes: vec![] }),
+            DxfEntity::Arc(DxfArc { center: [0.0, 0.0, 0.0], radius: 3.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] }),
         ],
     }
 }
@@ -151,7 +151,7 @@ async fn absorb_law() {
     let base = base_snapshot();
 
     // 🧩 Insert(2)+Remove(0) on entities: the two-op sequence base → mid → after.
-    let new_entity = DxfEntity::Arc { center: [0.0, 0.0, 0.0], radius: 1.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] };
+    let new_entity = DxfEntity::Arc(DxfArc { center: [0.0, 0.0, 0.0], radius: 1.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] });
     let d1 = DxfMutation::InsertEntity(insert_entity::InsertEntity { index: 2, entity: new_entity.clone() }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
     let d2 = DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: 0 }).diff(&mid);
@@ -163,7 +163,7 @@ async fn absorb_law() {
     // 🧩 Insert(2,f)+Insert(2,g): both must survive.
     let d1 = DxfMutation::InsertEntity(insert_entity::InsertEntity { index: 2, entity: new_entity.clone() }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
-    let other_entity = DxfEntity::Text { position: [0.0, 0.0, 0.0], height: 1.0, value: "g".into(), layer: "0".into(), unknown_group_codes: vec![] };
+    let other_entity = DxfEntity::Text(DxfText { position: [0.0, 0.0, 0.0], height: 1.0, value: "g".into(), layer: "0".into(), unknown_group_codes: vec![] });
     let d2 = DxfMutation::InsertEntity(insert_entity::InsertEntity { index: 2, entity: other_entity }).diff(&mid);
     let after = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
     let mut composed = d1.diff().clone();
@@ -174,14 +174,14 @@ async fn absorb_law() {
     // 🧩 Add+SetField (kind-preserving): patch into the added payload.
     let d1 = DxfMutation::InsertEntity(insert_entity::InsertEntity { index: 1, entity: new_entity.clone() }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
-    let patched = DxfEntity::Arc { center: [9.0, 9.0, 9.0], radius: 1.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] };
+    let patched = DxfEntity::Arc(DxfArc { center: [9.0, 9.0, 9.0], radius: 1.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] });
     let d2 = DxfMutation::SetEntity(set_entity::SetEntity { index: 1, entity: patched }).diff(&mid);
     let after = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
     assert_eq!(protocol::apply_diff(&composed, &base).expect("valid absorbed diff"), after, "Add+SetField absorb mismatch");
     match &after.entities[1] {
-        DxfEntity::Arc { center, .. } => assert_eq!(*center, [9.0, 9.0, 9.0]),
+        DxfEntity::Arc(DxfArc { center, .. }) => assert_eq!(*center, [9.0, 9.0, 9.0]),
         other => panic!("expected Arc, got {other:?}"),
     }
 
@@ -190,7 +190,7 @@ async fn absorb_law() {
     // absorb cleanly into a preceding Insert's carried payload).
     let d1 = DxfMutation::InsertEntity(insert_entity::InsertEntity { index: 1, entity: new_entity.clone() }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
-    let swapped = DxfEntity::Text { position: [0.0, 0.0, 0.0], height: 3.0, value: "swap".into(), layer: "0".into(), unknown_group_codes: vec![] };
+    let swapped = DxfEntity::Text(DxfText { position: [0.0, 0.0, 0.0], height: 3.0, value: "swap".into(), layer: "0".into(), unknown_group_codes: vec![] });
     let d2 = DxfMutation::SetEntity(set_entity::SetEntity { index: 1, entity: swapped.clone() }).diff(&mid);
     let after = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
     let mut composed = d1.diff().clone();
@@ -199,7 +199,7 @@ async fn absorb_law() {
     assert_eq!(after.entities[1], swapped);
 
     // 🧩 Modify+Remove: modifying then removing the same entity collapses to a removal.
-    let d1 = DxfMutation::SetEntity(set_entity::SetEntity { index: 1, entity: DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 9.0, layer: "0".into(), unknown_group_codes: vec![] } }).diff(&base);
+    let d1 = DxfMutation::SetEntity(set_entity::SetEntity { index: 1, entity: DxfEntity::Circle(DxfCircle { center: [0.0, 0.0, 0.0], radius: 9.0, layer: "0".into(), unknown_group_codes: vec![] }) }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
     let d2 = DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: 1 }).diff(&mid);
     let after = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
@@ -221,7 +221,7 @@ async fn absorb_law() {
     let base = base_snapshot();
     let d1 = DxfMutation::InsertEntity(insert_entity::InsertEntity { index: 0, entity: new_entity.clone() }).diff(&base);
     let s1 = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
-    let d2 = DxfMutation::SetEntity(set_entity::SetEntity { index: 0, entity: DxfEntity::Circle { center: [2.0, 2.0, 2.0], radius: 4.0, layer: "0".into(), unknown_group_codes: vec![] } }).diff(&s1);
+    let d2 = DxfMutation::SetEntity(set_entity::SetEntity { index: 0, entity: DxfEntity::Circle(DxfCircle { center: [2.0, 2.0, 2.0], radius: 4.0, layer: "0".into(), unknown_group_codes: vec![] }) }).diff(&s1);
     let s2 = protocol::apply_diff(d2.diff(), &s1).expect("valid second diff");
     let d3 = DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: 2 }).diff(&s2);
     let s3 = protocol::apply_diff(d3.diff(), &s2).expect("valid third diff");
@@ -313,7 +313,7 @@ async fn dxf_mutation_inverse_sum_law_holds_for_every_leaf() {
     base.tables.linetypes.extend([linetype("MID"), linetype("TAIL")]);
     let block = |name: &str| DxfBlock { name: name.into(), base_point: [0.0, 0.0, 0.0], entities: vec![], unknown_group_codes: vec![] };
     base.blocks.extend([block("B2"), block("B3")]);
-    let line = DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [2.0, 2.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] };
+    let line = DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [2.0, 2.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] });
     base.entities.push(line.clone());
     base.entities.push(line.clone());
     for mutation in [
@@ -334,7 +334,7 @@ async fn dxf_mutation_inverse_sum_law_holds_for_every_leaf() {
         DxfMutation::SetBlock(set_block::SetBlock { index: 1, block: DxfBlock { base_point: [1.0, 1.0, 1.0], ..block("B2") } }),
         DxfMutation::InsertEntity(insert_entity::InsertEntity { index: 1, entity: line.clone() }),
         DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: 1 }),
-        DxfMutation::SetEntity(set_entity::SetEntity { index: 2, entity: DxfEntity::Line { start: [9.0, 9.0, 0.0], end: [2.0, 2.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] } }),
+        DxfMutation::SetEntity(set_entity::SetEntity { index: 2, entity: DxfEntity::Line(DxfLine { start: [9.0, 9.0, 0.0], end: [2.0, 2.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }) }),
         DxfMutation::SetOtherTables(set_other_tables::SetOtherTables { other_tables: vec![DxfOtherTable { name: "VIEW".into(), tags: vec![DxfTag { code: 2, value: "*TOP".into() }] }] }),
         DxfMutation::SetOtherTables(set_other_tables::SetOtherTables { other_tables: vec![] }),
     ] {

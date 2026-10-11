@@ -16,7 +16,8 @@ pub const WFC_GRID2D_DOCUMENT_SCHEMA: &str = "s.wfc.grid2d";
 //#region 🔖️Media
 /// 🎨️ One 8-bit-per-channel colour — the single colour vocabulary every `wfc` artifact defines
 /// locally (never imported across artifact crates: app-to-app coupling is audited and forbidden).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WfcColor {
     pub r: u32,
@@ -27,7 +28,8 @@ pub struct WfcColor {
 
 /// 📍️ One point in a tile's own `0..1` unit space — the tile is drawn scaled into the cell rect, so
 /// media coordinates are resolution independent.
-#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WfcPoint2 {
     pub x: f64,
@@ -37,7 +39,8 @@ pub struct WfcPoint2 {
 /// ✏️ One SVG-flavoured path command (`M`/`L`/`Q`/`C`/`Z`), mirroring `🖍️draw`'s own `PathSegment`
 /// vocabulary field-for-field WITHOUT depending on that crate — a deliberate local copy, since an
 /// artifact crate may never import another app plugin's crate.
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum WfcPathSegment {
     MoveTo { to: WfcPoint2 },
@@ -48,7 +51,8 @@ pub enum WfcPathSegment {
 }
 
 /// 🖊️ One filled/stroked outline inside a vector tile.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WfcVectorPath {
     #[value(default)]
@@ -65,7 +69,8 @@ pub struct WfcVectorPath {
 /// pixel, row-major — a compact, wire-safe carrier that keeps a 64×64 tile far under the retained
 /// surface budget (`format: "base64"`, never `contentEncoding`: the owned JSON-Schema validator
 /// refuses that keyword).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum WfcTileMedia2d {
     Bitmap { width: u32, height: u32, palette: Vec<WfcColor>, pixels: String },
@@ -82,7 +87,8 @@ impl Default for WfcTileMedia2d {
 /// 🀄️ One authored tile — the WFC pattern universe is exactly this list, in canonical id order.
 /// `weight` is the sampling bias (`wfc_engine::weights::WeightTable` input); a non-positive weight
 /// is refused by `create-tile`/`change-tile-weight`.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WfcTile2d {
     pub id: String,
@@ -98,7 +104,8 @@ pub struct WfcTile2d {
 /// only `camelCase`/`kebab-case`/`lowercase`/`snake_case` and SILENTLY ignores anything else, which
 /// would leave the wire on PascalCase while the JSON Schema and the GraphQL enum declare
 /// `SCREAMING_SNAKE_CASE`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum WfcDirection2d {
     #[default]
     #[value(rename = "LEFT")]
@@ -140,7 +147,8 @@ impl WfcDirection2d {
 /// complete whitelist, so an empty rule set collapses to an unsatisfiable problem the moment the
 /// grid has two cells. `allowed = false` rows are authored so an editor can carry an explicit
 /// refusal (and so a rule can be toggled without losing its id).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WfcAdjacencyRule2d {
     pub id: String,
@@ -151,7 +159,7 @@ pub struct WfcAdjacencyRule2d {
 }
 
 /// 📌️ A cell the author has pre-assigned — a hard pin the solve must respect.
-#[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct WfcPinnedCell2d {
     pub x: u32,
@@ -160,7 +168,7 @@ pub struct WfcPinnedCell2d {
 }
 
 /// 🕳️ A cell that is not part of the problem at all (a hole in the grid).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct WfcCell2d {
     pub x: u32,
@@ -169,7 +177,7 @@ pub struct WfcCell2d {
 //#endregion 🔖️Media
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.wfc.grid2d")]
 pub struct Grid2dSnapshot {
@@ -260,7 +268,6 @@ pub fn cell_rect(snapshot: &Grid2dSnapshot, x: u32, y: u32) -> (f64, f64, f64, f
 //#endregion 🔖️Addressing
 
 //#region 🔖️PaletteStream
-const BASE64_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
 

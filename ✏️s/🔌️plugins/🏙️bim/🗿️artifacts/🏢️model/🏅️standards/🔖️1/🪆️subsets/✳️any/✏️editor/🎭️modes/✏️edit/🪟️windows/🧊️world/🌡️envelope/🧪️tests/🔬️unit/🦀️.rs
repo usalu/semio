@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSpace;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference;
 use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
 
 fn corner(x: f64, y: f64, z: f64) -> Vec3 {

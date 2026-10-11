@@ -1,5 +1,6 @@
 mod tests {
     use super::*;
+    use semio_framework::TopicContribution;
     use crate::workflow::{MediaContract, WorkflowEdge, WorkflowPosition, empty_workflow, placeholder_media_contract, validate_workflow};
     use {semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::MediaClass,semio_framework::MediaForm,semio_framework::MediaType,semio_framework::MediaWireFormat,semio_framework::ModeDefinition,semio_framework::PluginManifest,semio_framework::WindowKindDefinition};
     use std::sync::Arc;
@@ -474,7 +475,9 @@ mod tests {
         drop(store.inner.detach_backbone().expect("fixture transport detaches"));
         for _ in 0..65_536 {
             if store.inner.close_owned_terminal_is_empty() { return; }
-            store.inner.close_owned_step(1, 4096).expect("fixture owner closes under page grant");
+            let demand = store.inner.close_owned_demands(4096).expect("fixture owner quotes its next turn");
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            store.inner.close_owned_step(grant).expect("fixture owner closes under its quoted grant");
         }
         panic!("workflow fixture did not reach terminal emptiness");
     }
@@ -482,6 +485,7 @@ mod tests {
     /// 🧾️ The opened host actor is retained across edits and persistence reopen.
     #[test]
     fn workflow_host_preserves_the_opened_actor_context() {
+        test_identity!(identity);
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧾️actor-context/🔣️.json")).expect("neutral actor fixture");
         for case in fixture["cases"].as_array().expect("cases") {
             let actor=protocol::ActorId(case["actor"].as_str().expect("actor").into());
@@ -489,7 +493,7 @@ mod tests {
             let document=create_backbone_document(workflow::S_WORKFLOW_SCHEMA,"workflow-actor","Workflow",resolve_kernel_future(workflow::empty_workflow_snapshot()));
             let mut store=OsWorkflowStore::new(document,actor.clone()).expect("opened store");
             assert_eq!(store.inner.local_actor_id(),&actor);
-            store.add_parameter(&workflow::WorkflowParameterType::Numeric,"First").expect("first edit");
+            store.add_parameter(&workflow::WorkflowParameterType::Numeric,"First", &mut identity).expect("first edit");
             let document=store.document();
             let encoded=encode_backbone_payload(&document).expect("persist host document");
             close_backbone_envelope(take_backbone_envelope(document).1).expect("persisted copy retires");
@@ -497,7 +501,7 @@ mod tests {
             let reopened=decode_backbone_payload(&encoded,workflow::S_WORKFLOW_SCHEMA).expect("reopen host document");
             let mut store=OsWorkflowStore::new(reopened,reopened_actor.clone()).expect("reopened store");
             assert_eq!(store.inner.local_actor_id(),&reopened_actor);
-            store.add_parameter(&workflow::WorkflowParameterType::Numeric,"Second").expect("second edit");
+            store.add_parameter(&workflow::WorkflowParameterType::Numeric,"Second", &mut identity).expect("second edit");
             let document=store.document();
             let actors:Vec<_>=document.vcs.edits.iter().map(|edit|edit.actor.as_deref().expect("attributed edit")).collect();
             assert_eq!(serde_json::to_value(actors).expect("independent Serde actor projection"),case["expectedActors"]);
@@ -520,8 +524,9 @@ mod tests {
 
     #[test]
     fn backbone_and_workflow_store_round_trips_preserve_outcomes_and_conflicts() {
+        test_identity!(identity);
         let mut store = test_workflow_store();
-        store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Durable").expect("create one edit");
+        store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Durable", &mut identity).expect("create one edit");
         let mut document = store.document();
         let edit_id = document_history(&document).applied.last().expect("one applied edit").clone();
         let edit = document.vcs.edits.iter().find(|edit| edit.id == edit_id).expect("applied edit is persisted");
@@ -560,11 +565,12 @@ mod tests {
 
     #[test]
     fn backbone_binary_text_and_workflow_store_preserve_the_complete_cursor() {
+        test_identity!(identity);
         let mut store = test_workflow_store();
-        store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Committed").expect("first edit");
-        resolve_kernel_future(store.inner.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("cursor checkpoint".into()), authors: Vec::new() })).expect("checkpoint");
-        store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Undone").expect("second edit");
-        store.dispatch_text("undo").expect("undo second edit");
+        store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Committed", &mut identity).expect("first edit");
+        resolve_kernel_future(store.inner.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("cursor checkpoint".into()), authors: Vec::new() }, &mut identity)).expect("checkpoint");
+        store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Undone", &mut identity).expect("second edit");
+        store.dispatch_text("undo", &mut identity).expect("undo second edit");
         let document = store.document();
         let history = document_history(&document);
         assert!(!history.redo.is_empty(), "precondition: redo lane is populated");
@@ -582,21 +588,23 @@ mod tests {
 
     #[test]
     fn spawns_and_removes_app_instances() {
+        test_identity!(identity);
         seed_draw_plugin();
         let mut space_store = test_space_store();
         let mut store = test_workflow_store();
-        store.add_workflow_node("draw", "draw", None, 40.0, 40.0, &mut space_store).expect("spawn");
+        store.add_workflow_node("draw", "draw", None, 40.0, 40.0, &mut space_store, &mut identity).expect("spawn");
         assert_eq!(store.snapshot().expect("projection").graph.nodes.len(), 1);
         assert!(space_store.snapshot().expect("projection").programs.contains(&"draw".to_string()), "spawning a node must install its plugin into the owning space");
-        store.dispatch_text("undo").expect("undo");
+        store.dispatch_text("undo", &mut identity).expect("undo");
         assert_eq!(store.snapshot().expect("projection").graph.nodes.len(), 0);
     }
 
     #[test]
     fn adds_and_patches_studio_parameters() {
+        test_identity!(identity);
         let mut store = test_workflow_store();
-        let parameter_id = store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Zoom").expect("add");
-        store.patch_parameter(&parameter_id, &DslValue::object([("value".to_string(), DslValue::float(12.0)), ("max".to_string(), DslValue::float(10.0))])).expect("patch");
+        let parameter_id = store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Zoom", &mut identity).expect("add");
+        store.patch_parameter(&parameter_id, &DslValue::object([("value".to_string(), DslValue::float(12.0)), ("max".to_string(), DslValue::float(10.0))]), &mut identity).expect("patch");
         match &store.snapshot().expect("projection").parameters[0] {
             workflow::WorkflowParameter::Numeric { value, .. } => assert_eq!(*value, 10.0),
             _ => panic!("expected numeric"),
@@ -624,12 +632,13 @@ mod tests {
 
     #[test]
     fn concurrent_delete_and_wire_reconciles_without_a_dangling_edge() {
+        test_identity!(identity);
         seed_draw_plugin();
         seed_sink_plugin();
         let mut space_store_a = test_space_store();
         let mut store_a = test_workflow_store();
-        let node_a_id = store_a.add_workflow_node("draw", "draw", None, 0.0, 0.0, &mut space_store_a).expect("spawn a");
-        let node_b_id = store_a.add_workflow_node("sink", "sink", None, 200.0, 0.0, &mut space_store_a).expect("spawn b");
+        let node_a_id = store_a.add_workflow_node("draw", "draw", None, 0.0, 0.0, &mut space_store_a, &mut identity).expect("spawn a");
+        let node_b_id = store_a.add_workflow_node("sink", "sink", None, 200.0, 0.0, &mut space_store_a, &mut identity).expect("spawn b");
         let mut store_b = OsWorkflowStore::new(store_a.document(), protocol::ActorId("workflow-peer-b".into())).expect("valid replicated workflow store fixture");
 
         let (backbone_a, backbone_b) = resolve_kernel_future(MemoryBackbone::pair("mem://reconcile-race", "mem://reconcile-race"));
@@ -646,11 +655,11 @@ mod tests {
 
         // 🏃️ Actor A deletes node B; actor B (unaware of the delete) concurrently wires a new edge
         // to a port on node B — the classic delete/wire race `reconcile` must clean up post-merge.
-        store_a.dispatch_apply(vec![workflow::WorkflowMutation::RemoveNode(workflow::RemoveNode { node_id: node_b_id.clone() })]).expect("remove node b");
+        store_a.dispatch_apply(vec![workflow::WorkflowMutation::RemoveNode(workflow::RemoveNode { node_id: node_b_id.clone() })], &mut identity).expect("remove node b");
         store_b
             .dispatch_apply(vec![workflow::WorkflowMutation::ConnectPorts(workflow::ConnectPorts {
                 edge: WorkflowEdge { id: "edge-race".into(), source_node_id: source_node_id.clone(), source_port_id, target_node_id: target_node_id.clone(), target_port_id, contract: resolve_kernel_future(placeholder_media_contract("draw")) },
-            })])
+            })], &mut identity)
             .expect("wire edge to node b");
         store_a.tick().expect("pump a");
         store_b.tick().expect("pump b");
@@ -875,9 +884,10 @@ mod tests {
 
     #[test]
     fn document_text_round_trips_store_with_applied_operation() {
+        test_identity!(identity);
         let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", resolve_kernel_future(workflow::empty_workflow_snapshot()), None);
         let mut store = resolve_kernel_future(ArtifactStore::new(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
-        resolve_kernel_future(store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts {})], transaction: None })).expect("apply");
+        resolve_kernel_future(store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts {})], transaction: None }, &mut identity)).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

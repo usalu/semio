@@ -24,7 +24,7 @@ async fn typed_value_wrapper_round_trips() {
     let snapshot = StepSnapshot::from_part21_document(&semio_s_artifact_stdio_contract::part21::parse_part21(text).expect("external Part21 fixture"));
     let args = &snapshot.entities[0].args;
     match &args[2] {
-        StepValue::TypedValue { type_name, value } => {
+        StepValue::TypedValue(StepTypedValue { type_name, value }) => {
             assert_eq!(type_name, "IFCLENGTHMEASURE");
             assert_eq!(**value, StepValue::Real(3000.0));
         }
@@ -69,4 +69,21 @@ async fn codec_retention_law_decode_encode_is_stable() {
     let decoded = <StepSnapshot as store::ArtifactPack>::decode_pack(&bytes_once).expect("decode");
     let bytes_twice = store::ArtifactPack::encode_pack(&decoded);
     assert_eq!(bytes_once, bytes_twice, "encode_pack must be stable across a decode/encode cycle");
+}
+
+/// 🧬️ The newtype payload record spells the typed value on the wire exactly as the former named variant did.
+#[test]
+fn typed_value_payload_record_keeps_the_former_named_variant_wire() {
+    use semio_framework_value::ToValue;
+    #[derive(value_derive::ToValue)]
+    #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
+    enum Former {
+        Unset,
+        Real(f64),
+        TypedValue { type_name: String, value: Box<Former> },
+    }
+    let current = StepValue::TypedValue(StepTypedValue { type_name: "LENGTH_MEASURE".into(), value: Box::new(StepValue::Real(3000.0)) });
+    let former = Former::TypedValue { type_name: "LENGTH_MEASURE".into(), value: Box::new(Former::Real(3000.0)) };
+    assert_eq!(current.to_value(), former.to_value());
+    assert_eq!(StepValue::Unset.to_value(), Former::Unset.to_value());
 }

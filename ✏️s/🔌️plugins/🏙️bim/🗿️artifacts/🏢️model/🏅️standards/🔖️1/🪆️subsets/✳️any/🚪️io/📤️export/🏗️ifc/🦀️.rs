@@ -7,7 +7,7 @@
 //! no owner history. The file is written in stages ([`STAGES`]) so a job can report progress and stop between two of them.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ and https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/
 
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::phase_visibility;
 use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
@@ -300,7 +300,7 @@ pub fn finish(mut export: Export<'_>, model: &ModelSnapshot) -> (Part21Document,
 
 /// 🏗️ The Part-21 document of `model` in `schema` plus a note per item that could not be written: the inference comes from the shared session, so an export after an edit recomputes only what the edit touched.
 pub fn model_to_part21(schema: Schema, model: &ModelSnapshot) -> Result<(Part21Document, Vec<String>), String> {
-    registry::try_with_inference(None, model, |inferred| inferred_to_part21(schema, model, inferred)).map_err(|error| error.to_string())
+    inference::try_with_inference(None, model, |inferred| inferred_to_part21(schema, model, inferred)).map_err(|error| error.to_string())
 }
 
 /// 📤️ The IFC 2x3 file bytes of `model` plus a note per item that could not be written.

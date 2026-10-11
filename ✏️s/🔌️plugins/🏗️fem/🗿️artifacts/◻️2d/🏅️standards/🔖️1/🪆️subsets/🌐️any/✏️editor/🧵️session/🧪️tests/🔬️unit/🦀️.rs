@@ -1,5 +1,7 @@
 use super::*;
 
+const TEST_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 4_096, maximum_depth: 1 };
+
 #[test]
 fn input_authority_round_trips_and_rejects_hostile_lengths() {
     let job = FEM2D_JOB_TAG | 19;
@@ -23,7 +25,7 @@ fn mounted_close_and_capacity_are_fixed_and_terminal_witnessed() {
     let identity = MountedIdentity { app_instance_id: 1, base_revision: semio_framework_job::RevisionId(2), generation: semio_framework_job::Generation(3), canonical_base_revision: [4; 32], operation: OperationId(5), job: 5 };
     registry.current[1] = Some(CurrentSession { app_instance_id: 1, shell: returned, identity });
     assert!(registry.current[33 % SESSION_ACTIVE_CAPACITY].filter(|current| current.app_instance_id == 33).is_none(), "a modulo collision must not inherit another app's generation authority");
-    assert_eq!(maintenance_step(u32::MAX, 1, 4_096), PluginCloseStep::Complete);
+    assert_eq!(maintenance_step(u32::MAX, TEST_GRANT), PluginLifecycleStep::Complete(Default::default()));
     assert!(terminal_is_empty(u32::MAX));
 }
 
@@ -39,7 +41,7 @@ fn snapshot_lease_is_preceded_by_a_fixed_pending_admission_and_idle_polling_reus
     let retained = MOUNTED.with(|registry| registry.borrow().pending[render.app_instance_id as usize % SESSION_ACTIVE_CAPACITY].expect("same pending admission"));
     assert_eq!(first.shell, retained.shell);
     assert_eq!(first.identity, retained.identity);
-    assert!(matches!(close_step(render.app_instance_id, 1, 4_096), PluginCloseStep::Pending { released_items: 1, .. }));
+    assert!(matches!(close_step(render.app_instance_id, TEST_GRANT), PluginLifecycleStep::Progress(progress) if progress.copied_items == 1));
     assert!(terminal_is_empty(render.app_instance_id));
 }
 
@@ -68,7 +70,7 @@ fn snapshot_census_completes_within_one_opportunity_and_rejects_exact_plus_one_w
     let before = (exact.items, exact.bytes);
     assert_eq!(exact.charge(1, 0), Err(b"fem2d.session-admission-exceeded" as &'static [u8]));
     assert_eq!((exact.items, exact.bytes), before, "plus one returns the exact unchanged census owner");
-    assert!(matches!(close_step(render.app_instance_id, 1, 4_096), PluginCloseStep::Pending { released_items: 1, .. }));
+    assert!(matches!(close_step(render.app_instance_id, TEST_GRANT), PluginLifecycleStep::Progress(progress) if progress.copied_items == 1));
     assert!(terminal_is_empty(render.app_instance_id));
 }
 

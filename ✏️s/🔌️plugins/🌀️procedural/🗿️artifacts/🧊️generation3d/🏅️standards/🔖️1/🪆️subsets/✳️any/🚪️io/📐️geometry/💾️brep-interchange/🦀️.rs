@@ -2,7 +2,8 @@
 //!
 //! STEP carries the exact geometry; the mesh formats triangulate the shape first (a stepped tessellation job) or rebuild a faceted solid from the triangles (a stepped mesh import cursor). Binary payloads travel as standard base64 text.
 
-use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::phased_job::{cancelled_fault, launch, Flow, Pipeline};
+use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::brep_curve::guarded;
+use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::phased_job::{cancelled_fault, Flow, Pipeline};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
 use semio_framework_3d::brep::engine::{BrepError, GeometryKind, MeshImportCursor, MeshTransfer};
 use semio_framework_mesh_engine::{MeshData};
@@ -40,7 +41,7 @@ fn mesh_data(transfer: &MeshTransfer) -> Result<MeshData, WidgetFault> {
 }
 
 fn export_mesh(kind: &Kind, inputs: &WidgetInputs, port: &'static str, encode: fn(&MeshData) -> Result<String, WidgetFault>) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let shape = inputs.shape("shape")?.clone();
         let deflection = inputs.number("deflection")?;
         Ok(Pipeline::new(kind).input(&shape).tessellate(0, deflection).finish(move |work| {
@@ -51,7 +52,7 @@ fn export_mesh(kind: &Kind, inputs: &WidgetInputs, port: &'static str, encode: f
 }
 
 fn export_step(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let shape = inputs.shape("shape")?.clone();
         let compound = shape.kind() == GeometryKind::Compound;
         Ok(Pipeline::new(kind).import(&shape).finish(move |work| {
@@ -81,7 +82,7 @@ fn export_dwg(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 
 //#region 🔖️Import
 fn import_step(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let data = inputs.text("data")?.to_string();
         if data.trim().is_empty() {
             return Err(empty("data"));
@@ -98,7 +99,7 @@ fn import_step(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 
 fn faceted(kind: &Kind, inputs: &WidgetInputs, read: impl FnOnce(&str) -> Result<MeshData, WidgetFault>) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let data = inputs.text("data")?.to_string();
         if data.trim().is_empty() {
             return Err(empty("data"));

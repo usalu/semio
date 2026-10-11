@@ -185,7 +185,7 @@ fn inverse_indexed_triple<Item: Clone, D>(removed: &[usize], modified: &[(usize,
 //#region 🔖️VlrDiff
 /// 📦️ Sparse per-field patch for one `LasVlr`. `data` is retained/replaced byte-verbatim
 /// (weak-value raw-retention field, never sub-diffed).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LasVlrDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -236,7 +236,7 @@ fn absorb_vlr_rows(base: &mut LasVlrDiff, other: LasVlrDiff) {
 }
 
 /// 📦️ One `vlrs.modified[]` entity — `index` is the VLR's position in BASE.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LasVlrModified {
     pub index: usize,
@@ -244,7 +244,7 @@ pub struct LasVlrModified {
 }
 
 /// 📦️ One `vlrs.added[]` entity — `index` is the VLR's position in the FINAL sequence.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LasVlrAdded {
     pub index: usize,
@@ -252,7 +252,7 @@ pub struct LasVlrAdded {
 }
 
 /// 📦️ Sparse index-keyed `vlrs` triple.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LasVlrsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -332,7 +332,7 @@ fn absorb_vlrs(d1: Option<LasVlrsDiff>, d2: Option<LasVlrsDiff>) -> Option<LasVl
 /// 📍️ Sparse per-field patch for one `LasPoint`. `gps_time`/`rgb` are tri-state:
 /// `None` = unchanged, `Some(None)` = cleared (point demoted out of a format that carries it),
 /// `Some(Some(v))` = set.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LasPointDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -498,7 +498,7 @@ fn absorb_point_rows(base: &mut LasPointDiff, other: &LasPointDiff) {
 }
 
 /// 📍️ One `points.modified[]` entity — `index` is the point's position in BASE.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LasPointModified {
     pub index: usize,
@@ -506,7 +506,7 @@ pub struct LasPointModified {
 }
 
 /// 📍️ One `points.added[]` entity — `index` is the point's position in the FINAL sequence.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LasPointAdded {
     pub index: usize,
@@ -514,7 +514,7 @@ pub struct LasPointAdded {
 }
 
 /// 📍️ Sparse index-keyed `points` triple.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LasPointsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -591,7 +591,7 @@ fn absorb_points(d1: Option<LasPointsDiff>, d2: Option<LasPointsDiff>) -> Option
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.las`. Every real header field is a top-level scalar; `schema` is an
 /// identity field and never appears here.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.las.diff")]
 pub struct LasDiff {

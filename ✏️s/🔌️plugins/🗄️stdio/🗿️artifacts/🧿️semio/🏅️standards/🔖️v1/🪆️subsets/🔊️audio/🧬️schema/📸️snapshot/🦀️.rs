@@ -28,7 +28,8 @@ pub const STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA: &str = "stdio.semio.audio";
 /// `wav`-shaped: mirrors PCM8/16/24/32 + IEEE float, the `fmt ` chunk's `wBitsPerSample`/
 /// `wFormatTag` space, without depending on wav's own (future, W3) types — own type, per the
 /// repo-wide "own types, not merged into a sibling format" convention (tsv-vs-csv, docx-vs-xlsx).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum SemioAudioFormat {
     Pcm8,
@@ -48,7 +49,8 @@ pub enum SemioAudioFormat {
 /// sample sequence — a strong, per-field-diffable entity (today one field, `samples`, but kept as
 /// its own struct + collection triple rather than `Vec<Vec<f32>>` so a future field, e.g. a
 /// per-channel gain/pan, slots in without reshaping the collection).
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioAudioChannel {
     #[value(default)]
@@ -59,7 +61,8 @@ pub struct SemioAudioChannel {
 //#region 🔖️Tag
 /// 🏷️ One metadata key/value pair (ID3/RIFF `LIST INFO`-shaped: `title`, `artist`, `comment`, …).
 /// A weak/value entity per the recipe (its "diff" is the whole new pair, never sub-diffed).
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioAudioTag {
     pub key: String,

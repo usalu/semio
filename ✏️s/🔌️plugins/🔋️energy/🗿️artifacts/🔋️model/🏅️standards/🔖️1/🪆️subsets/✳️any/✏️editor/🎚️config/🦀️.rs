@@ -18,7 +18,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 ///
 /// 🌱️ No longer `Copy` — `result_field` is an owned `String`, so the three `EnergyModelConfig`-by-value
 /// call sites (`render`, `settings_nodes`, `simulation_template`) take it by reference or clone.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -103,7 +103,7 @@ impl store::ArtifactPack for EnergyModelConfig {
 impl store::ConfigRecord for EnergyModelConfig {}
 
 /// 🔺️ Sparse field delta over [`EnergyModelConfig`]: every present slot is the new value of exactly that field.
-#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct EnergyModelConfigDiff {
     #[value(skip_serializing_if = "Option::is_none")]

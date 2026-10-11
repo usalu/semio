@@ -55,7 +55,7 @@ pub const SEMIO_MESH_DOCUMENT_SCHEMA: &str = "stdio.semio.mesh";
 /// meshes"); every other subset in this packet's lease uses the minimal-command pattern instead,
 /// reported per-subset in the packet report, because their own schemas expose no by-index "replace"
 /// mutation today (only insert/remove/whole-document `SetSnapshot`).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
 pub struct SemioMeshSetVertexArgs {
     pub mesh_id: String,
     pub primitive_id: String,
@@ -63,7 +63,7 @@ pub struct SemioMeshSetVertexArgs {
     pub point: [f64; 3],
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
 pub enum SemioMeshEditCommand {
     SetVertex(SemioMeshSetVertexArgs),
 }
@@ -162,6 +162,14 @@ impl ArtifactCommandWork<EditorApp<SemioMeshEditor>> for SemioMeshSetVertexWork 
     ) -> Option<usize> {
         let editing::SnapshotEditingCommand::Native(SemioMeshEditCommand::SetVertex(args)) = command else { return None };
         (!args.mesh_id.is_empty() && !args.primitive_id.is_empty() && args.point.iter().all(|value| value.is_finite())).then_some(2)
+    }
+
+    fn work_demands(&self, input: &ArtifactCommandInputs<'_, EditorApp<SemioMeshEditor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let editing::SnapshotEditingCommand::Native(SemioMeshEditCommand::SetVertex(args)) = input.command else {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "stdio.semio.mesh.set-vertex.command-mismatch"));
+        };
+        let text = args.mesh_id.len().saturating_add(args.primitive_id.len());
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: text, capacity_bytes: text.saturating_add(std::mem::size_of::<SemioMeshMutation>()), release_bytes: 0, depth: 1 })
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioMeshEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioMeshEditor>>, Fault> {

@@ -3,7 +3,8 @@
 use crate::STDIO_JPG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-#[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum JfifDensityUnits {
     #[default]
@@ -78,3 +79,92 @@ pub struct JpgSnapshot {
 impl Default for JpgSnapshot {
     fn default()->Self{Self{schema:STDIO_JPG_DOCUMENT_SCHEMA.into(),image:JpgImage::default()}}
 }
+
+//#region 🌲️CanonicalTree
+use semio_framework_pack_json::{ArtifactCanonicalJsonNode as TreeNode, ArtifactCanonicalJsonText as TreeText, ArtifactCanonicalJsonTree as Tree};
+use semio_framework_value::{ValueError as TreeError, ValueRefusalKind as TreeRefusal};
+
+fn tree_absent(reason: &'static str) -> TreeError {
+    TreeError::literal(TreeRefusal::InvariantViolated, reason)
+}
+
+/// 🌲️ Octet fields keep the canonical JSON array projection their `pack::value::bytes` role already emits.
+impl Tree for JfifThumbnail {
+    fn canonical_tree_node(&self) -> Result<TreeNode<'_>, TreeError> {
+        Ok(TreeNode::Object(3))
+    }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn Tree, TreeError> {
+        match ordinal {
+            0 => Ok(&self.width),
+            1 => Ok(&self.height),
+            2 => Ok(&self.rgb_data),
+            _ => Err(tree_absent("canonical JFIF thumbnail ordinal is absent")),
+        }
+    }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<TreeText<'_>, TreeError> {
+        ["width", "height", "rgbData"].get(ordinal).map(|key| TreeText::from(*key)).ok_or_else(|| tree_absent("canonical JFIF thumbnail key is absent"))
+    }
+}
+
+impl Tree for JpgSegment {
+    fn canonical_tree_node(&self) -> Result<TreeNode<'_>, TreeError> {
+        Ok(TreeNode::Object(2))
+    }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn Tree, TreeError> {
+        match ordinal {
+            0 => Ok(&self.marker),
+            1 => Ok(&self.data),
+            _ => Err(tree_absent("canonical JPEG segment ordinal is absent")),
+        }
+    }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<TreeText<'_>, TreeError> {
+        ["marker", "data"].get(ordinal).map(|key| TreeText::from(*key)).ok_or_else(|| tree_absent("canonical JPEG segment key is absent"))
+    }
+}
+
+impl JpgImage {
+    fn canonical_fields(&self) -> ([u8; 9], usize) {
+        let mut fields = [0u8; 9];
+        let mut count = 0;
+        for field in 0..9u8 {
+            if field == 7 && self.jfif_thumbnail.is_none() {
+                continue;
+            }
+            fields[count] = field;
+            count += 1;
+        }
+        (fields, count)
+    }
+}
+
+/// 🌲️ Projects exactly the fields `ToValue` emits; the thumbnail is skipped when absent.
+impl Tree for JpgImage {
+    fn canonical_tree_node(&self) -> Result<TreeNode<'_>, TreeError> {
+        Ok(TreeNode::Object(self.canonical_fields().1))
+    }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn Tree, TreeError> {
+        let (fields, count) = self.canonical_fields();
+        if ordinal >= count {
+            return Err(tree_absent("canonical JPEG image ordinal is absent"));
+        }
+        match fields[ordinal] {
+            0 => Ok(&self.width),
+            1 => Ok(&self.height),
+            2 => Ok(&self.pixels),
+            3 => Ok(&self.jfif_version),
+            4 => Ok(&self.jfif_density_units),
+            5 => Ok(&self.jfif_x_density),
+            6 => Ok(&self.jfif_y_density),
+            7 => self.jfif_thumbnail.as_ref().map(|value| value as &dyn Tree).ok_or_else(|| tree_absent("canonical JPEG thumbnail is absent")),
+            _ => Ok(&self.other_segments),
+        }
+    }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<TreeText<'_>, TreeError> {
+        let (fields, count) = self.canonical_fields();
+        if ordinal >= count {
+            return Err(tree_absent("canonical JPEG image key is absent"));
+        }
+        Ok(TreeText::from(["width", "height", "pixels", "jfifVersion", "jfifDensityUnits", "jfifXDensity", "jfifYDensity", "jfifThumbnail", "otherSegments"][fields[ordinal] as usize]))
+    }
+}
+//#endregion 🌲️CanonicalTree

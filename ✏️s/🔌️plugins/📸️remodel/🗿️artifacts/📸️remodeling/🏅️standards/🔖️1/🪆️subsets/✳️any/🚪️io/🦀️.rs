@@ -389,7 +389,7 @@ pub fn image_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Resu
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::RemodelingAnalyzer;
     use crate::RemodelingSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {store::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,store::io::ComposeError,store::io::ComposeSource,store::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
 
@@ -428,9 +428,9 @@ pub use derived_composition::*;
 /// native composer, which the OS document-open path still resolves by `IoKey`. The eight
 /// `compose_export_*` rows that sat beside it are deleted (see this file's module doc); every foreign
 /// hop now lives on the typed `io()` channel below.
-pub fn native_composer_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
+pub fn native_composer_entries() -> &'static [semio_framework_plugin::app::ComposerEntry] {
     use crate::standards::v1::subsets::any::io::RemodelingComposer;
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::ComposerEntry>> = std::sync::OnceLock::new();
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::app::ComposerEntry>> = std::sync::OnceLock::new();
     ENTRIES.get_or_init(|| vec![semio_framework_plugin::composer_entry_of::<RemodelingComposer>()]).as_slice()
 }
 //#endregion 🚪️NativeComposer
@@ -477,8 +477,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     id: "remodeling.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("remodeling.diff"),
@@ -616,7 +616,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::RemodelingSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {store::io::Analysis,store::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct RemodelingParts {

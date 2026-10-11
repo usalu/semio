@@ -24,6 +24,9 @@ pub fn refusal(code: u32) -> ValueError {
 fn admitted(code: u32) -> Result<(), ValueError> { if code == 0 { Ok(()) } else { Err(refusal(code)) } }
 
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+type IdentityObserver<'a> = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'a>;
+
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 /// 🌉️ Carries one original host allocation port through all synchronous retained authoring hops.
 pub fn with_operation_authority<T>(operation: impl FnOnce(&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<T, crate::Fault>) -> Result<T, crate::Fault> {
     use crate::component::wasip2::semio::framework::pure;
@@ -32,7 +35,7 @@ pub fn with_operation_authority<T>(operation: impl FnOnce(&mut semio_framework_o
     let maximum = usize::try_from(pure::operation_begin().map_err(refusal).map_err(fault)?).map_err(|_| fault(refusal(2)))?;
     let mut observer = |next: NativeEncodeProgress| pure::operation_progress(next.completed as u64, next.total as u64, next.owned_bytes as u64) == 0;
     let mut allocate = |next: NativeEncodeAllocation| admitted(pure::operation_allocation(next.bytes as u64, next.owned_bytes as u64, next.next_owned_bytes as u64, next.maximum_bytes as u64));
-    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum, &mut observer, &mut allocate).map_err(fault)?;
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum, &mut observer as &mut IdentityObserver<'_>, &mut allocate).map_err(fault)?;
     let result = operation(&mut identity);
     let receipt = identity.pause_forwarded().map_err(fault)?;
     let returned = admitted(pure::operation_finish(receipt.owned_bytes() as u64)).map_err(fault);
@@ -48,7 +51,7 @@ pub fn with_owned_operation_authority<T>(operation:impl FnOnce(&mut semio_framew
     let rejected=std::cell::Cell::new(0);
     let mut observer=|next:NativeEncodeProgress|{let code=pure::operation_progress(next.completed as u64,next.total as u64,next.owned_bytes as u64);if code!=0{rejected.set(code);}code==0};
     let mut allocate=|next:NativeEncodeAllocation|{let code=pure::operation_allocation(next.bytes as u64,next.owned_bytes as u64,next.next_owned_bytes as u64,next.maximum_bytes as u64);if code!=0{rejected.set(code);}admitted(code)};
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum,&mut observer,&mut allocate)?;
+    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum,&mut observer as &mut IdentityObserver<'_>,&mut allocate)?;
     let result=operation(&mut identity);
     if rejected.get()!=0{return Err(refusal(rejected.get()));}
     let receipt=identity.pause_forwarded()?;
@@ -66,7 +69,7 @@ pub fn with_wit_operation_authority<T>(operation:impl FnOnce(&mut semio_framewor
     let rejected_code=std::cell::Cell::new(0);
     let mut observer=|next:NativeEncodeProgress|{let code=pure::operation_progress(next.completed as u64,next.total as u64,next.owned_bytes as u64);if code!=0{rejected_code.set(code);}code==0};
     let mut allocate=|next:NativeEncodeAllocation|{let code=pure::operation_allocation(next.bytes as u64,next.owned_bytes as u64,next.next_owned_bytes as u64,next.maximum_bytes as u64);if code!=0{rejected_code.set(code);}admitted(code)};
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum,&mut observer,&mut allocate).map_err(rejected)?;
+    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum,&mut observer as &mut IdentityObserver<'_>,&mut allocate).map_err(rejected)?;
     let result=operation(&mut identity);
     if rejected_code.get()!=0{return Err(rejected(refusal(rejected_code.get())));}
     let result=result.map_err(|fault|crate::component::wasip2::plugin_error(&fault));
@@ -88,7 +91,7 @@ pub fn with_actor_operation_authority(operation:impl FnOnce(&mut semio_framework
     let rejected=std::cell::Cell::new(0);
     let mut observer=|next:NativeEncodeProgress|{let code=pure::operation_progress(next.completed as u64,next.total as u64,next.owned_bytes as u64);if code!=0{rejected.set(code);}code==0};
     let mut allocate=|next:NativeEncodeAllocation|{let code=pure::operation_allocation(next.bytes as u64,next.owned_bytes as u64,next.next_owned_bytes as u64,next.maximum_bytes as u64);if code!=0{rejected.set(code);}admitted(code)};
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum,&mut observer,&mut allocate)?;
+    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum,&mut observer as &mut IdentityObserver<'_>,&mut allocate)?;
     let result=operation(&mut identity);
     let receipt=identity.pause_forwarded()?;
     let returned=admitted(pure::operation_finish(receipt.owned_bytes()as u64));

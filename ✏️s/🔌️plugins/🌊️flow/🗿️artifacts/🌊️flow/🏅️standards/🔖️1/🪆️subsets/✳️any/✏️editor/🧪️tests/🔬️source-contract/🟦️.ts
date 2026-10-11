@@ -290,7 +290,7 @@ assert(await documentOwnerFile.exists(), "Flow document owner catalog must live 
 const documentOwnerSource = await documentOwnerFile.text();
 assert(!documentOwnerSource.includes("crate::editor"), "Flow document ownership must not import an editor");
 assert(documentOwnerSource.includes("pub fn store_owners("), "the domain declares its exact reusable document catalog");
-assert(editorOwnerSource.includes("crate::retirement::store_owners()"), "the editor must use the same domain catalog as viewers");
+assert(editorOwnerSource.includes("crate::retirement::store_owners(grant)"), "the editor must use the same domain catalog as viewers");
 //#endregion 🗃️SharedDocumentOwnerAuthority
 //#region 👁️ViewerOwnerAuthority
 const viewerOwners = await Bun.file(new URL("../../../👁️viewer/🧫️fixtures/🧹️owners/🔣️.json", import.meta.url)).json();
@@ -302,7 +302,7 @@ assert(!viewerOwnerSource.includes("crate::editor"), "the viewer must not import
 for (const hook of ["build_document_store_owners", "build_config_store_owners", "build_document_store_disposer", "build_config_store_disposer", "build_presence_store_disposer", "build_transient_store_disposer"]) {
   assert(viewerOwnerSource.includes(`fn ${hook}(`), `Flow viewer must explicitly supply ${hook}`);
 }
-assert(viewerOwnerSource.includes("crate::retirement::store_owners()"));
+assert(viewerOwnerSource.includes("crate::retirement::store_owners(grant)"));
 const flowPluginSource = await Bun.file(new URL("../../../../../../../../../../../../🌎️hub/🧩️compositions/🌊️flow/🦀️.rs", import.meta.url)).text();
 assert(flowPluginSource.includes(".viewer::<crate::viewer::flow::FlowViewer>"));
 assert(viewerOwnerSource.includes("type Members = semio_s_artifact_stdio_semio::SemioMembers;"), "the viewer itself must declare the roster its composed children open through");

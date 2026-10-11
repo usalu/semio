@@ -18,7 +18,8 @@ use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21, Part21
 //#region 🔖️Value
 /// 🔤️ One typed value in IFC4's Part-21 argument-list syntax — own enum, mirrors
 /// `semio_s_artifact_stdio_contract::part21::Part21Value`'s shape but is IFC's own type (never shared cross-artifact).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", content = "value", rename_all = "camelCase")]
 #[derive(Default)]
 pub enum IfcValue {
@@ -38,10 +39,15 @@ pub enum IfcValue {
     /// Part-21 syntax level).
     Aggregate(Vec<IfcValue>),
     /// `IFCLENGTHMEASURE(3000.)` — a "defined type" wrapper: EXPRESS keyword + its own arg list.
-    TypedValue {
-        name: String,
-        items: Vec<IfcValue>,
-    },
+    TypedValue(IfcTypedValue),
+}
+
+/// 🏷️ The payload record of [`IfcValue::TypedValue`]: the EXPRESS keyword plus its own argument list.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct IfcTypedValue {
+    pub name: String,
+    pub items: Vec<IfcValue>,
 }
 
 impl IfcValue {
@@ -87,7 +93,7 @@ impl IfcValue {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_typed(&self) -> Option<(&str, &[IfcValue])> {
-        if let IfcValue::TypedValue { name, items } = self {
+        if let IfcValue::TypedValue(IfcTypedValue { name, items }) = self {
             Some((name.as_str(), items.as_slice()))
         } else {
             None
@@ -101,7 +107,8 @@ impl IfcValue {
 /// the primary `name`/`args` carried on [`IfcEntity`] itself. Ordinary (non-complex) instances
 /// carry an empty `complex` vec; nothing about a real complex instance's extra type members is
 /// ever silently dropped (typed raw-retention, per the recipe).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct IfcComplexType {
     pub name: String,
@@ -114,7 +121,8 @@ pub struct IfcComplexType {
 /// IFC4 entity type, matching how the format itself is structured; a derived analyzer view can
 /// filter by `name` for domain-specific queries (see `engine::spatial`) without this snapshot
 /// needing a hand-modeled Rust type per IFC entity kind.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct IfcEntity {
     pub id: u64,
@@ -129,7 +137,7 @@ pub struct IfcEntity {
 /// 📇️ The three standard `HEADER;` records (`FILE_DESCRIPTION`/`FILE_NAME`/`FILE_SCHEMA`), typed
 /// via IFC's own [`IfcValue`] — kept as their raw tuple-of-values shape (not schema-interpreted
 /// into named sub-fields), matching the recipe's "typed HEADER section" completeness target.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct IfcHeader {
     pub file_description: Vec<IfcValue>,
@@ -155,7 +163,7 @@ impl Default for IfcHeader {
 /// model (never `semio_s_artifact_stdio_contract::part21::Part21Document`). Spatial structure/placement
 /// matrices/property sets stay a derived analyzer view (`engine::spatial::analyze_spatial`,
 /// which is handed a `Part21Document` built on demand via [`to_part21_document`]), not stored here.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc")]
 pub struct IfcSnapshot {
@@ -189,7 +197,7 @@ fn ifc_value_from_part21(v: &Part21Value) -> IfcValue {
         Part21Value::Int(i) => IfcValue::Integer(*i),
         Part21Value::Real(r) => IfcValue::Real(r.to_f64().unwrap_or_default()),
         Part21Value::List(items) => IfcValue::Aggregate(items.iter().map(ifc_value_from_part21).collect()),
-        Part21Value::Typed { name, items } => IfcValue::TypedValue { name: name.clone(), items: items.iter().map(ifc_value_from_part21).collect() },
+        Part21Value::Typed { name, items } => IfcValue::TypedValue(IfcTypedValue { name: name.clone(), items: items.iter().map(ifc_value_from_part21).collect() }),
         Part21Value::Unset => IfcValue::Unset,
         Part21Value::Derived => IfcValue::Derived,
     }
@@ -205,7 +213,7 @@ fn part21_value_from_ifc(v: &IfcValue) -> Part21Value {
         IfcValue::Integer(i) => Part21Value::Int(*i),
         IfcValue::Real(r) => Part21Value::Real((*r).into()),
         IfcValue::Aggregate(items) => Part21Value::List(items.iter().map(part21_value_from_ifc).collect()),
-        IfcValue::TypedValue { name, items } => Part21Value::Typed { name: name.clone(), items: items.iter().map(part21_value_from_ifc).collect() },
+        IfcValue::TypedValue(IfcTypedValue { name, items }) => Part21Value::Typed { name: name.clone(), items: items.iter().map(part21_value_from_ifc).collect() },
         IfcValue::Unset => Part21Value::Unset,
         IfcValue::Derived => Part21Value::Derived,
     }

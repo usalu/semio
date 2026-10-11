@@ -504,6 +504,14 @@ pub struct UiWorkerRetirementRefusal { pub stage: &'static str, pub kind: semio_
 fn close_layout_worker_session(session: &mut semio_framework_job::MountedWorkerJobSession<MountedLayoutJob>, grant: semio_framework_job::RetainedCloneGrant) -> Result<Option<semio_framework_value::RetainedCloneProgress>, semio_framework_value::ValueError> {
     use semio_framework_job::{WorkerJobDemandError, WorkerJobCloseStep};
     use semio_framework_value::ValueRefusalKind;
+    if session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut {
+        let step = session.close_step(grant);
+        return match step {
+            WorkerJobCloseStep::Pending { progress } if progress.fits(grant) => Ok(Some(progress)),
+            WorkerJobCloseStep::Refused { kind, progress } => Err(semio_framework_value::ValueError::literal(kind, "UI original worker retirement refused").with_retained_progress(progress)),
+            _ => Err(semio_framework_value::ValueError::literal(ValueRefusalKind::InvariantViolated, "UI original worker retirement receipt invariant violated").with_retained_progress(step.progress())),
+        };
+    }
     session.begin_close();
     let demand = match session.retirement_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(WorkerJobDemandError::Contention(_)) => return Ok(None), Err(WorkerJobDemandError::Refused(error)) => return Err(error) };
     if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(Some(Default::default())); }
@@ -1594,7 +1602,6 @@ impl Ui {
             }
             UiSurfaceClosePhase::LayoutSession => {
                 if let Some(session) = window.layout_session.as_mut() {
-                    session.begin_close();
                     let admitted = match close_layout_worker_session(session, ui_contract::UI_WORKER_RETIREMENT_POLICY) {
                         Ok(progress) => progress.is_some(),
                         Err(error) => { let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseSession", kind:error.kind,progress:error.retained_progress() }; window.layout_retirement_refusal = Some(refusal); return UiSurfaceCloseStep::Refused(refusal); }
@@ -2271,9 +2278,6 @@ impl Ui {
         }
         let Some(root) = window.tree.root else { return UiLayoutStep::Idle };
         if cx.is_cancelled() {
-            if let Some(session) = window.layout_session.as_mut() {
-                session.begin_close();
-            }
             if let Some(job) = window.layout_job.as_mut() {
                 job.begin_close();
             }
@@ -2282,8 +2286,31 @@ impl Ui {
         }
         if let Some(session) = window.layout_session.as_mut() {
             if window.layout_session_generation != Some(window.layout_generation) {
-                session.begin_close();
                 window.layout_closing = true;
+            }
+            if session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut {
+                if let Some((issued, original)) = session.checked_out_retained_step_receipt() {
+                    if !original.fits(*issued) {
+                        let refusal = UiWorkerRetirementRefusal { stage: "Layout.OriginalReceiptInvariant", kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: *original };
+                        window.layout_retirement_refusal = Some(refusal);
+                        return UiLayoutStep::Refused { window_id, lane, refusal };
+                    }
+                    let remaining = cx.retained_grant();
+                    if remaining.maximum_items == 0 || remaining.maximum_depth == 0 || !original.fits(remaining) {
+                        self.enqueue_layout(window_id.as_ref());
+                        return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.OriginalReceiptBudget", nodes: 0, glyphs: 0 };
+                    }
+                    let progress = *original;
+                    if let Err(error) = cx.consume_retained(progress) {
+                        let refusal = UiWorkerRetirementRefusal { stage: "Layout.ReceiveOriginalReceipt", kind: error.kind, progress: error.retained_progress() };
+                        window.layout_retirement_refusal = Some(refusal);
+                        return UiLayoutStep::Refused { window_id, lane, refusal };
+                    }
+                    let (_, received) = session.take_checked_out_retained_step_receipt().expect("exclusive checked-out original receipt remains pending after admission");
+                    assert_eq!(received, progress);
+                    self.enqueue_layout(window_id.as_ref());
+                    return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.ReceiveOriginalReceipt", nodes: progress.copied_items, glyphs: 0 };
+                }
             }
             if window.layout_closing {
                 let witness=cx.original_cancel_token();
@@ -2323,28 +2350,6 @@ impl Ui {
                 return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseSession", nodes: 1, glyphs: 0 };
             }
             if session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut {
-                if let Some((issued, original)) = session.checked_out_retained_step_receipt() {
-                    if !original.fits(*issued) {
-                        let refusal = UiWorkerRetirementRefusal { stage: "Layout.OriginalReceiptInvariant", kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: *original };
-                        window.layout_retirement_refusal = Some(refusal);
-                        return UiLayoutStep::Refused { window_id, lane, refusal };
-                    }
-                    let remaining = cx.retained_grant();
-                    if remaining.maximum_items == 0 || remaining.maximum_depth == 0 || !original.fits(remaining) {
-                        self.enqueue_layout(window_id.as_ref());
-                        return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.OriginalReceiptBudget", nodes: 0, glyphs: 0 };
-                    }
-                    let progress = *original;
-                    if let Err(error) = cx.consume_retained(progress) {
-                        let refusal = UiWorkerRetirementRefusal { stage: "Layout.ReceiveOriginalReceipt", kind: error.kind, progress: error.retained_progress() };
-                        window.layout_retirement_refusal = Some(refusal);
-                        return UiLayoutStep::Refused { window_id, lane, refusal };
-                    }
-                    let (_, received) = session.take_checked_out_retained_step_receipt().expect("exclusive checked-out original receipt remains pending after admission");
-                    assert_eq!(received, progress);
-                    self.enqueue_layout(window_id.as_ref());
-                    return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.ReceiveOriginalReceipt", nodes: progress.copied_items, glyphs: 0 };
-                }
                 if let Some(error) = session.checked_out_error() {
                     let refusal = UiWorkerRetirementRefusal { stage: "Layout.WorkerRefusal", kind: error.kind, progress: error.retained_progress() };
                     window.layout_retirement_refusal = Some(refusal);

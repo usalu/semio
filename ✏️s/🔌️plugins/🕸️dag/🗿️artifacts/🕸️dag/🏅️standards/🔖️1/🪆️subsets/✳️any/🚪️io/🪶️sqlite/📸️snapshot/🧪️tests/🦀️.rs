@@ -38,18 +38,7 @@ impl std::ops::Deref for Owned {
 impl Drop for Owned {
     fn drop(&mut self) {
         if let Some(value) = self.0.take() {
-            let factory = semio_framework_value::retirement::OwnedValueRetirementFactory::<DagContentChild>::default();
-            let mut cursor = store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, value.content);
-            loop {
-                match cursor.close_step(1, 65536).unwrap() {
-                    store::SnapshotRetirementStep::Complete => {
-                        assert!(cursor.terminal_is_empty());
-                        break;
-                    }
-                    store::SnapshotRetirementStep::Pending { .. } => {}
-                    store::SnapshotRetirementStep::Blocked => panic!("DAG child retirement blocked"),
-                }
-            }
+            <DagSnapshot as semio_framework_value::FromValue>::retire_decoded(value);
         }
     }
 }

@@ -7,7 +7,8 @@ use crate::standards::v_ecma_376::subsets::base::schema::namespaces::{apply_bind
 const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
 
 /// 🧭️ Identifies one XML node by part, child-index path, expanded name, and lineage-bound revision.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocxXmlAddress {
     pub part_path: String,

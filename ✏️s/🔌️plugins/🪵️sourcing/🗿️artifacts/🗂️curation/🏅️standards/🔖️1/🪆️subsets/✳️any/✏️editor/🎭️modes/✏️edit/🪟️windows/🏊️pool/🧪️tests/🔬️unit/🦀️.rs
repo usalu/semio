@@ -234,7 +234,7 @@ async fn the_real_sourcing_module_pack_installs_through_the_live_contributions_l
     assert_eq!(installable, "[]", "the shipped extensions re-contribute authored modules, so nothing new is installable");
     let installed: Vec<String> = crate::schema::available_modules(crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(&json)).into_iter().map(|module| module.module_id).collect();
     assert_eq!(installed, vec!["beams".to_string(), "windows".to_string(), "slabs".to_string(), "reuse".to_string()], "a re-contributed module never duplicates the authored one");
-    let mutation = crate::editor::sourcing::config::SourcingCurationConfigMutation::SetContributions { json: installable };
+    let mutation = crate::editor::sourcing::config::SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: installable });
     assert!(crate::editor::sourcing::component::sourcing_curation_config_mutation_retained_bytes(&mutation).is_ok(), "the retained config preparation must admit the installable roster");
     let mut app = new_app().await;
     dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json })).await;

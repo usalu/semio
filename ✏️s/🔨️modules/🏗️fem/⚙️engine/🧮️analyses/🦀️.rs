@@ -5,9 +5,10 @@
 
 use crate::algebra::{MatD, VecD};
 use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, Elements, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
-use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
+use crate::sparse::{numerical_batch_close, numerical_batch_step, numerical_close_gate, numerical_ladder_turn, numerical_rung_demand, NumericalBatchEnd, NumericalOutcomeDesk, NumericalRun, ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
 use replication::value::list::PagedList;
-use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeDescriptor, JobOutcomeBorrow, JobPayloadStream, Operation, RetainedCloneGrant, RetainedCloneProgress, StepContext};
+use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
@@ -459,7 +460,7 @@ pub struct BucklingResult {
 // #endregion 🔖️Model
 
 // #region 🧩️JobGraph
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind")]
 pub enum FemJobStage {
     ValidateReferences,
@@ -487,13 +488,13 @@ impl FemJobStage {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 pub struct FemStagePlan {
     pub stage: FemJobStage,
     pub units: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 pub struct FemJobProgress {
     pub stage: Option<FemJobStage>,
     pub completed_stages: usize,
@@ -502,7 +503,7 @@ pub struct FemJobProgress {
     pub total_units: u64,
 }
 
-#[derive(Clone, ToValue, FromValue)]
+#[derive(Clone, ToValue, FromValue, semio_framework_value::RetireOwned)]
 struct FemGraphCheckpoint {
     plans: Vec<FemStagePlan>,
     stage_cursor: usize,
@@ -515,16 +516,17 @@ struct FemGraphCheckpoint {
 pub struct FemJobGraph {
     operation: Operation,
     state: FemGraphCheckpoint,
+    desk: NumericalOutcomeDesk,
 }
 
 impl FemJobGraph {
     pub fn new(operation: Operation, plans: Vec<FemStagePlan>, units_per_step: u64) -> Self {
         assert!(units_per_step > 0, "fem graph batch must contain work");
-        Self { operation, state: FemGraphCheckpoint { plans, stage_cursor: 0, unit_cursor: 0, completed_units: 0, units_per_step, checkpoint_due: false } }
+        Self { operation, state: FemGraphCheckpoint { plans, stage_cursor: 0, unit_cursor: 0, completed_units: 0, units_per_step, checkpoint_due: false }, desk: NumericalOutcomeDesk::default() }
     }
 
     pub fn from_checkpoint(operation: Operation, bytes: &[u8]) -> Result<Self, String> {
-        Ok(Self { operation, state: decode_value(bytes)? })
+        Ok(Self { operation, state: decode_value(bytes)?, desk: NumericalOutcomeDesk::default() })
     }
 
     pub fn checkpoint_bytes(&self) -> Vec<u8> {
@@ -542,7 +544,7 @@ impl FemJobGraph {
     }
 
     /// 🧹️ Retires at most one retained plan owner. `true` is an exact empty witness.
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    pub fn close_retained_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         let bytes = size_of::<FemStagePlan>();
         if maximum_bytes < bytes {
             return (false, 0, 0);
@@ -562,28 +564,28 @@ impl FemJobGraph {
     }
 }
 
-impl InteractiveJob for FemJobGraph {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+impl FemJobGraph {
+    fn run(&mut self, context: &mut StepContext<'_>) -> NumericalRun {
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return NumericalRun::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            return NumericalRun::Fault;
         }
         if self.state.checkpoint_due {
             self.state.checkpoint_due = false;
             let bytes = self.checkpoint_bytes();
             return match context.payload_from_bytes(JobPayloadStream::CheckpointState, &bytes) {
-                Ok(state) => StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.state.completed_units }),
-                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Ok(state) => self.desk.lend_checkpoint(state, self.state.completed_units),
+                Err(_) => NumericalRun::Fault,
             };
         }
         if self.state.stage_cursor == self.state.plans.len() {
             let progress = self.progress();
             let bytes = encode_value(&progress);
             return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
-                Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
-                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Ok(output) => self.desk.lend_complete(output),
+                Err(_) => NumericalRun::Fault,
             };
         }
         let stage = self.state.plans[self.state.stage_cursor].stage;
@@ -606,40 +608,81 @@ impl InteractiveJob for FemJobGraph {
             stepped += take;
             context.consume_fuel(take);
             if context.is_cancelled() {
-                return StepOutcome::Cancelled;
+                return NumericalRun::Cancelled;
             }
         }
         if self.state.stage_cursor == self.state.plans.len() {
             let progress = self.progress();
             let bytes = encode_value(&progress);
             return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
-                Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
-                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Ok(output) => self.desk.lend_complete(output),
+                Err(_) => NumericalRun::Fault,
             };
         }
         let bytes = encode_value(&self.progress());
         match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
-            Ok(preview) => StepOutcome::PreviewReady(preview),
-            Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            Ok(preview) => self.desk.lend_preview(preview),
+            Err(_) => NumericalRun::Fault,
         }
+    }
+
+    fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
+        self.desk.retirement_demands().transpose()
+    }
+
+    fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
+        if let Some(demand) = self.close_frontier()? {
+            return Ok(demand);
+        }
+        let backing_bytes = self.state.plans.capacity() * size_of::<FemStagePlan>();
+        Ok(if backing_bytes == 0 && self.state.plans.is_empty() { RetirementDemand::default() } else { RetirementDemand { release_bytes: backing_bytes.max(size_of::<FemStagePlan>()), depth: 1, ..Default::default() } })
+    }
+}
+
+impl InteractiveJob for FemJobGraph {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if self.desk.retire_due(cx, self.operation) {
+            self.desk.retire_delivered(cx)?;
+            return Ok(None);
+        }
+        let run = match self.desk.take_pending() {
+            Some(run) => run,
+            None => self.run(cx),
+        };
+        self.desk.admit(cx, run)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
+        self.desk.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {}
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let frontier = match self.close_frontier() {
+            Ok(frontier) => frontier,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        let (complete, released_items, released_bytes) = FemJobGraph::close_step(self, maximum_bytes);
-        if complete {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        if !numerical_close_gate(grant, frontier) {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
         }
+        let step = match self.desk.close_step(grant) {
+            Some(step) => step,
+            None => numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes)),
+        };
+        step.admit(grant, self.terminal_is_empty())
     }
 
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> { Ok(self.close_demand()?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.depth) }
+
     fn terminal_is_empty(&self) -> bool {
-        self.state.plans.is_empty() && self.state.plans.capacity() == 0
+        self.desk.terminal_is_empty() && self.state.plans.is_empty() && self.state.plans.capacity() == 0
     }
 }
 // #endregion 🧩️JobGraph
@@ -828,7 +871,7 @@ fn build_rcm_permutation(nodes: &[Node], elements: &[Elements], dof_map: &DofMap
 
 // #region 🔖️Assembly
 /// 🧱️ Bounded phases of deterministic stiffness assembly.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind")]
 pub enum AssemblyJobStage {
     ElementTriplets,
@@ -849,7 +892,7 @@ impl AssemblyJobStage {
 }
 
 /// 👁️ Replaceable assembly progress for live element-mark rendering.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 pub struct AssemblyPreview {
     pub stage: AssemblyJobStage,
     pub completed_elements: usize,
@@ -976,7 +1019,7 @@ struct AssemblyCheckpoint {
     merge_candidate: Option<(usize, AssemblyTriplet)>,
 }
 
-#[derive(ToValue, FromValue)]
+#[derive(ToValue, FromValue, semio_framework_value::RetireOwned)]
 struct AssemblyResumeCheckpoint {
     version: u8,
     model_signature: u64,
@@ -1549,6 +1592,7 @@ impl AssemblyJobConstruction {
                         plan,
                         close_lane: 0,
                         model_close: AnalysisModelCloseCursor::default(),
+                        desk: NumericalOutcomeDesk::default(),
                     });
                     self.stage = AssemblyConstructionStage::Complete;
                 }
@@ -1576,7 +1620,7 @@ impl AssemblyJobConstruction {
             return (false, 1, 0);
         }
         if let Some(job) = self.job.as_mut() {
-            let (terminal, items, bytes) = job.close_step(maximum_bytes);
+            let (terminal, items, bytes) = job.close_retained_step(maximum_bytes);
             if !terminal {
                 return (false, items, bytes);
             }
@@ -1738,6 +1782,7 @@ pub struct AssemblyJob<'model> {
     state: AssemblyCheckpoint,
     close_lane: u8,
     model_close: AnalysisModelCloseCursor,
+    desk: NumericalOutcomeDesk,
 }
 
 impl<'model> AssemblyJob<'model> {
@@ -1788,6 +1833,7 @@ impl<'model> AssemblyJob<'model> {
             },
             close_lane: 0,
             model_close: AnalysisModelCloseCursor::default(),
+            desk: NumericalOutcomeDesk::default(),
         })
     }
 
@@ -1827,7 +1873,7 @@ impl<'model> AssemblyJob<'model> {
     /// 🧹️ Retires exactly one nested assembly owner per call. The model root is deliberately
     /// retained until the caller observes `true`; mounted sessions keep a separate exact model root
     /// while dropping the resulting shallow assembly shell.
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    pub fn close_retained_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         loop {
             let released = match self.close_lane {
                 0 => {
@@ -2539,7 +2585,7 @@ impl AssemblyCsrBuild {
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         if let Some(assembly) = self.assembly.as_mut() {
-            let (terminal, items, bytes) = assembly.close_step(maximum_bytes);
+            let (terminal, items, bytes) = assembly.close_retained_step(maximum_bytes);
             if !terminal {
                 return (false, items, bytes);
             }
@@ -2575,52 +2621,57 @@ impl AssemblyCsrBuild {
     }
 }
 
-impl InteractiveJob for AssemblyJob<'_> {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+impl AssemblyJob<'_> {
+    /// 🧹️ Pays back the one lent completion payload so the finished matrices can be taken.
+    pub fn retire_outcome(&mut self) {
+        self.desk.retire_all();
+    }
+
+    fn run(&mut self, context: &mut StepContext<'_>) -> NumericalRun {
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return NumericalRun::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            return NumericalRun::Fault;
         }
         context.set_stage(self.state.pending_build.as_ref().map_or_else(|| self.state.stage.label(), |build| build.stage.label()));
         if context.should_yield() {
-            return StepOutcome::Yield;
+            return NumericalRun::Yield;
         }
         context.consume_fuel(1);
         if self.state.checkpoint_due {
             self.state.checkpoint_due = false;
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             let bytes = self.checkpoint_bytes();
             return match context.payload_from_bytes(JobPayloadStream::CheckpointState, &bytes) {
-                Ok(state) => StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.state.element_cursor as u64 }),
-                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Ok(state) => self.desk.lend_checkpoint(state, self.state.element_cursor as u64),
+                Err(_) => NumericalRun::Fault,
             };
         }
         if self.state.preview_due {
             self.state.preview_due = false;
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             let bytes = encode_value(&self.preview());
             return match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
                 Ok(preview) => {
                     self.state.preview_cursor = self.state.element_cursor;
-                    StepOutcome::PreviewReady(preview)
+                    self.desk.lend_preview(preview)
                 }
-                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Err(_) => NumericalRun::Fault,
             };
         }
         if self.state.stage == AssemblyJobStage::Complete {
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
-                return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
+                return NumericalRun::Complete;
             }
             let bytes = encode_value(&self.preview());
             return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
-                Ok(output) => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }),
-                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Ok(output) => self.desk.lend_complete(output),
+                Err(_) => NumericalRun::Fault,
             };
         }
         match self.state.stage {
@@ -2632,12 +2683,12 @@ impl InteractiveJob for AssemblyJob<'_> {
                         } else {
                             let result = if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) { self.advance_element_build().map(|_| ()) } else { self.begin_borrowed_element() };
                             if result.is_err() {
-                                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                                return NumericalRun::Fault;
                             }
                         }
                     } else {
                         if self.assemble_cell().is_err() {
-                            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                            return NumericalRun::Fault;
                         }
                     }
                 }
@@ -2649,17 +2700,17 @@ impl InteractiveJob for AssemblyJob<'_> {
                     self.state.stage = AssemblyJobStage::MergeFree;
                 }
                 Ok(Some(_)) => {}
-                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Err(_) => return NumericalRun::Fault,
             },
             AssemblyJobStage::MergeFree => match self.advance_partition_merge(false) {
                 Ok(None) => self.state.stage = AssemblyJobStage::Complete,
                 Ok(Some(_)) => {}
-                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Err(_) => return NumericalRun::Fault,
             },
             AssemblyJobStage::Complete => {}
         }
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return NumericalRun::Cancelled;
         }
         if self.state.preview_due {
             self.state.preview_due = false;
@@ -2667,31 +2718,68 @@ impl InteractiveJob for AssemblyJob<'_> {
             match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
                 Ok(preview) => {
                     self.state.preview_cursor = self.state.element_cursor;
-                    StepOutcome::PreviewReady(preview)
+                    self.desk.lend_preview(preview)
                 }
-                Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Err(_) => NumericalRun::Fault,
             }
         } else {
-            StepOutcome::Yield
+            NumericalRun::Yield
         }
+    }
+
+    fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
+        self.desk.retirement_demands().transpose()
+    }
+
+    fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
+        Ok(self.close_frontier()?.unwrap_or_else(|| numerical_rung_demand(self.close_lane > 11)))
+    }
+}
+
+impl InteractiveJob for AssemblyJob<'_> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if self.desk.retire_due(cx, self.operation) {
+            self.desk.retire_delivered(cx)?;
+            return Ok(None);
+        }
+        let run = match self.desk.take_pending() {
+            Some(run) => run,
+            None => self.run(cx),
+        };
+        self.desk.admit(cx, run)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
+        self.desk.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {}
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let frontier = match self.close_frontier() {
+            Ok(frontier) => frontier,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        let (complete, released_items, released_bytes) = AssemblyJob::close_step(self, maximum_bytes);
-        if complete {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        if !numerical_close_gate(grant, frontier) {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
         }
+        let step = match self.desk.close_step(grant) {
+            Some(step) => step,
+            None => numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes)),
+        };
+        step.admit(grant, self.terminal_is_empty())
     }
 
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> { Ok(self.close_demand()?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.depth) }
+
     fn terminal_is_empty(&self) -> bool {
-        self.close_lane > 11
+        self.close_lane > 11 && self.desk.terminal_is_empty()
     }
 }
 
@@ -2719,18 +2807,16 @@ fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemError> {
     let mut job = AssemblyJob::new(model, operation, 1)?;
     let mut preview_sequence = 0;
     loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut preview_sequence);
-        let mut outcome = job.step(&mut context);
-        let failed = matches!(outcome, StepOutcome::Fault(_) | StepOutcome::Cancelled);
-        let complete = matches!(outcome, StepOutcome::Complete(_));
-        while !outcome.terminal_is_empty() {
-            outcome.close_step(1, usize::MAX);
-        }
-        if failed {
-            return Err(FemError::Singular);
-        }
-        if complete {
-            break;
+        match numerical_batch_step(&mut job, operation, &mut preview_sequence) {
+            NumericalBatchEnd::Complete => {
+                job.retire_outcome();
+                break;
+            }
+            NumericalBatchEnd::Fault | NumericalBatchEnd::Cancelled => {
+                numerical_batch_close(&mut job);
+                return Err(FemError::Singular);
+            }
+            NumericalBatchEnd::Continue => {}
         }
     }
     let unfactored = job.finish().expect("completed assembly owns its matrices");

@@ -29,7 +29,7 @@ impl<T:Puzzle2dTextInverse>Puzzle2dTextInverseCursor<T>{
  pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,T>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if self.closing||self.phase==9{return Err(refusal("optional text inverse is closing or spent"))}
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-  source.bind(&mut self.source)?;mutation.bind(&mut self.mutation)?;
+  if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
   match self.phase{
    0=>{let step=self.preparation.advance(source,mutation,grant)?;let progress=match step{Puzzle2dTextPreparationStep::Pending(progress)=>progress,Puzzle2dTextPreparationStep::Complete{plan,progress}=>{self.plan=self.preparation.take();self.preparation.begin_close();self.phase=if plan.index.is_some(){1}else{7};progress}};Ok(RetainedCloneStep::Progress(progress))}
    1=>{let index=self.plan.unwrap().index.unwrap();let step=self.identifier.advance(source.project(11,|snapshot|T::retained_id(snapshot,index)),grant)?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=2}Ok(RetainedCloneStep::Progress(step.progress()))}

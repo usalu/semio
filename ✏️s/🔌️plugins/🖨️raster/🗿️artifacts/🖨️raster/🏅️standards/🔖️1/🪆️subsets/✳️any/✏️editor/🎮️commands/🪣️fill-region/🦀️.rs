@@ -19,7 +19,7 @@ pub const RASTER_FILL_TOOL_ID: &str = "s.raster.raster@1/*#editor#fillRegion";
 
 /// 🪣️ One bucket click as both hosts dispatch it: the layer and the clicked point in its image's pixels. The colour
 /// tolerance is the session's (`setFillTolerance`), one value both hosts read.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "fill-region")]
 pub struct FillRegion {
     pub layer_id: String,

@@ -1,5 +1,7 @@
 //! 📋️ Controlled identity assignment for every node of an authored subtree.
-use super::publication::{admit_identity,DrawingIdentityKind,NativeEncodeControl,ValueError};
+use super::publication::admit_identity;
+use crate::schema::identity::DrawingIdentityKind;
+use semio_framework_value::{NativeEncodeControl,ValueError};
 
 pub fn admit_clone_identities(node:&crate::DrawingLayerNode,suffix:&str,control:&mut NativeEncodeControl<'_>)->Result<semio_framework_value::list::PagedList<crate::schema::identity::DrawingIdentityAssignment,{usize::MAX}>,ValueError>{
  fn visit(node:&crate::DrawingLayerNode,suffix:&str,depth:usize,count:&mut usize,control:&mut NativeEncodeControl<'_>,output:&mut Vec<crate::schema::identity::DrawingIdentityAssignment>)->Result<(),ValueError>{

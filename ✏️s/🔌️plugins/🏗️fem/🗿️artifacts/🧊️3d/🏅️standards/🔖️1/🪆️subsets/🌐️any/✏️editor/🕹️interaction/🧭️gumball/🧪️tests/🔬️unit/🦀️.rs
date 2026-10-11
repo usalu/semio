@@ -169,7 +169,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let tick = |motion| Fem3dMutation::MoveSelection(fem3d_gumball_tick(&base, &ids(&["n20_l1", "sol1"]), motion).expect("the selection moves geometry"));
     let log = [tick(Fem3dGumballMotion::Translate { dx: 1.0, dy: 0.0, dz: 0.0 }), tick(Fem3dGumballMotion::Scale { sx: 2.0, sy: 1.0, sz: 1.0 }), tick(Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 1.0], angle: 0.5 })];
     let mut store = store::ArtifactStore::<Fem3dSnapshot, Fem3dMutation>::new(store::create_document_envelope::<Fem3dSnapshot, Fem3dMutation>(crate::FEM_3D_SCHEMA, "gumball-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Fem3dSnapshot, Fem3dMutation>());
+    store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::funded_bounded_artifact_store_owners::<Fem3dSnapshot, Fem3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     for mutation in &log {
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
     }
@@ -198,7 +198,9 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
         if disposer.terminal_is_empty(&store) {
             break;
         }
-        disposer.close_step(&mut store, 1, 1 << 20).expect("the store retires");
+        let demand = disposer.retirement_demands(&store, 1 << 20).expect("the store quotes its next retirement turn");
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(1 << 20), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        disposer.close_step(&mut store, grant).expect("the store retires");
     }
     assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
 }

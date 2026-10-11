@@ -14,7 +14,7 @@ use crate::CadSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 📦Bounds
 /// 📦 Axis-aligned 3d bounding box.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct CadBounds {
     pub min: [f64; 3],

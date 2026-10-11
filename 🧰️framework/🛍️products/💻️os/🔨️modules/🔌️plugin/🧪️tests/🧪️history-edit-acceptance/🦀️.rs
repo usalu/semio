@@ -296,6 +296,12 @@ pub fn acceptance_change_buckets(inputs: &[ActionArgDef], value: &DslValue) -> [
     buckets
 }
 
+/// 🎟️ The explicit mounted owner policy every acceptance instance runs under.
+fn acceptance_policy() -> crate::MountedOwnerPolicyV1 {
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+    crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
+}
+
 /// 🪪️ The acceptance actor's action meta on the registered instance.
 fn acceptance_meta() -> ActionMeta {
     ActionMeta { view_state: Some(ViewModel::new(Locale::En, Terminology::Native)), ..artifact_app_laws::meta(ACCEPTANCE_ACTOR) }
@@ -308,7 +314,7 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let args = DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-    let result = app.handle_action(action, Some(&args), &acceptance_meta()).await.map_err(|fault| format!("{action} faulted: {fault:?}"))?;
+    let result = crate::with_authoring_identity!(|identity| app.handle_action(action, Some(&args), &acceptance_meta(), &mut identity).await).map_err(|fault| format!("{action} faulted: {fault:?}"))?;
     match result.output.get("rejected").and_then(DslValue::as_str) {
         Some(code) => Err(format!("{action} was refused: {code}")),
         None => Ok(()),
@@ -326,7 +332,7 @@ where
         if done(app) {
             return Ok(());
         }
-        app.advance_typed_operation_publication().await.map_err(|fault| format!("a driver turn faulted: {fault:?}"))?;
+        crate::with_authoring_identity!(|identity| app.advance_typed_operation_publication(&mut identity, acceptance_policy().maintenance).await).map_err(|fault| format!("a driver turn faulted: {fault:?}"))?;
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     Err(format!(
@@ -344,7 +350,7 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let _ = acceptance_pump(app, |app| !app.time_travel.has_pending_work()).await;
-    artifact_app_laws::close_registered_fixture_app(app);
+    artifact_app_laws::close_registered_fixture_app(app, acceptance_policy());
 }
 
 /// 🪴️ A registered instance whose document is `base` (loaded through the document text path unless the instance boots on exactly
@@ -356,14 +362,14 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;
+    let mut app = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let seeded = async {
-        assert_eq!(app.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));
+        assert_eq!(app.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
         let mut files = app.document_text().await.map_err(|fault| AcceptanceSeedFault::Base(format!("the document does not print: {fault:?}")))?;
         if files.dsl != base {
             files.dsl = base.to_string();
-            artifact_app_laws::load_document_text(&mut app, &files).await.map_err(|fault| AcceptanceSeedFault::Base(format!("the base document does not load: {fault:?}")))?;
+            crate::with_authoring_identity!(|identity| artifact_app_laws::load_document_text(&mut app, &files, &mut identity).await).map_err(|fault| AcceptanceSeedFault::Base(format!("the base document does not load: {fault:?}")))?;
         }
         for (index, op) in ops.iter().enumerate() {
             let applied = app.store.mutation_ops().map_or(0, |applied| applied.len());
@@ -1071,14 +1077,14 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let archive = PluginApp::document_archive(app).await.map_err(|fault| format!("the document does not archive: {fault:?}"))?;
-    let mut reloaded = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;
+    let mut reloaded = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     reloaded.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let loaded = async {
-        assert_eq!(reloaded.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));
+        assert_eq!(reloaded.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
         PluginApp::begin_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, archive).map_err(|fault| format!("the archive is refused: {fault:?}"))?;
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
         loop {
-            let status = PluginApp::poll_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION).await.map_err(|fault| format!("the archive load faulted: {fault:?}"))?;
+            let status = crate::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, &mut identity).await).map_err(|fault| format!("the archive load faulted: {fault:?}"))?;
             match status.state {
                 protocol::DocumentArchiveLoadState::Ready => break,
                 protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault => return Err(format!("the archive load ends {:?}: {}", status.state, String::from_utf8_lossy(&status.fault))),
@@ -1174,13 +1180,13 @@ where
     documents.extend(examples.iter().map(|example| (format!("example {}", example.id()), Some(example.id().to_string()))));
     let mut reloaded_documents = 0;
     for (name, example) in documents {
-        let mut saved = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;
+        let mut saved = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
         saved.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
         let outcome = async {
             if let Some(example) = example {
-                assert_eq!(saved.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));
+                assert_eq!(saved.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
                 acceptance_verb(&mut saved, CATALOGUE_EXAMPLE_ACTION_ID, vec![("exampleId", DslValue::String(example))]).await.map_err(|refusal| format!("the app's own example route does not load it: {refusal}"))?;
-                artifact_app_laws::settle_registered_typed_operation(&mut saved, acceptance_meta().instance_id).await.map_err(|fault| format!("the example does not finish loading: {fault:?}"))?;
+                crate::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut saved, acceptance_meta().instance_id, acceptance_policy(), &mut identity).await).map_err(|fault| format!("the example does not finish loading: {fault:?}"))?;
             }
             saved.refresh_cache().await.map_err(|fault| format!("the history does not backfill: {fault:?}"))?;
             let before = acceptance_document_view(&mut saved, manifest).await?;
@@ -1231,17 +1237,17 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;
+    let mut app = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let seeded = async {
-        assert_eq!(app.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.to_string()));
+        assert_eq!(app.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
         for (action, args) in seed {
             let args = semio_framework_pack_json::parse(args, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the seed args of {action} are not JSON: {error:?}"))?;
             let DslValue::Object(args) = semio_framework_pack_json::to_dsl_value(&args) else {
                 return Err(format!("the seed args of {action} are not a JSON object"));
             };
             acceptance_verb(&mut app, action, args.iter().map(|(key, value)| (key.as_str(), value.clone())).collect()).await?;
-            artifact_app_laws::settle_registered_typed_operation(&mut app, acceptance_meta().instance_id).await.map_err(|fault| format!("the seed gesture {action} does not publish: {fault:?}"))?;
+            crate::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, acceptance_meta().instance_id, acceptance_policy(), &mut identity).await).map_err(|fault| format!("the seed gesture {action} does not publish: {fault:?}"))?;
         }
         app.refresh_cache().await.map_err(|fault| format!("the history does not backfill: {fault:?}"))
     }
@@ -1422,7 +1428,7 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into())).await;
+    let mut app = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     let declared = acceptance_withdraw_only_kinds(fixtures);
     let failures = input_schema_resolution_failures::<A>(&declared);
     acceptance_close(&mut app).await;

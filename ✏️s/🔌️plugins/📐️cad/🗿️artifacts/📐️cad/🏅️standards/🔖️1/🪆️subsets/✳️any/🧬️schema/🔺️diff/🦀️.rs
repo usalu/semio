@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the cad artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadDiff {
@@ -39,7 +39,7 @@ pub struct CadDiff {
 
 /// 🧱️ Explicit replacement of one fixed model slot: preserves an untouched slot (absent) apart from a cleared one (`child: None`),
 /// which a bare `Option<Option<_>>` would collapse on the wire.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 pub struct CadModelSlot {
     pub child: Option<CadModelChild>,
@@ -55,14 +55,30 @@ protocol::list_delta! {
     pub CadReferencesDelta { removal: CadReferenceRemoval, insertion: CadReferenceInsertion, relocation: CadReferenceRelocation, modification: CadReferenceModification, row: CadReference, patch: CadReferencePatch, key: id }
 }
 
+/// 🔑️ Keys the foreign drawing child rows by their child id.
+pub(crate) struct CadDrawingKeys;
+
+impl protocol::list_delta::KeyOf<CadDrawingChild> for CadDrawingKeys {
+    type Key = String;
+    fn key_of(row: &CadDrawingChild) -> String { row.child_id.clone() }
+}
+
+/// 🔑️ Keys the foreign brep child rows by their child id.
+pub(crate) struct CadBrepKeys;
+
+impl protocol::list_delta::KeyOf<CadBrepChild> for CadBrepKeys {
+    type Key = String;
+    fn key_of(row: &CadBrepChild) -> String { row.child_id.clone() }
+}
+
 protocol::plain_list_delta! {
     /// 🧩️ Positional delta for the `drawings` composed CHILD COLLECTION (`protocol::list_delta`).
-    pub CadDrawingsDelta { removal: CadDrawingRemoval, insertion: CadDrawingInsertion, relocation: CadDrawingRelocation, row: CadDrawingChild, list: Vec<CadDrawingChild>, key: String = |row| row.child_id.clone() }
+    pub CadDrawingsDelta { removal: CadDrawingRemoval, insertion: CadDrawingInsertion, relocation: CadDrawingRelocation, row: CadDrawingChild, list: Vec<CadDrawingChild>, key: String = by CadDrawingKeys }
 }
 
 protocol::plain_list_delta! {
     /// 🧊️ Positional delta for the ordered `breps` topology sibling collection (`protocol::list_delta`).
-    pub CadBrepsDelta { removal: CadBrepRemoval, insertion: CadBrepInsertion, relocation: CadBrepRelocation, row: CadBrepChild, list: Vec<CadBrepChild>, key: String = |row| row.child_id.clone() }
+    pub CadBrepsDelta { removal: CadBrepRemoval, insertion: CadBrepInsertion, relocation: CadBrepRelocation, row: CadBrepChild, list: Vec<CadBrepChild>, key: String = by CadBrepKeys }
 }
 //#endregion 🔖️DeltaHelpers
 

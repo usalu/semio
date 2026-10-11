@@ -33,7 +33,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant — real per-command payload modules the way `✏️editor/🎮️commands/*`
 /// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, semio_framework_value::RetireOwned)]
 pub enum EquationViewCommand {
     #[default]
     Noop,
@@ -73,13 +73,6 @@ impl ArtifactViewer for EquationViewer {
     }
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
 
-    /// 🔐️ The document-store owner catalogue, identical to the sibling editor's: a viewer owns the
-    /// very same `EquationSnapshot` envelope and must allocate and retire it the same way. Read-only
-    /// says nothing about ownership.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
     /// 🧹️ The bounded disposer `VcsArtifactApp`'s close ladder drives for the `document-store` lane.
     ///
     /// 🐛️ Left at the trait default (`None`) this surface can NEVER close: every close of a
@@ -92,14 +85,6 @@ impl ArtifactViewer for EquationViewer {
     /// `🗒️note`'s viewer documents for itself, ticket 26/09/18 slices TC3c §5f / TC3d §1 / TC3e).
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-    }
-
-    /// 🧹️ The remaining three lanes `VcsArtifactApp`'s close ladder drives. This viewer declares
-    /// `NoConfig`/`NoPresence`/`NoTransient`, so each is the framework's own empty owner — but the
-    /// ladder still demands a disposer per lane, and the trait default `None` faults the close the
-    /// same way `document-store` did. Mirrors `🗒️note`'s viewer, which carries the identical set.
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
     }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {

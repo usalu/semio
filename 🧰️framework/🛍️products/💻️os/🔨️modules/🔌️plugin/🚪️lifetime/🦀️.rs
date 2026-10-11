@@ -73,7 +73,7 @@ impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
             Err(std::sync::TryLockError::WouldBlock) => return Ok(false),
             Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault("captured app close worker is poisoned")),
         };
-        if cell.is_some() || pump.session.is_some() || pump.rejected.is_some() || pump.outcome.is_some() || pump.terminal || !pump.complete {
+        if cell.is_some() || pump.session.is_some() || pump.rejected.is_some() || pump.outcome_pending || pump.terminal || !pump.complete {
             return Err(plugin_internal_fault("captured app close reported terminal while retaining an owner"));
         }
         self.terminal.set(true);

@@ -1,7 +1,7 @@
 //! 📝️ The authoritative, durable form definition shared by authoring and answering.
 use crate::FormStep;
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 pub struct FormsDefinition {
     pub steps: Vec<FormStep>,
 }

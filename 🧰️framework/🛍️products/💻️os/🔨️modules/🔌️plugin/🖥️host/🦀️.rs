@@ -7,7 +7,7 @@ pub mod sqlite_wire;
 mod operation;
 #[cfg(test)]
 #[path="🧪️tests/🛂️receiving/🦀️.rs"]
-mod test_native_authority;
+pub(crate) mod test_native_authority;
 #[path="🚪️io/🪶️snapshot/🦀️.rs"]
 mod snapshot_call;
 pub use snapshot_call::{SnapshotCall,SnapshotCallOutput,SnapshotCallStatus,SnapshotComponentReceipt};
@@ -4709,7 +4709,8 @@ struct GuestRelayPublication {
     copied: bool,
     retired: bool,
     oversized: bool,
-    writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
+    delivered: bool,
+    writer: Option<semio_framework_job::RetainedPayloadBuilder>,
 }
 
 impl GuestRelayPublication {
@@ -4721,61 +4722,92 @@ impl GuestRelayPublication {
             GuestRelayPublicationKind::Commit => semio_framework_job::JobPayloadStream::CommitOutput,
             GuestRelayPublicationKind::Fault => semio_framework_job::JobPayloadStream::Fault,
         };
-        Self { kind, source:std::mem::ManuallyDrop::new(source), cursor: 0, copied: false, retired: false, oversized, writer: Some(semio_framework_job::RetainedJobPayloadWriter::new(stream)) }
+        Self { kind, source:std::mem::ManuallyDrop::new(source), cursor: 0, copied: false, retired: false, oversized, delivered: false, writer: Some(semio_framework_job::RetainedPayloadBuilder::new(stream)) }
     }
 
-    fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    /// 🏁️ A commit or fault ends the relay; only a preview is retired inside the running job.
+    fn is_terminal(&self) -> bool {
+        !matches!(self.kind, GuestRelayPublicationKind::Preview)
+    }
+
+    fn invalid(detail: &'static str) -> semio_framework_value::ValueError {
+        semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, detail)
+    }
+
+    /// ✍️ Pays one frontier of the publication (bind, append, retire the source, seal) and lends the sealed pages once.
+    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if self.delivered {
+            return Ok(None);
+        }
+        if !self.writer.as_ref().ok_or_else(|| Self::invalid("guest relay publication lost its payload builder"))?.is_initialized() {
+            self.writer.as_mut().expect("guest relay publication owns builder").advance_initialization(context)?;
+            return Ok(None);
+        }
         if !self.copied {
             let bytes = if self.oversized { &b"plugin-guest-relay-output-limit"[..] } else { self.source.as_slice() };
-            let writer = self.writer.as_mut().expect("guest relay publication owns writer");
-            match writer.write_slice_page(context, bytes, &mut self.cursor) {
-                Ok(true) => self.copied = true,
-                Ok(false) | Err(_) => return semio_framework_job::StepOutcome::Yield,
+            let writer = self.writer.as_mut().expect("guest relay publication owns builder");
+            if writer.append_original(context, bytes, &mut self.cursor)? {
+                self.copied = true;
             }
             context.consume_fuel(1);
-            return semio_framework_job::StepOutcome::Yield;
+            return Ok(None);
         }
         if !self.retired {
-            if self.source.is_empty()&&self.source.capacity()==0{
-                let grant=context.retained_grant();let bytes=std::mem::size_of::<bool>();
-                if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth<1{return semio_framework_job::StepOutcome::Yield;}
-                self.retired=true;
-                let progress=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};
-                if context.consume_retained(progress).is_err(){return semio_framework_job::StepOutcome::Yield;}
-                context.consume_fuel(1);return semio_framework_job::StepOutcome::Yield;
+            if self.source.is_empty() && self.source.capacity() == 0 {
+                let grant = context.retained_grant();
+                let bytes = std::mem::size_of::<bool>();
+                if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes || grant.maximum_depth < 1 {
+                    return Ok(None);
+                }
+                self.retired = true;
+                context.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
+                context.consume_fuel(1);
+                return Ok(None);
             }
-            let step=match self.close_original_source(context.retained_grant()){Ok(step)=>step,Err(_)=>return semio_framework_job::StepOutcome::Yield};
-            let progress=step.progress();
-            if context.consume_retained(progress).is_err(){return semio_framework_job::StepOutcome::Yield;}
+            let step = self.close_original_source(context.retained_grant())?;
+            context.consume_retained(step.progress())?;
             context.consume_fuel(1);
-            return semio_framework_job::StepOutcome::Yield;
+            return Ok(None);
         }
-        let metadata=std::mem::size_of::<Option<semio_framework_job::RetainedJobPayloadWriter>>()+std::mem::size_of::<semio_framework_job::RetainedJobPayload>()+std::mem::size_of::<semio_framework_job::StepOutcome>();
-        let grant=context.retained_grant();
-        if grant.maximum_items==0||grant.maximum_copy_bytes<metadata||grant.maximum_depth<1{return semio_framework_job::StepOutcome::Yield;}
-        if context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:metadata,..Default::default()}).is_err(){return semio_framework_job::StepOutcome::Yield;}
-        let writer = self.writer.take().expect("guest relay publication owns finished writer");
-        let payload = match writer.finish() {
-            Ok(payload) => payload,
-            Err(writer) => {
-                self.writer = Some(writer);
-                return semio_framework_job::StepOutcome::Yield;
-            }
+        let writer = self.writer.as_mut().expect("guest relay publication owns builder");
+        if writer.published().is_none() {
+            writer.seal(context)?;
+            return Ok(None);
+        }
+        let payload = writer.published().ok_or_else(|| Self::invalid("guest relay publication lost its sealed payload"))?;
+        let outcome = match self.kind {
+            GuestRelayPublicationKind::Preview => semio_framework_job::JobOutcomeBorrow::admit_preview(context, payload)?,
+            GuestRelayPublicationKind::Commit => semio_framework_job::JobOutcomeBorrow::admit_complete(context, None, Some(payload))?,
+            GuestRelayPublicationKind::Fault => semio_framework_job::JobOutcomeBorrow::admit_fault(context, payload)?,
         };
+        self.delivered |= outcome.is_some();
+        Ok(outcome)
+    }
+
+    /// 🤝️ Resolves a descriptor against the same sealed pages this publication lent.
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        let payload = self.writer.as_ref().and_then(semio_framework_job::RetainedPayloadBuilder::published).filter(|_| self.delivered).ok_or_else(|| Self::invalid("guest relay descriptor requires its delivered payload"))?;
         match self.kind {
-            GuestRelayPublicationKind::Preview => semio_framework_job::StepOutcome::PreviewReady(payload),
-            GuestRelayPublicationKind::Commit => {
-                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output: payload })
-            }
-            GuestRelayPublicationKind::Fault => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: payload }),
+            GuestRelayPublicationKind::Preview => descriptor.preview(payload),
+            GuestRelayPublicationKind::Commit => descriptor.complete(None, Some(payload)),
+            GuestRelayPublicationKind::Fault => descriptor.fault(payload),
         }
     }
 
-    fn begin_close(&mut self) {
+    /// ♻️ Retires a delivered non-terminal publication's pages inside the next running step; true once nothing is left.
+    fn retire(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_value::ValueError> {
         if let Some(writer) = self.writer.as_mut() {
-            writer.begin_close();
+            if !writer.terminal_is_empty() {
+                let step = writer.close_step_granted(context.retained_grant())?;
+                context.consume_retained(step.progress())?;
+                return Ok(false);
+            }
         }
+        self.writer = None;
+        Ok(self.terminal_is_empty())
     }
+
+    fn begin_close(&mut self) {}
 
     fn original_source_demand(&self)->semio_framework_value::RetirementDemand{
         if !self.source.is_empty(){semio_framework_value::RetirementDemand{copy_bytes:1+std::mem::size_of::<usize>(),depth:1,..Default::default()}}
@@ -4795,7 +4827,7 @@ impl GuestRelayPublication {
     }
 
     fn retirement_demands(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
-        if let Some(writer)=self.writer.as_ref(){return if writer.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<semio_framework_job::RetainedJobPayloadWriter>>(),depth:1,..Default::default()})}else{let mut demand=writer.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"Host publication writer depth overflow"))?;Ok(demand)};}
+        if let Some(writer)=self.writer.as_ref(){return if writer.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<semio_framework_job::RetainedPayloadBuilder>>(),depth:1,..Default::default()})}else{let mut demand=writer.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"Host publication writer depth overflow"))?;Ok(demand)};}
         Ok(self.original_source_demand())
     }
 
@@ -4805,7 +4837,7 @@ impl GuestRelayPublication {
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return S::Pending{progress:Default::default()};}
         if let Some(writer)=self.writer.as_mut(){
             if writer.terminal_is_empty(){drop(self.writer.take());return S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}};}
-            return match writer.close_step(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}){Ok(step)=>S::Pending{progress:step.progress()},Err(error)=>S::Refused{kind:error.kind,progress:error.retained_progress()}};
+            return match writer.close_step_granted(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}){Ok(step)=>S::Pending{progress:step.progress()},Err(error)=>S::Refused{kind:error.kind,progress:error.retained_progress()}};
         }
         match self.close_original_source(grant){Ok(semio_framework_value::RetainedCloneStep::Progress(progress))=>S::Pending{progress},Ok(semio_framework_value::RetainedCloneStep::Complete(progress))=>S::Complete{progress},Err(error)=>S::Refused{kind:error.kind,progress:error.retained_progress()}}
     }
@@ -4871,84 +4903,89 @@ impl GuestColdRelayJob {
         }
     }
 
-    fn terminal(&mut self, outcome: semio_framework_job::StepOutcome) -> semio_framework_job::StepOutcome {
-        self.terminal_delivered = true;
-        outcome
-    }
 }
 
 impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
-    fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        if let Some(publication) = self.publication.as_mut() {
-            let outcome = publication.step(context);
-            if !matches!(outcome, semio_framework_job::StepOutcome::Yield) {
-                let terminal = outcome.is_terminal();
-                self.publication = None;
-                if terminal {
-                    self.terminal_delivered = true;
-                }
+    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        use semio_framework_job::JobOutcomeBorrow;
+        if self.publication.as_ref().is_some_and(|publication| publication.delivered) {
+            if self.publication.as_ref().is_some_and(GuestRelayPublication::is_terminal) {
+                return JobOutcomeBorrow::admit_yield(context);
             }
-            return outcome;
+            let retired = self.publication.as_mut().expect("delivered guest relay publication").retire(context)?;
+            if retired {
+                let bytes = std::mem::size_of::<Option<GuestRelayPublication>>();
+                let grant = context.retained_grant();
+                if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes || grant.maximum_depth < 1 {
+                    return Ok(None);
+                }
+                context.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
+                self.publication = None;
+            }
+            return Ok(None);
+        }
+        if self.publication.is_some() {
+            let terminal = self.publication.as_ref().is_some_and(GuestRelayPublication::is_terminal);
+            let outcome = self.publication.as_mut().expect("guest relay publication was just observed").step(context)?;
+            if outcome.is_some() && terminal {
+                self.terminal_delivered = true;
+            }
+            return Ok(outcome);
         }
         if self.terminal_delivered {
-            return semio_framework_job::StepOutcome::Yield;
+            return JobOutcomeBorrow::admit_yield(context);
         }
         if context.is_cancelled() || self.cancel.is_cancelled_now() {
             self.cancel.cancel_now();
             if self.pending.is_none() && self.cleanup_required {
                 self.submit_cleanup();
-                return semio_framework_job::StepOutcome::Yield;
+                return JobOutcomeBorrow::admit_yield(context);
             }
             if self.pending.is_none() {
-                return self.terminal(semio_framework_job::StepOutcome::Cancelled);
+                self.terminal_delivered = true;
+                return JobOutcomeBorrow::admit_cancelled(context);
             }
         }
         if let Some(slot) = &self.pending {
-            let Some(completion) = slot.try_take() else { return semio_framework_job::StepOutcome::Yield };
+            let Some(completion) = slot.try_take() else { return JobOutcomeBorrow::admit_yield(context) };
             self.pending = None;
-            return match completion {
+            match completion {
                 GuestRelayCompletion::Started(Ok(())) => {
                     self.started = true;
-                    semio_framework_job::StepOutcome::Yield
                 }
                 GuestRelayCompletion::Started(Err(error)) | GuestRelayCompletion::Stepped(Err(error)) => {
                     self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.to_string().into_bytes()));
-                    semio_framework_job::StepOutcome::Yield
                 }
                 GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Running { progress: Some(progress) })) => {
                     self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Preview, progress.into_source()));
-                    semio_framework_job::StepOutcome::Yield
                 }
-                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Running { progress: None })) => semio_framework_job::StepOutcome::Yield,
+                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Running { progress: None })) => {}
                 GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Done { output })) => {
                     self.cleanup_required = false;
                     self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Commit, output.into_source()));
-                    semio_framework_job::StepOutcome::Yield
                 }
                 GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Failed { error })) => {
                     self.cleanup_required = false;
                     self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.into_source()));
-                    semio_framework_job::StepOutcome::Yield
                 }
                 GuestRelayCompletion::Rejected(error) => {
                     self.cleanup_required = false;
                     self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.into_source()));
-                    semio_framework_job::StepOutcome::Yield
                 }
                 GuestRelayCompletion::Fault(error) => {
                     self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.into_source()));
-                    semio_framework_job::StepOutcome::Yield
                 }
                 GuestRelayCompletion::TerminalFault(error) => {
                     self.cleanup_required = false;
                     self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.into_source()));
-                    semio_framework_job::StepOutcome::Yield
                 }
                 GuestRelayCompletion::Cancelled => {
                     self.cleanup_required = false;
-                    self.terminal(semio_framework_job::StepOutcome::Cancelled)
+                    self.terminal_delivered = true;
+                    return JobOutcomeBorrow::admit_cancelled(context);
                 }
-            };
+            }
+            return JobOutcomeBorrow::admit_yield(context);
         }
         if let Some((kind, input)) = self.start.take() {
             self.start_submitted = true;
@@ -4958,9 +4995,16 @@ impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
             self.submit(GuestRelayRequest::Step);
         } else {
             self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, b"plugin guest relay lost its start state".to_vec()));
-            return semio_framework_job::StepOutcome::Yield;
         }
-        semio_framework_job::StepOutcome::Yield
+        JobOutcomeBorrow::admit_yield(context)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            semio_framework_job::JobOutcomeKind::Yield => descriptor.yielded(),
+            semio_framework_job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            _ => self.publication.as_ref().ok_or_else(|| GuestRelayPublication::invalid("guest relay descriptor requires its publication"))?.borrow_outcome(descriptor),
+        }
     }
 
     fn begin_close(&mut self) {
@@ -5071,14 +5115,38 @@ struct GuestRelayLifecycleProbeJob {
     control: Arc<GuestRelayLifecycleProbeControl>,
     remaining: usize,
     terminal_output: Option<Vec<u8>>,
+    publication: Option<GuestRelayPublication>,
     closing: bool,
 }
 
+impl GuestRelayLifecycleProbeJob {
+    fn publication_demand(&self)->Option<Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>>{
+        let publication=self.publication.as_ref()?;
+        if publication.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<GuestRelayPublication>>(),depth:1,..Default::default()}));}
+        Some(publication.retirement_demands().and_then(|mut demand|{demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"lifecycle probe publication depth overflow"))?;Ok(demand)}))
+    }
+}
+
 impl semio_framework_job::InteractiveJob for GuestRelayLifecycleProbeJob {
-    fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        let Some(output) = self.terminal_output.take() else { return semio_framework_job::StepOutcome::Yield };
-        let output = context.payload_from_bytes(semio_framework_job::JobPayloadStream::CommitOutput, &output).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput));
-        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output })
+    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if self.publication.is_none() {
+            let Some(output) = self.terminal_output.take() else { return semio_framework_job::JobOutcomeBorrow::admit_yield(context) };
+            self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Commit, output));
+            return Ok(None);
+        }
+        let publication = self.publication.as_mut().expect("lifecycle probe publication was just observed");
+        if publication.delivered {
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(context);
+        }
+        publication.step(context)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            semio_framework_job::JobOutcomeKind::Yield => descriptor.yielded(),
+            semio_framework_job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            _ => self.publication.as_ref().ok_or_else(|| GuestRelayPublication::invalid("lifecycle probe descriptor requires its publication"))?.borrow_outcome(descriptor),
+        }
     }
 
     fn begin_close(&mut self) {
@@ -5090,6 +5158,15 @@ impl semio_framework_job::InteractiveJob for GuestRelayLifecycleProbeJob {
 
     fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
         use semio_framework_job::InteractiveJobCloseStep as S;
+        if let Some(publication)=self.publication.as_mut(){
+            if publication.terminal_is_empty(){
+                let bytes=std::mem::size_of::<Option<GuestRelayPublication>>();
+                if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth<1{return S::Pending{progress:Default::default()};}
+                drop(self.publication.take());return S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}};
+            }
+            if grant.maximum_depth==0{return S::Pending{progress:Default::default()};}
+            return match publication.close_step(semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}){S::Complete{progress}=>S::Pending{progress},step=>step};
+        }
         if self.remaining==0{return S::Refused{kind:semio_framework_value::ValueRefusalKind::UnsupportedOwner,progress:Default::default()};}
         if !self.control.awake.load(std::sync::atomic::Ordering::Acquire){return S::Blocked;}
         let bytes=std::mem::size_of::<usize>();
@@ -5098,18 +5175,91 @@ impl semio_framework_job::InteractiveJob for GuestRelayLifecycleProbeJob {
         self.remaining-=1;self.control.releases.fetch_add(1,std::sync::atomic::Ordering::SeqCst);
         S::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}}
     }
-    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if self.remaining==0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original lifecycle control Arc, wake and output owners require native retirement"));}Ok(std::mem::size_of::<usize>())}
-    fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{self.next_close_copy_byte_demand().map(|_|0)}
-    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.next_close_copy_byte_demand().map(|_|0)}
-    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.next_close_copy_byte_demand().map(|_|1)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if let Some(demand)=self.publication_demand(){return Ok(demand?.copy_bytes);}if self.remaining==0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original lifecycle control Arc, wake and output owners require native retirement"));}Ok(std::mem::size_of::<usize>())}
+    fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{if let Some(demand)=self.publication_demand(){return Ok(demand?.capacity_bytes);}self.next_close_copy_byte_demand().map(|_|0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if let Some(demand)=self.publication_demand(){return Ok(demand?.release_bytes);}self.next_close_copy_byte_demand().map(|_|0)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{if let Some(demand)=self.publication_demand(){return Ok(demand?.depth);}self.next_close_copy_byte_demand().map(|_|1)}
 
     fn terminal_is_empty(&self)->bool{false}
+}
+
+/// 🧾️ The original job and parameters a refused worker admission leaves with the registry until their paid close.
+struct GuestRelayRefusedSource<J: semio_framework_job::InteractiveJob> {
+    job: Option<J>,
+    params: Option<semio_framework_job::BatchJobParams>,
+    closing: bool,
+}
+
+impl<J: semio_framework_job::InteractiveJob> GuestRelayRefusedSource<J> {
+    fn terminal_is_empty(&self) -> bool {
+        self.job.is_none() && self.params.is_none()
+    }
+
+    fn retirement_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if let Some(job) = self.job.as_ref() {
+            return Ok(semio_framework_value::RetirementDemand { copy_bytes: job.next_close_copy_byte_demand()?, capacity_bytes: job.next_close_capacity_byte_demand(maximum_copy_bytes)?, release_bytes: job.next_close_release_byte_demand()?, depth: job.next_close_depth_demand()? });
+        }
+        Ok(semio_framework_value::RetirementDemand { depth: usize::from(self.params.is_some()), ..Default::default() })
+    }
+
+    fn begin_close(&mut self) {
+        if !self.closing {
+            self.closing = true;
+            if let Some(job) = self.job.as_mut() {
+                job.begin_close();
+            }
+        }
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep as S;
+        self.begin_close();
+        let item = semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        if let Some(job) = self.job.as_mut() {
+            if job.terminal_is_empty() {
+                if grant.maximum_items == 0 {
+                    return S::Pending { progress: Default::default() };
+                }
+                drop(self.job.take());
+                return S::Pending { progress: item };
+            }
+            let terminal = job.terminal_is_empty();
+            return match job.close_step(grant).admit(grant, terminal) {
+                S::Complete { progress } => S::Pending { progress },
+                step => step,
+            };
+        }
+        if self.params.is_some() {
+            if grant.maximum_items == 0 {
+                return S::Pending { progress: Default::default() };
+            }
+            drop(self.params.take());
+            return S::Pending { progress: item };
+        }
+        S::Complete { progress: Default::default() }
+    }
+}
+
+/// 🚪️ Admits one session from the registry's own drive grant; a refusal keeps the original job and parameters.
+fn admit_guest_relay_session<J: semio_framework_job::InteractiveJob + 'static>(job: J, params: semio_framework_job::BatchJobParams, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_job::WorkerJobSession<J>, GuestRelayRefusedSource<J>> {
+    let mut job = Some(job);
+    let mut params = Some(params);
+    let original = params.as_ref().expect("original session parameters");
+    let (operation, generation, now_us) = (original.operation, original.generation, original.now_us);
+    let mut recipient = semio_framework_value::RetainedCloneProgress::default();
+    match semio_framework_job::WorkerJobAdmissionContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, grant), now_us, &mut recipient) {
+        Ok(mut control) => match semio_framework_job::WorkerJobSession::try_admit_owned(&mut job, &mut params, &mut control) {
+            Ok(Some((session, _admission))) => Ok(session),
+            Ok(None) | Err(_) => Err(GuestRelayRefusedSource { job, params, closing: false }),
+        },
+        Err(_) => Err(GuestRelayRefusedSource { job, params, closing: false }),
+    }
 }
 
 #[expect(clippy::large_enum_variant, reason = "Failed worker admission must retain the exact job and credits for bounded retirement without allocating on rejection.")]
 enum GuestRelayMountedOwner {
     Session(semio_framework_job::WorkerJobSession<GuestColdRelayJob>),
-    Rejected(semio_framework_job::WorkerJobSessionAdmissionRejected<GuestColdRelayJob>),
+    Rejected(GuestRelayRefusedSource<GuestColdRelayJob>),
     LifecycleProbe(semio_framework_job::WorkerJobSession<GuestRelayLifecycleProbeJob>),
     Empty,
 }
@@ -5138,11 +5288,29 @@ struct GuestRelayMountedSession {
     owner: GuestRelayMountedOwner,
     checked_out: Option<semio_framework_job::WorkerJobOutcome<GuestColdRelayJob>>,
     lifecycle_probe_checked_out: Option<semio_framework_job::WorkerJobOutcome<GuestRelayLifecycleProbeJob>>,
-    outcome: Option<semio_framework_job::StepOutcome>,
+    outcome_stage: GuestRelayOutcomeStage,
+    outcome_kind: GuestRelayOutcomeKind,
     outcome_page: usize,
     output: GuestRelayMountedOutput,
     terminal: Option<GuestRelayMountedTerminal>,
     lifecycle: GuestRelayMountedLifecycle,
+}
+
+/// 🚦️ Where the checked-out semantic outcome of a mounted relay is: its pages are read once, then acknowledged, then handed back.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum GuestRelayOutcomeStage {
+    Idle,
+    Reading,
+    Acknowledging,
+}
+
+/// 🏁️ What the lent outcome means for the relay: it goes on, or it is the terminal result the caller drains.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum GuestRelayOutcomeKind {
+    Continues,
+    Complete,
+    Cancelled,
+    Fault,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -5323,7 +5491,7 @@ impl GuestRelayMountedRegistry {
             if let GuestRelayMountedOwner::Rejected(rejected)=&mut owner{Self::close_rejected(rejected);}
         }
         *slot =
-            GuestRelayMountedSlot::Mounted(GuestRelayMountedSession { wake:GuestRelayWakeCustody::new(), generation, owner, checked_out: None, lifecycle_probe_checked_out: None, outcome: None, outcome_page: 0, output, terminal: None, lifecycle: GuestRelayMountedLifecycle::Running });
+            GuestRelayMountedSlot::Mounted(GuestRelayMountedSession { wake:GuestRelayWakeCustody::new(), generation, owner, checked_out: None, lifecycle_probe_checked_out: None, outcome_stage: GuestRelayOutcomeStage::Idle, outcome_kind: GuestRelayOutcomeKind::Continues, outcome_page: 0, output, terminal: None, lifecycle: GuestRelayMountedLifecycle::Running });
     }
 
     fn detach(self: &Arc<Self>, index: usize, generation: u64) {
@@ -5383,7 +5551,7 @@ impl GuestRelayMountedRegistry {
         self.reaper_failed.store(true,std::sync::atomic::Ordering::Release);
     }
 
-    fn close_rejected(owner:&mut semio_framework_job::WorkerJobSessionAdmissionRejected<GuestColdRelayJob>){
+    fn close_rejected(owner:&mut GuestRelayRefusedSource<GuestColdRelayJob>){
         owner.begin_close();
     }
 
@@ -5451,7 +5619,6 @@ impl GuestRelayMountedRegistry {
         let grant=context.grant;
         let metadata=|copy_bytes|RetirementDemand{copy_bytes,depth:1,..Default::default()};
         let demand:Result<RetirementDemand,ValueError>=(||{
-            if let Some(outcome)=session.outcome.as_ref(){return if outcome.terminal_is_empty(){Ok(metadata(std::mem::size_of::<Option<semio_framework_job::StepOutcome>>()))}else{outcome.retirement_demands()};}
             if session.checked_out.is_some(){return Ok(metadata(std::mem::size_of::<Option<semio_framework_job::WorkerJobOutcome<GuestColdRelayJob>>>()));}
             if session.lifecycle_probe_checked_out.is_some(){return Ok(metadata(std::mem::size_of::<Option<semio_framework_job::WorkerJobOutcome<GuestRelayLifecycleProbeJob>>>()));}
             let map=|error|match error{semio_framework_job::WorkerJobDemandError::Refused(error)=>error,semio_framework_job::WorkerJobDemandError::Contention(_)=>ValueError::literal(ValueRefusalKind::WorkLimit,"original Host close owner is checked out")};
@@ -5467,12 +5634,8 @@ impl GuestRelayMountedRegistry {
             Err(error)=>{session.wake.refusal=Some(error.kind);GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},
             Ok(demand)if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth=>GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered},
             Ok(demand)=>{
-                if let Some(outcome)=session.outcome.as_mut(){
-                    if outcome.terminal_is_empty(){drop(session.outcome.take());progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};}
-                    else{match outcome.close_step(grant){Ok(step)=>progress=step.progress(),Err(error)=>{session.wake.refusal=Some(error.kind);progress=error.retained_progress();}}}
-                    GuestRelayMountedClose::Pending
-                }else if let Some(owner)=session.checked_out.take(){owner.begin_close();progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};GuestRelayMountedClose::Pending}
-                else if let Some(owner)=session.lifecycle_probe_checked_out.take(){owner.begin_close();progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};GuestRelayMountedClose::Pending}
+                if let Some(owner)=session.checked_out.take(){owner.begin_close();session.outcome_stage=GuestRelayOutcomeStage::Idle;progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};GuestRelayMountedClose::Pending}
+                else if let Some(owner)=session.lifecycle_probe_checked_out.take(){owner.begin_close();session.outcome_stage=GuestRelayOutcomeStage::Idle;progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};GuestRelayMountedClose::Pending}
                 else{
                     let terminal=match &session.owner{GuestRelayMountedOwner::Session(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::LifecycleProbe(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Rejected(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Empty=>false};
                     if terminal{session.owner=GuestRelayMountedOwner::Empty;progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};GuestRelayMountedClose::Pending}
@@ -5489,17 +5652,6 @@ impl GuestRelayMountedRegistry {
         session.wake.receipt=Some(GuestRelayWakeReceipt{epoch:context.epoch,slot:index,generation:session.generation,grant,progress});
         if !self.collect_original_wake_receipt(&mut session.wake){return GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered};}
         result
-    }
-
-    fn outcome_payload(outcome: &semio_framework_job::StepOutcome) -> Option<&semio_framework_job::RetainedJobPayload> {
-        match outcome {
-            semio_framework_job::StepOutcome::PreviewReady(payload) => Some(payload),
-            semio_framework_job::StepOutcome::CheckpointReady(checkpoint) => Some(&checkpoint.state),
-            semio_framework_job::StepOutcome::Complete(candidate) if !candidate.state.terminal_is_empty() => Some(&candidate.state),
-            semio_framework_job::StepOutcome::Complete(candidate) => Some(&candidate.output),
-            semio_framework_job::StepOutcome::Fault(fault) => Some(&fault.detail),
-            semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::Cancelled => None,
-        }
     }
 
     fn pump(self: &Arc<Self>, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
@@ -5537,76 +5689,188 @@ impl GuestRelayMountedRegistry {
             }
             return std::task::Poll::Pending;
         }
-        if session.outcome.is_some(){
-            if session.outcome.as_ref().is_some_and(semio_framework_job::StepOutcome::terminal_is_empty){session.wake.refusal=Some(semio_framework_value::ValueRefusalKind::UnsupportedOwner);return std::task::Poll::Pending;}
-            let Some(context)=self.checkout_original_wake(&mut session.wake,index,generation)else{return std::task::Poll::Pending;};
-            let grant=context.grant;let outcome=session.outcome.as_mut().unwrap();let page=Self::outcome_payload(outcome).and_then(|payload|payload.page(session.outcome_page));
-            let mut progress=semio_framework_value::RetainedCloneProgress::default();
-            if let Some(page)=page{
-                let bytes=page.len()+2*std::mem::size_of::<usize>();
-                if grant.maximum_items>0&&grant.maximum_copy_bytes>=bytes&&grant.maximum_depth>0&&session.output.length.checked_add(page.len()).is_some_and(|length|length<=semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES){
-                    if matches!(outcome,semio_framework_job::StepOutcome::Complete(_)|semio_framework_job::StepOutcome::Fault(_)){session.output.write_page(page).expect("original output capacity was admitted before page effects");}
-                    session.outcome_page+=1;progress=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};
-                }
-            }else{
-                match outcome.close_step(grant){Ok(step)=>progress=step.progress(),Err(error)=>{session.wake.refusal=Some(error.kind);progress=error.retained_progress();}}
-            }
-            session.wake.receipt=Some(GuestRelayWakeReceipt{epoch:context.epoch,slot:index,generation,grant,progress});self.collect_original_wake_receipt(&mut session.wake);
-            if progress.copied_items>0{waker.wake_by_ref();}
-            return std::task::Poll::Pending;
+        if session.checked_out.is_some() || session.lifecycle_probe_checked_out.is_some() {
+            return self.pump_outcome(session, index, generation, waker);
         }
-        if let GuestRelayMountedOwner::LifecycleProbe(owner) = &session.owner {
-            match owner.try_step_on_caller() {
-                Ok((ticket, semio_framework_job::WorkerJobPoll::Outcome)) => {
-                    let mut checked = owner.take_outcome(ticket).map_err(|_| PluginHostError::Plugin("plugin relay lifecycle probe outcome unavailable".into()))?;
-                    session.outcome = Some(checked.take_outcome());
-                    session.lifecycle_probe_checked_out = Some(checked);
-                    session.outcome_page = 0;
-                    waker.wake_by_ref();
-                }
-                Ok((_, semio_framework_job::WorkerJobPoll::Terminal)) => {
-                    let mut checked = owner.take_terminal().map_err(|_| PluginHostError::Plugin("plugin relay lifecycle probe terminal unavailable".into()))?;
-                    session.outcome = Some(checked.take_outcome());
-                    session.lifecycle_probe_checked_out = Some(checked);
-                    session.outcome_page = 0;
-                    waker.wake_by_ref();
-                }
-                Ok(_) => {}
-                Err(_) => {}
-            }
-            return std::task::Poll::Pending;
-        }
-        let GuestRelayMountedOwner::Session(owner)=&session.owner else{
-            if matches!(session.owner,GuestRelayMountedOwner::Rejected(_)){let _=self.pump_close(session,index,Some(waker));}
+        let Some(context) = self.checkout_original_wake(&mut session.wake, index, generation) else {
             return std::task::Poll::Pending;
         };
-        match owner.try_step_on_caller() {
-            Ok((ticket, semio_framework_job::WorkerJobPoll::Outcome)) => {
-                let checked = owner.take_outcome(ticket).map_err(|_| PluginHostError::Plugin("plugin cold relay outcome unavailable".into()));
-                match checked {
-                    Ok(mut checked) => {
-                        session.outcome = Some(checked.take_outcome());
-                        session.checked_out = Some(checked);
-                        session.outcome_page = 0;
-                        waker.wake_by_ref();
-                    }
-                    Err(error) => return std::task::Poll::Ready(Err(error)),
+        let (grant, epoch) = (context.grant, context.epoch);
+        let stepped = match &session.owner {
+            GuestRelayMountedOwner::LifecycleProbe(owner) => match step_guest_relay_owner(owner, grant) {
+                GuestRelayStep::Checked(checked, receipt) => {
+                    session.lifecycle_probe_checked_out = Some(checked);
+                    receipt
                 }
-            }
-            Ok((_, semio_framework_job::WorkerJobPoll::Terminal)) => match owner.take_terminal() {
-                Ok(mut checked) => {
-                    session.outcome = Some(checked.take_outcome());
-                    session.checked_out = Some(checked);
-                    session.outcome_page = 0;
-                    waker.wake_by_ref();
-                }
-                Err(_) => return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay terminal unavailable".into()))),
+                GuestRelayStep::Idle(receipt) => receipt,
+                GuestRelayStep::Unavailable(detail) => return std::task::Poll::Ready(Err(PluginHostError::Plugin(detail.into()))),
             },
-            Ok(_) => {}
-            Err(_) => {}
+            GuestRelayMountedOwner::Session(owner) => match step_guest_relay_owner(owner, grant) {
+                GuestRelayStep::Checked(checked, receipt) => {
+                    session.checked_out = Some(checked);
+                    receipt
+                }
+                GuestRelayStep::Idle(receipt) => receipt,
+                GuestRelayStep::Unavailable(detail) => return std::task::Poll::Ready(Err(PluginHostError::Plugin(detail.into()))),
+            },
+            GuestRelayMountedOwner::Rejected(_) | GuestRelayMountedOwner::Empty => {
+                session.wake.receipt = Some(GuestRelayWakeReceipt { epoch, slot: index, generation, grant, progress: Default::default() });
+                self.collect_original_wake_receipt(&mut session.wake);
+                if matches!(session.owner, GuestRelayMountedOwner::Rejected(_)) {
+                    let _ = self.pump_close(session, index, Some(waker));
+                }
+                return std::task::Poll::Pending;
+            }
         };
+        let progress = stepped.map_or(Default::default(), |(_, progress)| progress);
+        if !progress.fits(grant) {
+            session.wake.refusal = Some(semio_framework_value::ValueRefusalKind::InvariantViolated);
+        }
+        session.wake.receipt = Some(GuestRelayWakeReceipt { epoch, slot: index, generation, grant, progress });
+        self.collect_original_wake_receipt(&mut session.wake);
+        if session.checked_out.is_some() || session.lifecycle_probe_checked_out.is_some() {
+            session.outcome_stage = GuestRelayOutcomeStage::Reading;
+            session.outcome_kind = GuestRelayOutcomeKind::Continues;
+            session.outcome_page = 0;
+            waker.wake_by_ref();
+        }
         std::task::Poll::Pending
     }
+
+    /// 📖️ One paid turn of the checked-out outcome: read its pages once, acknowledge the descriptor, then resume or drain the terminal.
+    fn pump_outcome(&self, session: &mut GuestRelayMountedSession, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
+        use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep};
+        let Some(context) = self.checkout_original_wake(&mut session.wake, index, generation) else {
+            return std::task::Poll::Pending;
+        };
+        let grant = context.grant;
+        let mut progress = RetainedCloneProgress::default();
+        match session.outcome_stage {
+            GuestRelayOutcomeStage::Idle | GuestRelayOutcomeStage::Reading => {
+                let read = match (session.checked_out.as_ref(), session.lifecycle_probe_checked_out.as_ref()) {
+                    (Some(checked), _) => read_guest_relay_outcome_page(checked, session.outcome_page),
+                    (None, Some(checked)) => read_guest_relay_outcome_page(checked, session.outcome_page),
+                    (None, None) => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "mounted relay lost its checked-out outcome")),
+                };
+                match read {
+                    Err(error) => {
+                        session.wake.refusal = Some(error.kind);
+                        progress = error.retained_progress();
+                    }
+                    Ok((Some(page), kind)) => {
+                        let bytes = page.len() + 2 * std::mem::size_of::<usize>();
+                        if grant.maximum_items > 0 && grant.maximum_copy_bytes >= bytes && grant.maximum_depth > 0 && session.output.length.checked_add(page.len()).is_some_and(|length| length <= semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES) {
+                            if matches!(kind, GuestRelayOutcomeKind::Complete | GuestRelayOutcomeKind::Fault) {
+                                session.output.write_page(page).expect("original output capacity was admitted before page effects");
+                            }
+                            session.outcome_page += 1;
+                            progress = RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() };
+                        }
+                    }
+                    Ok((None, kind)) => {
+                        if grant.maximum_items > 0 && grant.maximum_depth > 0 {
+                            session.outcome_kind = kind;
+                            session.outcome_stage = GuestRelayOutcomeStage::Acknowledging;
+                            progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+                        }
+                    }
+                }
+            }
+            GuestRelayOutcomeStage::Acknowledging => {
+                let step = match (session.checked_out.as_mut(), session.lifecycle_probe_checked_out.as_mut()) {
+                    (Some(checked), _) => checked.acknowledge_outcome(grant),
+                    (None, Some(checked)) => checked.acknowledge_outcome(grant),
+                    (None, None) => RetainedCloneStep::Progress(Default::default()),
+                };
+                progress = step.progress();
+                if matches!(step, RetainedCloneStep::Complete(_)) {
+                    self.finish_guest_relay_outcome(session);
+                }
+            }
+        }
+        if !progress.fits(grant) {
+            session.wake.refusal = Some(semio_framework_value::ValueRefusalKind::InvariantViolated);
+        }
+        session.wake.receipt = Some(GuestRelayWakeReceipt { epoch: context.epoch, slot: index, generation, grant, progress });
+        self.collect_original_wake_receipt(&mut session.wake);
+        if progress.copied_items > 0 {
+            waker.wake_by_ref();
+        }
+        std::task::Poll::Pending
+    }
+
+    /// 🔚️ A continuing outcome resumes its worker; a terminal one becomes the result the caller drains while the session closes.
+    fn finish_guest_relay_outcome(&self, session: &mut GuestRelayMountedSession) {
+        match session.outcome_kind {
+            GuestRelayOutcomeKind::Continues => {
+                if let Some(checked) = session.checked_out.take() {
+                    if let Err(checked) = checked.resume() {
+                        session.checked_out = Some(checked);
+                        return;
+                    }
+                } else if let Some(checked) = session.lifecycle_probe_checked_out.take() {
+                    if let Err(checked) = checked.resume() {
+                        session.lifecycle_probe_checked_out = Some(checked);
+                        return;
+                    }
+                }
+            }
+            terminal => {
+                session.terminal = Some(match terminal {
+                    GuestRelayOutcomeKind::Complete => GuestRelayMountedTerminal::Complete,
+                    GuestRelayOutcomeKind::Cancelled => GuestRelayMountedTerminal::Cancelled,
+                    _ => GuestRelayMountedTerminal::Fault,
+                });
+                session.lifecycle = GuestRelayMountedLifecycle::DrainingForCaller;
+                if let Some(checked) = session.checked_out.take() {
+                    checked.begin_close();
+                } else if let Some(checked) = session.lifecycle_probe_checked_out.take() {
+                    checked.begin_close();
+                }
+            }
+        }
+        session.outcome_stage = GuestRelayOutcomeStage::Idle;
+        session.outcome_page = 0;
+    }
+}
+
+/// 🪜️ One caller-driven worker step of a mounted relay owner, with its physical receipt taken exactly once.
+enum GuestRelayStep<J> {
+    Checked(semio_framework_job::WorkerJobOutcome<J>, Option<(semio_framework_value::RetainedCloneGrant, semio_framework_value::RetainedCloneProgress)>),
+    Idle(Option<(semio_framework_value::RetainedCloneGrant, semio_framework_value::RetainedCloneProgress)>),
+    Unavailable(&'static str),
+}
+
+fn step_guest_relay_owner<J: semio_framework_job::InteractiveJob + 'static>(owner: &semio_framework_job::WorkerJobSession<J>, grant: semio_framework_value::RetainedCloneGrant) -> GuestRelayStep<J> {
+    let checked = match owner.try_step_on_caller(grant) {
+        Ok((ticket, semio_framework_job::WorkerJobPoll::Outcome)) => match owner.take_outcome(ticket) {
+            Ok(checked) => checked,
+            Err(_) => return GuestRelayStep::Unavailable("plugin cold relay outcome unavailable"),
+        },
+        Ok((_, semio_framework_job::WorkerJobPoll::Terminal)) => match owner.take_terminal() {
+            Ok(checked) => checked,
+            Err(_) => return GuestRelayStep::Unavailable("plugin cold relay terminal unavailable"),
+        },
+        Ok(_) | Err(_) => return GuestRelayStep::Idle(owner.take_retained_step_receipt().ok().flatten()),
+    };
+    let mut checked = checked;
+    let receipt = checked.take_retained_step_receipt();
+    GuestRelayStep::Checked(checked, receipt)
+}
+
+/// 📄️ Borrows one page of the checked-out outcome's payload and classifies the outcome.
+fn read_guest_relay_outcome_page<J: semio_framework_job::InteractiveJob>(checked: &semio_framework_job::WorkerJobOutcome<J>, page: usize) -> Result<(Option<&[u8]>, GuestRelayOutcomeKind), semio_framework_value::ValueError> {
+    use semio_framework_job::JobOutcomeView as V;
+    let view = checked.outcome()?.ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "mounted relay outcome is absent"))?;
+    let (payload, kind) = match view {
+        V::Yield { .. } => (None, GuestRelayOutcomeKind::Continues),
+        V::PreviewReady { payload, .. } => (Some(payload), GuestRelayOutcomeKind::Continues),
+        V::CheckpointReady { state, .. } => (Some(state), GuestRelayOutcomeKind::Continues),
+        V::Complete { output, .. } => (output, GuestRelayOutcomeKind::Complete),
+        V::Cancelled { .. } => (None, GuestRelayOutcomeKind::Cancelled),
+        V::Fault { detail, .. } => (Some(detail), GuestRelayOutcomeKind::Fault),
+    };
+    Ok((payload.and_then(|payload| payload.page(page)), kind))
 }
 
 enum GuestRelayMountedReap {
@@ -5719,7 +5983,7 @@ fn guest_relay_lifecycle_wait(pool: &WorkerPool, mut ready: impl FnMut() -> bool
 }
 
 fn guest_relay_lifecycle_probe_session(control: &Arc<GuestRelayLifecycleProbeControl>, generation: u64, terminal_output: Option<Vec<u8>>, remaining: usize, retained:semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_job::WorkerJobSession<GuestRelayLifecycleProbeJob>, String> {
-    let job = GuestRelayLifecycleProbeJob { control: Arc::clone(control), remaining, terminal_output, closing: false };
+    let job = GuestRelayLifecycleProbeJob { control: Arc::clone(control), remaining, terminal_output, publication: None, closing: false };
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(generation),
         generation: semio_framework_job::Generation(generation),
@@ -5733,7 +5997,7 @@ fn guest_relay_lifecycle_probe_session(control: &Arc<GuestRelayLifecycleProbeCon
         },
         now_us: semio_framework_job::default_now_us,
     };
-    semio_framework_job::WorkerJobSession::try_new(job, params).map_err(|mut rejected| {
+    admit_guest_relay_session(job, params, retained).map_err(|mut rejected| {
         rejected.begin_close();
         control.wake();
         control.release_one();
@@ -5977,7 +6241,7 @@ impl PluginInstanceHandle {
         };
         let relay = GuestColdRelayJob::new(Arc::clone(&self.runtime), Arc::clone(&self.instance), Arc::clone(&self.instance_gate), pool.clone(), cancel, job, (kind.to_string(), input));
         let (index, mounted_generation) = self.relay_registry.reserve().ok_or_else(|| PluginHostError::Plugin(format!("{kind} mounted relay registry is full")))?;
-        let owner = match semio_framework_job::WorkerJobSession::try_new(relay, params) {
+        let owner = match admit_guest_relay_session(relay, params, self.relay_registry.wake_authority.drive_policy) {
             Ok(session) => GuestRelayMountedOwner::Session(session),
             Err(rejected) => GuestRelayMountedOwner::Rejected(rejected),
         };

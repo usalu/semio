@@ -415,12 +415,14 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
 pub type GltfWeakCollectionDiff<T> = GltfCollectionDiff<T, T>;
 
 /// 🧷️ A reference to a top-level entry (a node, a mesh, an accessor): its own key in the lists of references an entity owns.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(transparent)]
 pub struct GltfRef(pub usize);
 
 /// 🧷️ One attribute of a primitive or morph target, keyed by its semantic.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct GltfAttribute {
     pub semantic: String,

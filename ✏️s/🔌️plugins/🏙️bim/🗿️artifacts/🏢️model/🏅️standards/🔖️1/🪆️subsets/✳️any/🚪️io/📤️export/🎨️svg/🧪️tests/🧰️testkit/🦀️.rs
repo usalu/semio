@@ -41,7 +41,8 @@ pub fn read_notated(name: &str) -> Vec<u8> {
 }
 
 /// 🔖️ One start or empty tag as the third-party reader sees it: element name and attributes.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Tag {
     pub name: String,
     pub attributes: Vec<(String, String)>,

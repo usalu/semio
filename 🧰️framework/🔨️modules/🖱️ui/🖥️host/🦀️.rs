@@ -24,6 +24,10 @@ mod event;
 #[path = "🪟️window/🦀️.rs"]
 mod window;
 
+#[cfg(test)]
+#[path = "🧪️tests/🔎️observed-allocator/🦀️.rs"]
+mod observed_allocator;
+
 pub use backend_alias::*;
 pub use enqueue::*;
 pub use event::*;

@@ -51,6 +51,7 @@ semio-s-artifact-stdio-contract = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 tiff = "0.11.3"
 fax = "0.2.7"
@@ -60,3 +61,7 @@ image = { version = "0.25", default-features = false, features = ["png", "tiff",
 
 [package.metadata.semio.composition]
 manifest = "../../🧩️composition/🔣️.json"
+
+[[test]]
+name = "preparation_law"
+path = "../../🧪️tests/⚙️preparation/🦀️.rs"

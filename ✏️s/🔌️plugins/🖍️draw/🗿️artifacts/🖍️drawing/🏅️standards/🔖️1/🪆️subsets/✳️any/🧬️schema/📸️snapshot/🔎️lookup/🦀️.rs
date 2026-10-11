@@ -4,7 +4,7 @@
 pub mod owned;
 
 use crate::{DrawingLayerNode, DrawingSnapshot};
-use semio_framework_value::{list::PagedList, paged::PagedUtf8, SnapshotRetirementStep, ValueError, ValueRefusalKind};
+use semio_framework_value::{list::PagedList, paged::PagedUtf8, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}};
 use std::mem::size_of;
 
@@ -49,9 +49,9 @@ impl<'a> DrawingLayerLookupCursor<'a> {
             return Ok(DrawingLayerLookupStep::Pending(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Frame<'a>>(), ..Default::default() }));
         }
         if self.phase == 1 {
-            let step = self.comparison.close_step(1, grant.maximum_release_bytes)?;
-            if step == SnapshotRetirementStep::Complete { self.comparison = Default::default(); self.phase = 2; }
-            return Ok(DrawingLayerLookupStep::Pending(close_progress(step)));
+            let step = self.comparison.close_step(grant)?;
+            if self.comparison.terminal_is_empty() { self.comparison = Default::default(); self.phase = 2; }
+            return Ok(DrawingLayerLookupStep::Pending(step.progress()));
         }
         if self.phase == 2 {
             if grant.maximum_copy_bytes < size_of::<Frame<'a>>() { return Ok(DrawingLayerLookupStep::Pending(Default::default())); }
@@ -78,8 +78,12 @@ impl<'a> DrawingLayerLookupCursor<'a> {
             return Ok(DrawingLayerLookupStep::Pending(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<RetainedCloneRef<'a, DrawingLayerNode>>(), ..Default::default() }));
         }
         let current = self.current.expect("selected Drawing lookup candidate");
-        let step = self.comparison.compare(current.project(1, crate::schema::layer_id), self.target.expect("retained Drawing lookup target"), BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes })?;
-        let (ordering, progress) = match step { BoundedOrdStep::Progress(progress) => (None, progress), BoundedOrdStep::Complete { ordering, progress } => (Some(ordering), progress) };
+        let step = self.comparison.compare(current.project(1, crate::schema::layer_id), self.target.expect("retained Drawing lookup target"), BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)?;
+        let (ordering, progress) = match step {
+            BoundedOrdStep::Authority(progress) => return Ok(DrawingLayerLookupStep::Pending(progress)),
+            BoundedOrdStep::Progress(progress) => (None, progress),
+            BoundedOrdStep::Complete { ordering, progress } => (Some(ordering), progress),
+        };
         let progress = RetainedCloneProgress { copied_items: progress.compared_items, copied_bytes: progress.compared_bytes, ..Default::default() };
         if ordering == Some(std::cmp::Ordering::Equal) {
             self.output = Some(Some(current));
@@ -114,8 +118,8 @@ impl<'a> DrawingLayerLookupCursor<'a> {
     pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "Drawing lookup closure was not started")); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        let step = self.comparison.close_step(1, grant.maximum_release_bytes)?;
-        if step != SnapshotRetirementStep::Complete { return Ok(RetainedCloneStep::Progress(close_progress(step))); }
+        let step = self.comparison.close_step(grant)?;
+        if !self.comparison.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(step.progress())); }
         if self.output.take().is_some() || self.current.take().is_some() || self.pending.take().is_some() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
         if !self.frames.is_empty() {
             if grant.maximum_copy_bytes < size_of::<Frame<'a>>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -131,10 +135,6 @@ impl<'a> DrawingLayerLookupCursor<'a> {
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.source.is_none() && self.target.is_none() && self.frames.terminal_is_empty() && self.pending.is_none() && self.current.is_none() && self.output.is_none() && self.comparison.terminal_is_empty() }
-}
-
-fn close_progress(step: SnapshotRetirementStep) -> RetainedCloneProgress {
-    match step { SnapshotRetirementStep::Pending { released_items, released_bytes } => RetainedCloneProgress { copied_items: released_items, released_bytes, ..Default::default() }, SnapshotRetirementStep::Complete => RetainedCloneProgress { copied_items: 1, ..Default::default() }, SnapshotRetirementStep::Blocked => Default::default() }
 }
 
 impl Drop for DrawingLayerLookupCursor<'_> {

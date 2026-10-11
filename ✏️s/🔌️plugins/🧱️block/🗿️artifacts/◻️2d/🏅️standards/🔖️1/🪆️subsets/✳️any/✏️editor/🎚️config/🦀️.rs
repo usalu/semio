@@ -14,7 +14,7 @@
 #[artifact(extension = "block2dcfg")]
 #[artifact(id = "block2d.config")]
 #[dsl(layout = "lines")]
-#[derive(Default)]
+#[derive(Default, semio_framework_value::RetireOwned)]
 pub struct Block2dConfig {}
 
 //#region 🔖️ArtifactCodec
@@ -92,6 +92,10 @@ impl protocol::MutationDiff<Block2dConfig> for Block2dConfigDiff {
 /// 🧮️ An empty config has no mutation: the enum is uninhabited, so no diff can be raised against it.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub enum Block2dConfigMutation {}
+
+impl semio_framework_value::retirement::RetireOwned for Block2dConfigMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { match self {} }
+}
 
 impl protocol::Mutation<Block2dConfig> for Block2dConfigMutation {
     type Diff = Block2dConfigDiff;

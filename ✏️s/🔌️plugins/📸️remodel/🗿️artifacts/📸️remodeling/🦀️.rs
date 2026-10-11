@@ -182,7 +182,8 @@ pub type RemodelingMeshChild = store::ArtifactChild<SemioMeshSnapshot>;
 
 /// 🧩️ Restart-stable content authority. Every literal leaf contains at most 4 KiB; values carry
 /// only bounded metadata and content-addressed leaves, never a whole image or mesh object.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelingDurableArtifact {
@@ -237,7 +238,7 @@ pub struct RemodelingAssetChunkSource {
     pub mime: String,
     pub width: u32,
     pub height: u32,
-    pub leaves: Vec<Arc<[u8]>>,
+    pub leaves: Vec<Arc<Vec<u8>>>,
     pub byte_len: usize,
 }
 
@@ -253,7 +254,7 @@ pub fn remodeling_asset_chunk_source(snapshot: &RemodelingSnapshot, asset_id: &s
         if byte_len > REMODELING_RASTER_CONTENT_BYTES {
             return None;
         }
-        leaves.push(Arc::from(chunk));
+        leaves.push(Arc::new(chunk.into()));
     }
     (!leaves.is_empty()).then(|| RemodelingAssetChunkSource { identity: handle.child_id.clone(), mime, width: artifact.width, height: artifact.height, leaves, byte_len })
 }
@@ -289,7 +290,8 @@ pub fn durable_remodeling_asset(asset: &ImageAsset) -> Option<RemodelingDurableA
 //#region 🔖️DurableContent
 /// 🏷️ Durable content lanes a reconstruction publishes through `append-content`, each with its exact
 /// bounded envelope. The wire spelling is the `RemodelingDurableArtifact.kind` it writes.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum RemodelingContentKind {
@@ -340,7 +342,7 @@ impl RemodelingContentKind {
 
 /// #️⃣️ Streaming content digest a run folds over every raw leaf it publishes; the resulting id names
 /// the durable content, so identical reconstruction output lands on the identical durable entry.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub struct RemodelingContentDigest {
     digest: [u64; 4],
     len: u64,
@@ -608,7 +610,8 @@ pub fn remodeling_mesh_workspace(handle: &RemodelingMeshChild) -> Option<MeshDat
 
 //#region 🔖️Buffers
 /// ☁️ Literal samples or an explicit reference to snapshot-owned raw content.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Float32Buffer {
@@ -641,6 +644,8 @@ impl Float32Buffer {
     pub fn is_empty(&self) -> bool { match self { Self::Inline { values } => values.is_empty(), Self::Content { chunk_count, .. } => *chunk_count == 0 } }
 }
 
+impl semio_framework_dsl_record::BorrowedDslField for Float32Buffer { const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Value; }
+
 impl semio_framework_dsl_record::DslField for Float32Buffer {
     fn shape() -> semio_framework_dsl_record::Shape { semio_framework_dsl_record::Shape::Block(Box::new(semio_framework_dsl_record::Shape::Statements(<Self as semio_framework_dsl_record::DslVariants>::variants()))) }
     fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
@@ -670,7 +675,8 @@ impl semio_framework_dsl_record::DslField for Float32Buffer {
 }
 
 /// 🧱 Literal octets owned by a snapshot or a typed reconstruction operation.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(transparent)]
 #[serde(transparent)]
 pub struct ByteBuffer(pub Vec<u8>);
@@ -680,6 +686,8 @@ impl ByteBuffer {
     pub fn to_u8_vec(&self) -> Vec<u8> { self.0.clone() }
     pub fn is_empty(&self) -> bool { self.0.is_empty() }
 }
+
+impl semio_framework_dsl_record::BorrowedDslField for ByteBuffer { const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Bytes64; }
 
 impl semio_framework_dsl_record::DslField for ByteBuffer {
     fn shape() -> semio_framework_dsl_record::Shape { semio_framework_dsl_record::Shape::Bytes64 }
@@ -697,7 +705,8 @@ impl semio_framework_dsl_record::DslField for ByteBuffer {
 /// `GeoProducts.{dsm,dtm,ortho}_asset_id`. Sampled video frames use `image/jpeg` (~10x smaller than
 /// PNG for photographic content); PNG stays reserved for exports/textures/rasters that need
 /// lossless round trips.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct ImageAsset {
@@ -710,7 +719,8 @@ pub struct ImageAsset {
 /// 🗂️ Which shape a `MediaStream`'s frames were captured as. Video input is always eagerly extracted
 /// into individually-addressable `FrameRef`s before persistence (video bytes themselves are never
 /// stored) — `MediaKind::Video` only records that provenance, `MediaStream.source` carries the detail.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum MediaKind {
@@ -722,7 +732,8 @@ pub enum MediaKind {
 /// 🎞️ Codec a `VideoSource` was demuxed from — a plain mirror of `remodeling_video::VideoCodec` without
 /// its `FourCc` payload (an unrecognized four-character code collapses to `Unknown`, which is enough
 /// provenance for a QC/diagnostic label).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum VideoCodec {
@@ -740,7 +751,8 @@ pub enum VideoCodec {
 /// once at import time from `remodeling_video::probe`. "Video input = image sequence with timestamps":
 /// by the time a stream reaches this document its frames are already individually-addressable
 /// `ImageAsset`s with true media timestamps; this struct only records where they came from.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct VideoSource {
@@ -753,7 +765,8 @@ pub struct VideoSource {
     pub height: u32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct FrameRef {
@@ -764,7 +777,8 @@ pub struct FrameRef {
 
 /// 🎞️ One imported media source (an image sequence or a video), decoded into `FrameRef`s pointing at
 /// `RemodelingSnapshot::assets`. Multiple cameras/angles are multiple streams, joined by `camera_id`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MediaStream {
@@ -786,7 +800,8 @@ pub struct MediaStream {
 /// serialize into a stable arg-form-editable shape — the document instead always carries a flat
 /// 5-slot `distortion` array plus a `model` label the plugin uses to decide which slots are live,
 /// matching the "pinhole|brownConrady|fisheye" UI select.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CameraCalibration {
@@ -807,7 +822,8 @@ pub struct CameraCalibration {
 /// 🎯️ One rig member's pose relative to the rig origin — a plain mirror of `remodeling_camera`'s
 /// `RigExtrinsic{camera_id, pose_in_rig: Se3}`, flattened to a quaternion + translation since `Se3`
 /// (a `crate::lie` manifold type) is a plugin-runtime concern, not a document one.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RigExtrinsic {
@@ -824,7 +840,7 @@ impl Default for RigExtrinsic {
 }
 
 /// 🎯️ Per-camera intrinsics/distortion plus rig extrinsics, refined by `remodeling_camera`/`remodeling_sfm`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CalibrationState {
@@ -834,7 +850,8 @@ pub struct CalibrationState {
     pub rig: Vec<RigExtrinsic>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct GcpObservation {
@@ -844,7 +861,8 @@ pub struct GcpObservation {
 }
 
 /// 📍️ A surveyed ground-control point used by `remodeling_geo` to georeference the reconstruction.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct GroundControlPoint {
@@ -859,7 +877,8 @@ pub struct GroundControlPoint {
 /// ⏭️ Frame sampling/decode limits `remodeling_engine` applies before feature extraction. `min_sharpness`
 /// is the blur gate: a candidate frame is dropped when its sharpness falls below this fraction of the
 /// rolling median sharpness of the last ~15 accepted frames.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct IngestParams {
@@ -875,7 +894,8 @@ impl Default for IngestParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum FeatureDetector {
@@ -885,7 +905,8 @@ pub enum FeatureDetector {
     Harris,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct FeatureParams {
@@ -901,7 +922,8 @@ impl Default for FeatureParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum MatcherKind {
@@ -910,7 +932,8 @@ pub enum MatcherKind {
     KdTree,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MatchParams {
@@ -928,7 +951,8 @@ impl Default for MatchParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum RobustLossKind {
@@ -938,7 +962,8 @@ pub enum RobustLossKind {
     Cauchy,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct SfmParams {
@@ -956,7 +981,8 @@ impl Default for SfmParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum DenseResolution {
@@ -966,7 +992,8 @@ pub enum DenseResolution {
     High,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DenseParams {
@@ -989,7 +1016,8 @@ impl Default for DenseParams {
 /// `hole_fill_max_boundary_verts`, and `self_intersection_check` are the watertight-guarantee knobs:
 /// when `guarantee_watertight` is set and repair/hole-fill can't recover a closed 2-manifold, the
 /// `🔖️Close` fallback triggers and re-validates until the result passes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MeshParams {
@@ -1022,7 +1050,8 @@ impl Default for MeshParams {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MotionParams {
@@ -1039,7 +1068,8 @@ impl Default for MotionParams {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct GeoParams {
@@ -1066,7 +1096,7 @@ impl Default for GeoParams {
 /// these directly to configure `remodeling_image`/`remodeling_video`/`remodeling_camera`/`remodeling_feature`/
 /// `remodeling_sfm`/`remodeling_dense`/`remodeling_mesh`/`remodeling_motion`/`remodeling_geo` without this crate
 /// depending on any of them.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct ReconstructionParams {
@@ -1090,7 +1120,8 @@ pub struct ReconstructionParams {
 
 /// 📷️ A single recovered camera pose — one `CameraTrajectory.poses` entry a finalized reconstruction run
 /// publishes; while the run is live the same poses stream as `reconstruction` tool-run trace records.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct CameraPosePreview {
@@ -1106,7 +1137,8 @@ impl Default for CameraPosePreview {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum MeshSource {
@@ -1119,7 +1151,8 @@ pub enum MeshSource {
 /// ✅️ A plain-JSON mirror of `remodeling_mesh::WatertightReport`'s summary fields (all scalars — the
 /// report itself carries no array data, so this is a snapshot only in the sense of avoiding a hard
 /// dependency on `remodeling_mesh`, not in the sense of trimming size).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct WatertightReportSnapshot {
@@ -1158,7 +1191,8 @@ pub struct WatertightReportSnapshot {
 /// (a `MeshDataTwin` buffer-by-buffer bridge, needed only because `MeshData` is foreign and had no
 /// `DslField` impl reachable from this crate) is gone entirely: every field left on this struct now has
 /// a real `DslField` impl on its own.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct RemodelingMesh {
     #[dsl(block)]
@@ -1177,7 +1211,8 @@ impl Default for RemodelingMesh {
 }
 
 /// ☁️ Sparse point cloud from bundle adjustment (`points` = flat xyz triples).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct SparseCloud {
@@ -1188,7 +1223,8 @@ pub struct SparseCloud {
 /// ☁️ Dense point cloud with optional per-point LAS-style classification codes (0 unclassified, 2
 /// ground, 6 building, …) — `remodeling_dense::PointClass` is a bespoke enum without numeric LAS
 /// discriminants, so `remodeling_engine` maps it to LAS codes when it distills this snapshot.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DenseCloud {
@@ -1199,7 +1235,8 @@ pub struct DenseCloud {
 }
 
 /// 🎥️ Recovered camera trajectory across all registered frames.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CameraTrajectory {
@@ -1207,7 +1244,8 @@ pub struct CameraTrajectory {
     pub poses: Vec<CameraPosePreview>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum TrackClass {
@@ -1219,7 +1257,8 @@ pub enum TrackClass {
 /// 🏃️ A distilled summary of one `remodeling_motion` track — full per-frame keyframe paths
 /// (`Track2d`/`Trajectory3d` in the motion crate) are plugin-runtime scratch, not durable document
 /// state; only enough is kept here to list/label tracks and drive the report table.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MotionTrackSummary {
@@ -1234,7 +1273,8 @@ pub struct MotionTrackSummary {
 /// PNG, ortho as an RGB PNG) rather than an embedded float grid — rasters are pixels, so they follow
 /// the same persistence rule as every other image in this document instead of a bespoke height-grid
 /// packed-array shape.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct GeoProducts {
@@ -1247,7 +1287,8 @@ pub struct GeoProducts {
 /// watertight snapshot (mirroring `QualityReport.watertight: Option<WatertightReport>`) and a few
 /// cheap scalar summaries (`remodeling_engine` computes these once at the end of a run; the underlying
 /// per-camera covariance/per-point-sigma arrays and density/overlap rasters stay plugin-runtime).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct QcReportSnapshot {
@@ -1262,7 +1303,7 @@ pub struct QcReportSnapshot {
 }
 
 /// 📦️ Everything a completed (or partially completed) reconstruction run has produced so far.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 pub struct ReconstructionResults {
     #[dsl(block)]

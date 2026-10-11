@@ -239,16 +239,28 @@ pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut Flo
     })
 }
 
+/// 🏠️ A host that shares `session`'s neural cache and converged evaluation baseline, installed under `grant`.
+#[cfg(feature = "component-app-assembly")]
+pub fn host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<FlowHost, semio_framework_value::ValueError> {
+    match flow_host_with_session(FlowHost::from_host_snapshot(host_snapshot.clone()), session, grant) {
+        Ok((host, _)) => Ok(host),
+        Err((error, host)) => {
+            host.retire_cold();
+            Err(error)
+        }
+    }
+}
+
 /// 🏠️ [`with_host`]'s session-backed twin: the host shares `session`'s neural cache and converged
 /// evaluation baseline, and is retired the same way. `body` receives the session back alongside the
 /// host because every real caller needs it mutably (`sync`/`tick`), which a captured `&mut` could
 /// not provide while the scope itself holds the session borrow.
 #[cfg(feature = "component-app-assembly")]
-pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> R {
-    let mut host = flow_host_with_session(host_snapshot, session);
+pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> Result<R, semio_framework_value::ValueError> {
+    let mut host = host_with_session(host_snapshot, session, grant)?;
     let result = body(&mut host, session);
     host.retire_cold();
-    result
+    Ok(result)
 }
 
 //#region 🧭️GraphEditor

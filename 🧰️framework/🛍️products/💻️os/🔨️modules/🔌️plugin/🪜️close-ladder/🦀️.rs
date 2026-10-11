@@ -60,7 +60,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 return Ok(handoff_demand());
             }
             if let Some(child) = transaction.children.last() {
-                return Ok(release_demand(child.next_close_byte_demand()));
+                return child.retirement_demands();
             }
             return Ok(handoff_demand());
         }
@@ -150,10 +150,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 return done(handoff());
             }
             if let Some(child_emit) = transaction.children.last_mut() {
-                return Ok(match child_emit.close_one(child) {
-                    RetainedCloneStep::Complete(_) => {
+                return Ok(match child_emit.close_one(child).map_err(value_fault)? {
+                    RetainedCloneStep::Complete(progress) => {
                         transaction.children.pop();
-                        RetainedCloneStep::Progress(handoff())
+                        RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress })
                     }
                     step => step,
                 });
@@ -338,14 +338,26 @@ impl ClosingOwner for ArtifactSnapshotCloseRetention {
 }
 
 impl<A: ArtifactApp> ClosingOwner for PeerRosterPublication<A> {
-    fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.close_demands(body) }
-    fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> { self.close_step(grant) }
-    fn closing_terminal_is_empty(&self) -> bool { self.terminal_is_empty() }
+    fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        let demand = self.close_demands(body)?;
+        Ok(if demand == RetirementDemand::default() && !self.fault.terminal_is_empty() { RetirementDemand { copy_bytes: size_of::<Option<Fault>>(), depth: 1, ..Default::default() } } else { demand })
+    }
+    fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        match self.close_step(grant)? {
+            PluginLifecycleStep::Complete(_) if !self.fault.terminal_is_empty() => {
+                let (fault, progress) = self.take_original_fault(grant).map_err(plugin_retirement_fault)?;
+                drop(fault);
+                Ok(PluginLifecycleStep::Progress(progress))
+            }
+            step => Ok(step),
+        }
+    }
+    fn closing_terminal_is_empty(&self) -> bool { self.terminal_is_empty() && self.fault.terminal_is_empty() }
 }
 
 impl ClosingOwner for PeerPresenceRootRetirement {
-    fn closing_demands(&self, _body: usize) -> Result<RetirementDemand, ValueError> { self.retirement_demands() }
-    fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> { self.close_step(grant).map(|step| PluginLifecycleStep::Progress(step.progress())) }
+    fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.retirement_demands(body) }
+    fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> { self.close_step(grant).map_err(plugin_retirement_fault) }
     fn closing_terminal_is_empty(&self) -> bool { self.terminal_is_empty() }
 }
 
@@ -421,8 +433,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         if !self.segmented_downloads.is_empty() { return CloseRung::Segments; }
         if !self.segmented_closures.is_empty() { return CloseRung::SegmentClosures; }
         if !self.snapshot_retirements.is_empty() { return CloseRung::SnapshotRetentions; }
-        if !self.child_member_retirements.is_empty() { return CloseRung::ChildMemberRetirements; }
-        if !self.child_content_retirements.is_empty() { return CloseRung::ChildRootRetirements; }
+        if self.child_member_retirements.empty_backing_byte_demand() != Some(0) { return CloseRung::ChildMemberRetirements; }
+        if self.child_content_retirements.empty_backing_byte_demand() != Some(0) { return CloseRung::ChildRootRetirements; }
         if !self.close_child_root_detached { return CloseRung::DetachChildRoot; }
         if self.close_child_member.is_some() { return CloseRung::ClosingChildMember; }
         if !self.children.is_empty() { return CloseRung::DetachChildren; }
@@ -434,8 +446,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         if !self.envelope_ingress.is_empty() { return CloseRung::EnvelopeIngress; }
         if !self.envelope_decode_terminal_is_empty() { return CloseRung::EnvelopeDecode; }
         if !self.store_replacement_jobs.is_empty() { return CloseRung::StoreReplacement; }
-        if !self.document_archive_loads.is_empty() { return CloseRung::DocumentArchive; }
-        if !self.retired_window_transient_stores.is_empty() { return CloseRung::WindowRetirements; }
+        if self.document_archive_loads.empty_backing_byte_demand() != Some(0) { return CloseRung::DocumentArchive; }
+        if self.retired_window_transient_stores.empty_backing_byte_demand() != Some(0) { return CloseRung::WindowRetirements; }
         if self.close_owned_stage < ORIGINAL_STORE_LANES.len() as u8 || self.close_owned_advance_ready { return CloseRung::OwnedStores; }
         if !self.retained_fields_own_terminal_is_empty() { return CloseRung::RetainedFields; }
         CloseRung::Uncovered
@@ -504,7 +516,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
     fn close_latest_wins_command_demands(&self, operation_id: u64, body: usize) -> Result<RetirementDemand, ValueError> {
         let Some(pending) = self.latest_wins_commands.get(operation_id) else { return Ok(handoff_demand()) };
         if !pending.command_owners_are_empty() { return pending.retirement_demands(body); }
-        Ok(if pending.meta.actor.capacity() != 0 { plugin_text_retirement_demand(&pending.meta.actor) } else { handoff_demand() })
+        Ok(if pending.meta.actor.has_owner() { release_demand(pending.meta.actor.original_allocation_bytes()) } else { handoff_demand() })
     }
 
     fn close_latest_wins_command_step(&mut self, operation_id: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
@@ -514,9 +526,20 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             assert_eq!(self.latest_wins_order.pop(), Some(operation_id));
             return Ok(RetainedCloneStep::Progress(handoff()));
         };
-        if !pending.command_owners_are_empty() { return pending.close_step(grant); }
-        if pending.meta.actor.capacity() != 0 {
-            return Ok(RetainedCloneStep::Progress(plugin_text_close(&mut pending.meta.actor, grant).unwrap_or(idle)));
+        if !pending.command_owners_are_empty() { return pending.close_step(grant).map(Self::lifecycle_retained); }
+        if pending.meta.actor.has_owner() {
+            if !plugin_turn_admitted(release_demand(pending.meta.actor.original_allocation_bytes()), grant)? { return Ok(RetainedCloneStep::Progress(idle)); }
+            return match std::mem::take(&mut pending.meta.actor).close_original_lease(grant) {
+                Ok((original, mut progress)) => {
+                    progress.released_bytes += original.as_ref().map_or(0, String::capacity);
+                    drop(original);
+                    Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }))
+                }
+                Err((error, actor)) => {
+                    pending.meta.actor = actor;
+                    Err(plugin_retirement_fault(error))
+                }
+            };
         }
         if !plugin_turn_admitted(handoff_demand(), grant)? { return Ok(RetainedCloneStep::Progress(idle)); }
         if let Some(lease) = pending.lease.take() { lease.finish(); }
@@ -653,7 +676,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             CloseRung::PrivateChildGroups => Ok(match self.close_private_child_group_step(grant)? {
                 semio_framework_job::InteractiveJobCloseStep::Pending { progress } | semio_framework_job::InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Progress(progress),
                 semio_framework_job::InteractiveJobCloseStep::Blocked => RetainedCloneStep::Progress(idle),
-                semio_framework_job::InteractiveJobCloseStep::Refused(kind) => return Err(plugin_sdk_fault(format!("private child group close was refused: {kind:?}"))),
+                semio_framework_job::InteractiveJobCloseStep::Refused { kind, .. } => return Err(plugin_sdk_fault(format!("private child group close was refused: {kind:?}"))),
             }),
             CloseRung::PendingReserved => {
                 if let Some((_, id)) = self.pending_reserved.next_id_from(0) {

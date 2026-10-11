@@ -39,7 +39,7 @@ pub struct Gap {
 }
 
 /// 🪟️ Precomputed optical and thermal description of one glazing system, outside pane first.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct GlazingSystem {
     pub panes: usize,
     pub pane_conductance_w_m2k: [f64; MAX_PANES],

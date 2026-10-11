@@ -5,7 +5,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 use super::super::elements::Placement;
 use std::collections::BTreeMap;
 
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct PlaceElements {
     pub placements: BTreeMap<String, Placement>,

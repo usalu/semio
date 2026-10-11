@@ -13,7 +13,7 @@ pub const NODE_GRAPH_EDIT_VERB: &str = "nodeGraphEdit";
 
 /// 🎯️ One batched edit inside a `NodeGraphEdit`, closed and typed — the shared node-graph gesture record vocabulary every
 /// renderer dispatches (design §13.3): each row names its entities by id and carries an intent.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 pub enum DagNodeGraphEditOp {
     #[dsl(key = "connect")]
@@ -43,7 +43,7 @@ impl From<NodeGraphEditRow> for DagNodeGraphEditOp {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[dsl(keyword = "node-graph-edit")]
 pub struct NodeGraphEdit {

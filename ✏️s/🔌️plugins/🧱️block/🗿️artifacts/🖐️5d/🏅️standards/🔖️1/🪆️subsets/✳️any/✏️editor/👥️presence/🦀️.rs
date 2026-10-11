@@ -9,7 +9,7 @@ use store::ArtifactPack;
 /// broadcasts automatically via the framework's typed `PresenceInteraction` for the declared `grip`
 /// domain (see `crate::editor::block5d::create_block5d_app`), so this facet is empty until block5d
 /// grows genuinely app-specific live state.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -88,6 +88,12 @@ impl protocol::MutationDiff<Block5dPresence> for Block5dPresenceDiff {
 /// 🧮️ An empty presence has no mutation: the enum is uninhabited, so no diff can be raised against it.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub enum Block5dPresenceMutation {}
+
+impl semio_framework_value::retirement::RetireOwned for Block5dPresenceMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { match self {} }
+}
+
+impl store::ArtifactPresenceSnapshot for Block5dPresence {}
 
 impl protocol::Mutation<Block5dPresence> for Block5dPresenceMutation {
     type Diff = Block5dPresenceDiff;

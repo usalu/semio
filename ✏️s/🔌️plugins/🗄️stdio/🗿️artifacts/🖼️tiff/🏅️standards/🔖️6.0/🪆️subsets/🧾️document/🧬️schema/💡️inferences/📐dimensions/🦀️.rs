@@ -13,7 +13,7 @@ use crate::TiffSnapshot;
 /// retains `SamplesPerPixel`(277) but not `ExtraSamples`(338) (never decoded by this codec, see
 /// `⚙️engine`), so `samplesPerPixel > 3` (more channels than plain RGB) is the closest honest
 /// proxy available.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct TiffDimensions {
     pub width: u32,

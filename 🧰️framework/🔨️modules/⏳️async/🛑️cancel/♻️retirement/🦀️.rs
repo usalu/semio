@@ -1,6 +1,7 @@
 //! 🛑️ Original cancellation nodes, waiter capacity and ancestor aliases close in separate admitted turns.
 use super::{CancelToken,CancelNode};
 use std::{mem::{ManuallyDrop,size_of},sync::Arc,task::Waker};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,RetirementTurnError,ValueError,ValueRefusalKind,advance_retirement_turn,shared_retirement_allocation_bytes};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum CancelTokenRetirementBlocked{SharedAlias,WeakAlias,RegisteredWaiter,WaiterContention}
@@ -49,6 +50,29 @@ impl CancelTokenRetirement{
     }
 }
 impl Drop for CancelTokenRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"cancellation retirement abandoned its original node");}}
+/// 🎟️ Erases original cancellation custody behind the typed retirement ladder of owning containers.
+struct Cursor(CancelTokenRetirement);
+impl RetireOwned for CancelToken{
+    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor(CancelTokenRetirement::from_token(self)))}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor>())}
+    fn controlled_retirement_supported()->bool{true}
+    fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
+}
+impl RetirementCursor for Cursor{
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+        match self.0.close_step(grant){
+            Ok(step)=>{let progress=step.progress();if progress!=RetainedCloneProgress::default(){RetirementStep::Progress(progress)}else if self.0.terminal_is_empty(){RetirementStep::Complete}else{RetirementStep::BudgetExhausted}}
+            Err(CancelTokenRetirementError::Blocked(blocked))=>RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,match blocked{CancelTokenRetirementBlocked::SharedAlias=>"original cancellation node retains a shared alias",CancelTokenRetirementBlocked::WeakAlias=>"original cancellation node retains a weak alias",CancelTokenRetirementBlocked::RegisteredWaiter=>"original cancellation node retains a registered wake owner",CancelTokenRetirementBlocked::WaiterContention=>"original cancellation waiter guard is occupied"})),
+            Err(CancelTokenRetirementError::Refused(error))=>RetirementStep::Failure(error),
+        }
+    }
+    fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands()?.depth)}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands()?.copy_bytes)}
+    fn next_close_byte_demand(&self)->Option<usize>{self.0.retirement_demands().ok().map(|demand|demand.release_bytes)}
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

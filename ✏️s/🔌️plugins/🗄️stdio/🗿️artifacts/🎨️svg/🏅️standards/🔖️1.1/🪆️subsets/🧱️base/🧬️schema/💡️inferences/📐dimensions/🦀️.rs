@@ -11,7 +11,7 @@ use crate::SvgSnapshot;
 /// 📐️ Root `<svg>` intrinsic size. `width`/`height` prefer the element's own `width`/`height`
 /// attributes (SVG 1.1 §7.10's "intrinsic size"), falling back to `viewBox`'s width/height (§7.11)
 /// when the attribute is absent or unparseable; `0.0` when neither is present.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SvgDimensions {
     pub width: f64,

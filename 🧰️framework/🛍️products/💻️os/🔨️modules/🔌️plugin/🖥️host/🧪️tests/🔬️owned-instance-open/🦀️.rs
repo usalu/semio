@@ -21,7 +21,7 @@ fn package_ref(package_id: &str, bytes: &[u8]) -> PackageRef {
 }
 
 fn open_budget() -> Budget {
-    Budget { fuel: u64::MAX, deadline_ms: 8, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
+    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: u64::MAX, deadline_ms: 8, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
 }
 
 fn jit_budget() -> Budget {
@@ -78,12 +78,12 @@ async fn a_mid_flight_owned_turn_refuses_new_events_instead_of_dropping_them() {
     let runtime = OwnedRuntime::new();
     let compiled = runtime.compile(&package_ref("semio:neutral-host-fixture", &bytes), &bytes).await.expect("compile plugin component");
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(3), &[], &open_budget()).await.expect("instantiate plugin actor");
-    let one_instruction = Budget { fuel: 1, ..open_budget() };
+    let one_instruction = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, ..open_budget() };
     assert!(matches!(runtime.execute_turn(&mut instance, &[instance_open_event(FIXTURE_EDITOR_APP, Vec::new())], one_instruction, &mut identity).await, Err(TurnFault::FuelExhausted)));
     assert!(instance.turn_in_flight(), "a fuel-yielded turn is mid-flight");
     let refusal = runtime.execute_turn(&mut instance, &[Event::Wake], open_budget(), &mut identity).await.expect_err("a mid-flight turn must refuse new events");
     assert!(format!("{refusal:?}").contains("mid-flight"), "a mid-flight turn must say so, got {refusal:?}");
-    let resumed = runtime.execute_turn(&mut instance, &[], Budget { fuel: 1_000_000, ..open_budget() }, &mut identity).await;
+    let resumed = runtime.execute_turn(&mut instance, &[], Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000_000, ..open_budget() }, &mut identity).await;
     assert!(matches!(resumed, Err(TurnFault::FuelExhausted | TurnFault::DeadlineExceeded)), "resuming with no events continues the same turn rather than refusing it, got {resumed:?}");
     assert!(instance.turn_in_flight(), "the resumed turn is still the same one");
     crate::test_native_authority::close(&mut identity);
@@ -96,7 +96,7 @@ const FIXTURE_ARTIFACT_KIND: &str = "fixture.neutral-host-fixture.counter";
 const MINTED_DOCUMENT_ID: &str = "artifact-0123456789abcdef0123456789abcdef";
 
 fn codec_budget() -> Budget {
-    Budget { fuel: 8_000_000_000, deadline_ms: 120_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 8_000_000_000, deadline_ms: 120_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -260,7 +260,7 @@ async fn owned_codec_answers_every_call_on_every_staged_component() {
     assert!(failures.is_empty(), "{swept} staged component rows swept, {} failed:\n{}", failures.len(), failures.join("\n"));
 }
 
-const FIXTURE_CODEC_BUDGET: Budget = Budget { fuel: 4_000_000_000, deadline_ms: 30_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
+const FIXTURE_CODEC_BUDGET: Budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 4_000_000_000, deadline_ms: 30_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
 
 const FIXTURE_DOCUMENT_SCHEMA: &str = "fixture.neutral-host-fixture.counter";
 

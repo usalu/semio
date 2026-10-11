@@ -37,7 +37,7 @@ fn export(all: bool, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<
 pub mod export_active_shot {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "export-active-shot")]
     pub struct ExportActiveShot {}
 
@@ -51,7 +51,7 @@ pub mod export_active_shot {
 pub mod export_all_shots {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "export-all-shots")]
     pub struct ExportAllShots {}
 

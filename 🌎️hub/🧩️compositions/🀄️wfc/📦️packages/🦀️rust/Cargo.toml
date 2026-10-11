@@ -72,6 +72,7 @@ semio-s-artifact-wfc-3d = { workspace = true, features = ["component-app-assembl
 semio-s-artifact-wfc-bitmap = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-wfc-grid2d = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-wfc-grid3d = { workspace = true, features = ["component-app-assembly"] }
+semio-framework-job = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
@@ -83,7 +84,6 @@ semio-framework-tool-run = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
-semio-framework-job = { workspace = true }
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
 

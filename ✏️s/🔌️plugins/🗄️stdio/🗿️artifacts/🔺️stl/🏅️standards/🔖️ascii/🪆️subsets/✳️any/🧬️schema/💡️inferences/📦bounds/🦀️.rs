@@ -8,7 +8,7 @@ use crate::StlSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Stl triangle-soup bounding box and triangle count.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct StlBounds {
     pub min: [f64; 3],

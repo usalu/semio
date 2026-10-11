@@ -20,7 +20,8 @@ pub const STDIO_TSV_DOCUMENT_SCHEMA: &str = "stdio.tsv";
 
 //#region 🔖️LineEnding
 /// ↩️ The file's own line-ending convention. IANA TSV doesn't mandate one; real files use either.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[derive(Default)]
 pub enum LineEnding {
@@ -45,7 +46,7 @@ impl LineEnding {
 /// 📸️ Persisted `stdio.tsv` snapshot — a raw row grid (no header/data distinction; IANA TSV
 /// draws none structurally) + the two pieces of whole-file retention metadata a byte-exact
 /// split/rejoin needs: whether the source ended with a line terminator, and which one it used.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tsv")]
 pub struct TsvSnapshot {

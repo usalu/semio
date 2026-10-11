@@ -36,7 +36,8 @@ impl std::hash::Hash for PartPath<'_> {
 //#region 🔖️DocxModel
 /// ✍️ Semantic run projection with direct formatting flags; style inheritance is not resolved here.
 /// Canonical XML parts retain absent, explicitly disabled, and richer formatting independently.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocxRun {
     pub text: String,
@@ -53,7 +54,8 @@ pub struct DocxRun {
 }
 
 /// 📄️ One `w:p` paragraph: an ordered list of runs plus an optional named style reference.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocxParagraph {
     #[value(default)]
@@ -76,7 +78,8 @@ impl DocxParagraph {
 
 /// 🔲️ One `w:tc` table cell: recursively holds its own block content (WordprocessingML cells may
 /// contain paragraphs and nested tables).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocxTableCell {
     #[value(default)]
@@ -87,7 +90,8 @@ pub struct DocxTableCell {
 }
 
 /// ➖️ One `w:tr` table row.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocxTableRow {
     #[value(default)]
@@ -98,7 +102,8 @@ pub struct DocxTableRow {
 }
 
 /// 🏛️ One `w:tbl` table.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocxTable {
     #[value(default)]
@@ -110,7 +115,8 @@ pub struct DocxTable {
 
 /// 🧱️ One block-level content item inside `word/document.xml`'s `w:body` (or a table cell) — a
 /// paragraph or a table, matching WordprocessingML's own block-content model.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum DocxBlock {
     Paragraph(DocxParagraph),
@@ -125,7 +131,8 @@ impl DocxBlock {
 }
 
 /// 🎨️ One `<w:style>` entry from `word/styles.xml`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocxStyle {
     pub id: String,
@@ -148,7 +155,8 @@ pub struct DocxDocument {
 
 //#region 🔖️XmlParts
 /// 📄️ One authoritative XML-bearing OPC part. `OpcPackage.parts` contains only non-XML payloads.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocxXmlPart {
     pub path: String,
@@ -233,7 +241,7 @@ pub fn docx_part_is_xml(path: &str, content_type: &str) -> bool {
 //#endregion 🔖️XmlParts
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, ArtifactSchema, value_derive::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.docx")]
 pub struct DocxSnapshot {

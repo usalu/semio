@@ -10,7 +10,8 @@ const MAX_LINK_DIMENSION: u32 = 2_048;
 const MAX_LINK_PIXELS: u64 = 4_194_304;
 const MAX_LINK_DPI: u32 = 9_600;
 
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]

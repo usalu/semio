@@ -12,7 +12,7 @@ pub mod import_snapshot_json {
     use super::*;
 
     /// 🛠️ Dev-only whole-document import — kept out of the command palette.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "import-snapshot-json")]
     pub struct ImportSnapshotJson {
         pub json: String,
@@ -39,7 +39,7 @@ pub mod set_active_example {
 
     pub const SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "active-example")]
     pub struct SetActiveExample {
         pub example_id: String,
@@ -68,7 +68,7 @@ pub mod set_active_example {
 pub mod reset_snapshot {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "reset-snapshot")]
     pub struct ResetSnapshot {}
 
@@ -82,7 +82,7 @@ pub mod reset_snapshot {
 pub mod save_download {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "save-download")]
     pub struct SaveDownload {}
 

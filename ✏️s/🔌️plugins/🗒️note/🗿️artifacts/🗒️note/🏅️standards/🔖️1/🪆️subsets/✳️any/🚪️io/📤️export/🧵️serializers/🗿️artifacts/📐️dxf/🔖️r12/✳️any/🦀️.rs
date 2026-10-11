@@ -9,7 +9,7 @@ use crate::{NoteBlockNode, NoteSnapshot};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_dxf::schema::snapshot::{DxfEntity};
+use semio_s_artifact_stdio_dxf::schema::snapshot::{DxfEntity, DxfLine};
 use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::{print_dxf_document};
 use semio_s_artifact_stdio_dxf::{DxfSnapshot, STDIO_DXF_DOCUMENT_SCHEMA};
 
@@ -25,7 +25,7 @@ impl Serializer<NoteSnapshot> for NoteIntoDxf {
         for block in flatten_blocks(&from.blocks) {
             if let NoteBlockNode::Ink { points, .. } = block {
                 for pair in points.windows(2) {
-                    entities.push(DxfEntity::Line { start: [pair[0][0], pair[0][1], 0.0], end: [pair[1][0], pair[1][1], 0.0], layer: "0".into(), unknown_group_codes: Vec::new() });
+                    entities.push(DxfEntity::Line(DxfLine { start: [pair[0][0], pair[0][1], 0.0], end: [pair[1][0], pair[1][1], 0.0], layer: "0".into(), unknown_group_codes: Vec::new() }));
                 }
             }
         }

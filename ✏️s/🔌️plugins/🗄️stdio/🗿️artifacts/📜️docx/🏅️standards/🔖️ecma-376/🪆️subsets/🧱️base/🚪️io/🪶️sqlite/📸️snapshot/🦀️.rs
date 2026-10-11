@@ -57,7 +57,7 @@ impl ArtifactSqliteSnapshot for DocxSnapshot {
         crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode(self, encoding, control,native_owner)
     }
 
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::decode(payload, control,native_control)
     }
 
@@ -80,10 +80,10 @@ impl ArtifactSqliteSnapshot for DocxSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
 
     fn retire_sqlite_snapshot(self) {
-        let mut retirement = semio_framework_value::retirement::owned_retirement(self);
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+        let (mut retirement, _) = semio_framework_value::retirement::admit_owned_retirement(self, grant).unwrap_or_else(|(error, _)| panic!("DOCX SQLite cold retirement refused: {error:?}"));
         while !retirement.terminal_is_empty() {
-            let maximum_bytes = retirement.next_close_byte_demand().max(65_536);
-            retirement.close_step(256, maximum_bytes).expect("DOCX SQLite cold retirement grant");
+            retirement.close_step(grant).expect("DOCX SQLite cold retirement grant");
         }
     }
 

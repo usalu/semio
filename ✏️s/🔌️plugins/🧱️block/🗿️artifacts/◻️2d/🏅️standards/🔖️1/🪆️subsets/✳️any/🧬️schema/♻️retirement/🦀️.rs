@@ -5,8 +5,7 @@
 
 use crate::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, Block2dSnapshot};
 use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
-use std::sync::Arc;
-use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, SharedValueRetirementFactory};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 
 
 
@@ -52,17 +51,3 @@ impl RetireOwned for Block2dMutation {
 }
 //#endregion 🧬️Mutations
 
-//#region 🗃️Owners
-/// 🗃️ Block2d's exact document root, initial root and retained mutation retirement authorities — the
-/// catalog a retained publication folds against (without it every batched fold faults with
-/// `batched fold lacks exact snapshot or mutation retirement authority`) and a document replacement
-/// or close retires through.
-pub fn document_store_owners() -> store::DocumentStoreOwners<Block2dSnapshot, Block2dMutation> {
-    store::DocumentStoreOwners::new(
-        Arc::new(SharedValueRetirementFactory::<Block2dSnapshot>::default()),
-        Arc::new(OwnedValueRetirementFactory::<Block2dSnapshot>::default()),
-        Arc::new(OwnedValueRetirementFactory::<Block2dMutation>::default()),
-        Box::new(store::ArtifactStoreCursorDisposer::<Block2dSnapshot, Block2dMutation>::new()),
-    )
-}
-//#endregion 🗃️Owners

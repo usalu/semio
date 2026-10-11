@@ -295,13 +295,13 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
     let base = SourcingCurationConfig::default();
     let mut expected = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&base)).expect("JSON oracle base");
     expected["filters"]["query"] = serde_json::json!("timber");
-    let (post, inverse, _) = prepare_sourcing_curation_config(&base, SourcingCurationConfigMutation::SetFilterQuery { value: "timber".into() }).expect("bounded config candidate");
+    let (post, inverse, _) = prepare_sourcing_curation_config(&base, SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "timber".into() })).expect("bounded config candidate");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&post)).expect("JSON oracle post"), expected);
-    assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery { value } if value == &base.filters.query));
-    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES) }).is_ok());
-    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES + 1) }).is_err());
-    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterModules { module_ids: Vec::new() }).is_ok(), "clearing the module filter is a retained edit");
-    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["m".into(); SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS + 1] }).is_err());
+    assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value }) if value == &base.filters.query));
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES) })).is_ok());
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES + 1) })).is_err());
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids: Vec::new() })).is_ok(), "clearing the module filter is a retained edit");
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids: vec!["m".into(); SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS + 1] })).is_err());
     assert_eq!(SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES, 768 + SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "the retained config store is the filter envelope plus its own contributions lane");
     assert_eq!(SOURCING_CURATION_CONFIG_GRANT_BYTES, 4_096, "one config turn must still fit the host's fixed 4 KiB typed-operation page grant");
 }
@@ -313,14 +313,14 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
 #[test]
 fn the_contributions_lane_is_priced_apart_from_the_filter_text_envelope() {
     assert!(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES > SOURCING_CURATION_CONFIG_TEXT_BYTES);
-    let inside = SourcingCurationConfigMutation::SetContributions { json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES) };
+    let inside = SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES) });
     assert!(sourcing_curation_config_mutation_retained_bytes(&inside).is_ok(), "a pack at the lane ceiling is admitted");
-    let over = SourcingCurationConfigMutation::SetContributions { json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES + 1) };
+    let over = SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES + 1) });
     assert!(sourcing_curation_config_mutation_retained_bytes(&over).is_err(), "one byte past the lane is refused, never truncated");
     let base = SourcingCurationConfig { contributions_json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES), ..Default::default() };
-    let (post, inverse, _) = prepare_sourcing_curation_config(&base, SourcingCurationConfigMutation::SetFilterQuery { value: "timber".into() }).expect("a filter edit over a full contributions lane stays bounded");
+    let (post, inverse, _) = prepare_sourcing_curation_config(&base, SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "timber".into() })).expect("a filter edit over a full contributions lane stays bounded");
     assert_eq!(post.contributions_json.len(), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "a filter edit never disturbs the retained pack");
-    assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery { .. }));
+    assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery(_)));
 }
 /// 🧩️ The pack the DEMONSTRATOR's aussuchen pane actually receives: the demonstrator consumes
 /// `sourcing.module`, `cad.computer` and `process.machines`, so the host hands this app all three
@@ -370,7 +370,7 @@ fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_wire()
     assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
     let distilled = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&pack, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     assert!(distilled.len() <= SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "what is RETAINED is the distilled roster, never the pack");
-    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetContributions { json: distilled }).is_ok());
+    assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: distilled })).is_ok());
 }
 //#endregion 🧪️RetainedConfigOracle
 use crate::editor::sourcing::unit_tests::context::{dispatch, new_app, sourcing_manifest_for_tests};
@@ -562,12 +562,12 @@ fn host_contributions_resolve_to_the_event_sourced_config_lane() {
     let foreign = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "json": "[{\"id\":\"sourcing\"}]" }))))
         .expect("host configuration")
         .expect("sourcing contribution mutation");
-    assert_eq!(foreign, SourcingCurationConfigMutation::SetContributions { json: "[]".into() }, "a pack with nothing this app installs is retained as an empty roster");
+    assert_eq!(foreign, SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: "[]".into() }), "a pack with nothing this app installs is retained as an empty roster");
     let pack = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&sourcing_reuse_contribution(), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     let installed = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "json": sourcing_reuse_contribution() }))))
         .expect("host configuration")
         .expect("sourcing contribution mutation");
-    assert_eq!(installed, SourcingCurationConfigMutation::SetContributions { json: pack });
+    assert_eq!(installed, SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: pack }));
     assert_eq!(<SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setFilterQuery", None).expect("non-host action"), None);
 }
 

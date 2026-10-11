@@ -73,7 +73,7 @@ pub(crate) const PARENT_PREVIEW_TIME_INTERVAL_MS: u64 = 16;
 
 /// 🏁 What one solve concludes with: the output bitmap as base64 palette indices (row-major), the
 /// satisfiability verdict, and the per-cell prior entropy map.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapInferenceCommit {
     #[value(with = "semio_framework_value::bytes")]
@@ -195,7 +195,7 @@ pub fn compile_bitmap_collapse(snapshot: &BitmapSnapshot) -> Result<BitmapCollap
 //#region 🔖️Solve
 /// 🏁 The solved output bitmap, or `Unsolved` for every non-`Solved` outcome (contradiction, budget,
 /// cancellation) — see [`BitmapContradiction`] for the dedicated satisfiability verdict.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum BitmapSolveResult {
     #[default]

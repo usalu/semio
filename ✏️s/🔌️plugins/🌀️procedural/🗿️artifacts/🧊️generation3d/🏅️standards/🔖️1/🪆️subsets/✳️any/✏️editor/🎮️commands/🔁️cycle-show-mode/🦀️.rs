@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🔁️ Argument-free by construction: `AppDefinition.keybinding` carries a chord and an action id and
 /// nothing else, so a keyboard-reachable display toggle has to read its own next value out of the
 /// config rather than take one (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "cycle-show-mode")]
 pub struct CycleShowMode {}
 

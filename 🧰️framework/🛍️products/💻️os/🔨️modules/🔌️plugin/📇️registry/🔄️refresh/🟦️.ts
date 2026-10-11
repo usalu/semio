@@ -10,7 +10,7 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 
 import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../📖️catalog-view/🟦️.ts";
 
-import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
+import type { PluginBuildTargetV1 } from "../🔎️discovery/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
@@ -30,9 +30,9 @@ import { syncBuiltPluginDescriptors } from "../../🏗️build/🛂️descriptor
  * `publishShardWorker()` (identical content for every target) is written once at the end rather than once
  * per target. Injectable fakes support tests without a real toolchain. */
 async function buildPluginCatalog(
-  orderedTargets: readonly DeployedRegistryEntryV1[],
-  cargoFn: (target: DeployedRegistryEntryV1) => Promise<{ readonly artifact: string }> = buildPluginCargo,
-  materializeFn: (target: DeployedRegistryEntryV1, artifact: string) => Promise<void> = materializePlugin,
+  orderedTargets: readonly PluginBuildTargetV1[],
+  cargoFn: (target: PluginBuildTargetV1) => Promise<{ readonly artifact: string }> = buildPluginCargo,
+  materializeFn: (target: PluginBuildTargetV1, artifact: string) => Promise<void> = materializePlugin,
   concurrencyLimit: number = materializeConcurrencyLimit(),
   publishShardWorkerFn: () => void = publishShardWorker,
   cargoLimit: number = cargoConcurrencyLimit(),

@@ -14,7 +14,7 @@ pub trait Wfc2dRow: Clone + PartialEq {
 
 //#region 🔖️Optionals
 /// 🔤 An optional String field set to a value or cleared.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Wfc2dOptionalText {
     pub value: Option<String>,
@@ -26,7 +26,7 @@ pub struct Wfc2dOptionalText {
 macro_rules! wfc_patch {
     ($(#[$doc:meta])* $name:ident for $row:ty { plain { $($field:ident : $ty:ty),* } optional { $($ofield:ident : $wrap:ident),* } }) => {
         $(#[$doc])*
-        #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+        #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, protocol::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase", default)]
         pub struct $name {
             $(pub $field: Option<$ty>,)*
@@ -114,7 +114,7 @@ protocol::list_delta! {
 //#endregion 🔖️RowTypes
 
 //#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.wfc.wfc2d")]
 pub struct Wfc2dDiff {

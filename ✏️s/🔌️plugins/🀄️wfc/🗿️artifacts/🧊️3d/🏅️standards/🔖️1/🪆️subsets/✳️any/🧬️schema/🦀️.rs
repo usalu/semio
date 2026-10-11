@@ -6,7 +6,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Wfc3dArtifact
 /// 🧬️ `Wfc3dArtifact` facet — the persisted problem spec IS the artifact; the solve is derived.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.wfc.wfc3d")]
 pub struct Wfc3dArtifact {

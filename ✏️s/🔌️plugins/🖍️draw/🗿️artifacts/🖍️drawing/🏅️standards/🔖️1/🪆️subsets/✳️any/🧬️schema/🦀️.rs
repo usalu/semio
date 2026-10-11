@@ -186,6 +186,7 @@ pub struct DrawingSceneGroup {
 pub struct DrawingSceneText {
     pub content: String,
     pub size: f64,
+    pub font_family: crate::DrawingFontFamily,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]

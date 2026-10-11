@@ -13,8 +13,8 @@
 /// arguments the WIT bridge instantiates.
 fn reactor_turn_future_bytes() -> usize {
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-    let budget = Budget { fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 };
-    let future = crate::reactor::poll_kernel(&runtime, Vec::new(), None, None, budget);
+    let budget = Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 };
+    let future = crate::reactor::poll_kernel(&runtime, Vec::new(), None, None, budget, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context());
     let bytes = size_of_val(&future);
     drop(future);
     bytes

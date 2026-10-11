@@ -7,7 +7,7 @@ use store::ArtifactPack;
 /// 👥️ Shareable live subset of sourcing curation view state (grid camera). Row selection now broadcasts
 /// automatically through the framework's typed `PresenceInteraction` field for the "rows" interaction
 /// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no longer mirrored here.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -24,6 +24,8 @@ impl Default for SourcingCurationPresence {
         Self { world_camera_position: [2.5, 2.0, 2.5], world_camera_target: [0.0, 0.0, 0.0], world_camera_fov: 50.0 }
     }
 }
+
+impl store::ArtifactPresenceSnapshot for SourcingCurationPresence {}
 
 /// 🔺️ Sparse field delta over [`SourcingCurationPresence`]: every present slot is the new value of exactly that field.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -124,7 +126,7 @@ impl ArtifactPack for SourcingCurationPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum SourcingCurationPresenceMutation {
     #[dsl(key = "world-camera")]
@@ -203,95 +205,6 @@ impl protocol::OpBinary for SourcingCurationPresenceMutation {
     }
 }
 //#endregion 🔖️PresenceMutation
-
-//#region 🧹️Retirement
-const SOURCING_PRESENCE_BYTES: usize = 7 * size_of::<f64>();
-const _: () = assert!(size_of::<SourcingCurationPresence>() == SOURCING_PRESENCE_BYTES && !std::mem::needs_drop::<SourcingCurationPresence>());
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct SourcingPresenceRetirementFactory;
-
-impl store::SnapshotRetirementFactory<SourcingCurationPresence> for SourcingPresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<SourcingCurationPresence>) -> usize { std::mem::size_of::<SourcingPresenceRetirement>() }
-
-    fn retire(&self, root: std::sync::Arc<SourcingCurationPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(SourcingPresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)) })
-    }
-}
-
-struct SourcingPresenceRetirement {
-    root: std::mem::ManuallyDrop<Option<std::sync::Arc<SourcingCurationPresence>>>,
-}
-
-impl store::ErasedSnapshotRetirement for SourcingPresenceRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 || maximum_bytes < SOURCING_PRESENCE_BYTES {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        let Some(root) = self.root.take() else { return Ok(store::SnapshotRetirementStep::Complete) };
-        let released_bytes = if std::sync::Arc::into_inner(root).is_some() { SOURCING_PRESENCE_BYTES } else { 0 };
-        Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes })
-    }
-
-    fn terminal_is_empty(&self) -> bool { self.root.is_none() }
-}
-
-impl Drop for SourcingPresenceRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() { assert!(self.root.is_none(), "Sourcing presence retirement requires exact terminal emptiness"); }
-    }
-}
-
-pub struct SourcingPresenceStoreDisposer {
-    terminal: Option<std::sync::Arc<SourcingCurationPresence>>,
-    active: Option<store::PresenceStoreRetirement<SourcingCurationPresence>>,
-}
-
-impl Default for SourcingPresenceStoreDisposer {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl SourcingPresenceStoreDisposer {
-    pub fn new() -> Self { Self { terminal: Some(std::sync::Arc::new(SourcingCurationPresence::default())), active: None } }
-}
-
-impl semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<SourcingCurationPresence, SourcingCurationPresenceMutation>> for SourcingPresenceStoreDisposer {
-    fn close_step(
-        &mut self,
-        owner: &mut store::PresenceStore<SourcingCurationPresence, SourcingCurationPresenceMutation>,
-        maximum_items: usize,
-        maximum_bytes: usize,
-    ) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework_plugin::Fault> {
-        use semio_framework_plugin::PluginCloseStep;
-        if maximum_items == 0 { return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
-        if let Some(active) = self.active.as_mut() {
-            return active.close_step(1, maximum_bytes).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, error.kind.as_str(), error.into_message())).map(|step| match step {
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-                store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "Sourcing presence retains local or peer readers" },
-                store::SnapshotRetirementStep::Complete => PluginCloseStep::Complete,
-            });
-        }
-        let terminal = self.terminal.take().expect("Sourcing presence terminal root");
-        match owner.begin_retirement(terminal, |_| !std::mem::needs_drop::<SourcingCurationPresence>()) {
-            Ok(active) => self.active = Some(active),
-            Err((reason, terminal)) => { self.terminal = Some(terminal); return Err(semio_framework_plugin::Fault::from(reason)); }
-        }
-        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-    }
-
-    fn terminal_is_empty(&self, owner: &store::PresenceStore<SourcingCurationPresence, SourcingCurationPresenceMutation>) -> bool {
-        self.terminal.is_none() && self.active.as_ref().is_some_and(store::PresenceStoreRetirement::terminal_is_empty) && owner.retirement_started() && owner.peers_root().is_empty()
-    }
-}
-//#endregion 🧹️Retirement
-
-//#region 🧪️RetirementTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️retirement/🦀️.rs"]
-mod retirement_tests;
-//#endregion 🧪️RetirementTests
 
 #[cfg(test)]
 mod law_tests {

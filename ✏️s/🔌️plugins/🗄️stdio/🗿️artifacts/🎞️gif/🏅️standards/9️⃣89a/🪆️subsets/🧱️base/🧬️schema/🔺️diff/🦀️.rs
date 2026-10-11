@@ -178,7 +178,7 @@ fn rewind_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[
 /// `f6-recon-report.md` for the full decision rule. `DiffCodec` for `GifDiff` is hand-rolled below
 /// instead (this struct itself needs no `dsl` derive at all; it's a plain leaf type consumed by the
 /// hand-rolled `print_diff`/`parse_diff`/`encode_diff`/`decode_diff`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifFrameDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -327,14 +327,14 @@ impl GifFrameDiff {
 //#endregion 🔖️FrameDiff
 
 //#region 🔖️FramesDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifFrameModified {
     pub index: usize,
     pub diff: GifFrameDiff,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifFrameAdded {
     pub index: usize,
@@ -342,7 +342,7 @@ pub struct GifFrameAdded {
 }
 
 /// 🔺️ Index-keyed collection triple for `GifSnapshot::frames`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifFramesDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -415,19 +415,19 @@ impl GifFramesDiff {
 /// 🧩️ Macro-free, hand-duplicated (small, two instantiations) index-keyed collection triple for a
 /// WEAK/value collection item — the "diff" IS the whole new value, per the recipe's strong/weak
 /// split (no further sub-diffing of a `String` or a `GifAppExtension`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifCommentModified {
     pub index: usize,
     pub text: String,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifCommentAdded {
     pub index: usize,
     pub text: String,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifCommentsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -492,19 +492,19 @@ impl GifCommentsDiff {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifAppExtensionModified {
     pub index: usize,
     pub extension: GifAppExtension,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifAppExtensionAdded {
     pub index: usize,
     pub extension: GifAppExtension,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifAppExtensionsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -574,7 +574,7 @@ impl GifAppExtensionsDiff {
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.gif.89a`. No `snapshot: Option<GifSnapshot>` full-replace slot anywhere.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif.89a.diff")]
 pub struct GifDiff {

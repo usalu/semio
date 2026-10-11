@@ -46,6 +46,20 @@ impl semio_framework_dsl_record::DslField for EntityId {
         <u32 as semio_framework_dsl_record::DslField>::from_value(value).map(EntityId)
     }
 }
+
+semio_framework_value::artifact_retire_leaf!(EntityId, ScheduleId);
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for EntityId {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> {
+        Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::U64(u64::from(self.0)))
+    }
+}
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ScheduleId {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> {
+        Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::U64(u64::from(self.0)))
+    }
+}
 // #endregion 🔖️Ids
 
 // #region 🔖️FixedTable
@@ -121,6 +135,19 @@ impl<K: FromValue, V: FromValue> FromValue for FixedTable<K, V> {
             admitted: bool::from_value(field("admitted")).map_err(|error| error.under("admitted"))?,
             faulted: bool::from_value(field("faulted")).map_err(|error| error.under("faulted"))?,
         })
+    }
+}
+
+/// ♻️ A table retires slot by slot exactly as the boxed slice it owns, as a vector of optional entries.
+impl<K: semio_framework_value::retirement::RetireOwned, V: semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for FixedTable<K, V> {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::RetireOwned::retirement(self.slots.into_vec())
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&Vec::<Option<(K, V)>>::new())
+    }
+    fn controlled_retirement_supported() -> bool {
+        <Vec<Option<(K, V)>> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()
     }
 }
 
@@ -252,7 +279,7 @@ impl<K: Ord, V> FixedTable<K, V> {
 
 // #region 🔖️Site
 /// 🌍️ Site location and orientation.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Site {
     pub latitude_deg: f64,
     pub longitude_deg: f64,
@@ -264,7 +291,7 @@ pub struct Site {
 
 // #region 🔖️Zone
 /// 🏠️ Thermal zone with volume and conditioning flags.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Zone {
     pub id: EntityId,
     pub name: String,
@@ -275,7 +302,7 @@ pub struct Zone {
 }
 
 /// 🪑️ Space within a zone.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Space {
     pub id: EntityId,
     pub name: String,
@@ -286,7 +313,8 @@ pub struct Space {
 
 // #region 🔖️Surface
 /// 🧱️ Surface boundary type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SurfaceClass {
     ExteriorWall,
     InteriorWall,
@@ -299,7 +327,7 @@ pub enum SurfaceClass {
 }
 
 /// 📐️ Planar polygon surface.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Surface {
     pub id: EntityId,
     pub name: String,
@@ -314,7 +342,7 @@ pub struct Surface {
 }
 
 /// 🌡️ Exterior boundary condition for surfaces.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum OutsideBoundary {
     OutdoorAir,
     Ground,
@@ -327,7 +355,8 @@ pub enum OutsideBoundary {
 /// surface, and `dsl::DslScalar` binds unit variants only, so a mutation payload names the boundary
 /// through this scalar and carries the partner in its own optional `EntityId` field — the same
 /// parallel-field shape `replace-airflow-network` uses for its `(zone, node)` pairs.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum OutsideBoundaryKind {
     OutdoorAir,
     Ground,
@@ -393,7 +422,7 @@ impl OutsideBoundary {
 pub const FENESTRATION_PLANE_TOLERANCE_M: f64 = 1e-3;
 
 /// See ANSI/ASHRAE 140 §5.2 cases 610/630/910/930, whose overhang and fins are exactly this shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Fenestration {
     pub id: EntityId,
     pub name: String,
@@ -429,7 +458,8 @@ pub struct Fenestration {
 // #region 🔖️Material
 /// 🪨️ Surface roughness class of an exterior face, which scales the forced part of its outside
 /// convection (EnergyPlus `Material` roughness keys).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SurfaceRoughness {
     VeryRough,
     Rough,
@@ -454,7 +484,7 @@ impl SurfaceRoughness {
 }
 
 /// 🧱️ Opaque material layer.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Material {
     pub id: EntityId,
     pub name: String,
@@ -469,7 +499,7 @@ pub struct Material {
 }
 
 /// 🪟️ One glass pane of a layered glazing construction, by its normal-incidence spectral averages.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct GlazingMaterial {
     pub id: EntityId,
     pub name: String,
@@ -487,7 +517,8 @@ pub struct GlazingMaterial {
 }
 
 /// 🌫️ Fill gas of a glazing gap.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum GasKind {
     Air,
     Argon,
@@ -496,7 +527,7 @@ pub enum GasKind {
 }
 
 /// 🌫️ Gas-filled gap between two panes of a layered glazing construction.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct GasMaterial {
     pub id: EntityId,
     pub name: String,
@@ -506,7 +537,7 @@ pub struct GasMaterial {
 
 /// 🧱️ Layered construction. An opaque construction names [`Material`]s outside first; a glazing
 /// construction alternates [`GlazingMaterial`] panes and [`GasMaterial`] gaps, outside pane first.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Construction {
     pub id: EntityId,
     pub name: String,
@@ -550,7 +581,7 @@ impl semio_framework_dsl_record::DslField for ScheduleId {
 
 // #region 🔖️Gains
 /// 👤️ People internal gain object.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct PeopleGain {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -563,7 +594,7 @@ pub struct PeopleGain {
 }
 
 /// 💡️ Lighting internal gain.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct LightingGain {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -575,7 +606,7 @@ pub struct LightingGain {
 }
 
 /// 🔌️ Electric equipment gain.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct EquipmentGain {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -588,7 +619,7 @@ pub struct EquipmentGain {
 
 // #region 🔖️Hvac
 /// 🌡️ Thermostat setpoint control.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Thermostat {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -599,7 +630,7 @@ pub struct Thermostat {
 }
 
 /// ❄️ Ideal loads air system for a zone.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct IdealLoadsSystem {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -612,7 +643,7 @@ pub struct IdealLoadsSystem {
 }
 
 /// 💧️ Humidistat control for a zone.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Humidistat {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -623,7 +654,7 @@ pub struct Humidistat {
 }
 
 /// 🎛️ Setpoint manager type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum SetpointManagerKind {
     Scheduled,
     OutdoorAirReset { low_outdoor_c: f64, high_outdoor_c: f64, low_setpoint_c: f64, high_setpoint_c: f64 },
@@ -632,7 +663,7 @@ pub enum SetpointManagerKind {
 }
 
 /// 🎛️ Setpoint manager for air/plant loops.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SetpointManager {
     pub id: EntityId,
     pub name: String,
@@ -641,7 +672,7 @@ pub struct SetpointManager {
 }
 
 /// 🏠️ Zone equipment assignment.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ZoneEquipmentAssignment {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -652,7 +683,8 @@ pub struct ZoneEquipmentAssignment {
 }
 
 /// 🏠️ Zone equipment catalog reference.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum ZoneEquipmentType {
     Baseboard,
     Radiant,
@@ -665,7 +697,7 @@ pub enum ZoneEquipmentType {
 }
 
 /// 🌀️ Air loop configuration reference in model.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ModelAirLoop {
     pub id: EntityId,
     pub name: String,
@@ -676,7 +708,7 @@ pub struct ModelAirLoop {
 }
 
 /// 🏭️ Plant loop configuration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct PlantLoopConfig {
     pub id: EntityId,
     pub name: String,
@@ -688,7 +720,8 @@ pub struct PlantLoopConfig {
 }
 
 /// 🏭️ Plant loop fluid type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum PlantLoopType {
     Heating,
     Cooling,
@@ -696,7 +729,7 @@ pub enum PlantLoopType {
 }
 
 /// 🌬️ Outdoor air system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct OutdoorAirSystem {
     pub id: EntityId,
     pub air_loop_id: EntityId,
@@ -705,7 +738,7 @@ pub struct OutdoorAirSystem {
 }
 
 /// 🌳️ Shading surface for solar obstruction.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ShadingSurface {
     pub id: EntityId,
     pub name: String,
@@ -714,7 +747,7 @@ pub struct ShadingSurface {
 }
 
 /// 📋️ Space list grouping.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SpaceList {
     pub id: EntityId,
     pub name: String,
@@ -722,7 +755,7 @@ pub struct SpaceList {
 }
 
 /// 🏠️ Thermal enclosure grouping zones.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ThermalEnclosure {
     pub id: EntityId,
     pub name: String,
@@ -730,14 +763,14 @@ pub struct ThermalEnclosure {
 }
 
 /// 🔗️ Surface adjacency pair.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct AdjacencyPair {
     pub surface_a_id: EntityId,
     pub surface_b_id: EntityId,
 }
 
 /// 💨️ Mechanical ventilation specification.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct MechanicalVentilation {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -748,7 +781,7 @@ pub struct MechanicalVentilation {
 }
 
 /// 🌐️ Airflow network definition in model.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct AirflowNetworkDefinition {
     pub zone_node_ids: Vec<(EntityId, u32)>,
     pub outdoor_node_id: u32,
@@ -756,7 +789,7 @@ pub struct AirflowNetworkDefinition {
 }
 
 /// ⚡️ Electrical load center.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ElectricalLoadCenter {
     pub id: EntityId,
     pub name: String,
@@ -766,7 +799,7 @@ pub struct ElectricalLoadCenter {
 }
 
 /// ☀️ PV system assignment.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct PvSystemAssignment {
     pub id: EntityId,
     pub dc_capacity_w: f64,
@@ -778,7 +811,7 @@ pub struct PvSystemAssignment {
 }
 
 /// 🔋️ Battery storage assignment.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct BatteryAssignment {
     pub id: EntityId,
     pub capacity_kwh: f64,
@@ -788,7 +821,7 @@ pub struct BatteryAssignment {
 }
 
 /// 🚿️ Service hot water system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ShwSystemConfig {
     pub id: EntityId,
     pub heater_capacity_w: f64,
@@ -798,7 +831,7 @@ pub struct ShwSystemConfig {
 }
 
 /// ☀️ Solar thermal collector system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SolarThermalConfig {
     pub id: EntityId,
     pub collector_area_m2: f64,
@@ -809,7 +842,7 @@ pub struct SolarThermalConfig {
 }
 
 /// ❄️ Refrigeration system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct RefrigerationConfig {
     pub id: EntityId,
     pub case_count: u32,
@@ -818,7 +851,7 @@ pub struct RefrigerationConfig {
 }
 
 /// 💧️ Water use system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct WaterSystemConfig {
     pub id: EntityId,
     pub fixture_count: u32,
@@ -827,7 +860,7 @@ pub struct WaterSystemConfig {
 }
 
 /// ⚠️ Fault definition.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct FaultDefinition {
     pub id: EntityId,
     pub target_equipment_id: EntityId,
@@ -837,7 +870,8 @@ pub struct FaultDefinition {
 }
 
 /// ⚠️ Fault type catalog.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum FaultType {
     SensorBias,
     CoilFouling,
@@ -847,7 +881,7 @@ pub enum FaultType {
 }
 
 /// 📊️ Output variable registration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct OutputVariableSpec {
     pub name: String,
     pub key: String,
@@ -855,7 +889,8 @@ pub struct OutputVariableSpec {
 }
 
 /// 📊️ Output reporting frequency.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum OutputReportFrequency {
     Timestep,
     Hourly,
@@ -865,7 +900,7 @@ pub enum OutputReportFrequency {
 }
 
 /// 📐️ Sizing object for design-day autosize.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SizingObject {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -874,7 +909,8 @@ pub struct SizingObject {
 }
 
 /// 📐️ Sizing type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SizingType {
     Heating,
     Cooling,
@@ -882,14 +918,15 @@ pub enum SizingType {
 }
 
 /// 📐️ Design day type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum DesignDayType {
     Heating,
     Cooling,
 }
 
 /// 💡️ Daylight zone configuration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct DaylightZoneConfig {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -899,14 +936,15 @@ pub struct DaylightZoneConfig {
 }
 
 /// 🌡️ Room air model selection per zone.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct RoomAirModelAssignment {
     pub zone_id: EntityId,
     pub model: RoomAirModelType,
 }
 
 /// 🌡️ Room air model type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum RoomAirModelType {
     WellMixed,
     OneNodeDisplacement,
@@ -915,7 +953,7 @@ pub enum RoomAirModelType {
 }
 
 /// 🌡️ Ground temperature configuration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct GroundTemperatureConfig {
     pub building_surface_c: [f64; 12],
     pub shallow_c: [f64; 12],
@@ -934,7 +972,7 @@ impl Default for GroundTemperatureConfig {
 /// selection plus every parameter each method needs, so the kernel maps this entity onto
 /// [`crate::air_exchange::InfiltrationSpec`] one-to-one instead of pinning one method and
 /// smuggling the flow through a coefficient field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Infiltration {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -957,7 +995,7 @@ pub struct Infiltration {
 /// are persisted model data, not per-run session state: every `ScheduleId` reference in this
 /// document resolves inside `schedules`, and [`crate::kernel::SimulationConfig`] reads both out of
 /// the model at run time (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Model {
     pub name: String,
     pub version: String,

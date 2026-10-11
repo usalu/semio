@@ -4,7 +4,7 @@ use crate::editor::sourcing::modes::edit::windows::grid::SOURCING_CURATION_WINDO
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧮️ How the 3D grid expands each curated row's count into world instances.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.sourcing.curation.gridwindowconfig", extension = "sourcinggridwindowcfg")]
@@ -95,9 +95,17 @@ impl protocol::DiffAlgebra<GridWindowConfig> for GridWindowConfigDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+/// 🧮️ The one field-set payload of [`GridWindowConfigMutation::SetInstanceDisplay`]; its wire is `{"instance_display": …}`.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct GridSetInstanceDisplay {
+    pub instance_display: String,
+}
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum GridWindowConfigMutation {
-    SetInstanceDisplay { instance_display: String },
+    SetInstanceDisplay(GridSetInstanceDisplay),
 }
 
 impl protocol::Mutation<GridWindowConfig> for GridWindowConfigMutation {
@@ -123,11 +131,23 @@ impl protocol::Mutation<GridWindowConfig> for GridWindowConfigMutation {
     }
     fn diff(&self, base: &GridWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         match self {
-            Self::SetInstanceDisplay { instance_display } => protocol::MutationOutcome::new(GridWindowConfigDiff { instance_display: (base.instance_display != *instance_display).then(|| instance_display.clone()) }),
+            Self::SetInstanceDisplay(GridSetInstanceDisplay { instance_display }) => protocol::MutationOutcome::new(GridWindowConfigDiff { instance_display: (base.instance_display != *instance_display).then(|| instance_display.clone()) }),
         }
     }
     fn inverse(&self, base: &GridWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        Ok(vec![Self::SetInstanceDisplay { instance_display: base.instance_display.clone() }])
+        Ok(vec![Self::SetInstanceDisplay(GridSetInstanceDisplay { instance_display: base.instance_display.clone() })])
+    }
+}
+
+impl store::snapshot_clone_preparation::ConfigApplyMutation<GridWindowConfig> for GridWindowConfigMutation {
+    fn exchange(self, post: &mut GridWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        let Self::SetInstanceDisplay(GridSetInstanceDisplay { mut instance_display }) = self;
+        std::mem::swap(&mut instance_display, &mut post.instance_display);
+        Ok(Self::SetInstanceDisplay(GridSetInstanceDisplay { instance_display }))
+    }
+    fn payload_bytes(&self) -> usize {
+        let Self::SetInstanceDisplay(GridSetInstanceDisplay { instance_display }) = self;
+        instance_display.len()
     }
 }
 
@@ -158,6 +178,11 @@ impl semio_framework_plugin::WindowConfigOwner for GridWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = GridWindowConfig;
     type Mutation = GridWindowConfigMutation;
+    type Edit = store::snapshot_clone_preparation::ConfigApplyEdit<GridWindowConfig, GridWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+        std::sync::Arc::new(store::snapshot_clone_preparation::ConfigApplyEdit::new())
+    }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()
     }
@@ -207,7 +232,16 @@ mod law_tests {
     #[semio_framework_async_macros::async_test]
     async fn inverse_diffs_sum_to_the_negative_diff() {
         let base = GridWindowConfig::default();
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&GridWindowConfigMutation::SetInstanceDisplay { instance_display: GRID_INSTANCE_DISPLAY_REPRESENTATIVE.into() }, &base).await;
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&GridWindowConfigMutation::SetInstanceDisplay { instance_display: GRID_INSTANCE_DISPLAY_LINE_BEHIND.into() }, &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&GridWindowConfigMutation::SetInstanceDisplay(GridSetInstanceDisplay { instance_display: GRID_INSTANCE_DISPLAY_REPRESENTATIVE.into() }), &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&GridWindowConfigMutation::SetInstanceDisplay(GridSetInstanceDisplay { instance_display: GRID_INSTANCE_DISPLAY_LINE_BEHIND.into() }), &base).await;
+    }
+
+    /// 🔬️ Wire stays byte-identical to the pre-migration externally tagged form, with serde_json as the oracle.
+    #[test]
+    fn set_instance_display_wire_is_byte_identical_to_the_neutral_json() {
+        let mutation = GridWindowConfigMutation::SetInstanceDisplay(GridSetInstanceDisplay { instance_display: GRID_INSTANCE_DISPLAY_REPRESENTATIVE.into() });
+        let expected = serde_json::json!({ "SetInstanceDisplay": { "instance_display": "representative" } });
+        assert_eq!(serde_json::Value::from(&semio_framework_value::ToValue::to_value(&mutation)), expected);
+        assert_eq!(<GridWindowConfigMutation as semio_framework_value::FromValue>::from_value(expected.into()).ok(), Some(mutation));
     }
 }

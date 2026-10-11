@@ -1,17 +1,39 @@
 use super::*;
 
+fn grant(items: usize) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }
+}
+
+fn step_grant() -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 }
+}
+
+/// 🧹️ Closes a job to terminal-empty under an unbounded grant, refusing any refusal receipt.
+fn close_job(mut job: impl semio_framework_job::InteractiveJob) {
+    semio_framework_job::InteractiveJob::begin_close(&mut job);
+    let mut turns = 0usize;
+    while !semio_framework_job::InteractiveJob::terminal_is_empty(&job) {
+        if let semio_framework_job::InteractiveJobCloseStep::Refused { kind, .. } = semio_framework_job::InteractiveJob::close_step(&mut job, grant(usize::MAX)) {
+            panic!("DEFLATE job close was refused: {kind:?}");
+        }
+        turns += 1;
+        assert!(turns < HASH_SIZE + WINDOW + 4_096);
+    }
+}
+
 #[test]
 fn deflate_job_zero_grant_preserves_input_and_one_opportunity_close_is_exact() {
+    use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep};
     let mut job = DeflateEncodeJob::new(vec![1, 2, 3], 1);
     let pointer = job.input.as_ptr();
-    semio_framework_job::InteractiveJob::begin_close(&mut job);
-    assert_eq!(semio_framework_job::InteractiveJob::close_step(&mut job, 0, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    InteractiveJob::begin_close(&mut job);
+    assert_eq!(InteractiveJob::close_step(&mut job, grant(0)), InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
     assert_eq!(job.input.as_ptr(), pointer);
     let mut opportunities = 0usize;
-    while !semio_framework_job::InteractiveJob::terminal_is_empty(&job) {
-        let step = semio_framework_job::InteractiveJob::close_step(&mut job, 1, usize::MAX);
-        if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } = step {
-            assert!(released_items <= 1);
+    while !InteractiveJob::terminal_is_empty(&job) {
+        let step = InteractiveJob::close_step(&mut job, grant(1));
+        if let InteractiveJobCloseStep::Pending { progress } = step {
+            assert!(progress.copied_items <= 1);
         }
         opportunities += 1;
         assert!(opportunities < HASH_SIZE + WINDOW + 64);
@@ -81,10 +103,9 @@ fn raw_deflate_round_trip() {
     assert_eq!(dec, p);
 }
 
-/// 📦️ Flattens a paged `RetainedJobPayload` back into the contiguous bytes these byte-identity
-/// assertions compare, then closes it to terminal-empty — the job protocol hands out pages, never
-/// one `Vec<u8>`, and `RetainedJobPayload::drop` refuses any payload that still owns page backing.
-fn retained_bytes(mut payload: semio_framework_job::RetainedJobPayload) -> Vec<u8> {
+/// 📦️ Flattens a sealed paged `RetainedJobPayload` into the contiguous bytes these byte-identity
+/// assertions compare — the job protocol lends pages, never one `Vec<u8>`.
+fn retained_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
     let mut bytes = Vec::with_capacity(payload.len());
     for index in 0..payload.page_count() {
         if let Some(page) = payload.page(index) {
@@ -92,25 +113,27 @@ fn retained_bytes(mut payload: semio_framework_job::RetainedJobPayload) -> Vec<u
         }
     }
     assert_eq!(bytes.len(), payload.len(), "retained payload reports {} bytes but its {} page(s) hold {}", payload.len(), payload.page_count(), bytes.len());
-    while payload.close_step(usize::MAX, usize::MAX) != semio_framework_job::JobPayloadCloseStep::Complete {}
     bytes
 }
 
-fn drive_encode_job(mut job: DeflateEncodeJob, fuel: u64) -> Vec<u8> {
-    use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome};
-    let cancel = root_cancel_token();
+/// ➡️ One scheduler step under a fresh original wallet; `true` once the job lent an outcome.
+fn step_once(job: &mut impl semio_framework_job::InteractiveJob, operation: u64, fuel: u64, cancel: semio_framework_job::CancelToken) -> bool {
+    use semio_framework_job::{Generation, OperationId, StepBudget, StepContext};
     let mut sequence = 0;
+    let mut progress = RetainedCloneProgress::default();
+    let mut context = StepContext::new(OperationId(operation), Generation(1), StepBudget::new(fuel, u64::MAX, step_grant()), cancel, || Some(0), &mut sequence, &mut progress);
+    job.step(&mut context).expect("DEFLATE job step").is_some()
+}
+
+fn drive_encode_job(mut job: DeflateEncodeJob, fuel: u64) -> Vec<u8> {
+    let cancel = semio_framework_job::root_cancel_token();
     loop {
-        let mut context = StepContext::new(OperationId(1), Generation(1), StepBudget::new(fuel, u64::MAX), cancel.clone(), || Some(0), &mut sequence);
-        match job.step(&mut context) {
-            StepOutcome::Complete(commit) => {
-                drop(retained_bytes(commit.state));
-                return retained_bytes(commit.output);
+        if step_once(&mut job, 1, fuel, cancel.clone()) {
+            let output = job.publication.as_ref().and_then(|publication| publication.commit_output()).map(retained_bytes);
+            if let Some(output) = output {
+                close_job(job);
+                return output;
             }
-            // 🧹️ A published checkpoint owns retained pages; the driver closes it exactly.
-            StepOutcome::CheckpointReady(checkpoint) => drop(retained_bytes(checkpoint.state)),
-            StepOutcome::Yield => {}
-            outcome => panic!("unexpected DEFLATE job outcome: {outcome:?}"),
         }
     }
 }
@@ -131,49 +154,48 @@ fn streaming_encode_matches_pre_refactor_golden_bytes() {
 
 #[test]
 fn streaming_checkpoint_restore_is_byte_identical() {
-    use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome};
     let payload = b"checkpointed owned compression ".repeat(256);
     let expected = deflate_raw(&payload);
     let mut job = DeflateEncodeJob::new(payload, 31);
-    let mut sequence = 0;
-    let checkpoint = loop {
-        let mut context = StepContext::new(OperationId(2), Generation(1), StepBudget::new(5, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-        if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-            break checkpoint;
+    let cancel = semio_framework_job::root_cancel_token();
+    let (state, applied_progress) = loop {
+        if step_once(&mut job, 2, 5, cancel.clone()) {
+            let delivered = job.publication.as_ref().and_then(|publication| publication.applied_progress());
+            if let Some(applied_progress) = delivered {
+                break (job.checkpoint_bytes(), applied_progress);
+            }
         }
     };
-    assert!(!checkpoint.state.is_empty(), "a CheckpointReady outcome must own its serialized state; an empty retained payload means `payload_from_bytes` rejected it and `retained_payload` swallowed the rejection");
-    let restored = DeflateEncodeJob::from_checkpoint(&retained_bytes(checkpoint.state)).expect("restore checkpoint");
-    assert_eq!(checkpoint.applied_progress as usize, restored.progress().0);
+    assert!(!state.is_empty(), "a delivered checkpoint must own its serialized state");
+    let restored = DeflateEncodeJob::from_checkpoint(&state).expect("restore checkpoint");
+    assert_eq!(applied_progress as usize, restored.progress().0);
+    close_job(job);
     assert_eq!(drive_encode_job(restored, 3), expected);
 }
 
 #[test]
 fn streaming_encode_observes_cancellation_without_progress() {
-    use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome};
     let mut job = DeflateEncodeJob::new(vec![7; 4096], 64);
     let before = job.checkpoint_bytes();
-    let cancel = root_cancel_token();
+    let cancel = semio_framework_job::root_cancel_token();
     cancel.cancel_now();
-    let mut sequence = 0;
-    let mut context = StepContext::new(OperationId(3), Generation(1), StepBudget::new(1, u64::MAX), cancel, || Some(0), &mut sequence);
-    assert_eq!(job.step(&mut context), StepOutcome::Cancelled);
+    assert!(step_once(&mut job, 3, 1, cancel), "a cancelled step lends the cancelled outcome");
     assert_eq!(job.checkpoint_bytes(), before);
+    close_job(job);
 }
 
 #[test]
 fn adversarial_streaming_transition_stays_below_watchdog_ceiling() {
-    use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext};
     let mut input = Vec::with_capacity(256 * 1024);
     for index in 0..256 * 1024 {
         input.push(((index * 31) ^ (index >> 5)) as u8);
     }
     let mut job = DeflateEncodeJob::new(input, usize::MAX);
-    let mut sequence = 0;
-    let mut context = StepContext::new(OperationId(4), Generation(1), StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
+    let cancel = semio_framework_job::root_cancel_token();
     let started = std::time::Instant::now();
-    let _ = job.step(&mut context);
+    let _ = step_once(&mut job, 4, 1, cancel);
     assert!(started.elapsed() < std::time::Duration::from_millis(8));
+    close_job(job);
 }
 
 /// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: the prior

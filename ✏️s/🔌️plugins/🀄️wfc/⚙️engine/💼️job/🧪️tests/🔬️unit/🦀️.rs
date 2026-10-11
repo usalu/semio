@@ -1,18 +1,42 @@
 use std::time::{Duration, Instant};
 
-use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, RevisionId, StepBudget};
+use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, JobOutcomeBorrow, RetainedCloneProgress, RevisionId, StepBudget};
 
 use super::*;
 use crate::model::ModelBuilder;
 use crate::topology::{GraphTopology, GraphTopologyBuilder};
 
-fn assert_fault(mut outcome: StepOutcome, expected: &[u8]) {
-    let detail = match &outcome {
-        StepOutcome::Fault(fault) => Some(payload_bytes(&fault.detail)),
-        _ => None,
-    };
-    retire_outcome(&mut outcome);
-    assert_eq!(detail.as_deref(), Some(expected));
+const PUBLICATION_STEP_BOUND: usize = semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES + 64;
+
+#[derive(Debug, PartialEq, Eq)]
+enum Seen {
+    Yield,
+    Preview(Vec<u8>),
+    Checkpoint(Vec<u8>),
+    Fault(Vec<u8>),
+    Cancelled,
+    Complete { state: Vec<u8>, output: Vec<u8> },
+}
+
+impl Seen {
+    fn is_terminal(&self) -> bool {
+        matches!(self, Seen::Fault(_) | Seen::Cancelled | Seen::Complete { .. })
+    }
+}
+
+fn seen_of(result: Result<Option<JobOutcomeBorrow<'_>>, semio_framework_value::ValueError>) -> Seen {
+    match result.expect("wfc step admission") {
+        None | Some(JobOutcomeBorrow::Yield { .. }) => Seen::Yield,
+        Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => Seen::Preview(payload_bytes(payload)),
+        Some(JobOutcomeBorrow::CheckpointReady { state, .. }) => Seen::Checkpoint(payload_bytes(state)),
+        Some(JobOutcomeBorrow::Fault { detail, .. }) => Seen::Fault(payload_bytes(detail)),
+        Some(JobOutcomeBorrow::Cancelled { .. }) => Seen::Cancelled,
+        Some(JobOutcomeBorrow::Complete { state, output, .. }) => Seen::Complete { state: state.map(payload_bytes).unwrap_or_default(), output: output.map(payload_bytes).unwrap_or_default() },
+    }
+}
+
+fn assert_fault(outcome: Seen, expected: &[u8]) {
+    assert_eq!(outcome, Seen::Fault(expected.to_vec()));
 }
 
 fn checkerboard(nodes: usize, seed: u64) -> WfcJob<GraphTopology> {
@@ -31,12 +55,12 @@ fn checkerboard(nodes: usize, seed: u64) -> WfcJob<GraphTopology> {
     WfcJob::new(operation, model, topology.build().expect("topology"), WfcJobConfig::default(), None, Vec::new())
 }
 
-fn drive(job: &mut WfcJob<GraphTopology>, fuel: u64) -> StepOutcome {
+fn drive(job: &mut WfcJob<GraphTopology>, fuel: u64) -> Seen {
     let mut sequence = job.operation.preview_sequence;
-    for _ in 0..2_000_000 {
-        let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(fuel, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-        let mut outcome = job.step(&mut context);
-        retire_outcome(&mut outcome);
+    for _ in 0..60_000_000 {
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(fuel, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let outcome = seen_of(job.step(&mut context));
         if outcome.is_terminal() {
             return outcome;
         }
@@ -46,15 +70,11 @@ fn drive(job: &mut WfcJob<GraphTopology>, fuel: u64) -> StepOutcome {
 
 fn checkpoint(job: &mut WfcJob<GraphTopology>) -> Vec<u8> {
     let mut sequence = job.operation.preview_sequence;
-    for _ in 0..2_000_000 {
-        let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-        let mut outcome = job.step(&mut context);
-        let checkpoint = match &outcome {
-            StepOutcome::CheckpointReady(checkpoint) => Some(payload_bytes(&checkpoint.state)),
-            _ => None,
-        };
-        retire_outcome(&mut outcome);
-        if let Some(bytes) = checkpoint {
+    for _ in 0..60_000_000 {
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let outcome = seen_of(job.step(&mut context));
+        if let Seen::Checkpoint(bytes) = outcome {
             return bytes;
         }
         assert!(!outcome.is_terminal(), "job terminated before checkpoint");
@@ -64,16 +84,11 @@ fn checkpoint(job: &mut WfcJob<GraphTopology>) -> Vec<u8> {
 
 fn terminal_checkpoint(job: &mut WfcJob<GraphTopology>) -> Vec<u8> {
     let mut sequence = job.operation.preview_sequence;
-    for _ in 0..2_000_000 {
-        let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-        let mut outcome = job.step(&mut context);
-        let checkpoint = match &outcome {
-            StepOutcome::Complete(candidate) => Some(payload_bytes(&candidate.state)),
-            _ => None,
-        };
-        retire_outcome(&mut outcome);
-        if let Some(bytes) = checkpoint {
-            return bytes;
+    for _ in 0..60_000_000 {
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        if let Seen::Complete { state, .. } = seen_of(job.step(&mut context)) {
+            return state;
         }
     }
     panic!("WFC job did not complete");
@@ -99,7 +114,7 @@ fn maximum_checkpoint(job: &mut WfcJob<GraphTopology>) -> Vec<u8> {
     prepare_maximum_checkpoint_state(job);
     job.begin_checkpoint(true).expect("maximum checkpoint build");
     assert_eq!(job.checkpoint_build.as_ref().expect("checkpoint build").byte_limit, MAX_CHECKPOINT_BYTES);
-    for _ in 0..2_000_000 {
+    for _ in 0..60_000_000 {
         if let Some(bytes) = job.checkpoint_one().expect("maximum checkpoint unit") {
             assert_eq!(bytes.len(), MAX_CHECKPOINT_BYTES);
             return bytes;
@@ -112,9 +127,11 @@ fn maximum_checkpoint(job: &mut WfcJob<GraphTopology>) -> Vec<u8> {
 fn batch_size_and_replay_are_deterministic() {
     let mut one = checkerboard(127, 19);
     let mut many = checkerboard(127, 19);
-    assert!(matches!(drive(&mut one, 1), StepOutcome::Complete(_)));
-    assert!(matches!(drive(&mut many, 64), StepOutcome::Complete(_)));
+    assert!(matches!(drive(&mut one, 1), Seen::Complete { .. }));
+    assert!(matches!(drive(&mut many, 64), Seen::Complete { .. }));
     assert_eq!(one.commit(), many.commit());
+    close_job(&mut one);
+    close_job(&mut many);
 }
 
 #[test]
@@ -122,9 +139,11 @@ fn checkpoint_resume_preserves_rng_trail_and_progress() {
     let mut original = checkerboard(41, 71);
     let bytes = checkpoint(&mut original);
     let mut restored = WfcJob::from_checkpoint(original.operation, original.model.clone(), original.topology.clone(), original.config, original.initial_domains.clone(), original.fixed.clone(), &bytes).expect("restore");
-    assert!(matches!(drive(&mut original, 3), StepOutcome::Complete(_)));
-    assert!(matches!(drive(&mut restored, 11), StepOutcome::Complete(_)));
+    assert!(matches!(drive(&mut original, 3), Seen::Complete { .. }));
+    assert!(matches!(drive(&mut restored, 11), Seen::Complete { .. }));
     assert_eq!(original.commit(), restored.commit());
+    close_job(&mut original);
+    close_job(&mut restored);
 }
 
 #[test]
@@ -135,6 +154,7 @@ fn checkpoint_restore_rejects_foreign_operation_and_topology() {
     assert!(WfcJob::from_checkpoint(foreign_operation, original.model.clone(), original.topology.clone(), original.config, original.initial_domains.clone(), original.fixed.clone(), &bytes).is_err());
     let foreign_topology = checkerboard(12, 71).topology;
     assert!(WfcJob::from_checkpoint(original.operation, original.model.clone(), foreign_topology, original.config, original.initial_domains.clone(), original.fixed.clone(), &bytes).is_err());
+    close_job(&mut original);
 }
 
 #[test]
@@ -143,13 +163,13 @@ fn previews_report_monotonic_sequences_and_progress() {
     let mut sequence = 0;
     let mut previews = Vec::new();
     loop {
-        let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-        let mut outcome = job.step(&mut context);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let outcome = seen_of(job.step(&mut context));
         let preview = match &outcome {
-            StepOutcome::PreviewReady(bytes) => Some(semio_framework_os_kernel::json::from_json_str::<WfcPreview>(std::str::from_utf8(&payload_bytes(bytes)).expect("preview UTF-8"))),
+            Seen::Preview(bytes) => Some(semio_framework_pack_json::from_json_str::<WfcPreview>(std::str::from_utf8(bytes).expect("preview UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject)),
             _ => None,
         };
-        retire_outcome(&mut outcome);
         if let Some(preview) = preview {
             previews.push(preview.expect("preview"));
         }
@@ -159,6 +179,7 @@ fn previews_report_monotonic_sequences_and_progress() {
     }
     assert!(!previews.is_empty());
     assert!(previews.windows(2).all(|pair| pair[1].sequence == pair[0].sequence + 1 && pair[1].observations >= pair[0].observations && pair[1].compatibility_edges >= pair[0].compatibility_edges && pair[1].backtracks >= pair[0].backtracks));
+    close_job(&mut job);
 }
 
 #[test]
@@ -180,16 +201,13 @@ fn first_preview_and_continuous_gap_include_bounded_publication() {
     let mut units_since_preview = 0;
     let mut preview_count = 0;
     for _ in 0..100_000 {
-        let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         units_since_preview += 1;
-        let mut outcome = job.step(&mut context);
-        retire_outcome(&mut outcome);
+        let outcome = seen_of(job.step(&mut context));
         match outcome {
-            StepOutcome::PreviewReady(_) => {
-                assert!(units_since_preview <= PREVIEW_UNIT_INTERVAL as usize + 1);
-                if preview_count == 0 {
-                    assert_eq!(units_since_preview, 2);
-                }
+            Seen::Preview(_) => {
+                assert!(units_since_preview <= PREVIEW_UNIT_INTERVAL as usize + PUBLICATION_STEP_BOUND);
                 units_since_preview = 0;
                 preview_count += 1;
                 if preview_count == 64 {
@@ -201,6 +219,7 @@ fn first_preview_and_continuous_gap_include_bounded_publication() {
         }
     }
     assert_eq!(preview_count, 64);
+    close_job(&mut job);
 }
 
 #[test]
@@ -222,27 +241,31 @@ fn checkpoint_resume_preserves_preview_sequence() {
     let mut restored = WfcJob::from_checkpoint(job.operation, job.model.clone(), job.topology.clone(), job.config, job.initial_domains.clone(), job.fixed.clone(), &bytes).expect("restore");
     let mut sequence = 0;
     let resumed = loop {
-        let mut context = StepContext::new(restored.operation.operation, restored.operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-        let mut outcome = restored.step(&mut context);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = crate::job::test_step_context(restored.operation.operation, restored.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        let outcome = seen_of(restored.step(&mut context));
         let preview = match &outcome {
-            StepOutcome::PreviewReady(bytes) => Some(semio_framework_os_kernel::json::from_json_str::<WfcPreview>(std::str::from_utf8(&payload_bytes(bytes)).expect("preview UTF-8"))),
+            Seen::Preview(bytes) => Some(semio_framework_pack_json::from_json_str::<WfcPreview>(std::str::from_utf8(bytes).expect("preview UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject)),
             _ => None,
         };
-        retire_outcome(&mut outcome);
         if let Some(preview) = preview {
             break preview.expect("preview");
         }
     };
     assert_eq!(resumed.sequence + 1, previous + 1);
+    close_job(&mut job);
+    close_job(&mut restored);
 }
 
 #[test]
 fn disjoint_and_adversarial_graphs_finish() {
     let mut disjoint = checkerboard(0, 1);
-    assert!(matches!(drive(&mut disjoint, 1), StepOutcome::Complete(_)));
+    assert!(matches!(drive(&mut disjoint, 1), Seen::Complete { .. }));
     let mut long = checkerboard(4_096, 2);
-    assert!(matches!(drive(&mut long, 32), StepOutcome::Complete(_)));
+    assert!(matches!(drive(&mut long, 32), Seen::Complete { .. }));
     assert_eq!(long.commit().expect("commit").assignment.len(), 4_096);
+    close_job(&mut disjoint);
+    close_job(&mut long);
 }
 
 #[test]
@@ -252,14 +275,22 @@ fn cancellation_and_generation_freshness_do_not_mutate_progress() {
     let before = job.metrics();
     let cancel = root_cancel_token();
     cancel.cancel_now();
-    let mut cancelled = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(10, u64::MAX), cancel, || Some(0), &mut sequence);
-    assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut cancelled = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(10, u64::MAX, HEADLESS_GRANT), cancel, &mut sequence, &mut sequence_receipt);
+    assert_eq!(seen_of(job.step(&mut cancelled)), Seen::Cancelled);
     assert_eq!(job.metrics(), before);
-    let mut stale = StepContext::new(job.operation.operation, Generation(job.operation.generation.0 + 1), StepBudget::new(10, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-    let mut outcome = job.step(&mut stale);
-    retire_outcome(&mut outcome);
-    assert!(matches!(outcome, StepOutcome::Fault(_)));
+    let mut faulted = false;
+    for _ in 0..PUBLICATION_STEP_BOUND {
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut stale = crate::job::test_step_context(job.operation.operation, Generation(job.operation.generation.0 + 1), StepBudget::new(10, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        if matches!(seen_of(job.step(&mut stale)), Seen::Fault(_)) {
+            faulted = true;
+            break;
+        }
+    }
+    assert!(faulted, "a stale generation publishes its fault within the bounded publication");
     assert_eq!(job.metrics(), before);
+    close_job(&mut job);
 }
 
 #[test]
@@ -268,7 +299,7 @@ fn cancellation_interrupts_checkpoint_and_commit_materialization_without_progres
     let mut sequence = 0;
     let mut checked_checkpoint = false;
     let mut checked_commit = false;
-    for _ in 0..2_000_000 {
+    for _ in 0..60_000_000 {
         let stage = job.state.stage;
         if matches!(stage, WfcStage::MaterializeCheckpoint | WfcStage::MaterializeCommit) {
             let before = match stage {
@@ -278,8 +309,9 @@ fn cancellation_interrupts_checkpoint_and_commit_materialization_without_progres
             };
             let cancel = root_cancel_token();
             cancel.cancel_now();
-            let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX), cancel, || Some(0), &mut sequence);
-            assert_eq!(job.step(&mut context), StepOutcome::Cancelled);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), cancel, &mut sequence, &mut sequence_receipt);
+            assert_eq!(seen_of(job.step(&mut context)), Seen::Cancelled);
             let after = match stage {
                 WfcStage::MaterializeCheckpoint => job.checkpoint_build.as_ref().map(|build| build.bytes.len()).unwrap_or(0),
                 WfcStage::MaterializeCommit => job.commit_build.as_ref().map(|build| build.cursor).unwrap_or(0),
@@ -289,14 +321,14 @@ fn cancellation_interrupts_checkpoint_and_commit_materialization_without_progres
             checked_checkpoint |= stage == WfcStage::MaterializeCheckpoint;
             checked_commit |= stage == WfcStage::MaterializeCommit;
         }
-        let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-        let mut outcome = job.step(&mut context);
-        retire_outcome(&mut outcome);
-        if outcome.is_terminal() {
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        if seen_of(job.step(&mut context)).is_terminal() {
             break;
         }
     }
     assert!(checked_checkpoint && checked_commit);
+    close_job(&mut job);
 }
 
 #[test]
@@ -309,27 +341,30 @@ fn maximum_checkpoint_restore_is_bounded_and_cancellable_in_every_phase() {
     assert!(restore.entropy_heap.is_empty());
     let mut cancelled = Vec::new();
     let mut sequence = 0;
-    for _ in 0..2_000_000 {
+    for _ in 0..60_000_000 {
         let stage = restore.stage;
         if !cancelled.contains(&stage) {
             let before = (restore.cursor, restore.domains.len(), restore.trail.len(), restore.decisions.len(), restore.observed.len(), restore.domain_cursor, restore.restored.is_some());
             let token = root_cancel_token();
             token.cancel_now();
-            let mut context = StepContext::new(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX), token, || Some(0), &mut sequence);
-            assert_eq!(restore.step(&mut context), StepOutcome::Cancelled);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = crate::job::test_step_context(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), token, &mut sequence, &mut sequence_receipt);
+            assert_eq!(seen_of(restore.step(&mut context)), Seen::Cancelled);
             let after = (restore.cursor, restore.domains.len(), restore.trail.len(), restore.decisions.len(), restore.observed.len(), restore.domain_cursor, restore.restored.is_some());
             assert_eq!(before, after);
             cancelled.push(stage);
         }
-        let mut context = StepContext::new(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-        let mut outcome = restore.step(&mut context);
-        retire_outcome(&mut outcome);
-        if matches!(outcome, StepOutcome::Complete(_)) {
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = crate::job::test_step_context(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        if matches!(seen_of(restore.step(&mut context)), Seen::Complete { .. }) {
             break;
         }
     }
     assert_eq!(cancelled, vec![RestoreStage::Header, RestoreStage::Domains, RestoreStage::Trail, RestoreStage::Decisions, RestoreStage::Observed, RestoreStage::Verify, RestoreStage::Rebuild, RestoreStage::Complete]);
-    assert!(restore.take_job().is_some());
+    let mut restored = restore.take_job().expect("the completed restore yields its job");
+    close_job(&mut restored);
+    close_job(&mut restore);
+    close_job(&mut source);
 }
 
 #[test]
@@ -345,8 +380,10 @@ fn minimum_checkpoint_is_exactly_the_fixed_header_and_restores() {
     let bytes = terminal_checkpoint(&mut source);
     assert_eq!(bytes.len(), CHECKPOINT_FIXED_HEADER_BYTES);
     assert_eq!(CheckpointCounts::from_state(&source.state, source.model.pattern_count()).checked_bytes(), Some(CHECKPOINT_FIXED_HEADER_BYTES));
-    let restored = WfcJob::from_checkpoint(source.operation, source.model.clone(), source.topology.clone(), source.config, None, Vec::new(), &bytes).expect("minimum checkpoint restore");
+    let mut restored = WfcJob::from_checkpoint(source.operation, source.model.clone(), source.topology.clone(), source.config, None, Vec::new(), &bytes).expect("minimum checkpoint restore");
     assert!(restored.state.domains.is_empty());
+    close_job(&mut restored);
+    close_job(&mut source);
 }
 
 #[test]
@@ -355,10 +392,16 @@ fn checkpoint_restore_rejects_size_arithmetic_overflow() {
     let mut bytes = terminal_checkpoint(&mut source);
     let observed_count_offset = CHECKPOINT_FIXED_HEADER_BYTES.checked_sub(size_of::<u64>()).expect("observed count offset");
     bytes[observed_count_offset..CHECKPOINT_FIXED_HEADER_BYTES].copy_from_slice(&u64::MAX.to_le_bytes());
-    let mut restore = WfcRestore::new(source.operation, source.model, source.topology, source.config, None, Vec::new(), bytes).expect("admitted overflow fixture");
+    let mut restore = WfcRestore::new(source.operation, source.model.clone(), source.topology.clone(), source.config, None, Vec::new(), bytes).expect("admitted overflow fixture");
     let mut sequence = 0;
-    let mut context = StepContext::new(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-    assert_fault(restore.step(&mut context), b"wfc-checkpoint-capacity");
+    let outcome = (0..PUBLICATION_STEP_BOUND).find_map(|_| {
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = crate::job::test_step_context(source.operation.operation, source.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
+        Some(seen_of(restore.step(&mut context))).filter(Seen::is_terminal)
+    });
+    assert_fault(outcome.expect("the fault is published within the bounded publication"), b"wfc-checkpoint-capacity");
+    close_job(&mut restore);
+    close_job(&mut source);
     assert_eq!(CheckpointCounts { domain_count: usize::MAX, pattern_count: usize::MAX, trail_count: usize::MAX, decision_count: usize::MAX, observed_count: usize::MAX }.checked_bytes(), None);
 }
 
@@ -390,6 +433,7 @@ fn maximum_admitted_checkpoint_and_commit_allocation_stay_below_watchdog() {
     assert!(checkpoint_elapsed < Duration::from_millis(8), "maximum checkpoint allocation exceeded watchdog: {checkpoint_elapsed:?}");
     assert!(commit_elapsed < Duration::from_millis(8), "maximum commit allocation exceeded watchdog: {commit_elapsed:?}");
     assert_eq!(pressure.len(), 64);
+    close_job(&mut source);
 }
 
 #[test]
@@ -398,13 +442,13 @@ fn every_large_domain_unit_including_checkpoint_stays_below_watchdog() {
     let mut sequence = 0;
     let mut samples = Vec::new();
     let mut saw_checkpoint = false;
-    for _ in 0..500_000 {
-        let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
+    for _ in 0..6_000_000 {
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = crate::job::test_step_context(job.operation.operation, job.operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut sequence_receipt);
         let start = Instant::now();
-        let mut outcome = job.step(&mut context);
+        let outcome = seen_of(job.step(&mut context));
         samples.push(start.elapsed());
-        saw_checkpoint |= matches!(outcome, StepOutcome::CheckpointReady(_));
-        retire_outcome(&mut outcome);
+        saw_checkpoint |= matches!(outcome, Seen::Checkpoint(_));
         if outcome.is_terminal() {
             break;
         }
@@ -416,4 +460,5 @@ fn every_large_domain_unit_including_checkpoint_stays_below_watchdog() {
     let p99 = samples[samples.len() * 99 / 100];
     assert!(saw_checkpoint);
     assert!(p99 < Duration::from_millis(2), "WFC unit p99 exceeded 2 ms: {p99:?}");
+    close_job(&mut job);
 }

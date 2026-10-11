@@ -104,7 +104,7 @@ pub(crate) fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceM
     assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert!(app.pending_command_prune.is_none() && !app.command_prune_requested());
-    crate::app::artifact_app_laws::close_registered_fixture_app(app);
+    crate::app::artifact_app_laws::close_registered_fixture_app(app, crate::app::artifact_app_laws::fixture_mounted_policy());
     assert!(app.close_terminal_is_empty());
     eprintln!("[DEBUG] actual mounted replacement preserves held document and pure shell rows; eachpredecisionturn originalpointers/heap0/0; selected65536 physicalextent exact; underfundretains; pendingvisibilitycancelledbeforeappclose");
 }

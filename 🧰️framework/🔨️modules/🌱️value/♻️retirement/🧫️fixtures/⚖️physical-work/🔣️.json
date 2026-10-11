@@ -9,13 +9,13 @@
       "id": "scalar",
       "kind": "u32",
       "value": 17,
-      "processedBytes": 4
+      "processedBytes": 0
     },
     {
       "id": "utf8",
       "kind": "text",
       "value": "Grüße\u0000🧬",
-      "processedBytes": 12
+      "processedBytes": 0
     },
     {
       "id": "ordered-numbers",

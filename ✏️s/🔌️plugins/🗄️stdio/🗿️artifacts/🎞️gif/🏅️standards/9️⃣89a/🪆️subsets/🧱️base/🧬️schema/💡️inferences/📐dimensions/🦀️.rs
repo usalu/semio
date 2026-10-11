@@ -11,7 +11,7 @@ use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 /// file with no GCT still color-resolves every frame through its own per-frame Local Color Table,
 /// which this whole-snapshot scalar doesn't drill into. `has_alpha` IS exact: it reads every
 /// frame's Graphic Control Extension `transparent_index` (§23.c.4) directly.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifDimensions {
     pub width: u32,

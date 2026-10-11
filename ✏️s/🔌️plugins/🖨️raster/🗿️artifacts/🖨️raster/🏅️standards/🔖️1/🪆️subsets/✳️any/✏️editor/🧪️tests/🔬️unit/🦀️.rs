@@ -110,16 +110,7 @@ pub(crate) mod context {
     /// raster document owns a populated asset pool) asserts in `Drop` that the bounded protocol ran
     /// first, and only a store ever runs it. The artifact's own owner catalog retires it instead.
     pub fn retire_raster_envelope(envelope: store::ArtifactEnvelope<RasterSnapshot, RasterMutation>) {
-        let mut retirement = crate::host::owned::raster_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled raster owner catalog retires one envelope");
-        // ⛽️ A `RasterOwnedMap` page backing is one 16 KiB allocation released whole.
-        let grant = crate::RASTER_OWNED_MAP_PAGE_BACKING_BYTES;
-        for _ in 0..1_000_000 {
-            if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) {
-                return;
-            }
-            store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, grant).expect("raster test envelope retires within its exact grant");
-        }
-        panic!("raster test envelope did not reach its terminal-empty shell")
+        crate::host::owned::close_raster_owner_cold(crate::host::owned::raster_envelope_decode_owner_bundle().retire_envelope(envelope));
     }
 
     pub async fn semio_app() -> RasterAppFixture {
@@ -170,22 +161,8 @@ fn raster_envelope_wire() -> Vec<u8> {
     ]))
     .into_bytes();
     let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-live-load", snapshot, None);
-    let mut retirement = crate::host::owned::raster_envelope_decode_owner_bundle().retire_envelope(envelope);
-    for _ in 0..100_000 {
-        match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Raster fixture envelope retirement") {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                drop(retirement);
-                return wire;
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("unshared Raster fixture envelope retirement blocked"),
-        }
-    }
-    panic!("Raster fixture envelope retirement did not reach terminal")
+    crate::host::owned::close_raster_owner_cold(crate::host::owned::raster_envelope_decode_owner_bundle().retire_envelope(envelope));
+    wire
 }
 
 /// 🎟️ Reserves page/byte credits first, then feeds the wire as fixed-size pages and seals — the
@@ -685,7 +662,7 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::ExportPng(export_png::ExportPng {}),
         RasterCommand::FlattenLayers(flatten_layers::FlattenLayers {name:"Flattened Image".into()}),
         RasterCommand::MergeDown(merge_down::MergeDown {layer_id:"l1".into()}),
-        RasterCommand::MaskFromSelection(mask_from_selection::MaskFromSelection {layer_id:"l1".into(),expected_image_key:None,selection:vec![crate::RasterSelectionSpan { start: 0, length: 1, coverage: 255 }]}),
+        RasterCommand::MaskFromSelection(mask_from_selection::MaskFromSelection {layer_id:"l1".into(),expected_image_key:None,selection:vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 0, length: 1, coverage: 255 }]}),
         RasterCommand::PaintStroke(paint_stroke::PaintStroke { layer_id: "l1".into(), tool: "eraser".into(), xs: vec![0.5, 3.25], ys: vec![1.5, 2.0], phase: None, reason: None, gesture: None }),
         RasterCommand::FillRegion(fill_region::FillRegion { layer_id: "l1".into(), x: 1.5, y: 0.25 }),
         RasterCommand::SetFillTolerance(set_fill_tolerance::SetFillTolerance { value: 40 }),
@@ -1293,26 +1270,30 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     let mut steps = 0usize;
-    let mut terminal = None;
+    let wallet = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
+    let mut completed = None;
     while steps < 400_000 {
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
-        let outcome = job.step(&mut context);
+        let mut progress = semio_framework_value::retained_clone::RetainedCloneProgress::default();
+        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX, wallet), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut progress);
+        let outcome = job.step(&mut context).expect("initializer turn");
         steps += 1;
-        if outcome.is_terminal() {
-            terminal = Some(outcome);
-            break;
+        if let Some(outcome) = outcome {
+            if outcome.is_terminal() {
+                completed = Some(matches!(outcome, semio_framework_job::JobOutcomeBorrow::Complete { .. }));
+                break;
+            }
         }
     }
-    let mut outcome = terminal.unwrap_or_else(|| panic!("the raster store initializer replaying {edits} edit(s) of the demo archive reached no terminal in {steps} steps"));
-    assert!(matches!(outcome, semio_framework_job::StepOutcome::Complete(_)), "the initializer completes the demo archive");
-    while !outcome.terminal_is_empty() {
-        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
+    let completed = completed.unwrap_or_else(|| panic!("the raster store initializer replaying {edits} edit(s) of the demo archive reached no terminal in {steps} steps"));
+    assert!(completed, "the initializer completes the demo archive");
+    job.begin_close();
     for _ in 0..400_000 {
         if job.terminal_is_empty() {
             break;
         }
-        let _ = job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let demand = job.retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("the initializer quotes its close turn");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let _ = job.close_step(grant);
     }
     assert!(job.terminal_is_empty(), "the completed initializer closes to terminal-empty");
     drop(job);

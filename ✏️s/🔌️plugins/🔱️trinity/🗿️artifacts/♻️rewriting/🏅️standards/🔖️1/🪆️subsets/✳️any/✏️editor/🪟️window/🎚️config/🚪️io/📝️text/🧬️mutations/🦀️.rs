@@ -5,8 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::rewriting::window_config::mutations::*;
 use crate::editor::rewriting::window_config::RewritingWindowConfig;
-use set_camera::SetCamera;
-use set_lod_mode::SetLodMode;
 
 impl protocol::OpText for RewritingWindowConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {

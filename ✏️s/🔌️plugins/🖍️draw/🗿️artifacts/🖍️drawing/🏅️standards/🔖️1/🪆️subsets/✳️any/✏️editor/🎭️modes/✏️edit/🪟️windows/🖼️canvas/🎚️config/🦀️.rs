@@ -2,7 +2,7 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.draw.drawing.canvas-window.config", extension = "drawingcanvaswindowcfg")]
@@ -53,10 +53,33 @@ impl protocol::DiffAlgebra<DrawingCanvasWindowConfig> for DrawingCanvasWindowCon
     }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 pub enum DrawingCanvasWindowConfigMutation {
-    Set { viewport: store::Viewport2d, framed: bool },
+    Set(DrawingCanvasWindowConfigSet),
+}
+
+/// 🎚️ Payload record of the one set mutation; its fields are the wire fields of the tagged `set` variant.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct DrawingCanvasWindowConfigSet {
+    pub viewport: store::Viewport2d,
+    pub framed: bool,
+}
+
+impl semio_framework_plugin::WindowConfigApplyMutation<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfigMutation {
+    fn exchange(self, post: &mut DrawingCanvasWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::Set(DrawingCanvasWindowConfigSet { viewport, framed }) => Self::Set(DrawingCanvasWindowConfigSet { viewport: std::mem::replace(&mut post.viewport, viewport), framed: std::mem::replace(&mut post.framed, framed) }),
+        })
+    }
+    fn admissible(&self) -> bool {
+        match self {
+            Self::Set(DrawingCanvasWindowConfigSet { viewport, .. }) => viewport.validate().is_ok(),
+        }
+    }
 }
 
 impl protocol::Mutation<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfigMutation {
@@ -87,11 +110,11 @@ impl protocol::Mutation<DrawingCanvasWindowConfig> for DrawingCanvasWindowConfig
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
     fn diff(&self, base: &DrawingCanvasWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         match self {
-            Self::Set { viewport, framed } => protocol::MutationOutcome::new(DrawingCanvasWindowConfigDiff { viewport: (&base.viewport != viewport).then(|| viewport.clone()), framed: (base.framed != *framed).then_some(*framed) }),
+            Self::Set(DrawingCanvasWindowConfigSet { viewport, framed }) => protocol::MutationOutcome::new(DrawingCanvasWindowConfigDiff { viewport: (&base.viewport != viewport).then(|| viewport.clone()), framed: (base.framed != *framed).then_some(*framed) }),
         }
     }
     fn inverse(&self, base: &DrawingCanvasWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        Ok(vec![Self::Set { viewport: base.viewport.clone(), framed: base.framed }])
+        Ok(vec![Self::Set(DrawingCanvasWindowConfigSet { viewport: base.viewport.clone(), framed: base.framed })])
     }
 }
 
@@ -159,6 +182,9 @@ impl semio_framework_plugin::WindowConfigOwner for DrawingCanvasWindowConfigOwne
     const MAXIMUM_PUBLICATION_BYTES: usize = 4_096;
     type State = DrawingCanvasWindowConfig;
     type Mutation = DrawingCanvasWindowConfigMutation;
+    type Edit = semio_framework_plugin::WindowConfigApplyEdit<DrawingCanvasWindowConfig, DrawingCanvasWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new()) }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
@@ -186,7 +212,7 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, config: DrawingCanvas
     if kind != super::DRAWING_PLAY_WINDOW_CANVAS {
         return Err(semio_framework_plugin::Fault::from("drawing-canvas-window-kind-required"));
     }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<DrawingCanvasWindowConfigOwner>(id, DrawingCanvasWindowConfigMutation::Set { viewport: config.viewport, framed: config.framed }))
+    Ok(semio_framework_plugin::WindowConfigMutation::of::<DrawingCanvasWindowConfigOwner>(id, DrawingCanvasWindowConfigMutation::Set(DrawingCanvasWindowConfigSet { viewport: config.viewport, framed: config.framed })))
 }
 
 #[cfg(test)]

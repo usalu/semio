@@ -1,5 +1,7 @@
 //! ➕️ Physical identity preparation from retained creation facts.
-use super::publication::{admit_identity,DrawingIdentity,DrawingIdentityKind,NativeEncodeControl,ValueError};
+use super::publication::admit_identity;
+use crate::schema::identity::{DrawingIdentity,DrawingIdentityKind};
+use semio_framework_value::{NativeEncodeControl,ValueError};
 fn text(source:&semio_framework_value::paged::PagedUtf8<{usize::MAX}>,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,ValueError>{let mut bytes=control.allocate_vec(source.len())?;for chunk in source.retained_chunks().iter(){control.step()?;bytes.extend_from_slice(chunk.as_bytes());}Ok(bytes)}
 pub fn layer_identity(document:&crate::DrawingSnapshot,kind:&str,operation:&semio_framework_plugin::AppOperationContext,control:&mut NativeEncodeControl<'_>)->Result<DrawingIdentity,ValueError>{
  validate_operation(operation)?;let document_bytes=text(&document.id,control)?;let mut ordinal=document.layers.len()as u64;

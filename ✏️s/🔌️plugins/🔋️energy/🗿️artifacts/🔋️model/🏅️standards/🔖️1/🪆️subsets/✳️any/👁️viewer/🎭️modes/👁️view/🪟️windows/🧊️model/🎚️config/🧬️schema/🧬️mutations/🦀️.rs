@@ -5,7 +5,8 @@ use super::{EnergyModelViewerCameraPose, EnergyModelViewerWindowConfig, EnergyMo
 mod set_camera;
 pub use set_camera::SetCamera;
 
-#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "kind", rename_all = "kebab-case")]
 #[mutations(snapshot = EnergyModelViewerWindowConfig, diff = EnergyModelViewerWindowConfigDiff, schema = "energy.model3dviewerwindowconfig")]

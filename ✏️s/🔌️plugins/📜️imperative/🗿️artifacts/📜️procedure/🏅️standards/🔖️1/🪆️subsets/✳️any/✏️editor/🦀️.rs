@@ -146,8 +146,6 @@ const IMPERATIVE_RETAINED_TOOL_IDS: &[&str] =
 const IMPERATIVE_RETAINED_PAYLOAD_SCHEMA: &str = "imperative.procedure.tool-command.v1";
 const IMPERATIVE_RETAINED_RAW_BYTES: usize = 8_192;
 const IMPERATIVE_RETAINED_WORK_ITEMS: usize = 64;
-/// 🎒️ Real bound for one Artifact-lane edit: a single step insert/remove/reorder/params leaf.
-const IMPERATIVE_STORE_MAXIMUM_BYTES: usize = 65_536;
 
 /// 🚦️ Per-tool publication lanes, read straight off the command bodies: the eight structural step
 /// verbs emit `artifact_mutations` only, while `run` and `setContributions` write the config store.
@@ -392,35 +390,20 @@ impl ArtifactEditor for ImperativePlayApp {
     /// 📬️ The ARTIFACT lane's publication authority — a retained tool whose contract states `Artifact`
     /// has nowhere to stage its edit without one, and dies after reaching the typed operation.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("imperative-artifact-retained", IMPERATIVE_STORE_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     /// 📬️ The CONFIG lane's twin, for `run` and `setContributions`.
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("imperative-config-retained", IMPERATIVE_STORE_MAXIMUM_BYTES))
-    }
-
-    /// ♻️ The exact store owners and disposers every lane of this editor retires through. Declaring
-    /// none answers the first real publication `returned snapshot read requires its exact
-    /// owned-snapshot retirement factory`.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+        Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
     }
 
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
@@ -490,6 +473,7 @@ impl ArtifactEditor for ImperativePlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(

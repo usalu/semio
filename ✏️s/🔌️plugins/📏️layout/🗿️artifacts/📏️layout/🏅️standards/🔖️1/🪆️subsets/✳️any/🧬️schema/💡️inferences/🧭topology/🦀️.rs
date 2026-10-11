@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
 
 //#region 🔖️Topology
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LayoutTopology {
     pub topo_order: Vec<String>,

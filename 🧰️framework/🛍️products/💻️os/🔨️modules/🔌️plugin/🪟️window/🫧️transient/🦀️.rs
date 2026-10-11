@@ -426,11 +426,15 @@ impl WindowTransientOwnerRegistry {
         self.owners.is_empty()
     }
 
-    pub(crate) fn refresh(&mut self, authority: &mut WindowTransientAuthority) -> Result<(), Fault> {
+    pub(crate) fn refresh_demands(&self, authority: &WindowTransientAuthority, body: usize) -> Result<RetirementDemand, ValueError> {
+        self.owners.get(authority.window_kind_id.as_str()).and_then(Option::as_ref).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "window transient refresh has no registered concrete window owner"))?.refresh_demands(authority, body)
+    }
+
+    pub(crate) fn refresh(&mut self, authority: &mut WindowTransientAuthority, grant: RetainedCloneGrant) -> Result<super::window_mutation::WindowAuthorityRefreshStep, Fault> {
         if authority.snapshot.document_generation != self.document_generation {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.document-generation"), "window transient refresh belongs to a replaced document"));
         }
-        self.owners.get_mut(authority.window_kind_id.as_str()).and_then(Option::as_mut).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient refresh has no registered concrete window owner"))?.refresh(authority)
+        self.owners.get_mut(authority.window_kind_id.as_str()).and_then(Option::as_mut).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient refresh has no registered concrete window owner"))?.refresh(authority, grant)
     }
 
     pub(crate) fn capture(&mut self, view_state: Option<&ViewModel>) -> Result<Option<WindowTransientAuthority>, Fault> {
@@ -581,7 +585,7 @@ macro_rules! transient_root {
         $crate::__kernel::sparse_record_diff! { record: $state, diff: $diff, $($fields)+ }
 
         #[doc = concat!("🫧️ The one mutation of [`", stringify!($state), "`]: replace the whole root.")]
-        #[derive(Clone, Debug, PartialEq, $crate::ToValue, $crate::FromValue)]
+        #[derive(Clone, Debug, PartialEq, $crate::ToValue, $crate::FromValue, $crate::__value::RetireOwned)]
         #[value(tag = "kind", rename_all = "kebab-case")]
         pub enum $mutation {
             Snapshot { transient: $state },
@@ -716,12 +720,6 @@ macro_rules! window_transient_transfer {
             }
         }
 
-        impl $crate::__value::retirement::RetireOwned for $mutation {
-            fn retirement(self) -> Box<dyn $crate::__value::retirement::RetirementCursor> {
-                let Self::Snapshot { transient } = self;
-                $crate::__value::retirement::sequence(vec![$crate::__value::retirement::leaf(0u8), $crate::__value::retirement::RetireOwned::retirement(transient)])
-            }
-        }
     };
 }
 

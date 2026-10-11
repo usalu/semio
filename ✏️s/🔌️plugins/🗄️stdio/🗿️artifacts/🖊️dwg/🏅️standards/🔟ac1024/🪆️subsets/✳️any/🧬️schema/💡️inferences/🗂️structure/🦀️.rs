@@ -4,7 +4,7 @@ use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 
 //#region 🔖️Structure
 /// 🗂️ Dwg (ac1024) logical drawing statistics.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[derive(Default)]
 pub struct DwgStructure {

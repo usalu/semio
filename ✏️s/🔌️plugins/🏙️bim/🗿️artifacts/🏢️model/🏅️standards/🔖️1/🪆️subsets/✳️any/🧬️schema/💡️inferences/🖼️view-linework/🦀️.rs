@@ -37,7 +37,7 @@ pub mod vertical;
 
 //#region 🔖️Values
 /// 🖼️ The drawing of one view: the kind, scale and detail it was drawn at, and the linework in the coordinates of the view. A plan view's `lines.storey` is its storey, a vertical view's is empty.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ViewLinework {
     pub view: String,
     pub kind: ViewKind,

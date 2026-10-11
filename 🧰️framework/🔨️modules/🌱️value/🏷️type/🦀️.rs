@@ -4,7 +4,7 @@ use crate::{DslValue, FromValue, ToValue, ValueError};
 use crate::retirement::RetireOwned;
 
 /// 📐️ One domain-neutral type declaration.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, crate::RetainedClone)]
 pub enum ValueType {
     Boolean,
     Integer,

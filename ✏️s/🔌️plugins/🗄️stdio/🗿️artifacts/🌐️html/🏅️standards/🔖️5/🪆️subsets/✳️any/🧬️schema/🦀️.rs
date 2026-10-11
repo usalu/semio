@@ -4,7 +4,7 @@
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlNode, HtmlSnapshot};
 use framework_schema::ArtifactSchema;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.html")]
 pub struct HtmlArtifact {

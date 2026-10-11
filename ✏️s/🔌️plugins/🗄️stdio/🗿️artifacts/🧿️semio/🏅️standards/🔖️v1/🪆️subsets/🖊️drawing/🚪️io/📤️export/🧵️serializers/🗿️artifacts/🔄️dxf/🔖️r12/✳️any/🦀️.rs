@@ -14,7 +14,7 @@ use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSeg
 use crate::standards::v1::subsets::drawing::schema::geometry::{compose_affine, semio_transform_affine, similarity_scale, transformed_segments};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_dxf::{
-    schema::snapshot::{DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue},
+    schema::snapshot::{DxfEntity, DxfCircle, DxfPolyline, DxfText, DxfHeaderVar, DxfLayer, DxfTables, DxfValue},
     DxfSnapshot,
 };
 
@@ -143,7 +143,7 @@ fn dxf_entity_from_node(node: &DrawNode, matrix: &[f64; 6], layer: &str) -> Opti
             if let Some(scale) = similarity_scale(matrix) {
                 if let Some((cx, cy, r)) = as_circle(segments) {
                     let [x, y] = map(SemioPoint2 { x: cx, y: cy });
-                    return Some(DxfEntity::Circle { center: [x, y, 0.0], radius: r * scale, layer: layer.into(), unknown_group_codes: vec![] });
+                    return Some(DxfEntity::Circle(DxfCircle { center: [x, y, 0.0], radius: r * scale, layer: layer.into(), unknown_group_codes: vec![] }));
                 }
             }
             let (points, closed) = flatten_to_polyline(&transformed_segments(segments, matrix));
@@ -151,11 +151,11 @@ fn dxf_entity_from_node(node: &DrawNode, matrix: &[f64; 6], layer: &str) -> Opti
                 return None;
             }
             let vertices = points.iter().map(|p| semio_s_artifact_stdio_dxf::schema::snapshot::DxfVertex { x: p.x, y: p.y, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] }).collect();
-            Some(DxfEntity::Polyline { vertices, closed, layer: layer.into(), unknown_group_codes: vec![] })
+            Some(DxfEntity::Polyline(DxfPolyline { vertices, closed, layer: layer.into(), unknown_group_codes: vec![] }))
         }
         DrawNode::Text { value, at, .. } => {
             let [x, y] = map(*at);
-            Some(DxfEntity::Text { position: [x, y, 0.0], height: 1.0, value: value.clone(), layer: layer.into(), unknown_group_codes: vec![] })
+            Some(DxfEntity::Text(DxfText { position: [x, y, 0.0], height: 1.0, value: value.clone(), layer: layer.into(), unknown_group_codes: vec![] }))
         }
         DrawNode::Group { .. } | DrawNode::Image { .. } => None,
     }

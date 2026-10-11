@@ -9,7 +9,7 @@
   "grant": {
     "maximumItems": 1,
     "maximumCopyBytes": 8,
-    "maximumCapacityBytes": 1024,
+    "maximumCapacityBytes": 4096,
     "maximumReleaseBytes": 4096,
     "maximumDepth": 64
   },

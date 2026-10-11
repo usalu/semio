@@ -2,13 +2,13 @@
 //! overlapping-extraction model, proving the un-gated grid/extract modules are reachable from the
 //! same production job the graph artifacts use.
 
-use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, InteractiveJob, InteractiveJobCloseStep, Operation, RevisionId, StepBudget, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
+use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, InteractiveJob, JobOutcomeBorrow, Operation, RetainedCloneProgress, RevisionId, StepBudget, StepContext};
 
 use crate::extract::{extract_2d, Extract2dConfig, Sample2d};
 use crate::grid2d::{declare_stencil_relations, declare_stencil_relations_tiled, Boundary, Grid2dTopology, Stencil2d};
 use crate::grid3d::{declare_stencil_relations_3d_tiled, Grid3dTopology, Stencil3d};
 use crate::ids::{PatternId, RelationId, TileId};
-use crate::job::{WfcCommit, WfcJob, WfcJobConfig};
+use crate::job::{close_job, WfcCommit, WfcJob, WfcJobConfig, HEADLESS_GRANT};
 use crate::model::{CompiledModel, ModelBuilder};
 use crate::symmetry::SymmetryGroup2d;
 use crate::tiled::TiledModelBuilder;
@@ -20,32 +20,27 @@ fn operation(seed: u64) -> Operation {
     Operation::new(allocate_operation_id(), RevisionId(1), Generation(1), seed)
 }
 
-/// 🧵️ Steps the job to its terminal outcome, retiring every payload the way a worker session does.
+/// 🧵️ Steps the job to its terminal outcome, then closes it through its own quoted ladder the way a worker session does.
 fn solve<T: Topology + Clone + Send>(job: &mut WfcJob<T>, operation: Operation, fuel: u64) -> WfcCommit {
     let mut sequence = operation.preview_sequence;
     let mut terminal = None;
     for _ in 0..STEP_LIMIT {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
-        let mut outcome = job.step(&mut context);
-        let complete = matches!(outcome, StepOutcome::Complete(_));
-        while !outcome.terminal_is_empty() {
-            outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
-        }
-        if outcome.is_terminal() {
+        let mut receipt = RetainedCloneProgress::default();
+        let mut context = crate::job::test_step_context(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, HEADLESS_GRANT), root_cancel_token(), &mut sequence, &mut receipt);
+        let ended = match job.step(&mut context).expect("wfc step admission") {
+            Some(JobOutcomeBorrow::Complete { .. }) => Some(true),
+            Some(JobOutcomeBorrow::Fault { .. } | JobOutcomeBorrow::Cancelled { .. }) => Some(false),
+            _ => None,
+        };
+        if let Some(complete) = ended {
             assert!(complete, "WFC job ended without a commit");
             terminal = job.commit();
             break;
         }
     }
     let commit = terminal.expect("WFC job did not complete");
-    job.begin_close();
-    for _ in 0..STEP_LIMIT {
-        if job.terminal_is_empty() {
-            return commit;
-        }
-        assert_ne!(job.close_step(1, JOB_PAYLOAD_PAGE_BYTES), InteractiveJobCloseStep::Blocked, "a locally owned job close has no external owner");
-    }
-    panic!("WFC job did not close");
+    close_job(job);
+    commit
 }
 
 /// 🀄️ Two tiles that may never sit next to their own kind — a checkerboard on any stencil.

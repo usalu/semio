@@ -1,6 +1,6 @@
 //! ☀️ Process 3d play app commands — the scene sun (config-only, ephemeral view state).
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation, Process3dConfigSetSun};
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::{Process3dSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -10,13 +10,13 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod toggle_sun {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
 
     pub fn handle(_payload: &ToggleSun, _doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let config = cfg.snapshot;
-        Ok(Emit::config(vec![Process3dConfigMutation::SetSun { enabled: !config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() }]))
+        Ok(Emit::config(vec![Process3dConfigMutation::SetSun(Process3dConfigSetSun{ enabled: !config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() })]))
     }
 }
 //#endregion 🔖️ToggleSun
@@ -25,7 +25,7 @@ pub mod toggle_sun {
 pub mod set_sun_azimuth {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "sun-azimuth")]
     pub struct SetSunAzimuth {
         pub value: f64,
@@ -38,7 +38,7 @@ pub mod set_sun_azimuth {
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let config = cfg.snapshot;
-        Ok(Emit::config(vec![Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: payload.value, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() }]))
+        Ok(Emit::config(vec![Process3dConfigMutation::SetSun(Process3dConfigSetSun{ enabled: config.sun_enabled, azimuth: payload.value, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() })]))
     }
 }
 //#endregion 🔖️SetSunAzimuth
@@ -47,7 +47,7 @@ pub mod set_sun_azimuth {
 pub mod set_sun_elevation {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "sun-elevation")]
     pub struct SetSunElevation {
         pub value: f64,
@@ -60,7 +60,7 @@ pub mod set_sun_elevation {
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let config = cfg.snapshot;
-        Ok(Emit::config(vec![Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: payload.value, intensity: config.sun_intensity, color: config.sun_color.clone() }]))
+        Ok(Emit::config(vec![Process3dConfigMutation::SetSun(Process3dConfigSetSun{ enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: payload.value, intensity: config.sun_intensity, color: config.sun_color.clone() })]))
     }
 }
 //#endregion 🔖️SetSunElevation
@@ -69,7 +69,7 @@ pub mod set_sun_elevation {
 pub mod set_sun_intensity {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "sun-intensity")]
     pub struct SetSunIntensity {
         pub value: f64,
@@ -82,7 +82,7 @@ pub mod set_sun_intensity {
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let config = cfg.snapshot;
-        Ok(Emit::config(vec![Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: payload.value, color: config.sun_color.clone() }]))
+        Ok(Emit::config(vec![Process3dConfigMutation::SetSun(Process3dConfigSetSun{ enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: payload.value, color: config.sun_color.clone() })]))
     }
 }
 //#endregion 🔖️SetSunIntensity

@@ -50,8 +50,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "5ca67918bf7587a6fb387312c4dc35dca2d63c16a2dccc0ba5bfd552c72c5efa",
-    "coreWasmSha256": "4e64083c7f9cafb12da1f9d7f5755a8d45344a59e18ffd44c83dfe4096e9d7ae",
-    "descriptorSha256": "1ba2922e112bac336766e3b415a2de9eccd17703bfa2ce6d0be8d43e5a24c87b"
+    "wasmSha256": "b4dc748bd4516d3d8dbd94eda2de431f1ab6a31c3cf0947542579f5806a255d1",
+    "coreWasmSha256": "39ebfdded33b0a1973e6a82e6bfcaa24be448a6047b4cc22a8208bd8c3823dc5",
+    "descriptorSha256": "ef5a15c33c477a1e7208b2687c97d739b75de171e03f2857ad6cd2b1b42d77fc"
   }
 }

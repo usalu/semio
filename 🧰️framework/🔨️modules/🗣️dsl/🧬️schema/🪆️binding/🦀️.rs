@@ -302,7 +302,7 @@ impl<T: DslField, const N: usize> DslField for semio_framework_value::paged::Pag
 /// 🔌️ A wire literal as a plain struct field (or inside a `#[dsl(table)]` `Vec` as a
 /// `WIRE`-typed column) — thin `DslField` wrapper around `crate::WireValue` so adopter
 /// technologies never need to hand-roll their own `Shape::Wire` binding.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Wire(pub WireValue);
 
 impl Wire {

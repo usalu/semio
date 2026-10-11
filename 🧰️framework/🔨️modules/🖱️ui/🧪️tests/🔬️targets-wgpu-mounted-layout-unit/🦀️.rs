@@ -207,6 +207,13 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
     }
     assert_eq!(lane, semio_framework_async::Lane::UserVisible);
     assert!(session.checked_out_job().is_some_and(|owner| owner.worker_thread_observed()));
+    if session.checked_out_retained_step_receipt().is_some() { session.take_checked_out_retained_step_receipt().expect("original turn receipt is received"); }
+    session.checked_out_outcome().expect("original checked-out outcome borrows");
+    let mut acknowledged = false;
+    for _ in 0..16 {
+        if matches!(session.acknowledge_checked_out_outcome(ui_contract::UI_WORKER_RETIREMENT_POLICY), semio_framework_value::RetainedCloneStep::Complete(_)) { acknowledged = true; break; }
+    }
+    assert!(acknowledged);
     session.begin_close();
     for _ in 0..LAYOUT_GLYPH_CREDITS + LAYOUT_NODE_CREDITS * 4 {
         let grant = ui_contract::UI_WORKER_RETIREMENT_POLICY;

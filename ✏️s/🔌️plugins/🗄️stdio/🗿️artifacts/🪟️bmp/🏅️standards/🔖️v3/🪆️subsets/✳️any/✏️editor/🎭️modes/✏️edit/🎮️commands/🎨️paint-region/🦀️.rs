@@ -17,7 +17,7 @@ pub const MAXIMUM_RAW_BYTES: usize = 8_192;
 pub const MAXIMUM_INTERACTIVE_ROWS: u32 = 65_536;
 pub const CAPACITY: ArtifactRetainedWorkCapacity = ArtifactRetainedWorkCapacity::for_invertible_items(1);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PaintIndexedRegionCommand {
     pub x: u32,
@@ -27,7 +27,7 @@ pub struct PaintIndexedRegionCommand {
     pub palette_index: u8,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PaintDirectRegionCommand {
     pub x: u32,
@@ -212,6 +212,10 @@ impl ArtifactCommandWork<EditorApp<BmpEditor>> for PaintRegionWork {
         CAPACITY.rows_for_items(1)
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<BmpEditor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<BmpMutation>(), depth: 1, ..Default::default() })
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BmpEditor>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BmpEditor>>, Fault> {
         if self.closing || self.complete {return Err(fault("stdio.bmp.paint-region.work-closed", "Paint work is already closed"));}
         let BmpEditCommand::Native(command)=input.command else {return Err(fault("stdio.bmp.paint-region.route-mismatch", "Paint work received another command"));};
@@ -228,7 +232,7 @@ impl ArtifactCommandWork<EditorApp<BmpEditor>> for PaintRegionWork {
         if self.intent.is_some_and(|bound|bound!=intent){return Err(fault("stdio.bmp.paint-region.intent-drift","Paint intent changed"));}
         self.intent=Some(intent);
         if cx.should_yield(){return Ok(ArtifactCommandWorkStep::Progress{stage:"bmp-paint-region-copy",preview:br#"{"en":"Checking owned bitmap samples","de":"Eigene Bitmap-Abtastwerte werden geprueft"}"#});}
-        let(done,_)=self.validation.advance(reader.as_ref(),semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_depth:64,maximum_release_bytes:0}).map_err(|error|fault("stdio.bmp.paint-region.revision",error))?;cx.consume_fuel(1);
+        let(done,_)=self.validation.advance(reader.as_ref(),semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:semio_framework_value::retained_clone::RETAINED_CLONE_BULK_PAGE_BYTES,maximum_capacity_bytes:0,maximum_depth:64,maximum_release_bytes:0}).map_err(|error|fault("stdio.bmp.paint-region.revision",error))?;cx.consume_fuel(1);
         if !done{return Ok(ArtifactCommandWorkStep::Progress{stage:"bmp-paint-region-copy",preview:br#"{"en":"Checking owned bitmap samples","de":"Eigene Bitmap-Abtastwerte werden geprueft"}"#});}
         let revision=self.validation.revision().ok_or_else(||fault("stdio.bmp.paint-region.revision","Validated source revision is absent"))?;
         let mutation=match command{
@@ -239,7 +243,7 @@ impl ArtifactCommandWork<EditorApp<BmpEditor>> for PaintRegionWork {
         self.complete=true;Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![mutation])))
     }
     fn begin_close(&mut self){self.closing=true;self.reader=None;self.intent=None;}
-    fn close_step(&mut self,_maximum_items:usize,_maximum_bytes:usize)->InteractiveJobCloseStep{if self.closing{InteractiveJobCloseStep::Complete}else{InteractiveJobCloseStep::Blocked}}
+    fn close_step(&mut self,_grant:semio_framework_value::retained_clone::RetainedCloneGrant)->InteractiveJobCloseStep{if self.closing{InteractiveJobCloseStep::Complete{progress:Default::default()}}else{InteractiveJobCloseStep::Blocked}}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.reader.is_none() && self.intent.is_none()

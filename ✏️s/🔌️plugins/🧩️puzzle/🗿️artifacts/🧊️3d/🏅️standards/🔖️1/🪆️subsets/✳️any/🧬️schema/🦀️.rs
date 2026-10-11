@@ -4,7 +4,8 @@ use crate::{Puzzle3dSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
 //#region 🔖️Artifact
 /// 🧬️ puzzle3d document artifact state.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle3d")]
 pub struct Puzzle3dArtifact {
@@ -129,7 +130,8 @@ pub fn puzzle3d_artifact_schema_descriptor() -> ::semio_framework_schema_registr
 pub(crate) type Quat = [f64; 4];
 pub(crate) type Vec3 = [f64; 3];
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -171,7 +173,8 @@ impl Default for BrushHostRules {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -184,7 +187,8 @@ pub struct BrushKindWeights {
     pub(crate) vortex_weights: std::collections::BTreeMap<String, f64>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct KindCompatEntry {
     pub(crate) source: String,
@@ -198,7 +202,8 @@ pub struct KindCompatEntry {
     pub(crate) specificity: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ObjectKindVortexTemplate {
     #[cfg_attr(test, serde(default))]
@@ -242,7 +247,8 @@ impl Default for ObjectKindVortexTemplate {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ObjectKindRepresentation {
     #[cfg_attr(test, serde(default))]
@@ -268,7 +274,8 @@ pub struct ObjectKindRepresentation {
     pub(crate) description: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct ObjectKind {
     pub(crate) id: String,
@@ -283,7 +290,8 @@ pub struct ObjectKind {
     pub(crate) vortices: Vec<ObjectKindVortexTemplate>,
 }
 
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct VortexKindCatalog {
     pub(crate) id: String,
@@ -313,7 +321,8 @@ pub struct VortexKindCatalog {
     pub(crate) default_cable_kind: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct CableKindCatalog {
     pub(crate) id: String,
@@ -324,7 +333,8 @@ pub struct CableKindCatalog {
 
 /// 🗂️ The compile-time-catalog side of a scene: object/vortex/cable kind rows, reachable through
 /// `apply_brush_placement_to_snapshot`'s public signature.
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct KindCatalogBundle {
     #[cfg_attr(test, serde(default))]
@@ -338,7 +348,8 @@ pub struct KindCatalogBundle {
     pub(crate) cables: Vec<CableKindCatalog>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct VortexProps {
     pub id: String,
@@ -349,7 +360,8 @@ pub struct VortexProps {
     pub direction: Option<Vec3>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct EngineSceneObject {
     pub id: String,
@@ -370,7 +382,8 @@ pub struct EngineSceneObject {
     pub vortices: Vec<VortexProps>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -406,7 +419,8 @@ pub struct AttractionProps {
     pub y: f64,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -423,7 +437,8 @@ pub struct WorldVolumeProps {
 
 /// 🏗️ A puzzle-3d scene's object/attraction/target-volume state, reachable through
 /// `apply_brush_placement_to_snapshot`'s public signature.
-#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct EngineSceneSnapshot {
     #[cfg_attr(test, serde(default))]
@@ -440,7 +455,8 @@ pub struct EngineSceneSnapshot {
 /// 📨️ The full typed payload `Puzzle3dEngineCommand::SetScene` carries — the exact same shape
 /// `Puzzle3dCollision::set_scene`'s JSON payload has always deserialized into, just reused directly
 /// instead of re-declared, so the command enum's field IS this type, not a mirror of it.
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct SceneConfig {
     #[cfg_attr(test, serde(rename = "sceneSnapshot"))]
@@ -466,14 +482,16 @@ pub struct SceneConfig {
     pub(crate) weights: BrushKindWeights,
 }
 
-#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrushCompatibleCandidate {
     pub object_kind_id: String,
     pub source_vortex_index: usize,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -489,7 +507,8 @@ pub struct BrushPreviewState {
     pub scale: Option<semio_framework_value::DslValue>,
 }
 
-#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -516,7 +535,8 @@ impl From<BrushPreviewState> for BrushPlacePayload {
 /// 🎯️ Public so `Puzzle3dEngineOutcome::BrushCandidates` can hand this back to callers (the app's
 /// brush slot) as a typed value instead of the JSON string the old `brush_candidates` wasm-bindgen
 /// method returned.
-#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BrushCollisionFreeResult {
     pub free: Vec<BrushCompatibleCandidate>,
@@ -787,7 +807,7 @@ impl FillRunReason {
     }
 }
 
-/// 📸️ Resume point a fill run job reports through `StepOutcome::CheckpointReady`: fixed 68-byte
+/// 📸️ Resume point a fill run job reports through `JobTurn::Checkpoint`: fixed 68-byte
 /// little-endian layout `requested u64 | placements u64 | provisionalOps u32 | tested u64 | nextKey u64 |
 /// inputs [u8; 32]`. `inputs` digests everything the planner's deterministic sequence depends on except
 /// the requested count (base revision, contact tolerance, weights, collision meshes), so a rebuilt run job
@@ -817,7 +837,7 @@ pub fn empty_puzzle3d_snapshot() -> Puzzle3dSnapshot {
 /// wrap it exactly like it already does for `Puzzle3dMutation`. Field shapes mirror the exact payload each
 /// old JSON-string method parsed: `SetScene` mirrors `set_scene`'s `SceneConfig` JSON body,
 /// `UpdateKindWeights` mirrors `update_kind_weights`'s two JSON map bodies.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum Puzzle3dEngineCommand {
     #[dsl(key = "set-scene")]
     SetScene { scene: SceneConfig },

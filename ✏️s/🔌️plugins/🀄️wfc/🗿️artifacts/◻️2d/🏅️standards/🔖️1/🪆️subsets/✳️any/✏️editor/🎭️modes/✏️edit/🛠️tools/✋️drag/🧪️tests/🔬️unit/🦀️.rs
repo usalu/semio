@@ -135,7 +135,9 @@ fn close(app: &mut Wfc2dApp) {
         if app.close_terminal_is_empty() {
             return;
         }
-        if PluginApp::close_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("wfc2d app close") == semio_framework_plugin::PluginCloseStep::Complete {
+        let demand = PluginApp::close_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("wfc2d app close quote");
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        if matches!(PluginApp::close_step(app, grant).expect("wfc2d app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
@@ -182,7 +184,7 @@ fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     block_on(async {
         let mut store = store::ArtifactStore::<Wfc2dSnapshot, crate::Wfc2dMutation>::new(store::create_document_envelope::<Wfc2dSnapshot, crate::Wfc2dMutation>(WFC_2D_DOCUMENT_SCHEMA, "drag-time-travel", base(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-        store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Wfc2dSnapshot, crate::Wfc2dMutation>());
+        store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::funded_bounded_artifact_store_owners::<Wfc2dSnapshot, crate::Wfc2dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
         let log = [drag_slots(vec!["room-a".into()], 1.0, 0.0), drag_slots(vec!["room-a".into(), "room-b".into()], 0.0, 2.0), resize_slot("room-a".into(), 3.0, 1.5)];
         for mutation in &log {
             store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
@@ -210,7 +212,9 @@ fn a_drag_edited_in_history_replays_its_downstream() {
             if disposer.terminal_is_empty(&store) {
                 break;
             }
-            disposer.close_step(&mut store, 1, 64 * 1024).expect("the store retires");
+            let demand = disposer.retirement_demands(&store, 64 * 1024).expect("the store quotes its next retirement turn");
+            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(64 * 1024), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            disposer.close_step(&mut store, grant).expect("the store retires");
         }
         assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
     });

@@ -7,7 +7,7 @@
 
 //#region 🔖️Config
 /// 🧮️ `Block5dPlayApp`'s empty artifact config; selection and locale live in the shared view model.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -89,6 +89,10 @@ impl protocol::MutationDiff<Block5dConfig> for Block5dConfigDiff {
 /// 🧮️ An empty config has no mutation: the enum is uninhabited, so no diff can be raised against it.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub enum Block5dConfigMutation {}
+
+impl semio_framework_value::retirement::RetireOwned for Block5dConfigMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { match self {} }
+}
 
 impl protocol::Mutation<Block5dConfig> for Block5dConfigMutation {
     type Diff = Block5dConfigDiff;

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️SeveritySchedule
 /// 📅️ Time-varying fault severity multiplier (0 = none, 1 = full fault).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SeveritySchedule {
     pub hourly_severity: [f64; 24],
     pub interpolation: bool,
@@ -41,7 +41,7 @@ impl SeveritySchedule {
 
 // #region 🔖️SensorOffset
 /// 🌡️ Sensor bias fault on temperature or flow readings.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SensorOffsetFault {
     pub offset: f64,
     pub unit: SensorUnit,
@@ -50,7 +50,7 @@ pub struct SensorOffsetFault {
 }
 
 /// 📏️ Sensor measurement unit for offset faults.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum SensorUnit {
     Celsius,
     Percent,
@@ -75,7 +75,7 @@ impl SensorOffsetFault {
 
 // #region 🔖️Fouling
 /// 🦠️ Heat exchanger fouling reducing UA over time.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct FoulingFault {
     pub baseline_ua_w_per_k: f64,
     pub fouling_factor: f64,
@@ -102,7 +102,7 @@ impl FoulingFault {
 
 // #region 🔖️Damper
 /// 🌬️ Damper stuck/leaking fault on air system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum DamperFaultKind {
     StuckClosed,
     StuckOpen,
@@ -110,7 +110,7 @@ pub enum DamperFaultKind {
 }
 
 /// 🌬️ Damper fault with scheduled severity.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct DamperFault {
     pub kind: DamperFaultKind,
     pub design_position: f64,
@@ -140,14 +140,14 @@ impl DamperFault {
 
 // #region 🔖️RefrigerantCharge
 /// ❄️ Refrigerant undercharge or overcharge fault.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum ChargeFaultKind {
     Undercharge,
     Overcharge,
 }
 
 /// ❄️ Refrigerant charge fault affecting capacity and power.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct RefrigerantChargeFault {
     pub kind: ChargeFaultKind,
     pub charge_deviation_fraction: f64,
@@ -185,7 +185,7 @@ impl RefrigerantChargeFault {
 
 // #region 🔖️FaultSet
 /// 🔧️ Combined fault set for a plant or air-handling component.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct FaultSet {
     pub sensor_offsets: Vec<SensorOffsetFault>,
     pub fouling: Vec<FoulingFault>,

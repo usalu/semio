@@ -241,7 +241,8 @@ pub mod mesh_bridge {
                         *id = format!("{prefix}{id}");
                     }
                 }
-                let target = merged.attributes.entry(name).or_insert_with(|| semio_framework_plugin::MeshAttribute { domain: attribute.domain, semantic: attribute.semantic, interpolation: attribute.interpolation, values: Vec::new(), indices: Some(Vec::new()) });
+                if !merged.attributes.contains_key(&name) { merged.attributes.insert(name.clone(), semio_framework_plugin::MeshAttribute { domain: attribute.domain, semantic: attribute.semantic, interpolation: attribute.interpolation, values: Vec::new(), indices: Some(Vec::new()) }); }
+                let target = merged.attributes.get_mut(&name).expect("merged channel was just declared");
                 let sample_offset = target.values.len() as u32;
                 if target.values.len() + attribute.values.len() > 600_000 { return Err(io_error("geometry merge exceeds its channel sample capacity")); }
                 let indices = attribute.indices.unwrap_or_else(|| (0..attribute.values.len() as u32).collect());
@@ -271,7 +272,7 @@ pub mod mesh_bridge {
         Ok(merged)
     }
 
-    fn merge_attributes(mesh: &MeshData) -> Result<std::collections::BTreeMap<String, semio_framework_plugin::MeshAttribute>, semio_framework_diagnostic::TextError> {
+    fn merge_attributes(mesh: &MeshData) -> Result<semio_framework_mesh_engine::HistoryFoldIndex<String, semio_framework_plugin::MeshAttribute>, semio_framework_diagnostic::TextError> {
         use semio_framework_plugin::{MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation};
         let mut attributes = mesh.attributes.clone();
         for (buffer, semantic, name, width) in [(&mesh.normals, MeshAttributeSemantic::Normal, "normal", 3), (&mesh.uvs, MeshAttributeSemantic::Uv, "uv", 2), (&mesh.colors, MeshAttributeSemantic::Color, "color", if mesh.colors.len() == mesh.positions.len() / 3 * 4 { 4 } else { 3 })] {
@@ -339,7 +340,7 @@ pub mod mesh_bridge {
     /// 🎨️ Keeps primitive seams and surface assets on editable polygon inputs.
     pub fn import_semio_mesh(snapshot: &SemioMeshSnapshot) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
         use semio_framework_plugin::{MeshAttribute, MeshAttributeDomain, MeshAttributeInterpolation, MeshAttributeSemantic, MeshTexture};
-        let mut materials = std::collections::BTreeMap::new();
+        let mut materials = semio_framework_mesh_engine::HistoryFoldIndex::new();
         for material in &snapshot.materials {
             let color = material.base_color;
             let mut data = semio_framework_pack_json::object([
@@ -358,7 +359,7 @@ pub mod mesh_bridge {
             }
             if materials.insert(material.id.clone(), semio_framework_pack_json::to_dsl_value(&data)).is_some() { return Err(io_error("mesh import has duplicate material identifiers")); }
         }
-        let mut textures = std::collections::BTreeMap::new();
+        let mut textures = semio_framework_mesh_engine::HistoryFoldIndex::new();
         for texture in &snapshot.textures {
             if textures.insert(texture.id.clone(), MeshTexture { mime: texture.mime.clone(), bytes: texture.bytes.clone() }).is_some() { return Err(io_error("mesh import has duplicate texture identifiers")); }
         }
@@ -883,7 +884,7 @@ pub use document_io::{export_document, import_document as import_picked_document
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::Generation3dAnalyzer;
     use crate::Generation3dSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.generation3d", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
@@ -993,7 +994,7 @@ pub use derived_composition::*;
 pub mod io_registry {
     use crate::standards::v1::subsets::any::io::Generation3dBuilder as Generation3dAnyBuilder;
     use crate::standards::v1::subsets::any::io::Generation3dComposer as Generation3dAnyComposer;
-    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -1110,7 +1111,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::Generation3dSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Generation3dParts {

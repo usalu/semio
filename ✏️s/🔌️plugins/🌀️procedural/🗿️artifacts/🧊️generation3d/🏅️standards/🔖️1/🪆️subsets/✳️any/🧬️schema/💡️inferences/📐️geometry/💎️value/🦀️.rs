@@ -2,6 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::catalogue::{Localized, Quality, ShapeKind};
 use semio_framework_3d::brep::engine::{BrepError, GeometryKind, ShapeValue};
+use semio_framework_3d::brep::representation::error::KernelError;
 use semio_framework_3d::mesh::HalfedgeMesh;
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -41,6 +42,11 @@ impl std::error::Error for WidgetFault {}
 /// 🛠️ The fault of a refused kernel call; the kernel's own message is appended in both languages.
 pub fn kernel_fault(error: &BrepError) -> WidgetFault {
     WidgetFault::new(format!("{FAULT_PREFIX}kernel"), format!("The geometry kernel refused the operation: {error}."), format!("Der Geometriekern hat die Operation abgelehnt: {error}."))
+}
+
+/// 🛠️ The localized fault of a refused kernel body operation, worded the way the engine words its own conversion.
+pub fn body_fault(error: &KernelError) -> WidgetFault {
+    kernel_fault(&BrepError::Operation(error.to_string()))
 }
 //#endregion 🔖️Fault
 
@@ -89,7 +95,7 @@ pub struct SelectionValue {
 }
 
 /// 💎️ One value on a widget port.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum GeometryValue {
     Number(f64),
     Integer(i64),
@@ -102,6 +108,25 @@ pub enum GeometryValue {
     Mesh(Arc<HalfedgeMesh>),
     Selection(SelectionValue),
     List(Vec<GeometryValue>),
+}
+
+/// 🟰️ Meshes are sealed shared values, so two mesh values are equal exactly when they are the same allocation.
+impl PartialEq for GeometryValue {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Number(a), Self::Number(b)) => a == b,
+            (Self::Integer(a), Self::Integer(b)) => a == b,
+            (Self::Boolean(a), Self::Boolean(b)) => a == b,
+            (Self::Text(a), Self::Text(b)) => a == b,
+            (Self::Vector(a), Self::Vector(b)) | (Self::Point(a), Self::Point(b)) => a == b,
+            (Self::Plane(a), Self::Plane(b)) => a == b,
+            (Self::Shape(a), Self::Shape(b)) => a == b,
+            (Self::Mesh(a), Self::Mesh(b)) => Arc::ptr_eq(a, b),
+            (Self::Selection(a), Self::Selection(b)) => a == b,
+            (Self::List(a), Self::List(b)) => a == b,
+            _ => false,
+        }
+    }
 }
 
 /// 📇️ What a value is, in one line a result payload can carry without the geometry itself.

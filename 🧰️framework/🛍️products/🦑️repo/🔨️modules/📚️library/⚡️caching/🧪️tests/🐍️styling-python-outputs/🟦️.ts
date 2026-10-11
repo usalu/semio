@@ -35,11 +35,12 @@ export async function testStylingPythonOutputs(workspace: string, output: string
   } }));
   put("📜️script.ts", `import { appendFileSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from ${JSON.stringify(join(workspace, "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"))};
 import { StylingPythonBuildScript, StylingPythonDepsScript } from ${JSON.stringify(compiler)};
 const root = process.cwd(), command = process.argv[2];
 if (command === "generate") { copyFileSync(join(root, "🧫️tokens.py"), join(root, ${JSON.stringify(join(fixture.owner, fixture.source))})); process.exit(0); }
 const Command = command === "deps" ? StylingPythonDepsScript : StylingPythonBuildScript;
-await new Command(join(root, ${JSON.stringify(packagePath)}), root).run([]);
+await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "styling-outputs-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async (invocation) => { await new Command(join(root, ${JSON.stringify(packagePath)}), root, invocation).run([]); });
 appendFileSync(join(root, command === "deps" ? ".deps" : ".runs"), command + "\\n");
 `);
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");

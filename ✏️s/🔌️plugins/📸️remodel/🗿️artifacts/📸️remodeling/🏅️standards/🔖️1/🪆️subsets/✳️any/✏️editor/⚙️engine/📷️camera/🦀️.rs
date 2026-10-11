@@ -9,7 +9,7 @@ use crate::lie::So3;
 
 // #region 🔖️Intrinsics
 /// 📷️ Pinhole camera intrinsic parameters: focal lengths, principal point, pixel skew, and a lens distortion model.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Intrinsics {
     pub fx: f64,
     pub fy: f64,
@@ -20,7 +20,7 @@ pub struct Intrinsics {
 }
 
 /// 🌀️ Lens distortion model applied to normalized camera-plane coordinates before the linear intrinsic map.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum Distortion {
     None,
     BrownConrady { k1: f64, k2: f64, k3: f64, p1: f64, p2: f64 },
@@ -180,7 +180,7 @@ impl Intrinsics {
 
 // #region 🔖️Extrinsics
 /// 🎥️ World-to-camera rigid transform: `p_cam = pose.0.act(p_world)`.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct CameraPose(pub Se3);
 
 fn se3_at(x: &VecD, offset: usize) -> Se3 {
@@ -422,7 +422,8 @@ pub fn rectify_remap_field(intrinsics: &Intrinsics, model: &RollingShutterModel,
 // #region 🔖️Rig
 /// 🧷️ One camera's fixed extrinsic pose within a multi-camera rig, relative to the rig's own reference
 /// frame: `p_camera = pose_in_rig.act(p_rig)`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct RigExtrinsic {
     pub camera_id: String,
     pub pose_in_rig: Se3,

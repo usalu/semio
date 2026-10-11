@@ -1,11 +1,11 @@
 //! 💬️ 💬️ S Studio app command — `workflow-engagement-submit`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "workflow-engagement-submit")]
 pub struct WorkflowEngagementSubmit {
     pub value: Option<String>,
@@ -16,7 +16,7 @@ pub fn handle(payload: &WorkflowEngagementSubmit, _doc: &ArtifactView<'_, Workfl
     let mut parts = raw.split_whitespace();
     match (parts.next(), parts.next()) {
         (Some(plugin_id), Some(app_id)) => match crate::engine::space::engine::resolve_future(crate::engine::space::engine::add_workflow_node_operation(plugin_id, app_id, None, 80.0, 80.0)) {
-            Some((operation, node_id)) => Ok(Emit { artifact_mutations: vec![operation], config_mutations: vec![SpaceConfigMutation::SetActiveNode { node_id: Some(node_id) }], ..Default::default() }),
+            Some((operation, node_id)) => Ok(Emit { artifact_mutations: vec![operation], config_mutations: vec![SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: Some(node_id) })], ..Default::default() }),
             None => Ok(Emit::default()),
         },
         _ => Ok(Emit::default()),

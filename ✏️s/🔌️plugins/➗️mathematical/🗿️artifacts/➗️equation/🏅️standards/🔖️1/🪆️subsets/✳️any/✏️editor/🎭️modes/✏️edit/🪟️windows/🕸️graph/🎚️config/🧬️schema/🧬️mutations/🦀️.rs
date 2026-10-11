@@ -5,7 +5,8 @@ use super::{EquationCamera, EquationGraphWindowConfig, EquationGraphWindowConfig
 mod set_camera;
 pub use set_camera::SetCamera;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 // 🔮️ The test-only serde mirror is the INDEPENDENT oracle `🧫️fixtures/🔁️mutations.json` is read
 // through (`language_neutral_mutations_match_json_oracle_and_restore_base` decodes the same vector
 // twice — once with `dsl::json`, once with `serde_json` — and asserts they agree). It must therefore
@@ -24,6 +25,19 @@ pub enum EquationGraphWindowConfigMutation {
 
 
 
+
+impl store::snapshot_clone_preparation::ConfigApplyMutation<EquationGraphWindowConfig> for EquationGraphWindowConfigMutation {
+    fn exchange(self, post: &mut EquationGraphWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetCamera(SetCamera { camera }) => Self::SetCamera(SetCamera { camera: std::mem::replace(&mut post.camera, camera) }),
+        })
+    }
+
+    fn admissible(&self) -> bool {
+        let Self::SetCamera(SetCamera { camera }) = self;
+        [camera.x, camera.y, camera.zoom].into_iter().all(f64::is_finite)
+    }
+}
 
 //#region 🌉️TestBridge
 

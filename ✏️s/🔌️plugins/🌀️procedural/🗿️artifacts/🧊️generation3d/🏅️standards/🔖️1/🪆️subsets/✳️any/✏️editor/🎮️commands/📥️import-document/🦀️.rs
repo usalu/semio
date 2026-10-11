@@ -44,7 +44,7 @@ pub const GENERATION3D_IMPORT_TOTAL_BYTES: usize = crate::editor::generation3d::
 pub const GENERATION3D_IMPORT_CAPACITY_CODE: &str = "generation3d-import-capacity";
 //#endregion 📏️Bounds
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "import-document")]
 #[value(rename_all = "camelCase")]
 pub struct ImportDocument {

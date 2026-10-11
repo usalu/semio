@@ -48,7 +48,8 @@ pub fn empty_paint_pixels() -> Vec<u8> {
 //#endregion 🔖️Pixels
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyTransform {
     #[dsl(coord)]
@@ -64,7 +65,8 @@ impl Default for LowpolyTransform {
 }
 
 /// 🖌️ One paint layer of an object: compositing metadata plus its persisted RGBA pixel buffer.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyPaintLayer {
     pub name: String,
@@ -124,7 +126,8 @@ pub fn managed_mesh_child_handle(object_id: &str, state: &LowpolyMeshState) -> s
     store::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id:format!("{object_id}-mesh"),dialect})
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyObject {
     pub id: String,
@@ -139,6 +142,7 @@ pub struct LowpolyObject {
     #[value(default)]
     pub mesh_content: String,
     /// 🕸️ The complete managed kernel state is independent of literal source text.
+    #[canonical_json(tree)]
     #[value(with="managed_mesh::json")]
     pub mesh_state: Option<LowpolyMeshState>,
 }
@@ -190,7 +194,7 @@ impl Default for LowpolySelection {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Patches
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyObjectPatch {
     pub name: Option<String>,

@@ -1171,7 +1171,6 @@ pub(crate) const ARCHITECT_RETAINED_TOOL_IDS: &[&str] = &[
 ];
 const ARCHITECT_WINDOW_PAYLOAD_SCHEMA: &str = "architect.program.window-command.v1";
 const ARCHITECT_WINDOW_RAW_BYTES: usize = 4_096;
-const ARCHITECT_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 16_384;
 
 fn architect_window_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(ARCHITECT_WINDOW_RAW_BYTES, 32, 1, 4_096, 7_500)
@@ -1532,18 +1531,6 @@ impl ArtifactEditor for ArchitectPlayApp {
 })())
 }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
-
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
@@ -1593,14 +1580,14 @@ impl ArtifactEditor for ArchitectPlayApp {
     /// bounded factory is the dag/trinity precedent for an app whose mutations are plain bounded
     /// records (`✏️s/🔌️plugins/🕸️dag/…/✏️editor/🦀️.rs`).
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("architect-artifact-retained", ARCHITECT_ARTIFACT_MUTATION_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     /// 🎚️ The `Config` lane validation, analysis and search publish their result on — supported only
     /// when the app owns a one-item config-store preparation factory. The config is one whole record
     /// carrying the last result text, so its bound is the exchange wire budget.
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("architect-config-retained", ARCHITECT_EXCHANGE_RAW_BYTES))
+        Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
     }
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -1639,6 +1626,7 @@ impl ArtifactEditor for ArchitectPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

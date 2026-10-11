@@ -130,7 +130,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let tick = |motion| Fem2dMutation::MoveSelection(fem2d_gumball_tick(&base, &["n1".to_string()], motion).expect("the selection moves geometry"));
     let log = [tick(Fem2dGumballMotion::Translate { dx: 1.0, dy: 0.0 }), tick(Fem2dGumballMotion::Scale { sx: 2.0, sy: 1.0 }), tick(Fem2dGumballMotion::Rotate { angle: 0.5 })];
     let mut store = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new(store::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(crate::FEM_2D_SCHEMA, "gumball-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Fem2dSnapshot, Fem2dMutation>());
+    store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::funded_bounded_artifact_store_owners::<Fem2dSnapshot, Fem2dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     for mutation in &log {
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
     }
@@ -159,7 +159,9 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
         if disposer.terminal_is_empty(&store) {
             break;
         }
-        disposer.close_step(&mut store, 1, 1 << 20).expect("the store retires");
+        let demand = disposer.retirement_demands(&store, 1 << 20).expect("the store quotes its next retirement turn");
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(1 << 20), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        disposer.close_step(&mut store, grant).expect("the store retires");
     }
     assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
 }

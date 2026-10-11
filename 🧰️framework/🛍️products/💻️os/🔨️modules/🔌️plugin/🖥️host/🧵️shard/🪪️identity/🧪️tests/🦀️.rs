@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_value::{ControlledRetirement,retained_clone::{RetainedCloneStep,RetainedCloneProgress}};
+use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneStep,RetainedCloneProgress}};
 use std::sync::{Arc,atomic::{AtomicBool,AtomicUsize,Ordering}};
 
 #[test]
@@ -13,7 +13,7 @@ fn shard_original_identity_loans_preserve_partial_children_and_actor_ledgers(){
  let mut second=OriginalShardIdentity::issue(policy,Box::new(|_|true),Box::new(|_|Ok(()))).unwrap();
  let second_before=second.owned_bytes();let original_recipient=std::ptr::from_ref(first.recipient.as_ref().get_ref());
  let mut identity=first.loan().unwrap();
- let (result,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||identity.encode(|native|native.with_retirement_owner(std::mem::size_of::<ControlledRetirement<String>>(),|native|{let mut original=ControlledRetirement::new(String::new()).ok().unwrap();let result=native.copy_text_into(&source,original.original_mut().unwrap());assert_eq!(original.original_mut().unwrap().as_bytes(),&source.as_bytes()[..65535]);(result,Some(Box::new(original)as Box<dyn ErasedSnapshotRetirement>))})));
+ let (result,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||identity.encode(|native|native.with_retirement_owner(std::mem::size_of::<ControlledRetirement<Vec<u8>>>(),|native|{let mut original=ControlledRetirement::new(Vec::<u8>::new()).ok().unwrap();let result=native.append_bytes(original.original_mut().unwrap(),source.as_bytes());assert_eq!(original.original_mut().unwrap().as_slice(),&source.as_bytes()[..65535]);(result,Some(Box::new(original)as Box<dyn ErasedSnapshotRetirement>))})));
  assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert!(birth.requested_bytes>0);assert_eq!(birth.released_bytes,0);
  drop(identity);let retained=first.owned_bytes();assert_eq!(retained,ledger.load(Ordering::Relaxed));assert_eq!(second.owned_bytes(),second_before);assert!(first.recipient.has_owner());
  let mut other=second.loan().unwrap();other.encode::<_,ValueError>(|native|native.charge(7)).unwrap();drop(other);assert_eq!(second.owned_bytes(),second_before+7);assert_eq!(first.owned_bytes(),retained);

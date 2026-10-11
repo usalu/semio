@@ -7,7 +7,8 @@ use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 
 //#region 🔖️Payload
 /// ➕ `add-edge-property` payload — the edge, the index the entry lands at and the entry.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct AddEdgeProperty {
     pub edge_id: GraphEdgeId,

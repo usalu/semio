@@ -199,6 +199,7 @@ pub(super) trait ErasedWindowConfigPackLoad: Send {
     fn advance(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep;
     fn request_cancel(&mut self);
     fn reject_stale(&mut self) -> WindowConfigPackLoadStep;
+    fn demand_bytes(&self) -> usize;
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, String>;
     fn terminal_is_empty(&self) -> bool;
@@ -221,40 +222,32 @@ impl WindowConfigPackLoad {
     pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let Some(inner)=self.inner.as_ref()else{return Ok(Default::default());};
         if inner.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:std::mem::size_of_val(inner.as_ref()),depth:1,..Default::default()});}
-        let mut demand=inner.close_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"window load frame depth overflow"))?;Ok(demand)
+        let mut demand=inner.retirement_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"window load frame depth overflow"))?;Ok(demand)
     }
 
-    pub fn phase(&self) -> WindowConfigPackLoadPhase {
-        self.inner.phase()
-    }
-
-    pub fn progress(&self) -> WindowConfigPackLoadProgress {
-        self.inner.progress()
-    }
-
-    pub fn diagnostic(&self) -> Option<WindowConfigPackLoadDiagnostic> {
-        self.inner.diagnostic()
-    }
-
-    pub fn request_cancel(&mut self) {
-        self.inner.request_cancel();
+    /// ♻️ Retires the load one granted unit at a time; the final unit releases the erased frame and records its terminal progress.
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,String>{
+        let Some(inner)=self.inner.as_ref()else{return Ok(PluginLifecycleStep::Complete(Default::default()));};
+        if !inner.terminal_is_empty(){
+            return self.inner.as_mut().expect("checked window load frame remains").close_step(grant).map(|step|match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),other=>other});
+        }
+        let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_message)?;
+        if grant.maximum_items==0||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
+        let inner=self.inner.take().expect("checked window load frame remains");
+        self.closed_progress=inner.progress();self.closed_diagnostic=inner.diagnostic();
+        drop(inner);
+        Ok(PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))
     }
 
     /// 🎟️ Fixed caller policy; each currency retains its independent authority.
     pub const fn next_grant(&self) -> RetainedCloneGrant {
         RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 }
     }
-
-    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.inner.retirement_demands(body) }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.inner.terminal_is_empty()
-    }
 }
 
 impl Drop for WindowConfigPackLoad {
     fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.inner.terminal_is_empty(), "window config Pack load reached Drop before terminal-empty handoff or retirement");
+        assert!(std::thread::panicking() || self.inner.is_none(), "window config Pack load reached Drop before terminal-empty handoff or retirement");
     }
 }
 
@@ -280,7 +273,6 @@ enum BuiltValue {
     Dsl(semio_framework_value::DslValue),
 }
 
-#[derive(semio_framework_value::RetireOwned)]
 enum ValueFrame {
     Record { kind: store::mounted_pack_rt::RetainedValueContainer, root: bool, spec: Option<semio_framework_dsl_record::BorrowedRecordSpec>, fields: semio_framework_dsl_record::RecordFields, field: Option<u16> },
     Sequence { kind: store::mounted_pack_rt::RetainedValueContainer, element: ExpectedValue, values: Vec<BuiltValue> },
@@ -289,7 +281,7 @@ enum ValueFrame {
     Bytes { values: Vec<u8>, remaining: usize },
 }
 
-#[derive(Clone, Copy, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy)]
 enum ValueWrapper {
     Block,
     Dynamic,
@@ -1517,6 +1509,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
 
     fn partition_demands(partition: &WindowConfigPartition<O>, body: usize) -> Result<RetirementDemand, ValueError> {
         if partition.preview_retirement_pending() { return partition.preview_retirement_demand(); }
+        if partition.returned_read_pending() { return partition.returned_read_demands(body); }
         partition.disposer.as_ref().map_or(Ok(RetirementDemand { copy_bytes: std::mem::size_of::<WindowConfigPartition<O>>(), depth: 1, ..Default::default() }), |owner| {
             if owner.terminal_is_empty(&partition.store) { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) }
             else { owner.retirement_demands(&partition.store, body) }
@@ -1526,6 +1519,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
     fn close_partition(slot: &mut Option<WindowConfigPartition<O>>, grant: RetainedCloneGrant, demand: RetirementDemand) -> Result<PluginLifecycleStep, String> {
         let partition = slot.as_mut().expect("granted original partition remains");
         if partition.preview_retirement_pending() { return partition.preview_retirement_step(grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_message); }
+        if partition.returned_read_pending() { return partition.returned_read_step(grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_message); }
         if let Some(owner) = partition.disposer.as_mut() {
             if !owner.terminal_is_empty(&partition.store) { return owner.close_step(&mut partition.store, grant).map(|step| match step { PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), other => other }).map_err(|fault| fault.message); }
             drop(partition.disposer.take());
@@ -1663,6 +1657,11 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPackLoad for TypedWindowConfigPackL
 
     fn reject_stale(&mut self) -> WindowConfigPackLoadStep {
         TypedWindowConfigPackLoad::reject_stale(self)
+    }
+
+    fn demand_bytes(&self) -> usize {
+        let envelope_id = <O::State as store::ArtifactDsl>::envelope_id();
+        12usize.saturating_add(envelope_id.len()).saturating_add(".pack v1".len()).saturating_add(std::mem::size_of::<RetainedWindowConfigTypedState<O>>())
     }
 
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { TypedWindowConfigPackLoad::retirement_demands(self, body) }

@@ -8,7 +8,8 @@ use crate::Generation3dSnapshot;
 
 //#region 🔖️RotateTransforms
 /// 🔃️ Composes the rotation by `angle` radians about the world axis `(ax, ay, az)` after every addressed operator's own.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RotateTransforms {
     pub targets: Vec<String>,

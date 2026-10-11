@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::patch_layer::{patch_value_json, raster_patch_layer_operations};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "patch-layers")]
 pub struct PatchLayers {
     pub layer_ids: Vec<String>,

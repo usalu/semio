@@ -88,7 +88,7 @@ pub struct EquationOptionalSeed {
 }
 
 /// 🩹 Field patch of one graph node; every present slot is the new value of exactly that field.
-#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct EquationNodePatch {
     pub label: Option<String>,
@@ -97,7 +97,7 @@ pub struct EquationNodePatch {
 }
 
 /// 🩹 Field patch of one graph edge.
-#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct EquationEdgePatch {
     pub source: Option<String>,

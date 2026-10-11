@@ -13,7 +13,7 @@ use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "delete-vfs-node")]
 pub struct DeleteVirtualFileSystemNode {
     pub node_id: String,
@@ -46,5 +46,5 @@ pub fn handle_with_row(payload: &DeleteVirtualFileSystemNode, _doc: &ArtifactVie
         return Err(Fault::new(FaultOrigin::App, "s.home.delete-vfs-node.unknown-local-studio", format!("no local studio {space_id} is listed in Home")));
     };
     let unkeep = (!entry.backbone_uri.is_empty()).then(|| Effect::ReplayShellCommand { action_id: "os.local-catalog.retire".into(), args: Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "documentId": space_id }))) });
-    Ok(Emit { config_mutations: vec![HomeConfigMutation::RetireLocalStudio { space_id: space_id.to_owned() }], effects: unkeep.into_iter().collect(), ..Default::default() })
+    Ok(Emit { config_mutations: vec![HomeConfigMutation::RetireLocalStudio(crate::editor::home::config::RetireLocalStudio { space_id: space_id.to_owned() })], effects: unkeep.into_iter().collect(), ..Default::default() })
 }

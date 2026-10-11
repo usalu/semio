@@ -87,8 +87,9 @@ pub(crate) mod context {
     
     /// ♻️ Retires a seed envelope through its bounded owner retirement; an envelope may never reach `Drop` owning.
     pub fn retire_envelope(envelope: store::ArtifactEnvelope<WiresSnapshot, WiresMutation>) {
-        let mut retirement = store::retire_document_envelope(envelope, std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<WiresSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<WiresMutation>::default()));
-        while !matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("seed envelope retirement"), store::SnapshotRetirementStep::Complete) {}
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::retire_document_envelope_birth_bytes::<WiresSnapshot, WiresMutation>(), maximum_depth: 4, ..Default::default() };
+        let (mut retirement, _) = store::retire_document_envelope(envelope, std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<WiresSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<WiresMutation>::default()), grant).map_err(|(error, ..)| error).expect("seed envelope retirement admission");
+        store::test_support::drive_retirement(retirement.as_mut()).expect("seed envelope retirement");
         assert!(retirement.terminal_is_empty(), "seed envelope retires completely");
     }
     

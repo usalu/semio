@@ -12,14 +12,14 @@ use std::collections::BTreeMap;
 
 //#region 🔖️State
 /// 🫧️ Every open gumball gesture of one FEM artifact instance, by owning window id.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct FemGumballTransient {
     pub gestures: BTreeMap<String, FemGumballGesture>,
 }
 
 /// 💾️ One window's in-flight gumball gesture.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct FemGumballGesture {
     pub states: Vec<String>,
@@ -31,7 +31,7 @@ pub struct FemGumballGesture {
 }
 
 /// 🧷️ One provisional entry of the open transaction, its mutation in value form.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct FemGumballEntry {
     pub key: String,

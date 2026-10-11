@@ -12,7 +12,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🛠️ Full initial payload for a new [`WorkshopMachine`] installed into the document's workshop.
 /// `index` is carried for label/provenance purposes only — the workshop's `machines` list has no
 /// user-meaningful order, so the diff always appends.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct CreateMachine {

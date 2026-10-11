@@ -895,6 +895,10 @@ impl Drop for JobPayloadPageGrant<'_> {
 mod payload_retirement;
 pub use payload_retirement::{close_step_outcome_slot,step_outcome_slot_retirement_demands,JobOutcomeSlot,JobPayloadSlot};
 pub use payload_retirement::WorkerJobSource;
+#[path="🏃️work/🎟️grant/🦀️.rs"]
+pub mod retained_work;
+#[path="♻️session-return/🦀️.rs"]
+mod session_return;
 #[path="📬️outcome/🤝️loan/🦀️.rs"]
 mod outcome_loan;
 pub use outcome_loan::{JobOutcomeAdmission,JobOutcomeBorrow,drive_step};
@@ -947,7 +951,7 @@ pub struct StepContext<'a> {
 }
 
 impl<'a> StepContext<'a> {
-    fn with_original_worker_authority(operation:OperationId,generation:Generation,budget:StepBudget,cancel:&'a CancelToken,now_us:fn()->Option<u64>,clock:ClockStride,preview_sequence:&'a mut u64,retained_progress:&'a mut RetainedCloneProgress,payload_ledger:&'a Arc<JobPayloadOperationLedger>)->Result<Self,ValueError>{if payload_ledger.operation!=operation||payload_ledger.generation!=generation||!retained_progress.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"worker context requires its original admitted identity ledger and recipient"))}Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(clock),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::OriginalWorker(payload_ledger),payload_page_granted:false})}
+    fn with_original_worker_authority(operation:OperationId,generation:Generation,budget:StepBudget,cancel:&'a CancelToken,now_us:fn()->Option<u64>,clock:ClockStride,preview_sequence:&'a mut u64,retained_progress:&'a mut RetainedCloneProgress,payload_ledger:&'a Arc<JobPayloadOperationLedger>)->Result<Self,ValueError>{if payload_ledger.operation!=operation||payload_ledger.generation!=generation||!retained_progress.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"worker context requires its original admitted identity ledger and recipient"))}Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(clock),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::OriginalWorker(payload_ledger),payload_page_granted:false,retained_work:retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK)})}
     pub fn new(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64,retained_progress:&'a mut RetainedCloneProgress) -> StepContext<'a> {
         StepContext::with_payload_ledger(operation, generation, budget, cancel, now_us, ClockStride::new(), preview_sequence, Arc::new(JobPayloadOperationLedger::new(operation, generation)),retained_progress)
     }
@@ -957,7 +961,7 @@ impl<'a> StepContext<'a> {
         assert_eq!(payload_ledger.operation, operation, "job payload ledger operation must match its step context");
         assert_eq!(payload_ledger.generation, generation, "job payload ledger generation must match its step context");
         assert!(retained_progress.fits(budget.retained),"original job recipient exceeds its incoming retained grant");
-        StepContext { retained:budget.retained, retained_progress, operation, generation, fuel_remaining: budget.fuel, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel:StepCancelReference::Owned(cancel), stage: "initial", preview_sequence, payload_ledger:JobPayloadLedgerReference::Owned(payload_ledger), payload_page_granted: false }
+        StepContext { retained:budget.retained, retained_progress, operation, generation, fuel_remaining: budget.fuel, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel:StepCancelReference::Owned(cancel), stage: "initial", preview_sequence, payload_ledger:JobPayloadLedgerReference::Owned(payload_ledger), payload_page_granted: false, retained_work: retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK) }
     }
 
     /// 🤝️ Borrows the original paid ledger and cancellation while preserving the caller's exact recipient.
@@ -965,7 +969,7 @@ impl<'a> StepContext<'a> {
         let Some(original)=authority.original()else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original payload authority has already closed"))};
         if original.operation!=operation||original.generation!=generation{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original payload authority identity does not match caller turn"))}
         if !retained_progress.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job recipient exceeds incoming retained grant"))}
-        Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(ClockStride::new()),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::Borrowed(authority),payload_page_granted:false})
+        Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(ClockStride::new()),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::Borrowed(authority),payload_page_granted:false,retained_work:retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK)})
     }
 
     /// 🎟️ Preserves the original caller depth and independently unspent physical credits.
@@ -2026,7 +2030,7 @@ impl<J> WorkerJobAuthorityOwner<J> {
     fn original_authority_admission_demand()->RetirementDemand{RetirementDemand{copy_bytes:b"job-session.terminal-fault".len(),capacity_bytes:size_of::<WorkerJobAuthority<J>>()+semio_framework_value::shared_retirement_allocation_bytes::<JobPayloadOperationLedger>()+JOB_PAYLOAD_PAGE_BYTES,depth:1,..Default::default()}}
     fn try_admit_owned(job:&mut Option<J>,params:&mut Option<BatchJobParams>,control:&mut impl WorkerJobAdmissionControl)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
         let original=params.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original authority admission requires parameters"))?;
-        if job.is_none()||control.admission_identity()!=(original.operation,original.generation){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original authority admission requires matching source identity"))}
+        if job.is_none()||control.admission_identity()!=(original.operation,original.generation)||!control.admission_cancel().is_none_or(|token|token.is_same_node(&original.cancel)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original authority admission requires matching source identity"))}
         let mut demand=Self::original_authority_admission_demand();demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<J>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original authority source extent overflow"))?;let grant=control.admission_grant()?;
         if !control.admission_is_open()||original.cancel.is_cancelled_now()||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(None)}
         if JOB_PAYLOAD_PROCESS_OWNED_BYTES.try_update(Ordering::AcqRel,Ordering::Acquire,|value|value.checked_add(JOB_PAYLOAD_PAGE_BYTES).filter(|value|*value<=JOB_PAYLOAD_PROCESS_BYTES)).is_err(){return Ok(None)}
@@ -2756,8 +2760,8 @@ impl<J> Drop for WorkerJobSessionInner<J> {
     }
 }
 
-struct WorkerJobSessionArc<J>(Option<Arc<WorkerJobSessionInner<J>>>);
-impl<J> std::ops::Deref for WorkerJobSessionArc<J>{type Target=Arc<WorkerJobSessionInner<J>>;fn deref(&self)->&Self::Target{self.0.as_ref().expect("live session retains its original Arc")}}
+struct WorkerJobSessionArc<J>(Option<session_return::SessionHandle<J>>);
+impl<J> std::ops::Deref for WorkerJobSessionArc<J>{type Target=session_return::SessionHandle<J>;fn deref(&self)->&Self::Target{self.0.as_ref().expect("live session retains its original Arc")}}
 
 pub struct WorkerJobSession<J: InteractiveJob + 'static> {
     inner: WorkerJobSessionArc<J>,
@@ -2795,13 +2799,13 @@ unsafe fn pump_worker_job_retirement_node<J:InteractiveJob+'static>(pointer:*mut
     match worker_job_close_step(inner,grant){
         WorkerJobCloseStep::Complete{progress} if progress!=RetainedCloneProgress::default()=>WorkerJobCloseStep::Pending{progress},
         WorkerJobCloseStep::Complete{..}=>{
-            if Arc::strong_count(inner)!=1||Arc::weak_count(inner)!=0||unsafe{(&*inner.waker.get()).is_some()}{return WorkerJobCloseStep::Blocked}
+            if !inner.is_unique()||unsafe{(&*inner.waker.get()).is_some()}{return WorkerJobCloseStep::Blocked}
             if let Some(step)=worker_wake_retirement::close_session_retained_wake(inner,grant){return step}
             let copy_bytes=0;
             let arc_bytes=std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<WorkerJobSessionInner<J>>()).expect("worker original Arc layout").0.pad_to_align().size();
             let released_bytes=arc_bytes;
             if grant.maximum_items==0||grant.maximum_copy_bytes<copy_bytes||grant.maximum_release_bytes<released_bytes||grant.maximum_depth==0{return WorkerJobCloseStep::Pending{progress:RetainedCloneProgress::default()}}
-            match Arc::try_unwrap(node.inner.take().unwrap()){
+            match node.inner.take().unwrap().try_return(){
                 Ok(inner)=>{drop(inner);WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,released_bytes,..RetainedCloneProgress::default()}}},
                 Err(inner)=>{node.inner=Some(inner);WorkerJobCloseStep::Blocked}
             }
@@ -3104,7 +3108,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
 
     pub fn try_admit_owned(job:&mut Option<J>,params:&mut Option<BatchJobParams>,control:&mut impl WorkerJobAdmissionControl)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
         let original=params.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"session admission requires original parameters"))?;
-        if job.is_none()||control.admission_identity()!=(original.operation,original.generation){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session admission requires the same original job and identity"))}
+        if job.is_none()||control.admission_identity()!=(original.operation,original.generation)||!control.admission_cancel().is_none_or(|token|token.is_same_node(&original.cancel)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session admission requires the same original job and identity"))}
         let demand=Self::owned_admission_demand()?;let grant=control.admission_grant()?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth||original.cancel.is_cancelled_now()||!control.admission_is_open(){return Ok(None)}
         let Some(session)=Self::birth_storage(original.operation,original.generation,control)?else{return Ok(None)};
@@ -3124,7 +3128,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         if storage.try_reserve_exact(1).is_err(){JOB_PAYLOAD_PROCESS_OWNED_BYTES.fetch_sub(JOB_PAYLOAD_PAGE_BYTES,Ordering::AcqRel);WORKER_JOB_RETIREMENT_SLOTS[slot].store(std::ptr::null_mut(),Ordering::Release);control.receive_admission(RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()})?;return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original session storage reservation refused"))}
         let mut authority=WorkerJobAuthorityOwner::write_pending_storage(storage,operation,generation);
         authority.close_stage=3;
-        let inner = Arc::new(WorkerJobSessionInner {
+        let inner = session_return::SessionHandle::new(WorkerJobSessionInner {
             generation,
             phase: AtomicU8::new(SESSION_IDLE),
             authority: ManuallyDrop::new(std::cell::UnsafeCell::new(Some(authority))),
@@ -3381,10 +3385,10 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         let demand=match self.original_session_arc_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return WorkerJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return WorkerJobCloseStep::Pending{progress:Default::default()}}
         let original=self.inner.0.as_ref().expect("terminal session retains original Arc");
-        if Arc::strong_count(original)!=1||Arc::weak_count(original)!=0||unsafe{(&*original.waker.get()).is_some()}{return WorkerJobCloseStep::Blocked}
+        if !original.is_unique()||unsafe{(&*original.waker.get()).is_some()}{return WorkerJobCloseStep::Blocked}
         if let Some(step)=worker_wake_retirement::close_session_retained_wake(original,grant){return step}
         self.terminal_step_end_us=self.last_step_end_us();
-        match Arc::try_unwrap(self.inner.0.take().unwrap()){
+        match self.inner.0.take().unwrap().try_return(){
             Ok(original)=>{drop(original);WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}}},
             Err(original)=>{self.inner.0=Some(original);WorkerJobCloseStep::Blocked},
         }

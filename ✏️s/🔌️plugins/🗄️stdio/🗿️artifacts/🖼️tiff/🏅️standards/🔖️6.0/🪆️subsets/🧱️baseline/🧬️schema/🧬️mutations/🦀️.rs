@@ -7,7 +7,8 @@ pub mod set_bits_per_sample;
 #[path = "🌈️set-photometric-interpretation/🦀️.rs"]
 pub mod set_photometric_interpretation;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = TiffSnapshot, diff = TiffDiff, schema = "TiffBaselineMutation")]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 pub enum TiffBaselineMutation {

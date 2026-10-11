@@ -4,7 +4,7 @@ use crate::{Point2, View, ViewKind};
 
 fn demo() -> (ModelSnapshot, ModelInference) {
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, Clone::clone);
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     (snapshot, inference)
 }
 
@@ -46,7 +46,7 @@ async fn the_window_shows_the_configured_view_else_the_first_vertical_one() {
 async fn a_plane_beside_the_model_cuts_nothing() {
     let (mut snapshot, _) = demo();
     snapshot.views.insert("v-beside".into(), View::through("bldg-1", "Beside", ViewKind::Section, crate::ViewPlane { start: Point2 { x: -1.0, y: 20.0 }, end: Point2 { x: 9.0, y: 20.0 } }));
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, Clone::clone);
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     assert_eq!(inference.view_linework["v-beside"].lines.area_of(PlanKind::SectionCut), 0.0);
 }
 

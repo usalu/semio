@@ -2,7 +2,8 @@
 use crate::{StructuralLoad, StructuralLoadPatch, ModelDiff, ModelMutation, ModelSnapshot};
 use crate::{StructuralLocation, Restraints, Point3};
 use protocol::{MutationKind, SemanticDescriptor};
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetLoad { pub id: String, #[value(default, skip_serializing_if = "Option::is_none")] pub name: Option<String>, #[value(default, skip_serializing_if = "Option::is_none")] pub load_case: Option<String>, #[value(default, skip_serializing_if = "Option::is_none")] pub member: Option<String>, #[value(default, skip_serializing_if = "Option::is_none")] pub location: Option<StructuralLocation>, #[value(default, skip_serializing_if = "Option::is_none")] pub force: Option<Point3>, #[value(default, skip_serializing_if = "Option::is_none")] pub moment: Option<Point3>, }
 impl SetLoad { pub fn patch(&self) -> StructuralLoadPatch { StructuralLoadPatch { name: self.name.clone(), load_case: self.load_case.clone(), member: self.member.clone(), location: self.location.clone(), force: self.force.clone(), moment: self.moment.clone() } } pub fn from_patch(id: String, patch: StructuralLoadPatch) -> Self { Self { id, name: patch.name, load_case: patch.load_case, member: patch.member, location: patch.location, force: patch.force, moment: patch.moment } } }

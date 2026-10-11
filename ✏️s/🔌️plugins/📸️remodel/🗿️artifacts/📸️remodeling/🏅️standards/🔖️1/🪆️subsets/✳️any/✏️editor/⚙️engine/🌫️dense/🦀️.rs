@@ -13,7 +13,7 @@ const MAX_INTERACTIVE_FUSED_POINTS: usize = 512;
 
 // #region 🔖️PointCloud
 /// 🏷️ Per-point semantic classification label produced by ground/planar segmentation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum PointClass {
     Unclassified,
     Ground,
@@ -25,7 +25,7 @@ pub enum PointClass {
 /// ☁️ 3D point cloud as struct-of-arrays: `normals`/`colors`/`confidence`/`classification` are each
 /// either empty (attribute unset) or exactly `positions.len()` entries, index-aligned with
 /// `positions`.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct PointCloud {
     pub positions: Vec<[f64; 3]>,
     pub normals: Vec<[f32; 3]>,
@@ -70,7 +70,7 @@ impl PointCloud {
 /// or a non-finite value marks a pixel as having no valid estimate. [`DepthMap::get`] returns
 /// `None` for such pixels as well as for out-of-bounds coordinates; `normal`/`confidence` at
 /// invalid pixels carry no meaning and callers should gate on `get` first.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct DepthMap {
     pub width: u32,
     pub height: u32,
@@ -276,7 +276,7 @@ fn neighbor_offsets(x: u32, y: u32, width: u32, height: u32) -> Vec<(u32, u32)> 
 }
 
 /// ⚙️ Tuning knobs for [`patchmatch_mvs`].
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct PatchMatchConfig {
     pub window_radius: i32,
     pub iterations: u32,
@@ -399,7 +399,7 @@ fn publishes(cost: f32, confidence_floor: Option<f32>) -> bool {
 }
 
 /// 🧭️ Fuel-bounded phases for the production PatchMatch path.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum PatchMatchPhase {
     Allocate,
     Initialize,
@@ -416,6 +416,7 @@ pub enum PatchMatchPhase {
 /// run's step count.
 pub const PATCH_MATCH_BULK_PIXELS_PER_UNIT: usize = 4_096;
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct PatchMatchPreparation {
     width: u32,
     height: u32,
@@ -899,6 +900,7 @@ pub fn fuse_depth_maps(views: &[(remodeling_camera::CameraPose, remodeling_camer
 
 /// 🧩️ Per-pixel fusion checkpoint. A source pixel and each cross-view consistency comparison are
 /// separate fuel units, so neither camera count nor raster size can create an opaque fusion turn.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct FusionPreparation {
     view: usize,
     pixel: usize,
@@ -1052,7 +1054,7 @@ const TSDF_MAX_WEIGHT: f32 = 100.0;
 
 /// 🧊️ One `8x8x8` chunk of a [`TsdfVolume`]'s hashed sparse grid: per-voxel signed distance and
 /// accumulated integration weight, row-major within the block (`(lz * 8 + ly) * 8 + lx`).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 struct TsdfBlock {
     sdf: Vec<f32>,
     weight: Vec<f32>,
@@ -1071,7 +1073,7 @@ impl TsdfBlock {
 /// 🧊️ Truncated signed distance field over a hashed grid of `8x8x8` voxel blocks (Curless-Levoy
 /// weighted integration), keyed by block coordinate so only blocks actually touched by an
 /// integrated depth map ever get allocated.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct TsdfVolume {
     pub voxel_size: f64,
     pub truncation: f64,
@@ -1244,6 +1246,7 @@ pub const TSDF_BLOCK_RETAINED_BYTES: usize = TSDF_BLOCK_VOXELS * 2 * size_of::<f
 
 /// 🧊️ Cursor for one depth-map integration. A continuation performs at most the requested number of
 /// ray samples; sparse blocks use an ordered map so insertion never triggers a whole-table rehash.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct TsdfIntegrationPreparation {
     pixel: usize,
     ray_step: i64,

@@ -50,13 +50,13 @@ fn selection_mask_cancellation_releases_private_work_without_publication() {
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     document.layers.push(crate::standards::v1::subsets::any::schema::create_pixel_layer("Paint",256,256));
     let id=crate::standards::v1::subsets::any::schema::layer_node_id(&document.layers[0]).to_owned();
-    let command=MaskFromSelection {layer_id:id,expected_image_key:None,selection:vec![crate::RasterSelectionSpan { start: 0, length: 65536, coverage: 255 }]};
+    let command=MaskFromSelection {layer_id:id,expected_image_key:None,selection:vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 0, length: 65536, coverage: 255 }]};
     let mut work=MaskFromSelectionWork {candidate:Some(prepare(&command,&document).unwrap()),..Default::default()};
     assert!(!work.candidate.as_mut().unwrap().advance(32768));
     work.begin_close();
     assert!(!work.terminal_is_empty());
-    assert!(matches!(work.close_step(0,0),semio_framework_job::InteractiveJobCloseStep::Blocked));
-    assert!(matches!(work.close_step(1,262144),semio_framework_job::InteractiveJobCloseStep::Complete));
+    assert!(matches!(work.close_step(semio_framework_value::retained_clone::RetainedCloneGrant::default()),semio_framework_job::InteractiveJobCloseStep::Pending {..}));
+    assert!(matches!(work.close_step(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:0,maximum_release_bytes:262144,maximum_depth:1}),semio_framework_job::InteractiveJobCloseStep::Complete {..}));
     assert!(work.terminal_is_empty());
     assert!(document.assets.is_empty());
     assert!(matches!(&document.layers[0],RasterLayerNode::Pixel {mask:None,image_key:None,..}));
@@ -68,7 +68,7 @@ fn protected_pixels_refuse_before_preparation() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for id in ["locked-pixel","inherited-pixel"] {
-        let command=MaskFromSelection {layer_id:id.into(),expected_image_key:None,selection:vec![crate::RasterSelectionSpan { start: 0, length: 1, coverage: 255 }]};
+        let command=MaskFromSelection {layer_id:id.into(),expected_image_key:None,selection:vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 0, length: 1, coverage: 255 }]};
         assert!(prepare(&command,&document).is_err());
     }
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);

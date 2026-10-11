@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "presence-heartbeat")]
 pub struct PresenceHeartbeat {
     pub artifact_id: String,
@@ -18,7 +18,7 @@ pub struct PresenceHeartbeat {
 }
 
 pub fn handle(payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    Ok(Emit { config_mutations: vec![SpaceIndexConfigMutation::SetArtifactPresence { artifact_id: payload.artifact_id.clone(), actors_csv: payload.actors_csv.clone() }], ..Default::default() })
+    Ok(Emit { config_mutations: vec![SpaceIndexConfigMutation::SetArtifactPresence(crate::editor::space_index::config::ArtifactPresenceSetting { artifact_id: payload.artifact_id.clone(), actors_csv: payload.actors_csv.clone() })], ..Default::default() })
 }
 
 //#region 🧪️Tests

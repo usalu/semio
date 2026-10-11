@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { lstatSync, mkdirSync, writeFileSync, existsSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import {observePhysicalFileV1,readPhysicalFileV1,type PhysicalFileClaimV1,type FileObservationControlV1} from "../../../🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
+import {decodeCargoProvenanceV1,encodeCargoProvenanceV1,type CargoProvenanceV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 
 export type TrustedCatalogByteClaimV1 = Readonly<{relativePath:string;sha256:string;byteLength:number}>;
 export type ActorProducerV1 = Readonly<{schema:"semio.os.closed-browser-actor-producer/v1";actor:TrustedCatalogByteClaimV1;component:TrustedCatalogByteClaimV1;descriptor:TrustedCatalogByteClaimV1;policyCanonical:string;policySha256:string;runtime:PhysicalFileClaimV1;compiler:PhysicalFileClaimV1;inputs:readonly Readonly<{logicalPath:string;path:string;sha256:string;byteLength:number}>[]}>;
@@ -65,8 +66,11 @@ export function trustedCatalogDataRootV1(repoRoot:string,mode:"development"|"sta
 
 /** 📦️ Records actual final custody while preserving the original completed compiler observation. */
 export async function retainTrustedCargoInvocationV1(source:string,destination:string,stagedPaths:ReadonlyMap<string,string>,control:FileObservationControlV1):Promise<PhysicalFileClaimV1> {
-  const observation=await parsedClaim(source,await observePhysicalFileV1(source,control),control);
-  if(observation.version!==1||observation.status!==0||observation.cancelled!==false||!Array.isArray(observation.units)||observation.units.length===0)throw new Error("trusted Cargo producer did not complete");
-  for(const [original,staged]of stagedPaths){const matches=observation.units.flatMap((unit:any)=>unit.artifacts.filter((row:any)=>row.path===original));if(matches.length!==1)throw new Error("trusted staged artifact lacks one original compiler witness");const claimed=await observePhysicalFileV1(staged,control);if(claimed.sha256!==matches[0].sha256)throw new Error("trusted staged artifact differs from compiler bytes");matches[0].stagedPath=staged;matches[0].stagedSha256=claimed.sha256;}
-  mkdirSync(dirname(destination),{recursive:true,mode:0o700});writeFileSync(destination,JSON.stringify(observation)+"\n",{flag:"wx",mode:0o600});return observePhysicalFileV1(destination,control);
+  const claim=await observePhysicalFileV1(source,control),input=await bytes(source,control);
+  let observation:CargoProvenanceV1;
+  try{if(input.length!==claim.byteLength||createHash("sha256").update(input).digest("hex")!==claim.sha256)throw new Error("trusted producer parsed bytes changed");observation=decodeCargoProvenanceV1(new TextDecoder("utf-8",{fatal:true}).decode(input));}finally{input.fill(0);}
+  if(observation.status!==0||observation.cancelled!==false||observation.units.length===0)throw new Error("trusted Cargo producer did not complete");
+  let units=observation.units;
+  for(const [original,staged]of stagedPaths){const matches=units.flatMap(unit=>unit.artifacts.filter(row=>row.path===original));if(matches.length!==1)throw new Error("trusted staged artifact lacks one original compiler witness");const claimed=await observePhysicalFileV1(staged,control);if(claimed.sha256!==matches[0]!.sha256)throw new Error("trusted staged artifact differs from compiler bytes");units=units.map(unit=>({...unit,artifacts:unit.artifacts.map(row=>row.path===original?{...row,stagedPath:staged,stagedSha256:claimed.sha256}:row)}));}
+  mkdirSync(dirname(destination),{recursive:true,mode:0o700});writeFileSync(destination,await encodeCargoProvenanceV1({...observation,units}),{flag:"wx",mode:0o600});return observePhysicalFileV1(destination,control);
 }

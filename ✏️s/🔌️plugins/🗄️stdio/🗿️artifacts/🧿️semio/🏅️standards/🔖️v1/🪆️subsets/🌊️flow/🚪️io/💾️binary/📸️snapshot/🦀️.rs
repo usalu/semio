@@ -423,9 +423,12 @@ impl MemberSnapshotOpenOperation for SemioFlowSnapshotDecode {
         })
     }
 
-    fn step(&mut self, cx: &mut StepContext<'_>) -> MemberSnapshotOpenStep {
+    fn step(&mut self, cx: &mut StepContext<'_>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> MemberSnapshotOpenStep {
         match SemioFlowSnapshotDecode::step(self, cx) {
-            SemioFlowSnapshotDecodeStep::Pending { consumed_bytes } => MemberSnapshotOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: consumed_bytes as u64, total: self.retained_input_bytes() as u64 }),
+            SemioFlowSnapshotDecodeStep::Pending { consumed_bytes } => MemberSnapshotOpenStep::Pending(store::MemberSnapshotOpenProgress {
+                opening: MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: consumed_bytes as u64, total: self.retained_input_bytes() as u64 },
+                retained_progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: usize::from(consumed_bytes > 0 && grant.maximum_items > 0), copied_bytes: consumed_bytes.min(grant.maximum_copy_bytes), ..Default::default() },
+            }),
             SemioFlowSnapshotDecodeStep::Ready => MemberSnapshotOpenStep::Ready,
             SemioFlowSnapshotDecodeStep::Rejected(diagnostic) => MemberSnapshotOpenStep::Rejected(diagnostic),
         }

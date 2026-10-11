@@ -2,7 +2,7 @@
 use framework_schema::ArtifactSchema;
 use semio_framework_artifact_flow_flow::CameraJson;
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.flow.flow.presence")]
 pub struct FlowPresence {
@@ -11,3 +11,5 @@ pub struct FlowPresence {
     #[state(presence)]
     pub camera: CameraJson,
 }
+
+impl store::ArtifactPresenceSnapshot for FlowPresence {}

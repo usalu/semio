@@ -12,6 +12,10 @@ role = "artifact"
 [lints]
 workspace = true
 
+[[test]]
+name = "preparation_law"
+path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️preparation-law/🦀️.rs"
+
 [lib]
 path = "../../🦀️.rs"
 

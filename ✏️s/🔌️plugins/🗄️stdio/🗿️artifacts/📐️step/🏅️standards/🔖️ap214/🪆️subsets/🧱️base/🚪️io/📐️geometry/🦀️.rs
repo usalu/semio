@@ -453,7 +453,8 @@ fn compute_knot_multiplicities(knots: &[f64]) -> (Vec<u32>, Vec<f64>) {
 
 // #region 🔖️Parse
 
-#[derive(Debug)]
+#[derive(Debug, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 struct StepEntity {
     entity_type: String,
     attrs: String,

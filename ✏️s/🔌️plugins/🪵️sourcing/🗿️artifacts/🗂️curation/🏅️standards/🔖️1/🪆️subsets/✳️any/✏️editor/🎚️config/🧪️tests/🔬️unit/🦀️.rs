@@ -37,20 +37,20 @@ async fn round_trip(config: &SourcingCurationConfig, operation: &SourcingCuratio
 #[semio_framework_async_macros::async_test]
 async fn config_mutations_round_trip_every_variant() {
     let config = sample_config();
-    round_trip(&config, &SourcingCurationConfigMutation::SetFilterQuery { value: "kvh".into() }).await;
-    round_trip(&config, &SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["windows".into(), "slabs".into()] }).await;
-    round_trip(&config, &SourcingCurationConfigMutation::SetFilterTypology { path: vec!["slabs".into()] }).await;
-    round_trip(&config, &SourcingCurationConfigMutation::SetFilterMinAvailability { value: 12 }).await;
-    round_trip(&config, &SourcingCurationConfigMutation::SetSort { sort: None }).await;
-    round_trip(&config, &SourcingCurationConfigMutation::SetContributions { json: "[]".into() }).await;
+    round_trip(&config, &SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "kvh".into() })).await;
+    round_trip(&config, &SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids: vec!["windows".into(), "slabs".into()] })).await;
+    round_trip(&config, &SourcingCurationConfigMutation::SetFilterTypology(SetFilterTypologyEdit { path: vec!["slabs".into()] })).await;
+    round_trip(&config, &SourcingCurationConfigMutation::SetFilterMinAvailability(SetFilterMinAvailabilityEdit { value: 12 })).await;
+    round_trip(&config, &SourcingCurationConfigMutation::SetSort(SetSortEdit { sort: None })).await;
+    round_trip(&config, &SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: "[]".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn config_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterQuery { value: "kvh".into() });
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["beams".into(), "slabs".into()] });
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterTypology { path: vec!["beams".into(), "steel".into()] });
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterMinAvailability { value: 7 });
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort { sort: Some(TableSort { column_id: "name".into(), direction: SortDirection::Asc }) });
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort { sort: None });
+    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "kvh".into() }));
+    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids: vec!["beams".into(), "slabs".into()] }));
+    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterTypology(SetFilterTypologyEdit { path: vec!["beams".into(), "steel".into()] }));
+    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterMinAvailability(SetFilterMinAvailabilityEdit { value: 7 }));
+    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort(SetSortEdit { sort: Some(TableSort { column_id: "name".into(), direction: SortDirection::Asc }) }));
+    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort(SetSortEdit { sort: None }));
 }

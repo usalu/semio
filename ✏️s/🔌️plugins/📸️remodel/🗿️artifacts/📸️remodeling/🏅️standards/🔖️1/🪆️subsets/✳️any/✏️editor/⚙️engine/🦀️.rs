@@ -173,7 +173,7 @@ pub fn raster_to_png_asset(raster: &remodeling_geo::Raster) -> ImageAsset {
 }
 
 //#region 🔖️BoundedRasterPng
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum RasterPngPhase {
     MinMax,
     Header,
@@ -195,6 +195,7 @@ const RASTER_PNG_DURABLE_CHUNK_BYTES: usize = 4_096;
 /// 🗜️ Resumable 16-bit grayscale PNG writer using stored DEFLATE blocks. Each call scans at most
 /// `cell_budget` cells or emits at most the corresponding fixed row window; no full raster-sized
 /// normalization or compression buffer is ever allocated.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct RasterPngPreparation {
     raster: remodeling_geo::Raster,
     phase: RasterPngPhase,

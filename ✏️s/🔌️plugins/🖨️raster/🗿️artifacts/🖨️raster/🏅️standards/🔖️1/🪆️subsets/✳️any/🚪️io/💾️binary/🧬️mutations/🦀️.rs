@@ -31,7 +31,7 @@ pub(crate) mod unit_tests;
 
 mod native_codec {
 use super::*;
-pub use crate::standards::v1::subsets::any::io::text::mutations::{RasterMutationDsl,raster_mutation_to_dsl,raster_mutation_from_dsl};
+use crate::standards::v1::subsets::any::io::text::mutations::{RasterMutationDsl,raster_mutation_to_dsl,raster_mutation_from_dsl};
 
 impl protocol::OpBinary for RasterMutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

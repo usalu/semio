@@ -3,7 +3,7 @@
 use super::{JackResultsWindowTransient, JackResultsWindowTransientDiff, JackResultsWindowTransientMutation};
 use crate::ast::QueryResult;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-query-result")]
 #[mutation_leaf(contract = ::protocol)]

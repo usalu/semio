@@ -690,7 +690,7 @@ pub struct DrawingTool {
 impl DrawingTool {
     /// 🚀️ The tool at rest for `utility` (or a command verb), minting from `authoring_seed`.
     pub fn start(tool: &str, authoring_seed: &str) -> Self {
-        let runner = ToolMachineRunner::start(format!("{DRAWING_EDITOR_APP_ID}#{tool}"), protocol::ActorId(authoring_seed.to_string()), (), DrawingToolHost).expect("the canvas tool enters its initial configuration without yielding");
+        let runner = ToolMachineRunner::start(format!("{DRAWING_EDITOR_APP_ID}#{tool}"), protocol::ActorId(authoring_seed.into()), (), DrawingToolHost).expect("the canvas tool enters its initial configuration without yielding");
         Self { runner }
     }
 
@@ -749,7 +749,7 @@ const DRAWING_QUERY_TARGET_BYTES: usize = 8_192;
 const MAX_GESTURE_POINTS: usize = 48;
 static NEXT_TRACE_POINTER_REQUEST: AtomicU64 = AtomicU64::new(20_000);
 
-#[derive(Clone, Copy, Debug, Default, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, Default, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 struct TracePath {
     indices: [u16; TRACE_POINTER_MAX_DEPTH],
     len: u8,
@@ -790,7 +790,7 @@ enum TracePointerWork {
     PublishPick {next:usize},
 }
 
-#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 pub(crate) struct TracePickCandidate {
     generality: i32,
     pub(crate) layer_id: String,
@@ -1575,7 +1575,7 @@ fn advance_trace_pointer(session: &mut DrawingSession, mut job: TracePointerJob,
 }
 //#endregion 🧵️TracePointerContinuation
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "canvas-pointer-down")]
 pub struct CanvasPointerDown {

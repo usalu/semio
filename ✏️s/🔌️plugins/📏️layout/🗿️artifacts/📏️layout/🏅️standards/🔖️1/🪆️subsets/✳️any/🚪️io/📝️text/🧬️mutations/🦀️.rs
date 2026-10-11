@@ -114,7 +114,7 @@ pub fn undo_layout_mutation_json(snapshot_json: &str, mutation_json: &str) -> Re
     use protocol::Mutation;
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
     let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <LayoutMutation as Mutation<LayoutSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?.into_iter().rev() {
+    for undo in <LayoutMutation as Mutation<crate::LayoutSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?.into_iter().rev() {
         let (next, raised) = bridge_step(&current, &undo)?;
         current = next;
         messages.extend(raised);

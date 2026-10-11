@@ -111,8 +111,8 @@ use semio_s_artifact_trinity_jack::Graph;
 use std::collections::BTreeMap;
 use layout::RuleLayout;
 use rule::{Pattern,Lhs,Rhs,Assignment,ParameterKind,ParameterSpec,Rule};
-use derived_construction::*;
-use derived_analysis::*;
+use crate::standards::v1::subsets::any::io::derived_construction::*;
+use crate::standards::v1::subsets::any::io::derived_analysis::*;
 use crate::LayoutPoint;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use semio_framework_graph::manifest::PropertyValue;

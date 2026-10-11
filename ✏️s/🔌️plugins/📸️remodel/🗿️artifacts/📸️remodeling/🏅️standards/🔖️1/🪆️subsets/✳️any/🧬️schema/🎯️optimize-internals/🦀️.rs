@@ -49,7 +49,7 @@ pub fn numeric_jacobian(problem: &impl LeastSquaresProblem, x: &VecD, eps: f64, 
 /// 🛡️ M-estimator loss for iteratively-reweighted least squares: [`RobustLoss::weight`] gives the
 /// per-residual IRLS weight `rho'(r)/r`, [`RobustLoss::rho`] the robust cost itself, both parameterized
 /// by `r2 = r*r` since every caller already has the squared residual on hand.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum RobustLoss {
     Trivial,
     Huber(f64),
@@ -179,7 +179,7 @@ pub fn gauss_newton(problem: &impl LeastSquaresProblem, x0: VecD, cfg: &LmConfig
 // #region 🔖️LevenbergMarquardt
 /// 🎛️ Levenberg-Marquardt tuning: damping schedule, convergence tolerances, and the robust loss
 /// applied per residual (IRLS).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct LmConfig {
     pub max_iters: usize,
     pub initial_lambda: f64,
@@ -263,7 +263,7 @@ pub fn levenberg_marquardt(problem: &impl LeastSquaresProblem, x0: VecD, cfg: &L
 // #region 🔖️SchurBundle
 /// 🌉️ One residual term in a bipartite least-squares problem: touches an "A" block, a "B" block, or
 /// both (a pure prior on one side is expressed by leaving the other index `None`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub struct ResidualTerm {
     pub a_index: Option<usize>,
     pub b_index: Option<usize>,
@@ -561,6 +561,7 @@ pub fn camera_covariances(result: &SchurResult) -> &[MatD] {
 /// 🧮️ [`accumulate_bipartite`] spread over calls: `Jᵀ W J` and `Jᵀ W r` per block plus the robust
 /// cost, `term_budget` residual terms at a time, so a worker step never evaluates more terms than
 /// its budget however large the problem.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct BipartiteAccumulator {
     haa: Vec<MatD>,
     hbb: Vec<MatD>,
@@ -617,7 +618,7 @@ impl BipartiteAccumulator {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum SchurLmPhase {
     /// Accumulating the normal equations at the current parameters.
     Base,
@@ -635,6 +636,7 @@ enum SchurLmPhase {
 /// iteration's base, so an accepted iteration costs one pass over the terms, a rejected one the
 /// candidate pass only. A 36-camera / 1 800-point bundle whose single iteration ran 5 s in one
 /// unit of a debug build now spends ~90 units of a few milliseconds.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct SchurLmPreparation {
     pub a_params: Vec<VecD>,
     pub b_params: Vec<VecD>,

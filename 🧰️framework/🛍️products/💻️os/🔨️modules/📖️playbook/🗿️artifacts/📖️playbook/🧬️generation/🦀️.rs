@@ -2,7 +2,8 @@
 
 use super::GenerationPlayState;
 use crate::os_store as store;
-use semio_framework_value::{DslValue, FromValue, RetirementDemand, ToValue, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use store::ErasedSnapshotRetirement as _;
+use semio_framework_value::{DslValue, FromValue, RetirementDemand, ToValue, ValueError, ValueRefusalKind, retained_clone::RetainedCloneProgress};
 use std::mem::ManuallyDrop;
 use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{RetireOwned,shared::SharedControlledRetirement}};
 use std::sync::Arc;
@@ -70,6 +71,17 @@ impl Drop for GenerationPlayRoot {
         let Some(root)=self.0.as_ref() else {return};
         if root.generations.capacity()==0&&root.selected_generation_id.is_none()&&root.preview_text.is_none(){drop(self.0.take());}
         else if !std::thread::panicking(){panic!("nonempty generation root must be explicitly retired before drop");}
+    }
+}
+impl RetireOwned for GenerationPlayRoot {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::erased_cursor(Box::new(self.into_retirement()))
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        Some(semio_framework_value::retirement::erased_cursor_birth_bytes() + std::mem::size_of::<GenerationRootRetirement>())
+    }
+    fn controlled_retirement_supported() -> bool {
+        true
     }
 }
 //#endregion 🪪️ImmutableRoot

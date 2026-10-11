@@ -23,7 +23,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use store::{Backbone, BackboneMessage, MemoryBackbone};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[artifact(extension = "testkit-txn")]
 pub(crate) struct TxnSnapshot {
     count: i32,
@@ -179,19 +179,19 @@ struct TxnFixtureJob {
 }
 
 impl semio_framework_job::InteractiveJob for TxnFixtureJob {
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         if cx.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
         }
         if cx.should_yield() {
-            return semio_framework_job::StepOutcome::Yield;
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
         }
         if self.owners.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
             self.page += 1;
-            return semio_framework_job::StepOutcome::Yield;
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
         }
         let Some(command) = self.owners.command.as_deref() else {
-            return semio_framework_job::StepOutcome::Cancelled;
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
         };
         let value = self.count + 1;
         let emit = match command {
@@ -200,10 +200,11 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
             TxnCommand::IncrementAndNotify => Emit { artifact_mutations: vec![SetTransactionCountAndNotify { value }.into()], ..Default::default() },
         };
         self.owners.completion.as_ref().expect("transaction fixture completion").complete(Ok(emit), crate::app::EphemeralEmit::default()).expect("one exact transaction completion");
-        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-        })
+        semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        crate::app::artifact_app_laws::fixture_job_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -377,8 +378,9 @@ impl ArtifactApp for TxnApp {
         Some(crate::app::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-txn-artifact-retained"))
     }
 
-    fn build_document_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::ValueError>> {
-        Some(crate::app::mutation_fixture::wire::funded_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-txn-artifact-retained"))
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { crate::app::mutation_fixture::wire::document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>() }
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::app::mutation_fixture::wire::admit_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-txn-artifact-retained", grant))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -427,8 +429,8 @@ fn close_transaction_store_roots(app: &mut VcsArtifactApp<TxnApp>) {
 
 #[semio_framework_async_macros::async_test]
 async fn dispatching_a_mutation_with_foreign_steps_proposes_instead_of_applying() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
-    let draft = assert_proposes_transaction(&mut app, TxnCommand::IncrementAndNotify).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let draft = assert_proposes_transaction(&mut app, TxnCommand::IncrementAndNotify, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     assert_eq!(draft.local_ops.len(), 1, "the local op must still be encoded for the proposal");
     assert_eq!(draft.foreign.len(), 1, "the foreign step must be reported");
     assert_eq!(draft.foreign[0].target.artifact_id, "peer-doc");
@@ -440,14 +442,14 @@ async fn dispatching_a_mutation_with_foreign_steps_proposes_instead_of_applying(
 /// reads `snapshot()`/the history right after its dispatch, which is only true after this.
 async fn dispatch_settled(app: &mut VcsArtifactApp<TxnApp>, command: TxnCommand, actor: &str) -> Result<semio_framework::InvocationResult, Fault> {
     let action_meta = meta(actor);
-    let admitted = app.dispatch_typed(command, &action_meta).await?;
-    settle_registered_typed_operation(app, action_meta.instance_id).await?;
+    let admitted = app.dispatch_typed(command, &action_meta, &mut crate::app::artifact_app_laws::fixture_identity()).await?;
+    settle_registered_typed_operation(app, action_meta.instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await?;
     Ok(admitted)
 }
 
 #[semio_framework_async_macros::async_test]
 async fn plain_command_still_applies_normally() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     dispatch_settled(&mut app, TxnCommand::Increment, "local").await.expect("increment");
     assert_eq!(app.snapshot().unwrap().count, 1);
     assert!(app.take_pending_transaction_proposal().await.is_none(), "a plain command must not stash a proposal");
@@ -456,7 +458,7 @@ async fn plain_command_still_applies_normally() {
 
 #[semio_framework_async_macros::async_test]
 async fn command_cache_inputs_share_immutable_arcs() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     app.refresh_cache().await.expect("refresh cache");
     let (_, cached_snapshot, cached_config, cached_history) = app.cache.as_ref().expect("cache");
     let (snapshot, config, history) = app.command_cache_inputs();
@@ -468,7 +470,7 @@ async fn command_cache_inputs_share_immutable_arcs() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_tick_extends_cached_history_in_place() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local").await.expect("first increment");
     let history_ptr = std::sync::Arc::as_ptr(&app.cache.as_ref().expect("first history cache").3);
     dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local").await.expect("second increment");
@@ -483,18 +485,18 @@ async fn a_streamed_tick_extends_cached_history_in_place() {
 
 #[semio_framework_async_macros::async_test]
 async fn commit_produces_exactly_one_edit_with_group_id_and_origin() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let origin = protocol::MutationOrigin::Transaction { initiator: protocol::ForeignTarget { artifact_id: "initiator-doc".into(), artifact_kind: "s.testkit.txn".into(), dialect: None } };
-    let edit_id = assert_transaction_commits_as_one_edit(&mut app, "txn-1", vec![SetTransactionCount { value: 7 }.into()], origin).await;
+    let edit_id = assert_transaction_commits_as_one_edit(&mut app, "txn-1", vec![SetTransactionCount { value: 7 }.into()], origin, &mut crate::app::artifact_app_laws::fixture_identity()).await;
     assert_eq!(app.snapshot().unwrap().count, 7);
     assert!(!edit_id.is_empty());
-    assert!(app.transaction_commit("txn-1", &meta("local")).await.is_err(), "committing an already-committed txn_id must fail, not double-apply");
+    assert!(app.transaction_commit("txn-1", &meta("local"), &mut crate::app::artifact_app_laws::fixture_identity()).await.is_err(), "committing an already-committed txn_id must fail, not double-apply");
     close_transaction_store_roots(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rollback_leaves_state_untouched() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     dispatch_settled(&mut app, TxnCommand::Increment, "local").await.expect("increment");
     assert_transaction_rollback_leaves_state_untouched(&mut app, "txn-2", vec![SetTransactionCount { value: 99 }.into()]).await;
     assert_eq!(app.snapshot().unwrap().count, 1, "rollback must leave the earlier state exactly as it was");
@@ -516,7 +518,7 @@ async fn rollback_leaves_state_untouched() {
 /// retains that channel owner, and its close is `Blocked` until the attachment is released.
 #[semio_framework_async_macros::async_test]
 async fn generation_mismatch_is_rejected_with_the_frozen_code() {
-    let mut sender = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId("remote".into())).await;
+    let mut sender = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId("remote".into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let (near, mut far) = MemoryBackbone::pair("mem://txn", "mem://txn").await;
     sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
     dispatch_settled(&mut sender, TxnCommand::Increment, "remote").await.expect("the peer edits its own copy");
@@ -529,11 +531,11 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
     assert!(!envelopes.is_empty(), "the peer's edit must reach the channel");
     let operations = protocol::encode_envelopes(&envelopes);
 
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let outcome = app.transaction_prepare("txn-3", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 5 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     assert!(outcome.rejection.is_none());
-    app.ingest_operations(&operations).await.expect("a remote edit lands while the transaction is pending");
-    let error = app.transaction_commit("txn-3", &meta("local")).await.expect_err("commit must reject a stale generation");
+    app.ingest_operations(&operations, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("a remote edit lands while the transaction is pending");
+    let error = app.transaction_commit("txn-3", &meta("local"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("commit must reject a stale generation");
     assert_eq!(error.code.0, "transaction.generation-mismatch");
     app.transaction_rollback("txn-3").await.expect("a rejected commit leaves the transaction pending and explicitly rollback-able");
     sender.detach_backbone().await.expect("sender releases its backbone before close");
@@ -544,7 +546,7 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
 
 #[semio_framework_async_macros::async_test]
 async fn second_prepare_while_pending_is_rejected_instance_busy() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let first = app.transaction_prepare("txn-4a", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     assert!(first.rejection.is_none());
     let second = app.transaction_prepare("txn-4b", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 2 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
@@ -558,7 +560,7 @@ async fn second_prepare_while_pending_is_rejected_instance_busy() {
 /// RefreshUi/ReadDocument/ContextMenu/ephemeral lanes.
 #[semio_framework_async_macros::async_test]
 async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let prepared = app.transaction_prepare("txn-5", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], &[], Some(protocol::MutationOrigin::Owner)).await;
     assert!(prepared.rejection.is_none());
     let blocked = dispatch_settled(&mut app, TxnCommand::Increment, "local").await;
@@ -570,12 +572,12 @@ async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
 
 #[semio_framework_async_macros::async_test]
 async fn undo_and_redo_by_group() {
-    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
-    assert_transaction_commits_as_one_edit(&mut app, "txn-6", vec![SetTransactionCount { value: 42 }.into()], protocol::MutationOrigin::Owner).await;
+    let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    assert_transaction_commits_as_one_edit(&mut app, "txn-6", vec![SetTransactionCount { value: 42 }.into()], protocol::MutationOrigin::Owner, &mut crate::app::artifact_app_laws::fixture_identity()).await;
     assert_eq!(app.snapshot().unwrap().count, 42);
-    app.transaction_undo("txn-6").await.expect("undo the group");
+    app.transaction_undo("txn-6", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("undo the group");
     assert_eq!(app.snapshot().unwrap().count, 0, "undo must revert the transaction's edit");
-    app.transaction_redo("txn-6").await.expect("redo the group");
+    app.transaction_redo("txn-6", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("redo the group");
     assert_eq!(app.snapshot().unwrap().count, 42, "redo must reapply the transaction's edit");
     close_transaction_store_roots(&mut app);
 }

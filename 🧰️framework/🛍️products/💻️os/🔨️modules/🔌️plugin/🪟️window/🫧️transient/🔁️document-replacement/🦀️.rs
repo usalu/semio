@@ -28,13 +28,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let cursor = if closing { &mut self.close_window_retirement_cursor } else { &mut self.maintenance_window_retirement_cursor };
         retire_document_window_registry_step(&mut self.retired_window_transient_stores, cursor, grant, closing)
     }
-}
 
-fn document_window_registry_demands(registries: &ArtifactFixedRegistry<WindowTransientOwnerRegistry>, cursor: usize, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-    let Some((_, generation)) = registries.next_id_from(cursor) else { return Ok(Default::default()) };
-    let mut demand = registries.get(generation).expect("selected window transient retirement remains owned").retirement_demands(body)?;
-    demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "document window retirement depth overflow"))?;
-    Ok(demand)
+    /// 📏️ Quotes the next displaced document window retirement under the same cursor [`Self::retire_document_windows_step`] advances.
+    fn document_windows_retirement_demands(&self, body: usize, closing: bool) -> Result<RetirementDemand, ValueError> {
+        let cursor = if closing { self.close_window_retirement_cursor } else { self.maintenance_window_retirement_cursor };
+        retire_document_window_registry_demands(&self.retired_window_transient_stores, cursor, body, closing)
+    }
 }
 
 /// ♻️ Advances one displaced document's windows fairly even while another owner is blocked.

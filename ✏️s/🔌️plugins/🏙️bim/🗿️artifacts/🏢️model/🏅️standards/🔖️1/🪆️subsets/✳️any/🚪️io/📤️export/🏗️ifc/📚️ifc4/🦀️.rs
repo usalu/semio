@@ -328,7 +328,7 @@ pub struct ModelIntoIfc4;
 impl Serializer<ModelSnapshot> for ModelIntoIfc4 {
     const INTO: Dialect = IFC4_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let (bytes, notes) = export_ifc4(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ModelIntoIfc4: {message}"))))?;
         let diagnostics = notes
             .into_iter()

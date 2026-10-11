@@ -22,7 +22,6 @@ use crate::document::{
 use semio_framework::ToolExecutionContract;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
 use semio_framework_ui_contract as ui;
-use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::tree_group;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
@@ -83,17 +82,6 @@ use semio_framework_plugin::WindowOptions;
 #[macro_export]
 macro_rules! norm_exact_store_ownership {
     () => {
-        fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-            Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-        }
-
-        fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-            Some(semio_framework_plugin::no_config_store_owners())
-        }
-
-        fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-            Some(semio_framework_plugin::no_draft_store_owners())
-        }
 
         fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
             Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
@@ -137,13 +125,6 @@ macro_rules! norm_exact_store_ownership {
 #[macro_export]
 macro_rules! norm_exact_viewer_store_ownership {
     () => {
-        fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-            Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-        }
-
-        fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-            Some(semio_framework_plugin::no_config_store_owners())
-        }
 
         fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
             Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
@@ -1957,9 +1938,6 @@ pub const NORM_RETAINED_TOOL_IDS: &[&str] = &["evaluate", "setSelectedCheckIndex
 pub const NORM_RETAINED_PAYLOAD_SCHEMA: &str = "norm.tool-command.v1";
 /// 🎒️ Wire ceiling for one norm tool dispatch: the largest payload is an inserted row, a few dozen scalar quantities — kilobytes, never megabytes.
 pub const NORM_RETAINED_RAW_BYTES: usize = 524_288;
-/// 🎒️ Real bound for one Artifact-lane edit: a single `change-<field>`/`insert-layer`/`remove-layer`
-/// leaf, the only artifact mutations any norm command emits.
-pub const NORM_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 2_097_152;
 /// 🚦️ Per-tool publication lanes, read straight off the command bodies: `set-field`/`insert-item`/`remove-item`/`apply-remedy` commit
 /// artifact mutations, `evaluate` emits nothing at all (the report is derived on every read), and
 /// `selected-check` writes persisted-local state through the exact Results-window config lane.
@@ -2119,10 +2097,6 @@ impl<A: NormRetainedEditor> semio_framework_plugin::retained_command::ArtifactCo
     fn begin_close(&mut self) {
         self.state.begin_close();
     }
-
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        InteractiveJobCloseStep::Complete
-    }
 }
 
 
@@ -2243,14 +2217,14 @@ impl<A: NormRetainedEditor> semio_framework_plugin::ArtifactOwnedToolJobFactory 
 
 //#region 🔌️EditorOverrides
 /// 📬️ `ArtifactEditor::build_artifact_store_one_item_preparation_factory` for every norm editor —
-/// the framework's own bounded one-item publication authority, the same one trinity, dag and
-/// reasoning bind, whose fold footprint every leaf derives from its schema-declared inverse rows
-/// (`ArtifactStoreOneItemFootprint::for_leaf`, design §20.5).
+/// the store's paged document-lane preparation, the same one trinity binds, whose fold footprint every leaf
+/// derives from its schema-declared inverse rows (`ArtifactStoreOneItemFootprint::for_leaf`, design §20.5).
 pub fn norm_artifact_store_preparation<A: NormRetainedEditor>() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>>
 where
-    A::Mutation: Clone + Sync,
+    A::Snapshot: semio_framework_value::retained_clone::RetainedClone,
+    A::Mutation: Sync + store::ArtifactCanonicalJsonTree,
 {
-    Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<A::Snapshot, A::Mutation>("norm-artifact-retained", NORM_ARTIFACT_STORE_MAXIMUM_BYTES))
+    Some(store::mutation_apply_preparation_factory::<A::Snapshot, A::Mutation>())
 }
 
 /// 🏭️ Declares one norm app's concrete owned factory as a newtype over the shared generic
@@ -2339,6 +2313,7 @@ pub fn build_norm_tool_job<A: NormRetainedEditor>(request: semio_framework_plugi
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
         authoring_seed: request.authoring_seed.clone(),
     };
     let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(

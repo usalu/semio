@@ -208,7 +208,7 @@ impl Default for Puzzle2dPlayRuntime {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle2dConfig {
     #[value(default)]
@@ -344,19 +344,19 @@ impl Puzzle2dConfig {
     pub fn mutations_to(&self, next: &Puzzle2dConfig) -> Vec<Puzzle2dConfigMutation> {
         let mut mutations = Vec::new();
         if self.node_kind_weights != next.node_kind_weights {
-            mutations.push(Puzzle2dConfigMutation::SetNodeKindWeights { value: next.node_kind_weights.clone() });
+            mutations.push(Puzzle2dConfigMutation::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ value: next.node_kind_weights.clone() }));
         }
         if self.handle_kind_weights != next.handle_kind_weights {
-            mutations.push(Puzzle2dConfigMutation::SetHandleKindWeights { value: next.handle_kind_weights.clone() });
+            mutations.push(Puzzle2dConfigMutation::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights{ value: next.handle_kind_weights.clone() }));
         }
         if self.fill_count != next.fill_count {
-            mutations.push(Puzzle2dConfigMutation::SetFillCount { value: next.fill_count });
+            mutations.push(Puzzle2dConfigMutation::SetFillCount(Puzzle2dConfigSetFillCount{ value: next.fill_count }));
         }
         if self.contact_tolerance != next.contact_tolerance {
-            mutations.push(Puzzle2dConfigMutation::SetContactTolerance { value: next.contact_tolerance });
+            mutations.push(Puzzle2dConfigMutation::SetContactTolerance(Puzzle2dConfigSetContactTolerance{ value: next.contact_tolerance }));
         }
         if self.brush_placement_overlap_budget != next.brush_placement_overlap_budget {
-            mutations.push(Puzzle2dConfigMutation::SetBrushPlacementOverlapBudget { value: next.brush_placement_overlap_budget });
+            mutations.push(Puzzle2dConfigMutation::SetBrushPlacementOverlapBudget(Puzzle2dConfigSetBrushPlacementOverlapBudget{ value: next.brush_placement_overlap_budget }));
         }
         mutations
     }
@@ -365,13 +365,49 @@ impl Puzzle2dConfig {
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 🎚️ Payload of [`Puzzle2dConfigMutation::SetNodeKindWeights`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle2dConfigSetNodeKindWeights {
+    pub value: BTreeMap<String, f64>,
+}
+
+/// 🎚️ Payload of [`Puzzle2dConfigMutation::SetHandleKindWeights`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle2dConfigSetHandleKindWeights {
+    pub value: BTreeMap<String, f64>,
+}
+
+/// 🎚️ Payload of [`Puzzle2dConfigMutation::SetFillCount`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle2dConfigSetFillCount {
+    pub value: u32,
+}
+
+/// 🎚️ Payload of [`Puzzle2dConfigMutation::SetContactTolerance`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle2dConfigSetContactTolerance {
+    pub value: f64,
+}
+
+/// 🎚️ Payload of [`Puzzle2dConfigMutation::SetBrushPlacementOverlapBudget`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle2dConfigSetBrushPlacementOverlapBudget {
+    pub value: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Puzzle2dConfigMutation {
-    SetNodeKindWeights { value: BTreeMap<String, f64> },
-    SetHandleKindWeights { value: BTreeMap<String, f64> },
-    SetFillCount { value: u32 },
-    SetContactTolerance { value: f64 },
-    SetBrushPlacementOverlapBudget { value: f64 },
+    SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights),
+    SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights),
+    SetFillCount(Puzzle2dConfigSetFillCount),
+    SetContactTolerance(Puzzle2dConfigSetContactTolerance),
+    SetBrushPlacementOverlapBudget(Puzzle2dConfigSetBrushPlacementOverlapBudget),
 }
 
 impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
@@ -387,21 +423,21 @@ impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::SetNodeKindWeights { .. } => &Self::DESCRIPTORS[0],
-            Self::SetHandleKindWeights { .. } => &Self::DESCRIPTORS[1],
-            Self::SetFillCount { .. } => &Self::DESCRIPTORS[2],
-            Self::SetContactTolerance { .. } => &Self::DESCRIPTORS[3],
-            Self::SetBrushPlacementOverlapBudget { .. } => &Self::DESCRIPTORS[4],
+            Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ .. }) => &Self::DESCRIPTORS[0],
+            Self::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights{ .. }) => &Self::DESCRIPTORS[1],
+            Self::SetFillCount(Puzzle2dConfigSetFillCount{ .. }) => &Self::DESCRIPTORS[2],
+            Self::SetContactTolerance(Puzzle2dConfigSetContactTolerance{ .. }) => &Self::DESCRIPTORS[3],
+            Self::SetBrushPlacementOverlapBudget(Puzzle2dConfigSetBrushPlacementOverlapBudget{ .. }) => &Self::DESCRIPTORS[4],
         }
     }
 
     fn diff(&self, base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfigDiff> {
         let diff = match self {
-            Self::SetNodeKindWeights { value } => Puzzle2dConfigDiff { node_kind_weights: (value != &base.node_kind_weights).then(|| value.clone()), ..Default::default() },
-            Self::SetHandleKindWeights { value } => Puzzle2dConfigDiff { handle_kind_weights: (value != &base.handle_kind_weights).then(|| value.clone()), ..Default::default() },
-            Self::SetFillCount { value } => Puzzle2dConfigDiff { fill_count: (value != &base.fill_count).then_some(*value), ..Default::default() },
-            Self::SetContactTolerance { value } => Puzzle2dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
-            Self::SetBrushPlacementOverlapBudget { value } => Puzzle2dConfigDiff { brush_placement_overlap_budget: (value != &base.brush_placement_overlap_budget).then_some(*value), ..Default::default() },
+            Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ value }) => Puzzle2dConfigDiff { node_kind_weights: (value != &base.node_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights{ value }) => Puzzle2dConfigDiff { handle_kind_weights: (value != &base.handle_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetFillCount(Puzzle2dConfigSetFillCount{ value }) => Puzzle2dConfigDiff { fill_count: (value != &base.fill_count).then_some(*value), ..Default::default() },
+            Self::SetContactTolerance(Puzzle2dConfigSetContactTolerance{ value }) => Puzzle2dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
+            Self::SetBrushPlacementOverlapBudget(Puzzle2dConfigSetBrushPlacementOverlapBudget{ value }) => Puzzle2dConfigDiff { brush_placement_overlap_budget: (value != &base.brush_placement_overlap_budget).then_some(*value), ..Default::default() },
         };
         if protocol::DiffAlgebra::<Puzzle2dConfig>::is_empty(&diff) {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "The configuration already holds this value.");
@@ -411,11 +447,11 @@ impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
 
     fn inverse(&self, base: &Puzzle2dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            Self::SetNodeKindWeights { .. } => Self::SetNodeKindWeights { value: base.node_kind_weights.clone() },
-            Self::SetHandleKindWeights { .. } => Self::SetHandleKindWeights { value: base.handle_kind_weights.clone() },
-            Self::SetFillCount { .. } => Self::SetFillCount { value: base.fill_count },
-            Self::SetContactTolerance { .. } => Self::SetContactTolerance { value: base.contact_tolerance },
-            Self::SetBrushPlacementOverlapBudget { .. } => Self::SetBrushPlacementOverlapBudget { value: base.brush_placement_overlap_budget },
+            Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ .. }) => Self::SetNodeKindWeights(Puzzle2dConfigSetNodeKindWeights{ value: base.node_kind_weights.clone() }),
+            Self::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights{ .. }) => Self::SetHandleKindWeights(Puzzle2dConfigSetHandleKindWeights{ value: base.handle_kind_weights.clone() }),
+            Self::SetFillCount(Puzzle2dConfigSetFillCount{ .. }) => Self::SetFillCount(Puzzle2dConfigSetFillCount{ value: base.fill_count }),
+            Self::SetContactTolerance(Puzzle2dConfigSetContactTolerance{ .. }) => Self::SetContactTolerance(Puzzle2dConfigSetContactTolerance{ value: base.contact_tolerance }),
+            Self::SetBrushPlacementOverlapBudget(Puzzle2dConfigSetBrushPlacementOverlapBudget{ .. }) => Self::SetBrushPlacementOverlapBudget(Puzzle2dConfigSetBrushPlacementOverlapBudget{ value: base.brush_placement_overlap_budget }),
         }])
     }
 }

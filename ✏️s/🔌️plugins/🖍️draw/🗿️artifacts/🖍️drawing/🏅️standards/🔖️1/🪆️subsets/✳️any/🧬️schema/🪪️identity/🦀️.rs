@@ -24,7 +24,8 @@ pub enum DrawingIdentityKind {Layer,Path,Group,Boolean,Trace,Shape,Text,Image,Sv
 #[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue)]
 #[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
 pub struct DrawingIdentityCommitment {pub kind:DrawingIdentityKind,pub digest:[u8;32]}
-#[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned)]
+#[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned,semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
 pub struct DrawingIdentityAssignment {pub source:PagedUtf8<{usize::MAX}>,pub target:PagedUtf8<{usize::MAX}>}
 

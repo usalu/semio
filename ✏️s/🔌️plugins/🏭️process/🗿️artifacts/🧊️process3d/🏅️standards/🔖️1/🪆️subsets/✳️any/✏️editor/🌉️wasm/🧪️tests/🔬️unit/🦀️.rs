@@ -30,7 +30,7 @@ fn drill_step(id: &str) -> ProcessStep {
 /// every fixture to finish through [`close_store`].
 async fn new_store() -> Process3dStore {
     let mut store = Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
-    store.install_document_store_owners_exact(crate::host::owned::process3d_document_store_owners());
+    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog")).map_err(|(error, _)| error).expect("Process3d fixture installs its bounded catalog");
     store
 }
 
@@ -41,20 +41,14 @@ fn close_store(mut store: Process3dStore) {
     use semio_framework_plugin::ArtifactOwnedDisposer;
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
     for _ in 0..1_048_576 {
-        let grant = semio_framework_plugin::app::artifact_close_release_grant(store.next_close_byte_demand(), store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture admits exact close allocation");
-        match disposer.close_step(&mut store, 1, grant).expect("Process3d fixture store close step") {
-            semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= grant);
-            }
-            semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } => panic!("Process3d fixture store close awaits input: {reason}"),
-            semio_framework_plugin::PluginCloseStep::Blocked { reason } => {
-                assert!(store.next_close_byte_demand() > grant, "Process3d fixture store close blocked without a newly retained physical demand: {reason}");
-            }
-            semio_framework_plugin::PluginCloseStep::Complete => {
+        let demand = disposer.retirement_demands(&store, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture store close demand");
+        match disposer.close_step(&mut store, crate::host::owned::process3d_demand_grant(demand)).expect("Process3d fixture store close step") {
+            semio_framework_plugin::PluginLifecycleStep::Complete(_) => {
                 assert!(disposer.terminal_is_empty(&store));
                 return;
             }
+            semio_framework_plugin::PluginLifecycleStep::AwaitingInput { reason } => panic!("Process3d fixture store close awaits input: {reason}"),
+            semio_framework_plugin::PluginLifecycleStep::Progress(_) | semio_framework_plugin::PluginLifecycleStep::Blocked { .. } => {}
         }
     }
     panic!("Process3d fixture store did not reach its terminal-empty witness")
@@ -180,7 +174,7 @@ async fn sets_stock_to_imported_solid_and_backwards_restores() {
 async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
     let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None);
     let mut store = Process3dStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
-    store.install_document_store_owners_exact(crate::host::owned::process3d_document_store_owners());
+    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog")).map_err(|(error, _)| error).expect("Process3d fixture installs its bounded catalog");
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![

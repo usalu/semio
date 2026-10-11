@@ -28,12 +28,14 @@ export async function proveEntityCatalogOwnership(repoRoot: string): Promise<voi
     const execution = join(moduleRoot, "🏷️entity-kinds/🏃️execution/🟦️.ts");
     const plan = join(moduleRoot, "🏷️entity-kinds/📋️plan/🟦️.ts");
     const source = join(moduleRoot, "🏷️entity-kinds/📥️source/🟦️.ts");
+    const processInvocation = join(moduleRoot, "..", "🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts");
     const schema = join(moduleRoot, "🟦️.ts");
     const result = await build({
       stdin: { contents: `import { PreviewGeneratedScript, CheckScript } from ${JSON.stringify(execution)};
 import { generatedTargets } from ${JSON.stringify(plan)};
 import { readEntityCatalog } from ${JSON.stringify(source)};
 import { entityKindIndexByEmoji } from ${JSON.stringify(schema)};
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from ${JSON.stringify(processInvocation)};
 const root = ${JSON.stringify(repoRoot)};
 const catalog = readEntityCatalog(root);
 if (catalog.kinds.length !== ${fixture.catalogLength}) throw Error("catalog size drift");
@@ -42,8 +44,10 @@ if (index.size !== ${fixture.emojiLength}) throw Error("emoji key count drift");
 for (const vector of ${JSON.stringify(fixture.firstWins)}) if (index.get(vector.emoji)?.id !== vector.id) throw Error("FIRST-WINS drift");
 const paths = generatedTargets(catalog).map(target => target.path);
 if (paths.length !== 2) throw Error("general output ownership drift");
-new CheckScript(root, root).run([]);
-new PreviewGeneratedScript(root, root).run([]);
+await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "entity-kinds-ownership-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async invocation => {
+  new CheckScript(root, root, invocation).run([]);
+  new PreviewGeneratedScript(root, root, invocation).run([]);
+});
 console.log("[DEBUG] independent Node product-removal loader: 58 entries, two planned projections, check and preview executed");`, resolveDir: repoRoot, sourcefile: "entity-removal-oracle.ts", loader: "ts" },
       bundle: true, write: false, platform: "node", format: "esm", logLevel: "silent",
       plugins: [{ name: "complete-product-removal", setup(api) {

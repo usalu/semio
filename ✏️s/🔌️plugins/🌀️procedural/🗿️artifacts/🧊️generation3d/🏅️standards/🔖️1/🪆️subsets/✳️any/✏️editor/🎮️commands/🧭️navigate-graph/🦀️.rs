@@ -102,7 +102,7 @@ macro_rules! graph_keyboard_command {
             pub const STEP: FlowGraphStep = $step;
 
             #[doc = $doc]
-            #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+            #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
             #[dsl(keyword = $keyword)]
             pub struct $Payload {}
 
@@ -135,7 +135,7 @@ pub mod activate_selection {
     use semio_framework_value_derive::{FromValue, ToValue};
 
     /// ⏎️ See [`super::activate_emit`].
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "activate-selection")]
     pub struct ActivateSelection {}
 

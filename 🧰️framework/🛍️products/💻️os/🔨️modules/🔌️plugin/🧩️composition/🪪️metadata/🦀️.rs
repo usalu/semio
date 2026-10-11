@@ -1,6 +1,6 @@
 mod private_child_metadata {
     use super::*;
-    use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+    use semio_framework_value::{SharedUtf8, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
     use std::mem::ManuallyDrop;
 
     #[derive(Clone, Copy)]
@@ -27,7 +27,7 @@ mod private_child_metadata {
         pub(crate) actor: protocol::ActorId,
         pub(crate) key: MemberKey,
         pub(crate) prepared_identity: PreparedChildContentIdentity,
-        pub(crate) publication_actor: String,
+        pub(crate) publication_actor: SharedUtf8,
         pub(crate) transaction: Option<protocol::TransactionRef>,
         pub(crate) group_id: Option<String>,
         pub(crate) registry_owner: store::OwnerRef,
@@ -36,10 +36,12 @@ mod private_child_metadata {
     impl PrivateChildMemberMetadataParts {
         fn fields_mut(&mut self) -> [Option<&mut String>; 31] {
             let (transaction_id, tool) = self.transaction.as_mut().map(|transaction| (Some(&mut transaction.id), Some(&mut transaction.tool))).unwrap_or((None, None));
-            [Some(&mut self.expected.artifact_id), Some(&mut self.expected.dialect.artifact_kind), Some(&mut self.expected.dialect.standard), Some(&mut self.expected.dialect.subset), Some(&mut self.owner.parent.artifact_id), Some(&mut self.owner.parent.dialect.artifact_kind), Some(&mut self.owner.parent.dialect.standard), Some(&mut self.owner.parent.dialect.subset), Some(&mut self.owner.slot), Some(&mut self.owner.child_id), Some(&mut self.actor.0), Some(&mut self.key.owner), Some(&mut self.key.slot), Some(&mut self.key.child_id), Some(&mut self.prepared_identity.reference.artifact_id), Some(&mut self.prepared_identity.reference.dialect.artifact_kind), Some(&mut self.prepared_identity.reference.dialect.standard), Some(&mut self.prepared_identity.reference.dialect.subset), Some(&mut self.prepared_identity.key.owner), Some(&mut self.prepared_identity.key.slot), Some(&mut self.prepared_identity.key.child_id), Some(&mut self.publication_actor), transaction_id, tool, self.group_id.as_mut(), Some(&mut self.registry_owner.parent.artifact_id), Some(&mut self.registry_owner.parent.dialect.artifact_kind), Some(&mut self.registry_owner.parent.dialect.standard), Some(&mut self.registry_owner.parent.dialect.subset), Some(&mut self.registry_owner.slot), Some(&mut self.registry_owner.child_id)]
+            [Some(&mut self.expected.artifact_id), Some(&mut self.expected.dialect.artifact_kind), Some(&mut self.expected.dialect.standard), Some(&mut self.expected.dialect.subset), Some(&mut self.owner.parent.artifact_id), Some(&mut self.owner.parent.dialect.artifact_kind), Some(&mut self.owner.parent.dialect.standard), Some(&mut self.owner.parent.dialect.subset), Some(&mut self.owner.slot), Some(&mut self.owner.child_id), None, Some(&mut self.key.owner), Some(&mut self.key.slot), Some(&mut self.key.child_id), Some(&mut self.prepared_identity.reference.artifact_id), Some(&mut self.prepared_identity.reference.dialect.artifact_kind), Some(&mut self.prepared_identity.reference.dialect.standard), Some(&mut self.prepared_identity.reference.dialect.subset), Some(&mut self.prepared_identity.key.owner), Some(&mut self.prepared_identity.key.slot), Some(&mut self.prepared_identity.key.child_id), None, transaction_id, tool, self.group_id.as_mut(), Some(&mut self.registry_owner.parent.artifact_id), Some(&mut self.registry_owner.parent.dialect.artifact_kind), Some(&mut self.registry_owner.parent.dialect.standard), Some(&mut self.registry_owner.parent.dialect.subset), Some(&mut self.registry_owner.slot), Some(&mut self.registry_owner.child_id)]
         }
+        fn shared_fields(&self) -> [&SharedUtf8; 2] { [&self.actor.0, &self.publication_actor] }
+        fn shared_fields_mut(&mut self) -> [&mut SharedUtf8; 2] { [&mut self.actor.0, &mut self.publication_actor] }
         fn fields(&self) -> [Option<&String>; 31] {
-            [Some(&self.expected.artifact_id), Some(&self.expected.dialect.artifact_kind), Some(&self.expected.dialect.standard), Some(&self.expected.dialect.subset), Some(&self.owner.parent.artifact_id), Some(&self.owner.parent.dialect.artifact_kind), Some(&self.owner.parent.dialect.standard), Some(&self.owner.parent.dialect.subset), Some(&self.owner.slot), Some(&self.owner.child_id), Some(&self.actor.0), Some(&self.key.owner), Some(&self.key.slot), Some(&self.key.child_id), Some(&self.prepared_identity.reference.artifact_id), Some(&self.prepared_identity.reference.dialect.artifact_kind), Some(&self.prepared_identity.reference.dialect.standard), Some(&self.prepared_identity.reference.dialect.subset), Some(&self.prepared_identity.key.owner), Some(&self.prepared_identity.key.slot), Some(&self.prepared_identity.key.child_id), Some(&self.publication_actor), self.transaction.as_ref().map(|transaction| &transaction.id), self.transaction.as_ref().map(|transaction| &transaction.tool), self.group_id.as_ref(), Some(&self.registry_owner.parent.artifact_id), Some(&self.registry_owner.parent.dialect.artifact_kind), Some(&self.registry_owner.parent.dialect.standard), Some(&self.registry_owner.parent.dialect.subset), Some(&self.registry_owner.slot), Some(&self.registry_owner.child_id)]
+            [Some(&self.expected.artifact_id), Some(&self.expected.dialect.artifact_kind), Some(&self.expected.dialect.standard), Some(&self.expected.dialect.subset), Some(&self.owner.parent.artifact_id), Some(&self.owner.parent.dialect.artifact_kind), Some(&self.owner.parent.dialect.standard), Some(&self.owner.parent.dialect.subset), Some(&self.owner.slot), Some(&self.owner.child_id), None, Some(&self.key.owner), Some(&self.key.slot), Some(&self.key.child_id), Some(&self.prepared_identity.reference.artifact_id), Some(&self.prepared_identity.reference.dialect.artifact_kind), Some(&self.prepared_identity.reference.dialect.standard), Some(&self.prepared_identity.reference.dialect.subset), Some(&self.prepared_identity.key.owner), Some(&self.prepared_identity.key.slot), Some(&self.prepared_identity.key.child_id), None, self.transaction.as_ref().map(|transaction| &transaction.id), self.transaction.as_ref().map(|transaction| &transaction.tool), self.group_id.as_ref(), Some(&self.registry_owner.parent.artifact_id), Some(&self.registry_owner.parent.dialect.artifact_kind), Some(&self.registry_owner.parent.dialect.standard), Some(&self.registry_owner.parent.dialect.subset), Some(&self.registry_owner.slot), Some(&self.registry_owner.child_id)]
         }
     }
 
@@ -51,7 +53,7 @@ mod private_child_metadata {
         pub(crate) fn parts_mut(&mut self) -> Option<&mut PrivateChildMemberMetadataParts> { self.parts.as_mut() }
         /// 🧳️ Moves the ready exact identities once into the retained typed request and content owners.
         pub(crate) fn take_ready(&mut self, grant: RetainedCloneGrant) -> Result<Option<PrivateChildMemberMetadataParts>, ValueError> { if grant.maximum_items == 0 { return Ok(None); } Ok(self.parts.take()) }
-        pub(crate) fn next_close_byte_demand(&self) -> usize { self.parts.as_ref().and_then(|parts| parts.fields().into_iter().flatten().find_map(|field| (field.capacity() != 0).then_some(field.capacity()))).unwrap_or(0) }
+        pub(crate) fn next_close_byte_demand(&self) -> usize { self.parts.as_ref().and_then(|parts| parts.fields().into_iter().flatten().find_map(|field| (field.capacity() != 0).then_some(field.capacity())).or_else(|| parts.shared_fields().into_iter().find_map(|field| field.has_owner().then(|| field.original_allocation_bytes())))).unwrap_or(0) }
         pub(crate) fn terminal_is_empty(&self) -> bool { self.parts.is_none() }
         /// 🪵️ Releases a ready bundle's original string allocation under one whole release grant.
         pub(crate) fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -59,6 +61,12 @@ mod private_child_metadata {
             if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
             if let Some(field) = self.parts.as_mut().unwrap().fields_mut().into_iter().flatten().find(|field| field.capacity() != 0) {
                 let bytes = field.capacity();
+                if grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
+                drop(std::mem::take(field));
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }));
+            }
+            if let Some(field) = self.parts.as_mut().unwrap().shared_fields_mut().into_iter().find(|field| field.has_owner()) {
+                let bytes = field.original_allocation_bytes();
                 if grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
                 drop(std::mem::take(field));
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }));
@@ -152,7 +160,7 @@ mod private_child_metadata {
             let Some([id, kind, standard, subset, parent, parent_kind, parent_standard, parent_subset, slot, child, actor, key_owner, key_slot, key_child, prepared_id, prepared_kind, prepared_standard, prepared_subset, prepared_owner, prepared_slot, prepared_child, publication_actor, transaction_id, tool, group_id, registry_parent, registry_kind, registry_standard, registry_subset, registry_slot, registry_child]) = self.strings.take_ready(grant) else { return Ok(None); };
             let transaction = (self.transaction_present == Some(true)).then_some(protocol::TransactionRef { id: transaction_id, tool });
             let group_id = (self.group_present == Some(true)).then_some(group_id);
-            Ok(Some(PrivateChildMemberMetadata { parts: ManuallyDrop::new(Some(PrivateChildMemberMetadataParts { expected: ArtifactRef { artifact_id: id, dialect: ArtifactDialect { artifact_kind: kind, standard, subset } }, owner: store::OwnerRef { parent: ArtifactRef { artifact_id: parent, dialect: ArtifactDialect { artifact_kind: parent_kind, standard: parent_standard, subset: parent_subset } }, slot, child_id: child }, actor: protocol::ActorId(actor), key: MemberKey { owner: key_owner, slot: key_slot, child_id: key_child }, prepared_identity: PreparedChildContentIdentity { key: MemberKey { owner: prepared_owner, slot: prepared_slot, child_id: prepared_child }, reference: ArtifactRef { artifact_id: prepared_id, dialect: ArtifactDialect { artifact_kind: prepared_kind, standard: prepared_standard, subset: prepared_subset } } }, publication_actor, transaction, group_id, registry_owner: store::OwnerRef { parent: ArtifactRef { artifact_id: registry_parent, dialect: ArtifactDialect { artifact_kind: registry_kind, standard: registry_standard, subset: registry_subset } }, slot: registry_slot, child_id: registry_child } })) }))
+            Ok(Some(PrivateChildMemberMetadata { parts: ManuallyDrop::new(Some(PrivateChildMemberMetadataParts { expected: ArtifactRef { artifact_id: id, dialect: ArtifactDialect { artifact_kind: kind, standard, subset } }, owner: store::OwnerRef { parent: ArtifactRef { artifact_id: parent, dialect: ArtifactDialect { artifact_kind: parent_kind, standard: parent_standard, subset: parent_subset } }, slot, child_id: child }, actor: protocol::ActorId(actor.into()), key: MemberKey { owner: key_owner, slot: key_slot, child_id: key_child }, prepared_identity: PreparedChildContentIdentity { key: MemberKey { owner: prepared_owner, slot: prepared_slot, child_id: prepared_child }, reference: ArtifactRef { artifact_id: prepared_id, dialect: ArtifactDialect { artifact_kind: prepared_kind, standard: prepared_standard, subset: prepared_subset } } }, publication_actor: publication_actor.into(), transaction, group_id, registry_owner: store::OwnerRef { parent: ArtifactRef { artifact_id: registry_parent, dialect: ArtifactDialect { artifact_kind: registry_kind, standard: registry_standard, subset: registry_subset } }, slot: registry_slot, child_id: registry_child } })) }))
         }
         pub(crate) fn next_close_byte_demand(&self) -> usize { self.strings.next_close_byte_demand() }
         pub(crate) fn terminal_is_empty(&self) -> bool { self.strings.terminal_is_empty() }
@@ -166,11 +174,12 @@ mod private_child_metadata {
         fn fields(self) -> [&'a str; 4] { let (id, tool) = self.transaction.map(|transaction| (transaction.id.as_str(), transaction.tool.as_str())).unwrap_or(("", "")); [self.actor, id, tool, self.group_id.unwrap_or("")] }
     }
 
-    pub(crate) struct PrivatePublicationMetadataParts { pub(crate) actor: String, pub(crate) transaction: Option<protocol::TransactionRef>, pub(crate) group_id: Option<String> }
+    pub(crate) struct PrivatePublicationMetadataParts { pub(crate) actor: SharedUtf8, pub(crate) transaction: Option<protocol::TransactionRef>, pub(crate) group_id: Option<String> }
 
     impl PrivatePublicationMetadataParts {
-        fn fields(&self) -> [Option<&String>; 4] { [Some(&self.actor), self.transaction.as_ref().map(|transaction| &transaction.id), self.transaction.as_ref().map(|transaction| &transaction.tool), self.group_id.as_ref()] }
-        fn fields_mut(&mut self) -> [Option<&mut String>; 4] { let (id, tool) = self.transaction.as_mut().map(|transaction| (Some(&mut transaction.id), Some(&mut transaction.tool))).unwrap_or((None, None)); [Some(&mut self.actor), id, tool, self.group_id.as_mut()] }
+        fn actor_if_owned(&mut self) -> Option<&mut SharedUtf8> { self.actor.has_owner().then_some(&mut self.actor) }
+        fn fields(&self) -> [Option<&String>; 4] { [None, self.transaction.as_ref().map(|transaction| &transaction.id), self.transaction.as_ref().map(|transaction| &transaction.tool), self.group_id.as_ref()] }
+        fn fields_mut(&mut self) -> [Option<&mut String>; 4] { let (id, tool) = self.transaction.as_mut().map(|transaction| (Some(&mut transaction.id), Some(&mut transaction.tool))).unwrap_or((None, None)); [None, id, tool, self.group_id.as_mut()] }
     }
 
     pub(crate) struct PrivatePublicationMetadata { parts: ManuallyDrop<Option<PrivatePublicationMetadataParts>> }
@@ -180,7 +189,7 @@ mod private_child_metadata {
         pub(crate) fn parts(&self) -> Option<&PrivatePublicationMetadataParts> { self.parts.as_ref() }
         pub(crate) fn parts_mut(&mut self) -> Option<&mut PrivatePublicationMetadataParts> { self.parts.as_mut() }
         pub(crate) fn take_ready(&mut self, grant: RetainedCloneGrant) -> Result<Option<PrivatePublicationMetadataParts>, ValueError> { if grant.maximum_items == 0 { return Ok(None); } Ok(self.parts.take()) }
-        pub(crate) fn next_close_byte_demand(&self) -> usize { self.parts.as_ref().and_then(|parts| parts.fields().into_iter().flatten().find_map(|field| (field.capacity() != 0).then_some(field.capacity()))).unwrap_or(0) }
+        pub(crate) fn next_close_byte_demand(&self) -> usize { self.parts.as_ref().and_then(|parts| parts.fields().into_iter().flatten().find_map(|field| (field.capacity() != 0).then_some(field.capacity())).or_else(|| parts.actor.has_owner().then(|| parts.actor.original_allocation_bytes()))).unwrap_or(0) }
         pub(crate) fn terminal_is_empty(&self) -> bool { self.parts.is_none() }
         /// 🧺️ Closes one whole original parent metadata allocation or its empty inline bundle.
         pub(crate) fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -190,6 +199,12 @@ mod private_child_metadata {
                 let bytes = field.capacity();
                 if grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
                 drop(std::mem::take(field));
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }));
+            }
+            if let Some(actor) = self.parts.as_mut().unwrap().actor_if_owned() {
+                let bytes = actor.original_allocation_bytes();
+                if grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
+                drop(std::mem::take(actor));
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }));
             }
             drop(self.parts.take());
@@ -211,7 +226,7 @@ mod private_child_metadata {
             let Some([actor, id, tool, group_id]) = self.strings.take_ready(grant) else { return Ok(None); };
             let transaction = (self.transaction_present == Some(true)).then_some(protocol::TransactionRef { id, tool });
             let group_id = (self.group_present == Some(true)).then_some(group_id);
-            Ok(Some(PrivatePublicationMetadata { parts: ManuallyDrop::new(Some(PrivatePublicationMetadataParts { actor, transaction, group_id })) }))
+            Ok(Some(PrivatePublicationMetadata { parts: ManuallyDrop::new(Some(PrivatePublicationMetadataParts { actor: actor.into(), transaction, group_id })) }))
         }
         pub(crate) fn next_close_byte_demand(&self) -> usize { self.strings.next_close_byte_demand() }
         pub(crate) fn terminal_is_empty(&self) -> bool { self.strings.terminal_is_empty() }

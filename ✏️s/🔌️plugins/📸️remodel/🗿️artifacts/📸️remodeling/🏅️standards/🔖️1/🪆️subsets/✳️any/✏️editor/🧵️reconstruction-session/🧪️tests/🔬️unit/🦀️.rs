@@ -1,7 +1,8 @@
 use super::*;
 use crate::editor::remodeling::commands::import_frame_payload::checker_data_url;
 use crate::examples::synthetic_orbit::{FRAMES, FRAME_MIME};
-use semio_framework_job::{root_cancel_token, StepBudget, JOB_PAYLOAD_PAGE_BYTES};
+use semio_framework_job::{root_cancel_token, StepBudget};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_tool_run::{ToolRunId, ToolRunTick, ToolRunTraceOp};
 use std::time::{Duration, Instant};
 
@@ -84,41 +85,43 @@ enum Turn {
     Yield,
 }
 
-fn close_payload(mut payload: RetainedJobPayload) {
-    while !payload.terminal_is_empty() {
-        payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+const FUNDED_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 16 };
+
+fn budget(fuel: u64, deadline_us: u64) -> StepBudget {
+    StepBudget::new(fuel, deadline_us, FUNDED_GRANT)
+}
+
+fn whole_turns() -> StepBudget {
+    budget(u64::MAX, u64::MAX)
+}
+
+fn view_to_turn(view: JobOutcomeView<'_>) -> Turn {
+    match view {
+        JobOutcomeView::PreviewReady { payload, .. } => Turn::Tick(ToolRunTick::decode(payload.single_page().expect("a tick is one payload page")).expect("tick decodes")),
+        JobOutcomeView::CheckpointReady { state, .. } => Turn::Checkpoint(state.single_page().expect("checkpoint page").to_vec()),
+        JobOutcomeView::Complete { .. } => Turn::Complete,
+        JobOutcomeView::Fault { .. } => Turn::Fault,
+        JobOutcomeView::Cancelled { .. } => panic!("the run was never cancelled"),
+        JobOutcomeView::Yield { .. } => Turn::Yield,
     }
 }
 
-fn settle(outcome: StepOutcome) -> Turn {
-    match outcome {
-        StepOutcome::PreviewReady(payload) => {
-            let page = payload.single_page().expect("a tick is one payload page").to_vec();
-            close_payload(payload);
-            Turn::Tick(ToolRunTick::decode(&page).expect("tick decodes"))
-        }
-        StepOutcome::CheckpointReady(checkpoint) => {
-            let bytes = checkpoint.state.single_page().expect("checkpoint page").to_vec();
-            close_payload(checkpoint.state);
-            Turn::Checkpoint(bytes)
-        }
-        StepOutcome::Complete(candidate) => {
-            close_payload(candidate.state);
-            close_payload(candidate.output);
-            Turn::Complete
-        }
-        StepOutcome::Fault(fault) => {
-            close_payload(fault.detail);
-            Turn::Fault
-        }
-        StepOutcome::Cancelled => panic!("the run was never cancelled"),
-        StepOutcome::Yield => Turn::Yield,
-    }
+/// 🚦️ One `step` call: `None` while the job is still working inside a turn, the delivered outcome otherwise.
+fn step_once(job: &mut impl InteractiveJob, step_budget: StepBudget, sequence: &mut u64, clock: fn() -> Option<u64>) -> Option<Turn> {
+    let mut retained = RetainedCloneProgress::default();
+    let mut context = StepContext::new(semio_framework_job::OperationId(91), semio_framework_job::Generation(1), step_budget, root_cancel_token(), clock, sequence, &mut retained);
+    let borrow = job.step(&mut context).expect("remodeling job step")?;
+    let descriptor = borrow.into_descriptor();
+    Some(view_to_turn(job.borrow_outcome(&descriptor).expect("remodeling job outcome")))
 }
 
-fn turn(job: &mut impl InteractiveJob, budget: StepBudget, sequence: &mut u64) -> Turn {
-    let mut context = StepContext::new(semio_framework_job::OperationId(91), semio_framework_job::Generation(1), budget, root_cancel_token(), never, sequence);
-    settle(job.step(&mut context))
+fn turn(job: &mut impl InteractiveJob, step_budget: StepBudget, sequence: &mut u64) -> Turn {
+    for _ in 0..1_000_000 {
+        if let Some(turn) = step_once(job, StepBudget::new(step_budget.fuel, step_budget.deadline_us, step_budget.retained), sequence, never) {
+            return turn;
+        }
+    }
+    panic!("the job never delivered an outcome");
 }
 
 /// 🪞️ Everything a run handed the ledger, folded the way the ledger folds it.
@@ -281,14 +284,13 @@ fn fresh_run(document: Arc<RemodelingSnapshot>) -> ReconstructionRunJob {
     ReconstructionRunJob::new(identity(), document, None, 0)
 }
 
-const WHOLE_TURNS: StepBudget = StepBudget { fuel: u64::MAX, deadline_us: u64::MAX, work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK };
 
 #[semio_framework_async_macros::async_test]
 async fn the_run_matches_the_language_neutral_fixture() {
     for case in fixture()["cases"].as_array().expect("cases") {
         let document = case["document"].as_str().expect("document");
         let mut job = fresh_run(imported_document(document).await);
-        let mirror = run_to_end(&mut job, StepBudget::new(1, u64::MAX));
+        let mirror = run_to_end(&mut job, budget(1, u64::MAX));
         assert_eq!(if mirror.completed { "complete" } else if mirror.faulted { "faulted" } else { "open" }, case["final"], "{document}: final outcome");
         let prefix: Vec<String> = mirror.verdicts.iter().map(|(_, verdict, reason)| format!("{}:{}", verdict_id(*verdict), reason_id(*reason))).collect();
         let expected_prefix: Vec<&str> = case["verdictPrefix"].as_array().expect("prefix").iter().map(|entry| entry.as_str().expect("verdict")).collect();
@@ -326,7 +328,7 @@ async fn prints_the_run_fixture_actuals() {
     for case in fixture()["cases"].as_array().expect("cases") {
         let document = case["document"].as_str().expect("document");
         let mut job = fresh_run(imported_document(document).await);
-        let mirror = run_to_end(&mut job, StepBudget::new(1, u64::MAX));
+        let mirror = run_to_end(&mut job, budget(1, u64::MAX));
         let counters: serde_json::Map<String, serde_json::Value> = ReconstructionRunCounter::ALL.iter().map(|counter| (counter.id().to_string(), serde_json::json!(mirror.counter(*counter)))).collect();
         let stages: Vec<&str> = mirror.stages.iter().map(|stage| ReconstructionRunStage::ALL[usize::from(*stage)].id()).collect();
         let appends = mirror.ops.iter().filter(|op| matches!(op, RemodelingMutation::AppendContent(_))).count();
@@ -379,7 +381,7 @@ fn oracle_match_verdict(descriptors: &[Vec<[u64; 4]>], frame_a: usize, frame_b: 
 #[semio_framework_async_macros::async_test]
 async fn every_traced_match_verdict_agrees_with_the_bitvec_hamming_oracle() {
     let mut job = fresh_run(imported_document("synthetic-orbit").await);
-    let mirror = run_to_end(&mut job, WHOLE_TURNS);
+    let mirror = run_to_end(&mut job, whole_turns());
     let (descriptors, pairs, ratio, mutual) = job.engine.as_ref().expect("the engine stays resident until close").match_oracle_inputs();
     let mut decisive = [0usize; 3];
     for (frame_a, frame_b) in pairs {
@@ -402,10 +404,10 @@ async fn every_traced_match_verdict_agrees_with_the_bitvec_hamming_oracle() {
 async fn a_single_unit_of_fuel_is_one_visible_decision() {
     let law = &fixture()["fuel"];
     let mut job = fresh_run(imported_document(law["document"].as_str().expect("document")).await);
-    let mirror = run_to_end(&mut job, StepBudget::new(law["fuelPerStep"].as_u64().expect("fuel"), u64::MAX));
+    let mirror = run_to_end(&mut job, budget(law["fuelPerStep"].as_u64().expect("fuel"), u64::MAX));
     assert!(mirror.completed);
     assert_eq!(mirror.evidence_ticks, mirror.ticks, "every tick of a single-unit step shows at least one trace record, step or provisional op");
-    let whole = run_to_end(&mut fresh_run(imported_document(law["document"].as_str().expect("document")).await), WHOLE_TURNS);
+    let whole = run_to_end(&mut fresh_run(imported_document(law["document"].as_str().expect("document")).await), whole_turns());
     assert_eq!(mirror.verdicts, whole.verdicts, "slicing by fuel never changes the decisions");
     assert_eq!(mirror.ops, whole.ops, "slicing by fuel never changes the provisional result");
 }
@@ -414,13 +416,13 @@ async fn a_single_unit_of_fuel_is_one_visible_decision() {
 async fn a_resumed_run_replays_silently_to_its_checkpoint_and_ends_with_the_same_result() {
     let law = &fixture()["resume"];
     let document = imported_document(law["document"].as_str().expect("document")).await;
-    let whole = run_to_end(&mut fresh_run(Arc::clone(&document)), WHOLE_TURNS);
+    let whole = run_to_end(&mut fresh_run(Arc::clone(&document)), whole_turns());
     let wanted = law["checkpointIndex"].as_u64().expect("checkpoint index") as usize;
     let mut first = fresh_run(Arc::clone(&document));
     let mut mirror = Mirror::default();
     let mut sequence = 0;
     let checkpoint = loop {
-        match turn(&mut first, WHOLE_TURNS, &mut sequence) {
+        match turn(&mut first, whole_turns(), &mut sequence) {
             Turn::Tick(tick) => mirror.fold(tick),
             Turn::Checkpoint(bytes) => {
                 mirror.checkpoints.push(bytes.clone());
@@ -437,7 +439,7 @@ async fn a_resumed_run_replays_silently_to_its_checkpoint_and_ends_with_the_same
     let steps_before = mirror.steps.len();
     let mut resumed = ReconstructionRunJob::new(identity(), Arc::clone(&document), Some(&checkpoint), mirror.ops.len() as u32);
     loop {
-        match turn(&mut resumed, WHOLE_TURNS, &mut sequence) {
+        match turn(&mut resumed, whole_turns(), &mut sequence) {
             Turn::Tick(tick) => mirror.fold(tick),
             Turn::Checkpoint(_) | Turn::Yield => {}
             Turn::Complete => break,
@@ -456,7 +458,7 @@ async fn a_resumed_run_replays_silently_to_its_checkpoint_and_ends_with_the_same
 async fn the_revalidate_job_keeps_the_result_on_an_unchanged_head_and_withdraws_it_when_inputs_changed() {
     let document = imported_document("orbit-short").await;
     let mut run = fresh_run(Arc::clone(&document));
-    let whole = run_to_end(&mut run, WHOLE_TURNS);
+    let whole = run_to_end(&mut run, whole_turns());
     let checkpoint = whole.checkpoints.last().expect("a final checkpoint").clone();
     let provisional = whole.ops.len() as u32;
     let unrelated = Arc::new(crate::mutations::apply_remodeling_mutation(&document, &crate::mutations::create_gcp(crate::GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [0.0, 0.0, 0.0], observations: Vec::new() })).expect("gcp applies"));
@@ -464,17 +466,17 @@ async fn the_revalidate_job_keeps_the_result_on_an_unchanged_head_and_withdraws_
     for (head, withdrawn) in [(unrelated, false), (changed, true)] {
         let mut job = ReconstructionRevalidateJob::new(identity(), head, Some(&checkpoint), provisional);
         let mut sequence = 0;
-        let Turn::Tick(tick) = turn(&mut job, WHOLE_TURNS, &mut sequence) else { panic!("revalidation reports one tick") };
+        let Turn::Tick(tick) = turn(&mut job, whole_turns(), &mut sequence) else { panic!("revalidation reports one tick") };
         assert_eq!(tick.retract_to, withdrawn.then_some(0), "withdrawn = {withdrawn}");
         assert_eq!(tick.steps.iter().any(|step| step.reason == ReconstructionRunReason::InputsChanged.code() && step.kind == ToolRunStepKind::Danger), withdrawn);
-        assert!(matches!(turn(&mut job, WHOLE_TURNS, &mut sequence), Turn::Complete));
+        assert!(matches!(turn(&mut job, whole_turns(), &mut sequence), Turn::Complete));
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_provisional_result_applies_onto_its_base_and_its_inverse_restores_the_base() {
     let document = imported_document("orbit-short").await;
-    let mirror = run_to_end(&mut fresh_run(Arc::clone(&document)), WHOLE_TURNS);
+    let mirror = run_to_end(&mut fresh_run(Arc::clone(&document)), whole_turns());
     let mut inverses = Vec::new();
     let mut current = (*document).clone();
     for op in &mirror.ops {
@@ -511,12 +513,11 @@ async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example
         for run in 0..law["coldRuns"].as_u64().expect("cold runs") as usize {
             let mut job = fresh_run(Arc::clone(&document));
             let mut sequence = 0;
-            let cancel = root_cancel_token();
             for index in 0.. {
                 let stage = job.stage.id();
                 let unit = job.engine.as_ref().map(|engine| engine.unit_label());
                 let started = Instant::now();
-                let outcome = InteractiveJob::step(&mut job, &mut StepContext::new(semio_framework_job::OperationId(91), semio_framework_job::Generation(1), StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, 0), cancel.clone(), expired_clock, &mut sequence));
+                let outcome = step_once(&mut job, budget(semio_framework_job::INTERACTIVE_LANE_FUEL, 0), &mut sequence, expired_clock);
                 let elapsed = started.elapsed();
                 if run == 0 {
                     best.push((elapsed, stage));
@@ -525,7 +526,7 @@ async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example
                     assert!(index < best.len(), "{name}: cold run {run} took more units than the recorded run");
                     best[index].0 = best[index].0.min(elapsed);
                 }
-                if matches!(settle(outcome), Turn::Complete | Turn::Fault) {
+                if matches!(outcome, Some(Turn::Complete | Turn::Fault)) {
                     assert_eq!(index + 1, best.len(), "{name}: every cold run slices into the same units");
                     break;
                 }
@@ -560,7 +561,7 @@ async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example
 async fn print_run_fixture_cases() {
     for document in ["checker", "orbit-short", "synthetic-orbit"] {
         let mut job = fresh_run(imported_document(document).await);
-        let mirror = run_to_end(&mut job, StepBudget::new(1, u64::MAX));
+        let mirror = run_to_end(&mut job, budget(1, u64::MAX));
         let prefix: Vec<String> = mirror.verdicts.iter().take(24).map(|(_, verdict, reason)| format!("{}:{}", verdict_id(*verdict), reason_id(*reason))).collect();
         let counters: serde_json::Map<String, serde_json::Value> = ReconstructionRunCounter::ALL.iter().map(|counter| (counter.id().to_string(), serde_json::json!(mirror.counter(*counter)))).collect();
         let stages: Vec<&str> = mirror.stages.iter().map(|stage| ReconstructionRunStage::ALL[usize::from(*stage)].id()).collect();

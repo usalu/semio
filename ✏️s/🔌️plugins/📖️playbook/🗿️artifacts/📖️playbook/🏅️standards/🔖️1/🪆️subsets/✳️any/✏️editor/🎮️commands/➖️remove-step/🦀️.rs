@@ -7,7 +7,7 @@ use crate::{playbook_flow_content, playbook_remove_step_leaves, PlaybookSnapshot
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "remove-step")]
 pub struct RemoveStep {
     pub step_id: String,

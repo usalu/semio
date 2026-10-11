@@ -59,12 +59,13 @@ fn materialize_test_value(value: NativeIoValue) -> TestNativeIoValue {
 }
 
 fn run(request: NativeIoRequest) -> Result<TestNativeIoValue, String> {
+    let grant = fixture_compute_grant();
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::allocate_operation_id(),
         generation: semio_framework_job::Generation(1),
         cancel: semio_framework_job::root_cancel_token(),
         config: semio_framework_job::BatchDriveConfig {
-            retained: fixture_compute_grant(),
+            retained: grant,
             site: "native_io_test",
             stage: semio_framework_job::InteractiveStage::InteractiveStep,
             fuel_per_step: semio_framework_job::INTERACTIVE_LANE_FUEL,
@@ -72,25 +73,37 @@ fn run(request: NativeIoRequest) -> Result<TestNativeIoValue, String> {
         },
         now_us: semio_framework_job::default_now_us,
     };
-    let mut session = semio_framework_job::BatchJobSession::try_new(NativeIoJob::new(request), params).unwrap_or_else(|_| panic!("native I/O test session admission"));
+    let identity = (params.operation, params.generation);
+    let mut job = Some(NativeIoJob::new(request));
+    let mut params = Some(params);
+    let mut recipient = semio_framework_job::RetainedCloneProgress::default();
+    let mut control = semio_framework_job::WorkerJobAdmissionContext::new(identity.0, identity.1, semio_framework_job::StepBudget::new(1, u64::MAX, grant), semio_framework_job::default_now_us, &mut recipient).expect("native I/O admission context");
+    let admitted = semio_framework_job::BatchJobSession::try_admit_owned(&mut job, &mut params, &mut control);
+    drop(control);
+    let (mut session, progress) = admitted.expect("native I/O test session admission").unwrap_or_else(|| panic!("native I/O test session retained its unchanged sources"));
+    assert!(job.is_none() && params.is_none() && progress.fits(grant));
     let result;
+    let mut turns = 0usize;
     loop {
-        if session.step().is_err() {
+        turns += 1;
+        assert!(turns < 1_000_000, "native I/O job never published a terminal outcome");
+        if session.step(grant).is_err() {
             panic!("native I/O test session contention");
         }
         assert!(session.checkout_outcome(), "native I/O outcome checkout");
+        let (issued, receipt) = session.take_checked_out_retained_step_receipt().expect("native I/O original step receipt");
+        assert!(receipt.fits(issued));
+        let Some(terminal) = session.checked_out_outcome().expect("native I/O outcome view").map(|view| view.is_terminal()) else {
+            session.resume().expect("native I/O test session resume after an outcome-free turn");
+            continue;
+        };
+        for _ in 0..10_000 {
+            let step = session.acknowledge_outcome(grant);
+            assert!(step.progress().fits(grant));
+            if matches!(step, semio_framework_job::RetainedCloneStep::Complete(_)) { break; }
+        }
         let Some(job) = session.checked_out_job_mut() else { panic!("native I/O checked-out job") };
         let terminal_result = job.take_result();
-        let Some(mut outcome) = session.take_outcome() else { panic!("native I/O retained outcome") };
-        let terminal = outcome.is_terminal();
-        for _ in 0..10_000 {
-            if outcome.terminal_is_empty() { break; }
-            let grant = fixture_compute_grant();
-            fixture_io_retirement_permits(outcome.retirement_demands().expect("original outcome demand"), grant);
-            let step = outcome.close_step(grant).expect("admitted outcome close");
-            assert!(step.progress().fits(grant));
-        }
-        assert!(outcome.terminal_is_empty());
         if terminal {
             result = terminal_result.unwrap_or_else(|| panic!("native I/O terminal result")).map(materialize_test_value);
             break;

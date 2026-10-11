@@ -2,7 +2,8 @@
 
 use super::{JackGraphWindowConfig, JackGraphWindowConfigDiff, JackGraphWindowConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "set-camera")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCamera {

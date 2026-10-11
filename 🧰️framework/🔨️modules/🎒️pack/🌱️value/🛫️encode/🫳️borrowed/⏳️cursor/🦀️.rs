@@ -7,6 +7,7 @@ use semio_framework_value::{list::PagedList, retained_clone::{RetainedCloneGrant
 const SYMBOL_LIMIT: usize = isize::MAX as usize;
 
 #[derive(Clone, Copy)]
+#[derive(Debug)]
 struct Symbol { path: [usize; 64], depth: usize, occurrences: usize, selected: bool, forced: bool }
 impl Symbol {
     fn text<'a>(&self, source: &'a dyn FieldProjectionSource) -> Result<&'a str, ValueError> {

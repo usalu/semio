@@ -8,7 +8,7 @@ use crate::{playbook_flow_content, playbook_remove_block_leaves, PlaybookSnapsho
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "remove-block")]
 pub struct RemoveBlock {
     pub step_id: String,

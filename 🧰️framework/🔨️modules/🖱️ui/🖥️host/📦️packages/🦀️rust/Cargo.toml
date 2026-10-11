@@ -24,6 +24,7 @@ raw-window-handle = "0.6"
 
 [dev-dependencies]
 serde_json = { workspace = true }
+semio-framework-async = { path = "../../../../⏳️async/📦️packages/🦀️rust" }
 
 # 🪟️ Native windowing. Absent on wasm, where the browser canvas host takes over.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

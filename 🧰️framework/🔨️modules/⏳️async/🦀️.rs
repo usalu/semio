@@ -255,6 +255,9 @@ struct CancelNode {
 #[path="🛑️cancel/♻️retirement/🦀️.rs"]
 mod cancellation_retirement;
 pub use cancellation_retirement::{CancelTokenRetirement,CancelTokenRetirementError,CancelTokenRetirementBlocked};
+#[path="♻️cancel-return/📬️claim/🦀️.rs"]
+mod publication_claim;
+pub use publication_claim::{PublicationClaim,PublicationClaimHandle,PublicationPermit};
 
 #[cfg(test)]
 #[path="🛑️cancel/🎟️admission/🧪️tests/🦀️.rs"]
@@ -361,6 +364,11 @@ impl CancelToken {
 
     pub async fn is_cancelled(&self) -> bool {
         self.is_cancelled_now()
+    }
+
+    /// 🪪️ True when both handles are aliases of the same original cancellation node.
+    pub fn is_same_node(&self, other: &CancelToken) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
     }
 
     /// 🔍️ Reads cancellation from a finite synchronous scheduler turn.

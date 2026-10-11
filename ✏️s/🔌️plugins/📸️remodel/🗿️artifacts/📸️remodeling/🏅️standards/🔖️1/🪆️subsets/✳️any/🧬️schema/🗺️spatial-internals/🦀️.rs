@@ -11,7 +11,8 @@ fn dist_sq<const D: usize>(a: &[f64; D], b: &[f64; D]) -> f64 {
     a.iter().zip(b.iter()).map(|(x, y)| (x - y) * (x - y)).sum()
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 struct KdNode<const D: usize> {
     point: [f64; D],
     id: u32,
@@ -47,7 +48,8 @@ impl Ord for KdHeapEntry {
 }
 
 /// 🌲️ Balanced k-d tree over `[f64; D]` points with `u32` payload indices, built by iterative median splits (quickselect on `axis = depth % D`) into a flat node vector with children linked by index; all queries run iteratively with an explicit stack and bounding-plane pruning. <https://en.wikipedia.org/wiki/K-d_tree>
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct KdTree<const D: usize> {
     nodes: Vec<KdNode<D>>,
 }

@@ -1,18 +1,8 @@
 //! ♻️ Exact field ownership for persisted collection documents.
 
-use crate::{ArtifactBody, CollectionEntry, CollectionFolder, CollectionMutation, CollectionSnapshot};
+use crate::CollectionMutation;
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
-use semio_framework_value::{artifact_retire_struct as retire_struct, artifact_retirement_sequence as seq};
-
-retire_struct!(CollectionFolder { id, parent_id, name });
-retire_struct!(CollectionEntry { id, folder_id, name, kind_id, body });
-retire_struct!(CollectionSnapshot { schema, name, folders, entries });
-
-impl RetireOwned for ArtifactBody {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        match self { Self::Document { schema, document_id } => seq![schema, document_id], Self::Blob { blob } => blob.retirement() }
-    }
-}
+use semio_framework_value::artifact_retirement_sequence as seq;
 
 impl RetireOwned for CollectionMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {

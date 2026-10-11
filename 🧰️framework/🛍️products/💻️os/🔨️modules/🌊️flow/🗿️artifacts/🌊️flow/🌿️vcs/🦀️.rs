@@ -123,7 +123,8 @@ fn apply_flow_collection_delta<'a, T: Identified<String>>(items: &mut Vec<&'a T>
 
 //#region 🔖️Mutations
 /// 📍️ One layout assignment; absent or null layout removes the existing entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FlowLayoutEntry {
@@ -210,6 +211,10 @@ impl ArtifactStoreOneItemPreparationFactory<FlowHostSnapshot, FlowMutation> for 
         mutations::prepared_operation_wire_source(mutation)
     }
 
+    fn begin_batch_digest(&self, _edit: &mut Option<Box<crate::os_spr::Edit<FlowMutation>>>, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn crate::os_store::ArtifactStoreBatchDigest<FlowMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "flow catalog prepares no retained gesture"))
+    }
+
     fn preflight(&self, _mutation: &FlowMutation, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
         Err("flow catalog prepares no retained gesture".into())
     }
@@ -218,7 +223,7 @@ impl ArtifactStoreOneItemPreparationFactory<FlowHostSnapshot, FlowMutation> for 
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "flow catalog prepares no retained gesture"))
     }
 
-    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<FlowHostSnapshot, FlowMutation>, _grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<FlowHostSnapshot, FlowMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, ArtifactStoreOneItemPreparationRequest<FlowHostSnapshot, FlowMutation>)> {
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<FlowHostSnapshot, FlowMutation, FlowMutation>, _grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<FlowHostSnapshot, FlowMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, ArtifactStoreOneItemPreparationRequest<FlowHostSnapshot, FlowMutation, FlowMutation>)> {
         Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "flow catalog prepares no retained gesture"), request))
     }
 }

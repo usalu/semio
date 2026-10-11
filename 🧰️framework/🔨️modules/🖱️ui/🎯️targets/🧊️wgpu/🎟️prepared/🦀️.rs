@@ -1550,6 +1550,7 @@ impl PreparedRenderUpload {
         match self {
             #[cfg(test)]
             Self::GlyphAtlas { pixels, .. } | Self::IconAtlas { pixels, .. } | Self::Raster { pixels, .. } => Ok(usize::from(!pixels.is_empty())),
+            Self::GlyphAtlasPages { pixels } | Self::IconAtlasPages { pixels } => pixels.next_close_copy_byte_demand(),
             _ => Ok(0),
         }
     }
@@ -3881,6 +3882,6 @@ impl OffscreenPresentToken {
 #[path = "../../../🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "wgpu-engine", not(target_os = "wasi")))]
 #[path = "🖼️atlas/🧪️tests/🦀️.rs"]
 mod atlas_original_owner_tests;

@@ -108,7 +108,7 @@ impl ShardLoop {
             for offset in 0..ring.len {
                 if let Some(slot) = ring.slots[ring.order[offset]].as_mut() {
                     if slot.owner.budget.is_none() {
-                        slot.owner.budget = self.granted_budgets.get(&slot.owner.authority.actor()).copied();
+                        slot.owner.budget = self.granted_budgets.get(&slot.owner.authority.actor()).cloned();
                     }
                 }
             }

@@ -19,6 +19,15 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
+#[cfg(test)]
+macro_rules! test_identity {
+    ($identity:ident) => {
+        let mut observer_function = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+        let observer: &mut store::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer_function;
+        let mut $identity = store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1 << 20, observer).expect("finite test identity admission");
+    };
+}
+
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🦀️.rs"]
 pub mod ast;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🦀️.rs"]
@@ -193,7 +202,7 @@ pub use content::*;
 
 // #region 🔖️Runtime
 /// 🔌️ Runtime port on a node.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Port {
     pub id: String,
@@ -204,7 +213,7 @@ pub struct Port {
 }
 
 /// 🧩️ Runtime node (piece).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Node {
     pub id: String,
@@ -223,7 +232,7 @@ pub struct Node {
 }
 
 /// 🔗️ Runtime edge (connection).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Edge {
     pub id: String,
@@ -235,7 +244,8 @@ pub struct Edge {
 }
 
 /// 📷️ Camera for snapshot documents.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Camera {
     pub x: f64,
@@ -436,7 +446,7 @@ fn validate_trinity_scene(gm: &GraphManifest, scene: &JackWorkingScene) -> Resul
 }
 
 /// 🎯️ Entity reference for mutations.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", tag = "entity", content = "id")]
 pub enum EntityRef {
     Node(String),

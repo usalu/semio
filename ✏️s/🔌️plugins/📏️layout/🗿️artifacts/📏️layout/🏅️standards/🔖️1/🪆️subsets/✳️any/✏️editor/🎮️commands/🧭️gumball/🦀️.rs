@@ -11,7 +11,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, No
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// ✋️ `translateSelection` — moves the frames by `{dx, dy}` page units.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "translate-selection")]
 pub struct TranslateSelection {
     #[value(default)]
@@ -27,7 +27,7 @@ pub struct TranslateSelection {
 }
 
 /// 🔃️ `rotateSelection` — turns the frames by `angle` radians (counter-clockwise) about the centroid of their centres.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "rotate-selection")]
 pub struct RotateSelection {
     #[value(default)]
@@ -41,7 +41,7 @@ pub struct RotateSelection {
 }
 
 /// 🗜️ `scaleSelection` — scales the frames by `{sx, sy}` about the centroid of their centres.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "scale-selection")]
 pub struct ScaleSelection {
     #[value(default)]

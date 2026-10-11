@@ -163,7 +163,10 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
     let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
         .await
         .expect("GIS Map preparation-law Store opens");
-    store.install_document_store_owners_exact(crate::host::owned::gis_map_document_store_owners());
+    let owners = store::funded_bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>().expect("GIS owner catalog is fully funded");
+    if let Err((error, _owners)) = store.install_document_store_owners_exact(owners) {
+        panic!("GIS store refused its exact owner catalog: {error}");
+    }
     let factory = gis_map_parent_one_item_preparation_factory();
     let mutation = GisMapMutation::CreatePosition(crate::mutations::create_position::CreatePosition {
         index: 0,

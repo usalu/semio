@@ -38,7 +38,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const from = (target: string, pattern: RegExp) => project.targets[target].dependsOn.flatMap((entry: string) => pattern.exec(entry)?.[1] ?? []).sort();
       expect(from("activate-dev", /^@semio-tech\/framework-os-dev:activate-(.+)-react-dev$/)).toEqual(lanes);
       expect(from("prepare-dev", /^@semio-tech\/framework-os-dev:prepare-(.+)-react-dev$/)).toEqual(lanes);
-      expect(from("prepare-release", /^@semio-tech\/framework-os-dev:prepare-(.+)-react-release$/)).toEqual(lanes);
+      expect(from("catalog-release", /^@semio-tech\/framework-os-dev:prepare-(.+)-react-release$/)).toEqual(lanes);
     });
   });
 

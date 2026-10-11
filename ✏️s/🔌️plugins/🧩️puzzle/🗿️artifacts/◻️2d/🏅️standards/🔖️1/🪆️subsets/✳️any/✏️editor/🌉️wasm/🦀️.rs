@@ -14,7 +14,7 @@
 
 use crate::editor::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
 use crate::editor::puzzle2d::engine::{
-    apply_edge_handle_snap_to_board_snapshot_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, puzzle_2d_lod_scale_json,
+    canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, puzzle_2d_lod_scale_json,
     BoardHost, CubicBez, Point,
 };
 use crate::Puzzle2dSnapshot;
@@ -64,17 +64,12 @@ pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64
 pub fn board_redraw_layout_snapshot_json(snapshot_json:&str,options_json:&str,maximum_bytes:u32,maximum_work:u32,progress:js_sys::Function)->Result<String,JsValue>{
  let report=|phase:&str,completed:u64|progress.call2(&JsValue::NULL,&JsValue::from_str(phase),&JsValue::from_f64(completed as f64)).map(|value|value.as_bool().unwrap_or(false)).unwrap_or(false);
  let mut decode_progress=|p:semio_framework_value::NativeDecodeProgress|report("decode",p.completed as u64);
- let mut encode_progress=|p:semio_framework_value::NativeEncodeProgress|report("encode",p.completed as u64);
+ let mut encode_progress=|p:semio_framework_value::native_encoding::NativeEncodeProgress|report("encode",p.completed as u64);
  let mut layout_progress=|p:semio_framework_os_infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);
  let mut decode=semio_framework_value::NativeDecodeControl::new(maximum_bytes as usize,&mut decode_progress);
  let mut encode=semio_framework_value::NativeEncodeControl::new(maximum_bytes as usize,&mut encode_progress);
  let mut work=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(maximum_work as u64,&mut layout_progress);
  semio_framework_os_infinite::board::io::text::layout::redraw_snapshot_json(snapshot_json,options_json,&mut decode,&mut work,&mut encode).map_err(|e|JsValue::from_str(&e.to_string()))
-}
-
-#[wasm_bindgen(js_name = boardRedrawHandlesSnapshotJson)]
-pub fn board_redraw_handles_snapshot_json(snapshot_json: &str) -> Result<String, JsValue> {
-    apply_edge_handle_snap_to_board_snapshot_json(snapshot_json).map_err(|e| JsValue::from_str(&e))
 }
 
 /// 🔤️ Parses `.puzzle2d` DSL text (`Puzzle2dSnapshot`'s `dsl::DslArtifact` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.2d.json` snapshot — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
@@ -152,13 +147,13 @@ impl BoardSession {
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
+            let admission = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));
             }
             g.host.set_size(lw, lh, dpr);
-            g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
+            g.gpu.finish_attach(admission);
             Ok(JsValue::UNDEFINED)
         })
     }

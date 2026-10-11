@@ -6,7 +6,8 @@
 /// tail (`cbSize` bytes) verbatim when present — `None` for the plain 16-byte PCM form. NO type
 /// sharing with `avi` (both are RIFF-based but deliberately distinct vocabularies per the master
 /// plan).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WavFmt {
     pub audio_format: u16,
@@ -29,7 +30,7 @@ impl Default for WavFmt {
 /// `(audio_format, bits_per_sample)` — `Raw` is the honest fallback for anything this codec
 /// doesn't interpret sample-by-sample (24-bit PCM, ADPCM, WAVE_FORMAT_EXTENSIBLE payloads, …).
 /// 🔢️ JSON float samples retain their complete unsigned IEEE 754 words.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 pub enum WavData {
     Pcm16(Vec<i16>),
     Pcm8(Vec<u8>),
@@ -218,7 +219,8 @@ pub(crate) fn is_zero_byte(value: &u8) -> bool {
     *value == 0
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RiffChunk {
     pub fourcc: String,
@@ -232,7 +234,7 @@ pub struct RiffChunk {
 /// 🧭️ One position in the top-level RIFF/WAVE chunk sequence. `Format` and `Samples`
 /// reference the typed primary chunks; `Other` references `other_chunks[index]`. A duplicate
 /// `fmt `/`data` chunk is deliberately an `Other` entry so its original payload survives exactly.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 pub enum WavChunkRef {
     Format,
     Samples,
@@ -393,7 +395,7 @@ pub fn validate_wav_serialization(snapshot: &WavSnapshot) -> Result<(), WavSeria
 }
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.wav")]
 pub struct WavSnapshot {
@@ -436,3 +438,94 @@ impl Default for WavSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+//#region 🌲️CanonicalTree
+use semio_framework_pack_json::{ArtifactCanonicalDecimalU64 as TreeDecimal, ArtifactCanonicalJsonNode as TreeNode, ArtifactCanonicalJsonText as TreeText, ArtifactCanonicalJsonTree as Tree};
+use semio_framework_value::{ValueError as TreeError, ValueRefusalKind as TreeRefusal};
+
+static WAV_DATA_KINDS: [&str; 4] = ["pcm16", "pcm8", "raw", "float32"];
+static WAV_CHUNK_KINDS: [&str; 3] = ["format", "samples", "other"];
+
+fn tree_absent(reason: &'static str) -> TreeError {
+    TreeError::literal(TreeRefusal::InvariantViolated, reason)
+}
+
+#[repr(transparent)]
+struct WavFloatBits(f32);
+
+#[repr(transparent)]
+struct WavFloatSamples(Vec<f32>);
+
+impl Tree for WavFloatBits {
+    fn canonical_tree_node(&self) -> Result<TreeNode<'_>, TreeError> {
+        Ok(TreeNode::Object(1))
+    }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn Tree, TreeError> {
+        match ordinal {
+            // SAFETY: `f32` and `u32` share size and alignment, and every bit pattern is a valid `u32`.
+            0 => Ok(unsafe { &*(&self.0 as *const f32 as *const u32) }),
+            _ => Err(tree_absent("canonical WAV float word ordinal is absent")),
+        }
+    }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<TreeText<'_>, TreeError> {
+        if ordinal == 0 { Ok(TreeText::from("bits")) } else { Err(tree_absent("canonical WAV float word key is absent")) }
+    }
+}
+
+impl Tree for WavFloatSamples {
+    fn canonical_tree_node(&self) -> Result<TreeNode<'_>, TreeError> {
+        Ok(TreeNode::Array(self.0.len()))
+    }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn Tree, TreeError> {
+        let sample = self.0.get(ordinal).ok_or_else(|| tree_absent("canonical WAV float sample ordinal is absent"))?;
+        // SAFETY: `WavFloatBits` is `repr(transparent)` over the borrowed `f32`.
+        Ok(unsafe { &*(sample as *const f32 as *const WavFloatBits) })
+    }
+}
+
+/// 🌲️ Projects `{kind, value}` exactly as the hand-written `ToValue` emits it; float samples are `{bits}` words.
+impl Tree for WavData {
+    fn canonical_tree_node(&self) -> Result<TreeNode<'_>, TreeError> {
+        Ok(TreeNode::Object(2))
+    }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn Tree, TreeError> {
+        match (ordinal, self) {
+            (0, Self::Pcm16(_)) => Ok(&WAV_DATA_KINDS[0]),
+            (0, Self::Pcm8(_)) => Ok(&WAV_DATA_KINDS[1]),
+            (0, Self::Raw(_)) => Ok(&WAV_DATA_KINDS[2]),
+            (0, Self::Float32(_)) => Ok(&WAV_DATA_KINDS[3]),
+            (1, Self::Pcm16(samples)) => Ok(samples),
+            (1, Self::Pcm8(samples) | Self::Raw(samples)) => Ok(samples),
+            // SAFETY: `WavFloatSamples` is `repr(transparent)` over the borrowed vector.
+            (1, Self::Float32(samples)) => Ok(unsafe { &*(samples as *const Vec<f32> as *const WavFloatSamples) }),
+            _ => Err(tree_absent("canonical WAV data ordinal is absent")),
+        }
+    }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<TreeText<'_>, TreeError> {
+        ["kind", "value"].get(ordinal).map(|key| TreeText::from(*key)).ok_or_else(|| tree_absent("canonical WAV data key is absent"))
+    }
+}
+
+/// 🌲️ Projects `{kind}` or `{kind, value}` where `other` carries its chunk index as decimal text.
+impl Tree for WavChunkRef {
+    fn canonical_tree_node(&self) -> Result<TreeNode<'_>, TreeError> {
+        Ok(TreeNode::Object(if matches!(self, Self::Other(_)) { 2 } else { 1 }))
+    }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn Tree, TreeError> {
+        match (ordinal, self) {
+            (0, Self::Format) => Ok(&WAV_CHUNK_KINDS[0]),
+            (0, Self::Samples) => Ok(&WAV_CHUNK_KINDS[1]),
+            (0, Self::Other(_)) => Ok(&WAV_CHUNK_KINDS[2]),
+            (1, Self::Other(index)) => Ok(TreeDecimal::from_ref(index)),
+            _ => Err(tree_absent("canonical WAV chunk reference ordinal is absent")),
+        }
+    }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<TreeText<'_>, TreeError> {
+        match (ordinal, self) {
+            (0, _) => Ok(TreeText::from("kind")),
+            (1, Self::Other(_)) => Ok(TreeText::from("value")),
+            _ => Err(tree_absent("canonical WAV chunk reference key is absent")),
+        }
+    }
+}
+//#endregion 🌲️CanonicalTree

@@ -9,7 +9,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// 🧩️ Brings a new [`FormQuestion`] into existence inside `step_id`'s `blocks`, at an optional
 /// FINAL-state `index` (`None` appends). An unknown `step_id` is Error `mutation.target-missing`; a
 /// duplicate `block.id` within that step is Fatal `mutation.duplicate-id`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct CreateBlock {

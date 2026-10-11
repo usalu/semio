@@ -10,7 +10,7 @@ use std::hash::{Hash, Hasher};
 
 //#region 🔖️Extent
 /// 📏️ binary's real extent over its opaque `bytes` blob.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BinaryExtent {
     pub byte_length: u64,

@@ -183,7 +183,7 @@ fn rewind_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[
 /// `GifFrameDiff` finding exactly — see `f6-recon-report.md` §3b). `DiffCodec` for `GifDiff` is
 /// hand-rolled below instead (this struct itself needs no `dsl` derive at all; it's a plain leaf
 /// type consumed by the hand-rolled `print_diff`/`parse_diff`/`encode_diff`/`decode_diff`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifImageDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -276,14 +276,14 @@ impl GifImageDiff {
 //#endregion 🔖️ImageDiff
 
 //#region 🔖️ImagesDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifImageModified {
     pub index: usize,
     pub diff: GifImageDiff,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifImageAdded {
     pub index: usize,
@@ -291,7 +291,7 @@ pub struct GifImageAdded {
 }
 
 /// 🔺️ Index-keyed collection triple for `GifSnapshot::images`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct GifImagesDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -365,7 +365,7 @@ impl GifImagesDiff {
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.gif` (87a). No `snapshot: Option<GifSnapshot>` full-replace slot anywhere —
 /// every mutation leaf names exactly the fields and image rows it changes.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif.diff")]
 pub struct GifDiff {

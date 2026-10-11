@@ -8,7 +8,7 @@ fn pinned() -> BimScheduleWindowConfig {
 }
 
 fn snapshot(config: BimScheduleWindowConfig) -> BimScheduleWindowConfigMutation {
-    BimScheduleWindowConfigMutation::Replace { config }
+    BimScheduleWindowConfigMutation::Replace(Replace { config })
 }
 
 #[semio_framework_async_macros::async_test]

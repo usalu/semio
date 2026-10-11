@@ -11,9 +11,9 @@ async fn framework_reserved_emit_admission_preserves_saturated_foreign_slots_and
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){
   let occupied=row["occupied"].as_u64().unwrap()as usize;
-  let mut app=contract_composed_app_raw().await;
+  let mut app=contract_composed_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
   let admitted=app.test_reserved_emit_admission_case(occupied,&meta());
-  drain_and_close_composed_fixture(&mut app);
+  drain_and_close_composed_fixture(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
   assert_eq!(admitted,row["admitted"].as_bool().unwrap());
   println!("[DEBUG] reserved producer occupied={occupied} exact original reservation+keyed lease, no producer handoff at saturation, foreign identity unchanged");
  }
@@ -21,18 +21,18 @@ async fn framework_reserved_emit_admission_preserves_saturated_foreign_slots_and
 
 #[semio_framework_async_macros::async_test]
 async fn framework_reserved_emit_cancelled_worker_keeps_original_permit_until_completion_handoff(){
- let mut app=contract_composed_app_raw().await;
+ let mut app=contract_composed_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
  let retained=app.test_reserved_emit_cancelled_worker_handoff(&meta()).await;
- drain_and_close_composed_fixture(&mut app);
+ drain_and_close_composed_fixture(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
  assert!(retained,"cancelled producer must return its original permit so completed original output can enter bounded mounted cancellation");
  println!("[DEBUG] cancelled reserved worker retains original operation+keyed lease through completion handoff, then exact finish");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn framework_reserved_emit_busy_completion_keeps_original_fixed_owner(){
- let mut app=contract_composed_app_raw().await;
+ let mut app=contract_composed_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
  let retained=app.test_reserved_emit_busy_completion_owner(&meta()).await;
- drain_and_close_composed_fixture(&mut app);
+ drain_and_close_composed_fixture(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
  assert!(retained,"busy original completion remains in the same pre-admitted operation until bounded close");
  println!("[DEBUG] busy completion retains same operation, original cell/payload pointer and cancelled keyed lease");
 }

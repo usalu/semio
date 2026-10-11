@@ -30,6 +30,7 @@ struct FoldControlState {
     page_bytes: AtomicUsize,
     pending_retirement_birth: AtomicUsize,
     pending_retirement_items: AtomicUsize,
+    pending_original_copy: AtomicUsize,
     retirement_capacity: AtomicUsize,
     retirement_items: AtomicUsize,
     admitted_retirement_items: AtomicUsize,
@@ -47,14 +48,14 @@ pub struct HistoryFoldControl(Arc<FoldControlState>);
 
 impl HistoryFoldControl {
     /// 🌱️ Creates fixed retirement queue capacity without inspecting any history.
-    pub fn new() -> Self { Self(Arc::new(FoldControlState { cancelled: AtomicBool::new(false), completed: AtomicU64::new(0), page_bytes: AtomicUsize::new(4096), pending_retirement_birth:AtomicUsize::new(0), pending_retirement_items:AtomicUsize::new(0), retirement_capacity:AtomicUsize::new(0), retirement_items:AtomicUsize::new(0), admitted_retirement_items:AtomicUsize::new(0), admitted_retirement_capacity:AtomicUsize::new(0), original_copy:AtomicUsize::new(0),original_depth:AtomicUsize::new(0),original_release:AtomicUsize::new(0),admitted_original_copy:AtomicUsize::new(0),retirements: FoldRetirementQueue::new() })) }
+    pub fn new() -> Self { Self(Arc::new(FoldControlState { cancelled: AtomicBool::new(false), completed: AtomicU64::new(0), page_bytes: AtomicUsize::new(4096), pending_retirement_birth:AtomicUsize::new(0), pending_retirement_items:AtomicUsize::new(0),pending_original_copy:AtomicUsize::new(0), retirement_capacity:AtomicUsize::new(0), retirement_items:AtomicUsize::new(0), admitted_retirement_items:AtomicUsize::new(0), admitted_retirement_capacity:AtomicUsize::new(0), original_copy:AtomicUsize::new(0),original_depth:AtomicUsize::new(0),original_release:AtomicUsize::new(0),admitted_original_copy:AtomicUsize::new(0),retirements: FoldRetirementQueue::new() })) }
     /// 📊️ Completed cooperative work units, excluding cancellation retirement.
     pub fn completed(&self) -> u64 { self.0.completed.load(Ordering::Relaxed) }
     fn original_grant(&self)->RetainedCloneGrant {RetainedCloneGrant{maximum_items:self.0.retirement_items.load(Ordering::Relaxed),maximum_copy_bytes:self.0.original_copy.load(Ordering::Relaxed),maximum_capacity_bytes:self.0.retirement_capacity.load(Ordering::Relaxed),maximum_release_bytes:self.0.original_release.load(Ordering::Relaxed),maximum_depth:self.0.original_depth.load(Ordering::Relaxed)}}
     fn accept_original_progress(&self,progress:RetainedCloneProgress){self.0.retirement_items.fetch_sub(progress.copied_items,Ordering::Relaxed);self.0.retirement_capacity.fetch_sub(progress.retained_capacity_bytes,Ordering::Relaxed);self.0.original_copy.fetch_sub(progress.copied_bytes,Ordering::Relaxed);self.0.admitted_retirement_items.fetch_add(progress.copied_items,Ordering::Relaxed);self.0.admitted_retirement_capacity.fetch_add(progress.retained_capacity_bytes,Ordering::Relaxed);self.0.admitted_original_copy.fetch_add(progress.copied_bytes,Ordering::Relaxed);}
-    pub fn adopt_actor(&self,original:HistoryFoldOwned<String>)->SharedActorAdmission {let capacity=semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<String>();self.0.pending_retirement_birth.fetch_add(capacity,Ordering::Relaxed);self.0.pending_retirement_items.fetch_add(1,Ordering::Relaxed);SharedActorAdmission{original:Some(original),control:self.clone(),capacity}}
+    pub fn adopt_actor(&self,original:HistoryFoldOwned<String>)->SharedActorAdmission {let capacity=semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<String>();self.0.pending_retirement_birth.fetch_add(capacity,Ordering::Relaxed);self.0.pending_retirement_items.fetch_add(1,Ordering::Relaxed);self.0.pending_original_copy.fetch_add(SharedActorAdmission::COPY_BYTES,Ordering::Relaxed);SharedActorAdmission{original:Some(original),control:self.clone(),capacity}}
     /// 🪪️ Borrows the original shared actor until its exact lease header is admitted.
-    pub fn lease_actor<'a>(&self,original:&'a semio_framework_value::SharedUtf8)->SharedActorLease<'a>{self.0.pending_retirement_items.fetch_add(1,Ordering::Relaxed);SharedActorLease{original,control:self.clone()}}
+    pub fn lease_actor<'a>(&self,original:&'a semio_framework_value::SharedUtf8)->SharedActorLease<'a>{self.0.pending_retirement_items.fetch_add(1,Ordering::Relaxed);self.0.pending_original_copy.fetch_add(SharedActorLease::COPY_BYTES,Ordering::Relaxed);SharedActorLease{original,control:self.clone()}}
     /// ♻️ Transfers an owned local to exact retirement when its coroutine scope ends.
     pub fn track<T: RetireOwned>(&self, value: T) -> Result<HistoryFoldAdmission<T>, (ValueError, T)> {
         if !T::controlled_retirement_supported() { return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner, "fold local has no controlled retirement authority"), value)); }
@@ -88,22 +89,24 @@ impl HistoryFoldControl {
 impl Default for HistoryFoldControl { fn default() -> Self { Self::new() } }
 
 pub struct SharedActorAdmission {original:Option<HistoryFoldOwned<String>>,control:HistoryFoldControl,capacity:usize}
+impl SharedActorAdmission{const COPY_BYTES:usize=size_of::<String>()+size_of::<semio_framework_value::SharedUtf8>();}
 impl Future for SharedActorAdmission {
     type Output=semio_framework_value::SharedUtf8;
     fn poll(mut self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{
-        let grant=self.control.original_grant();let copy=size_of::<String>()+size_of::<semio_framework_value::SharedUtf8>();
+        let grant=self.control.original_grant();let copy=Self::COPY_BYTES;
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<self.capacity{return Poll::Pending;}
         let original=self.original.take().expect("original actor admission retains paid String owner").take();
         let(owner,progress)=semio_framework_value::SharedUtf8::admit(original,grant).unwrap_or_else(|_|unreachable!("original actor admission was preflighted"));
         self.control.accept_original_progress(progress);Poll::Ready(owner)
     }
 }
-impl Drop for SharedActorAdmission {fn drop(&mut self){self.control.0.pending_retirement_birth.fetch_sub(self.capacity,Ordering::Relaxed);self.control.0.pending_retirement_items.fetch_sub(1,Ordering::Relaxed);}}
+impl Drop for SharedActorAdmission {fn drop(&mut self){self.control.0.pending_retirement_birth.fetch_sub(self.capacity,Ordering::Relaxed);self.control.0.pending_retirement_items.fetch_sub(1,Ordering::Relaxed);self.control.0.pending_original_copy.fetch_sub(Self::COPY_BYTES,Ordering::Relaxed);}}
 
 /// 🧾️ One original actor alias waits for the caller's independent copy and item authority.
 pub struct SharedActorLease<'a>{original:&'a semio_framework_value::SharedUtf8,control:HistoryFoldControl}
-impl Future for SharedActorLease<'_>{type Output=semio_framework_value::SharedUtf8;fn poll(self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{let grant=self.control.original_grant();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<size_of::<semio_framework_value::SharedUtf8>(){return Poll::Pending;}let(owner,progress)=self.original.admit_clone(grant).unwrap_or_else(|_|unreachable!("original shared actor lease preflighted"));self.control.accept_original_progress(progress);Poll::Ready(owner)}}
-impl Drop for SharedActorLease<'_>{fn drop(&mut self){self.control.0.pending_retirement_items.fetch_sub(1,Ordering::Relaxed);}}
+impl SharedActorLease<'_>{const COPY_BYTES:usize=size_of::<semio_framework_value::SharedUtf8>();}
+impl Future for SharedActorLease<'_>{type Output=semio_framework_value::SharedUtf8;fn poll(self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{let grant=self.control.original_grant();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<Self::COPY_BYTES{return Poll::Pending;}let(owner,progress)=self.original.admit_clone(grant).unwrap_or_else(|_|unreachable!("original shared actor lease preflighted"));self.control.accept_original_progress(progress);Poll::Ready(owner)}}
+impl Drop for SharedActorLease<'_>{fn drop(&mut self){self.control.0.pending_retirement_items.fetch_sub(1,Ordering::Relaxed);self.control.0.pending_original_copy.fetch_sub(Self::COPY_BYTES,Ordering::Relaxed);}}
 
 /// 🧳️ Coroutine-local owned values enqueue their registered retirement instead of deep-dropping on cancellation.
 pub struct HistoryFoldOwned<T: RetireOwned> { owner: Option<Box<ControlledRetirement<T>>>, control: HistoryFoldControl }
@@ -192,7 +195,7 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
     pub fn next_local_admission_item_demand(&self)->usize{if self.control_closed{0}else{self.control.0.pending_retirement_items.load(Ordering::Relaxed)}}
     /// 📏️ Explicit cold admission preserves all independent currencies.
     pub fn next_step_grant(&self,maximum_items:usize,logical_copy:usize)->Result<RetainedCloneGrant,ValueError>{
-        Ok(RetainedCloneGrant{maximum_items,maximum_copy_bytes:if !self.control_closed&&!self.future_finished&&self.control.empty(){logical_copy}else{self.next_copy_byte_demand()?.max(logical_copy)},maximum_capacity_bytes:self.next_capacity_byte_demand(logical_copy)?,maximum_release_bytes:self.next_release_byte_demand()?,maximum_depth:self.next_depth_demand()?.max(1)})
+        Ok(RetainedCloneGrant{maximum_items,maximum_copy_bytes:(if !self.control_closed&&!self.future_finished&&self.control.empty(){logical_copy}else{self.next_copy_byte_demand()?.max(logical_copy)}).max(self.control.0.pending_original_copy.load(Ordering::Relaxed)),maximum_capacity_bytes:self.next_capacity_byte_demand(logical_copy)?,maximum_release_bytes:self.next_release_byte_demand()?,maximum_depth:self.next_depth_demand()?.max(1)})
     }
     fn control_frame_bytes(&self)->usize{let layout=std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<FoldControlState>()).unwrap().0.pad_to_align();if Arc::strong_count(&self.control.0)==1{layout.size()}else{0}}
     fn cleanup_one(&mut self,grant:RetainedCloneGrant,cancelled:bool)->Result<RetainedCloneStep,ValueError>{

@@ -65,6 +65,58 @@
       "valid": false
     },
     {
+      "name": "target-from-source-declaration",
+      "stage": "target",
+      "value": {
+        "pluginId": "portable",
+        "packageId": "semio:portable",
+        "cratePath": "owner/📦️packages/🦀️rust",
+        "packageName": "portable-component",
+        "wasmOut": "portable_component.wasm",
+        "role": "plugin",
+        "consumes": [],
+        "dependsOn": [],
+        "directoryName": "🧪️portable"
+      },
+      "valid": true
+    },
+    {
+      "name": "target-missing-directory",
+      "stage": "target",
+      "value": {
+        "pluginId": "portable",
+        "packageId": "semio:portable",
+        "cratePath": "owner/📦️packages/🦀️rust",
+        "packageName": "portable-component",
+        "wasmOut": "portable_component.wasm",
+        "role": "plugin",
+        "consumes": [],
+        "dependsOn": []
+      },
+      "valid": false
+    },
+    {
+      "name": "target-cannot-fabricate-hashes",
+      "stage": "target",
+      "value": {
+        "pluginId": "portable",
+        "packageId": "semio:portable",
+        "cratePath": "owner/📦️packages/🦀️rust",
+        "packageName": "portable-component",
+        "wasmOut": "portable_component.wasm",
+        "role": "plugin",
+        "consumes": [],
+        "dependsOn": [],
+        "directoryName": "🧪️portable",
+        "hashes": {
+          "wasmSha256": "0",
+          "coreWasmSha256": "0",
+          "descriptorSha256": "0"
+        }
+      },
+      "valid": false
+    },
+    {
       "name": "compiled-without-deployment",
       "stage": "compiled",
       "value": {

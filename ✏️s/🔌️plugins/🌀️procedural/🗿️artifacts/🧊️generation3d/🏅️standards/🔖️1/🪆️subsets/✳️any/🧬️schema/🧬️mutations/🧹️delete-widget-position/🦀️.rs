@@ -6,7 +6,8 @@ use crate::Generation3dSnapshot;
 //#region 🔖️DeleteWidgetPosition
 /// 🗑️ Removes the position override for `id`; diff/inverse leaves capture the removed position
 /// from `base` so undo is a real `move-widget`.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct DeleteWidgetPosition {
     pub id: String,

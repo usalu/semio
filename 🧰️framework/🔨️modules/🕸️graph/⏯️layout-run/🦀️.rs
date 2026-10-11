@@ -12,7 +12,8 @@
 //! Schema of record: `🧬️schema/🔣️.json`. Contract: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📋️tool-run-contract.md` §3.7, §5 W3-F.
 
 use semio_framework_value::{FromValue, ToValue};
-use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPublication, StepContext, JOB_PAYLOAD_PAGE_BYTES};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter,
     ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_PROVISIONAL_OPS_MAX,
@@ -802,6 +803,9 @@ pub struct LayoutRunJob<E: LayoutRunOpEncoder> {
     checkpoints: u32,
     stop: Option<LayoutRunStop>,
     closing: bool,
+    publication: RetainedJobPublication,
+    staged: Option<(JobPublicationKind, Vec<u8>)>,
+    delivered: bool,
 }
 
 impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
@@ -882,6 +886,9 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
             checkpoints: 0,
             stop: None,
             closing: false,
+            publication: RetainedJobPublication::new(),
+            staged: None,
+            delivered: false,
         }
     }
 
@@ -1031,38 +1038,30 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
         [ToolRunStepArg::Unsigned(u64::from(self.iteration)), ToolRunStepArg::Float(self.max_displacement), ToolRunStepArg::Float(self.energy)]
     }
 
-    fn flush(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        let Some(tick) = self.writer.finish() else { return StepOutcome::Yield };
+    fn publish(&mut self, kind: JobPublicationKind, bytes: Vec<u8>) -> LayoutRunTurn {
+        self.staged = Some((kind, bytes));
+        LayoutRunTurn::Staged
+    }
+
+    fn flush(&mut self) -> LayoutRunTurn {
+        let Some(tick) = self.writer.finish() else { return LayoutRunTurn::Yield };
         match tick.encode() {
-            Ok(bytes) if bytes.len() <= JOB_PAYLOAD_PAGE_BYTES => match cx.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
-                Ok(payload) => StepOutcome::PreviewReady(payload),
-                Err(rejected) => {
-                    drop(rejected.into_source());
-                    Self::fault(cx, "layout run preview page was refused")
-                }
-            },
-            Ok(bytes) => Self::fault(cx, &format!("layout run tick takes {} bytes, above one payload page", bytes.len())),
-            Err(error) => Self::fault(cx, &format!("layout run tick does not encode: {error:?}")),
+            Ok(bytes) if bytes.len() <= JOB_PAYLOAD_PAGE_BYTES => self.publish(JobPublicationKind::Preview, bytes),
+            Ok(bytes) => self.fault(&format!("layout run tick takes {} bytes, above one payload page", bytes.len())),
+            Err(error) => self.fault(&format!("layout run tick does not encode: {error:?}")),
         }
     }
 
-    fn fault(cx: &mut StepContext<'_>, message: &str) -> StepOutcome {
-        let detail = match cx.payload_from_bytes(JobPayloadStream::Fault, &message.as_bytes()[..message.len().min(JOB_PAYLOAD_PAGE_BYTES)]) {
-            Ok(detail) => detail,
-            Err(rejected) => {
-                drop(rejected.into_source());
-                RetainedJobPayload::empty(JobPayloadStream::Fault)
-            }
-        };
-        StepOutcome::Fault(JobFault { detail })
+    fn fault(&mut self, message: &str) -> LayoutRunTurn {
+        self.publish(JobPublicationKind::Fault, message.as_bytes()[..message.len().min(JOB_PAYLOAD_PAGE_BYTES)].to_vec())
     }
 
-    fn initialize(&mut self, cx: &mut StepContext<'_>, cursor: u32) -> StepOutcome {
+    fn initialize(&mut self, cx: &mut StepContext<'_>, cursor: u32) -> LayoutRunTurn {
         let count = self.positions.len();
         if cursor == 0 {
             let (reason, args) = if self.resumed { (LayoutRunReason::Resumed, vec![ToolRunStepArg::Unsigned(u64::from(self.iteration))]) } else { (LayoutRunReason::Initialized, vec![ToolRunStepArg::Unsigned(count as u64), ToolRunStepArg::Unsigned(self.edges.len() as u64)]) };
             if self.writer.step(ToolRunStepKind::Info, LayoutRunStage::Initialize.index(), reason.code(), None, &args).is_err() {
-                return Self::fault(cx, "layout run step arguments exceed the limit");
+                return self.fault("layout run step arguments exceed the limit");
             }
         }
         let mut index = cursor as usize;
@@ -1085,7 +1084,7 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
         } else {
             self.phase = LayoutRunPhase::Initialize { cursor: index as u32 };
         }
-        self.flush(cx)
+        self.flush()
     }
 
     fn settle_phase(&mut self, stop: LayoutRunStop) -> LayoutRunPhase {
@@ -1093,12 +1092,12 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
         LayoutRunPhase::Compact { cursor: 0, settle: true }
     }
 
-    fn iterate(&mut self, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
+    fn iterate(&mut self, cx: &mut StepContext<'_>) -> Option<LayoutRunTurn> {
         let count = self.positions.len();
         let cool = self.cooling();
         loop {
             if cx.is_cancelled() {
-                return Some(StepOutcome::Cancelled);
+                return Some(LayoutRunTurn::Cancelled);
             }
             match self.phase {
                 LayoutRunPhase::Tree { cursor } => {
@@ -1179,7 +1178,7 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
                 _ => return None,
             }
             if cx.deadline_exceeded() {
-                return Some(StepOutcome::Yield);
+                return Some(LayoutRunTurn::Yield);
             }
         }
     }
@@ -1236,12 +1235,12 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
         self.bounds = [self.bounds[0].min(point[0]), self.bounds[1].min(point[1]), self.bounds[2].max(point[0]), self.bounds[3].max(point[1])];
     }
 
-    fn finish_iteration(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+    fn finish_iteration(&mut self, cx: &mut StepContext<'_>) -> LayoutRunTurn {
         self.iteration += 1;
         cx.consume_fuel(1);
         self.settle_streak = if self.diverged_count == 0 && self.max_displacement < self.config.settle_displacement { self.settle_streak + 1 } else { 0 };
         if self.diverged_count > 0 && self.writer.step(ToolRunStepKind::Danger, LayoutRunStage::Iterate.index(), LayoutRunReason::Diverged.code(), None, &[ToolRunStepArg::Unsigned(u64::from(self.diverged_count))]).is_err() {
-            return Self::fault(cx, "layout run step arguments exceed the limit");
+            return self.fault("layout run step arguments exceed the limit");
         }
         let threshold = self.compact_threshold();
         let count = self.positions.len();
@@ -1261,7 +1260,7 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
             }
             if moves {
                 if let Err(message) = self.append_move(index) {
-                    return Self::fault(cx, &message);
+                    return self.fault(&message);
                 }
             }
             if moves || reason.code() != self.reasons[index] {
@@ -1280,10 +1279,10 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
         } else {
             LayoutRunPhase::Tree { cursor: 0 }
         };
-        self.flush(cx)
+        self.flush()
     }
 
-    fn compact(&mut self, cx: &mut StepContext<'_>, cursor: u32, settle: bool) -> StepOutcome {
+    fn compact(&mut self, cx: &mut StepContext<'_>, cursor: u32, settle: bool) -> LayoutRunTurn {
         let count = self.positions.len();
         if cursor == 0 {
             self.writer.retract_to(0);
@@ -1296,7 +1295,7 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
         while index < count && self.writer.pending_bytes() < LAYOUT_RUN_TICK_FLUSH_BYTES {
             if self.moved(index) {
                 if let Err(message) = self.append_move(index) {
-                    return Self::fault(cx, &message);
+                    return self.fault(&message);
                 }
             } else {
                 self.emitted[index] = self.positions[index];
@@ -1310,7 +1309,7 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
         if index < count {
             self.phase = LayoutRunPhase::Compact { cursor: index as u32, settle };
             self.progress(ToolRunState::Running);
-            return self.flush(cx);
+            return self.flush();
         }
         if settle {
             let (kind, reason) = match self.stop {
@@ -1318,7 +1317,7 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
                 _ => (ToolRunStepKind::Success, LayoutRunReason::Converged),
             };
             if self.writer.step(kind, LayoutRunStage::Settle.index(), reason.code(), None, &self.step_args()).is_err() {
-                return Self::fault(cx, "layout run step arguments exceed the limit");
+                return self.fault("layout run step arguments exceed the limit");
             }
             self.phase = LayoutRunPhase::Done;
             self.progress(ToolRunState::Complete);
@@ -1328,10 +1327,10 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
             self.checkpoint_owed = true;
             self.progress(ToolRunState::Running);
         }
-        self.flush(cx)
+        self.flush()
     }
 
-    fn release_one(&mut self) -> Option<usize> {
+    fn release_next(&mut self) -> Option<usize> {
         fn take<T>(values: &mut Vec<T>) -> Option<usize> {
             (values.capacity() != 0).then(|| {
                 let bytes = values.capacity() * size_of::<T>();
@@ -1358,8 +1357,65 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
             .or_else(|| take(&mut self.tree.stack))
     }
 
+    fn next_release_bytes(&self) -> usize {
+        fn bytes<T>(values: &[T], capacity: usize) -> usize {
+            capacity * size_of::<T>() + values.len() * 0
+        }
+        [
+            bytes(&self.positions, self.positions.capacity()),
+            bytes(&self.velocities, self.velocities.capacity()),
+            bytes(&self.forces, self.forces.capacity()),
+            bytes(&self.displacements, self.displacements.capacity()),
+            bytes(&self.emitted, self.emitted.capacity()),
+            bytes(&self.origins, self.origins.capacity()),
+            bytes(&self.anchors, self.anchors.capacity()),
+            bytes(&self.radii, self.radii.capacity()),
+            bytes(&self.entities, self.entities.capacity()),
+            bytes(&self.pinned, self.pinned.capacity()),
+            bytes(&self.epoch_entities, self.epoch_entities.capacity()),
+            bytes(&self.reasons, self.reasons.capacity()),
+            bytes(&self.diverged, self.diverged.capacity()),
+            bytes(&self.edges, self.edges.capacity()),
+            bytes(&self.tree.cells, self.tree.cells.capacity()),
+            bytes(&self.tree.next, self.tree.next.capacity()),
+            bytes(&self.tree.stack, self.tree.stack.capacity()),
+        ]
+        .into_iter()
+        .find(|bytes| *bytes != 0)
+        .unwrap_or(0)
+    }
+
+    fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if !self.publication.terminal_is_empty() {
+            return self.publication.retirement_demands();
+        }
+        if let Some((_, bytes)) = self.staged.as_ref() {
+            return Ok(RetirementDemand { release_bytes: bytes.capacity(), depth: 1, ..Default::default() });
+        }
+        Ok(RetirementDemand { release_bytes: self.next_release_bytes(), depth: usize::from(!self.owns_nothing()), ..Default::default() })
+    }
+
+    fn retire_delivered<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        let step = self.publication.close_step(cx.retained_grant())?;
+        cx.consume_retained(step.progress())?;
+        if self.publication.terminal_is_empty() {
+            if let Some((_, bytes)) = self.staged.as_ref() {
+                let progress = RetainedCloneProgress { copied_items: 1, released_bytes: bytes.capacity(), ..Default::default() };
+                if !progress.fits(cx.retained_grant()) {
+                    return Ok(None);
+                }
+                cx.consume_retained(progress)?;
+                self.staged = None;
+            }
+            self.delivered = false;
+        }
+        Ok(None)
+    }
+
     fn owns_nothing(&self) -> bool {
-        self.positions.capacity() == 0
+        self.publication.terminal_is_empty()
+            && self.staged.is_none()
+            && self.positions.capacity() == 0
             && self.velocities.capacity() == 0
             && self.forces.capacity() == 0
             && self.displacements.capacity() == 0
@@ -1379,25 +1435,51 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
     }
 }
 
+/// 🔁️ What one compute turn produced before its outcome is published or reported.
+enum LayoutRunTurn {
+    Yield,
+    Cancelled,
+    Complete,
+    Staged,
+}
+
 impl<E: LayoutRunOpEncoder> InteractiveJob for LayoutRunJob<E> {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if self.delivered {
+            return self.retire_delivered(cx);
+        }
         if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return JobOutcomeBorrow::admit_cancelled(cx);
+        }
+        if let Some((kind, bytes)) = self.staged.as_ref() {
+            let outcome = self.publication.advance_from_source(*kind, bytes, cx)?;
+            self.delivered = outcome.is_some();
+            return Ok(outcome);
         }
         if std::mem::take(&mut self.checkpoint_owed) {
-            return match cx.payload_from_bytes(JobPayloadStream::CheckpointState, &self.checkpoint().encode()) {
-                Ok(state) => StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: u64::from(self.iteration) }),
-                Err(rejected) => {
-                    drop(rejected.into_source());
-                    StepOutcome::Yield
-                }
-            };
+            let bytes = self.checkpoint().encode().to_vec();
+            self.staged = Some((JobPublicationKind::Checkpoint { applied_progress: u64::from(self.iteration) }, bytes));
+            return Ok(None);
         }
-        match self.phase {
+        let turn = match self.phase {
             LayoutRunPhase::Initialize { cursor } => self.initialize(cx, cursor),
             LayoutRunPhase::Compact { cursor, settle } => self.compact(cx, cursor, settle),
-            LayoutRunPhase::Done => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) }),
-            _ => self.iterate(cx).unwrap_or(StepOutcome::Yield),
+            LayoutRunPhase::Done => LayoutRunTurn::Complete,
+            _ => self.iterate(cx).unwrap_or(LayoutRunTurn::Yield),
+        };
+        match turn {
+            LayoutRunTurn::Yield | LayoutRunTurn::Staged => Ok(None),
+            LayoutRunTurn::Cancelled => JobOutcomeBorrow::admit_cancelled(cx),
+            LayoutRunTurn::Complete => JobOutcomeBorrow::admit_complete(cx, None, None),
+        }
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Complete => descriptor.complete(None, None),
+            _ => self.publication.borrow_outcome(descriptor),
         }
     }
 
@@ -1406,14 +1488,52 @@ impl<E: LayoutRunOpEncoder> InteractiveJob for LayoutRunJob<E> {
         self.writer = ToolRunTickWriter::new(self.writer.identity());
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if !self.closing || grant.maximum_items == 0 {
             return InteractiveJobCloseStep::Blocked;
         }
-        match self.release_one() {
-            Some(released_bytes) => InteractiveJobCloseStep::Pending { released_items: 1, released_bytes },
-            None => InteractiveJobCloseStep::Complete,
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
+        let demand = match self.close_demands() {
+            Ok(demand) => demand,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        }
+        if !self.publication.terminal_is_empty() {
+            return match self.publication.close_step(grant) {
+                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            };
+        }
+        if let Some((_, bytes)) = self.staged.take() {
+            let released_bytes = bytes.capacity();
+            drop(bytes);
+            self.delivered = false;
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } };
+        }
+        match self.release_next() {
+            Some(released_bytes) => InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } },
+            None => InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() },
+        }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1474,7 +1594,7 @@ pub mod testing {
     use fdg_sim::force::fruchterman_reingold;
     use fdg_sim::glam::Vec3;
     use fdg_sim::{Dimensions, ForceGraph, ForceGraphHelper, Simulation, SimulationParameters};
-    use semio_framework_job::{drive_step, root_cancel_token, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobPayloadCloseStep, OperationId, RetainedJobPayload, StepBudget, StepOutcome, JOB_PAYLOAD_PAGE_BYTES, INTERACTIVE_LANE_WALL_US};
+    use semio_framework_job::{drive_step, root_cancel_token, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobOutcomeBorrow, JobOutcomeView, OperationId, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload, StepBudget, StepContextOwner, INTERACTIVE_LANE_WALL_US};
     use semio_framework_tool_run::{ToolRunProgress, ToolRunStep, ToolRunTick, ToolRunTraceOp, ToolRunTraceStore, ToolRunVerdict};
     use serde::Deserialize;
     use std::collections::{BTreeSet, VecDeque};
@@ -1629,40 +1749,70 @@ pub mod testing {
         (0..payload.page_count()).filter_map(|index| payload.page(index)).flatten().copied().collect()
     }
 
+    fn wallet() -> RetainedCloneGrant {
+        RetainedCloneGrant { maximum_items: 256, maximum_copy_bytes: 1 << 18, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }
+    }
+
     /// ▶️ Drives `job` through `drive_step` to `Complete` with `fuel` per step and a frozen clock, so the slicing is
     /// the job's own (one iteration per step) and every recorded step time is a whole, never deadline-cut step.
     pub fn layout_run_drive<J: InteractiveJob + ?Sized>(job: &mut J, fuel: u64) -> Result<LayoutRunRecording, String> {
         let mut recording = LayoutRunRecording::default();
         let cancel = root_cancel_token();
+        let grant = wallet();
+        let (mut owner, _) = StepContextOwner::new(OperationId(1), Generation(1), grant).map_err(|error| format!("{error:?}"))?;
         let (mut sequence, mut verdict) = (0, None);
-        while !recording.complete {
-            let started = std::time::Instant::now();
-            let mut outcome = drive_step(job, "layout-run-testing", OperationId(1), Generation(1), InteractiveStage::InteractiveStep, StepBudget::new(fuel, INTERACTIVE_LANE_WALL_US), cancel.clone(), frozen_now, &mut sequence, &mut verdict);
-            recording.step_micros.push(started.elapsed().as_micros() as u64);
-            let observed = match &outcome {
-                StepOutcome::PreviewReady(payload) => ToolRunTick::decode(&payload_bytes(payload)).map_err(|error| format!("{error:?}")).and_then(|tick| recording.apply(tick)),
-                StepOutcome::CheckpointReady(_) => {
-                    recording.checkpoints += 1;
-                    Ok(())
+        let result = (|| {
+            while !recording.complete {
+                let started = std::time::Instant::now();
+                let mut receipt = RetainedCloneProgress::default();
+                let descriptor = {
+                    let mut cx = owner.context(StepBudget::new(fuel, INTERACTIVE_LANE_WALL_US, grant), cancel.clone(), frozen_now, &mut sequence, &mut receipt).ok_or_else(|| "layout run step context refused".to_string())?;
+                    drive_step(job, &mut cx, "layout-run-testing", InteractiveStage::InteractiveStep, &mut verdict).map_err(|error| format!("{error:?}"))?.map(JobOutcomeBorrow::into_descriptor)
+                };
+                recording.step_micros.push(started.elapsed().as_micros() as u64);
+                let Some(mut descriptor) = descriptor else { continue };
+                let observed = match job.borrow_outcome(&descriptor).map_err(|error| format!("{error:?}"))? {
+                    JobOutcomeView::PreviewReady { payload, .. } => ToolRunTick::decode(&payload_bytes(payload)).map_err(|error| format!("{error:?}")).and_then(|tick| recording.apply(tick)),
+                    JobOutcomeView::CheckpointReady { .. } => {
+                        recording.checkpoints += 1;
+                        Ok(())
+                    }
+                    JobOutcomeView::Complete { .. } => {
+                        recording.complete = true;
+                        Ok(())
+                    }
+                    JobOutcomeView::Yield { .. } => Ok(()),
+                    JobOutcomeView::Cancelled { .. } => Err("layout run cancelled".to_string()),
+                    JobOutcomeView::Fault { detail, .. } => Err(String::from_utf8_lossy(&payload_bytes(detail)).into_owned()),
+                };
+                for _ in 0..4096 {
+                    if matches!(descriptor.acknowledge(grant), RetainedCloneStep::Complete(_)) {
+                        break;
+                    }
                 }
-                StepOutcome::Complete(_) => {
-                    recording.complete = true;
-                    Ok(())
-                }
-                StepOutcome::Yield => Ok(()),
-                StepOutcome::Cancelled => Err("layout run cancelled".to_string()),
-                StepOutcome::Fault(fault) => Err(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned()),
-            };
-            while outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES) != JobPayloadCloseStep::Complete {}
-            observed?;
+                observed?;
+            }
+            Ok(())
+        })();
+        for _ in 0..4096 {
+            if owner.terminal_is_empty() {
+                break;
+            }
+            owner.close_step(grant);
         }
-        Ok(recording)
+        result.map(|()| recording)
     }
 
     /// 🧹️ Closes a job the way the ledger does, one owned buffer per `close_step`.
     pub fn layout_run_close<J: InteractiveJob + ?Sized>(job: &mut J) {
+        let grant = wallet();
         job.begin_close();
-        while job.close_step(1, JOB_PAYLOAD_PAGE_BYTES) != InteractiveJobCloseStep::Complete {}
+        for _ in 0..4096 {
+            if matches!(job.close_step(grant), InteractiveJobCloseStep::Complete { .. }) {
+                return;
+            }
+        }
+        panic!("layout run job did not close");
     }
 }
 //#endregion 🔖️Testing

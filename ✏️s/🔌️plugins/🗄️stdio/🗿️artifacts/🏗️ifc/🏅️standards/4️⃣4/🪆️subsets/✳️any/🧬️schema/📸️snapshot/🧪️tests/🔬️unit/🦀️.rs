@@ -36,3 +36,20 @@ async fn codec_round_trip_via_dsl_and_pack() {
     let decoded = <IfcSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode_pack");
     assert_eq!(decoded, snapshot);
 }
+
+/// 🧬️ The newtype payload record spells the typed value on the wire exactly as the former named variant did.
+#[test]
+fn typed_value_payload_record_keeps_the_former_named_variant_wire() {
+    use semio_framework_value::ToValue;
+    #[derive(value_derive::ToValue)]
+    #[value(tag = "kind", content = "value", rename_all = "camelCase")]
+    enum Former {
+        Unset,
+        Real(f64),
+        Aggregate(Vec<Former>),
+        TypedValue { name: String, items: Vec<Former> },
+    }
+    let current = IfcValue::TypedValue(IfcTypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0), IfcValue::Aggregate(vec![IfcValue::Unset])] });
+    let former = Former::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![Former::Real(3000.0), Former::Aggregate(vec![Former::Unset])] };
+    assert_eq!(current.to_value(), former.to_value());
+}

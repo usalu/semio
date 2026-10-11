@@ -56,7 +56,8 @@ use super::replace_stock_solid;
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the process3d document, derived per
 /// `📓️derivation-rules.md` from `Process3dSnapshot`'s shape.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Process3dSnapshot, diff = Process3dDiff, schema = "process.process3d")]
 pub enum Process3dMutation {

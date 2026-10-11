@@ -45,7 +45,8 @@ use framework_schema::ArtifactSchema;
 /// It is deliberately NOT font-decoded through a `/ToUnicode` CMap: this standard's writer shows
 /// the field back through a simple single-byte font, so what is read is exactly what any reader
 /// recovers, and decode→encode→decode is stable on it.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PageDoc {
     pub width: f64,
@@ -82,7 +83,7 @@ impl Default for PageDoc {
 ///
 /// A PDF document always has at least one page (ISO 32000-1 §7.7.3.2: `/Count` is at least 1 for a
 /// readable document), so `Default` is one blank US-Letter page rather than an empty list.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf")]
 pub struct PdfSnapshot {

@@ -12,7 +12,8 @@ pub use super::set_text::SetTextPayload;
 pub use super::set_transform::SetTransformPayload;
 pub use super::set_view_box::SetViewBoxPayload;
 
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "s.stdio.svg")]
 pub enum SvgMutation {

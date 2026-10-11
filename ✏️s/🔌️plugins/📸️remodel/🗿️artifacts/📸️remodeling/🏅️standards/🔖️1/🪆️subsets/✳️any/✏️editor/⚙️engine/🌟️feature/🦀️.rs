@@ -8,7 +8,7 @@ use remodeling_image::{build_pyramid, extract_patch, gaussian_blur, scharr_gradi
 
 // #region 🔖️Keypoint
 /// 📍️ A detected image feature: subpixel position, source pyramid octave, dominant orientation in radians (intensity-centroid convention), and detector response/score.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Keypoint {
     pub x: f32,
     pub y: f32,
@@ -256,7 +256,7 @@ pub fn detect_harris_keypoints(image: &ImageGray, target_count: usize) -> Vec<Ke
 }
 
 /// 🧭️ Which corner candidates a bounded detection scores.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum BoundedDetector {
     /// FAST-9 corners rescored by Harris across the pyramid, oriented by the intensity centroid
     /// (the [`detect_orb_keypoints`] policy).
@@ -265,7 +265,7 @@ pub enum BoundedDetector {
     Harris,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum BoundedDetectionPhase {
     /// Building pyramid level `level + 1` from level `level`, `row` rows of it done.
     Level { level: usize, row: u32 },
@@ -293,6 +293,7 @@ enum BoundedDetectionPhase {
 /// footprints, so the band's interior rows are bit-identical to a whole-image pass — the pyramid and
 /// the candidate set never depend on the band size — while one call touches only
 /// `rows × width` pixels plus that fixed halo.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct BoundedDetectionPreparation {
     detector: BoundedDetector,
     /// 🌄️ The active level's streamed Harris response.
@@ -322,6 +323,7 @@ const CORNER_HALO_ROWS: u32 = 3;
 /// earlier passes finished, so a band costs its own rows and nothing is recomputed for a halo —
 /// the halo-band version of this (whole filters re-run on 12 extra rows per band) could not keep
 /// an adversarial 512×512 frame's band inside a worker step.
+#[derive(semio_framework_value::RetireOwned)]
 struct HarrisStream {
     width: u32,
     height: u32,
@@ -641,7 +643,7 @@ const BRIEF_SEED: u64 = 0xB817_ED0B_5D3E_C0DE;
 const BRIEF_BLUR_SIGMA: f32 = 1.2;
 
 /// 🧬️ 256-bit rotation-aware BRIEF descriptor packed into 4 `u64` words (bit `i` lives at word `i / 64`, position `i % 64`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub struct Descriptor256(pub [u64; 4]);
 
 impl Descriptor256 {
@@ -704,7 +706,7 @@ const MATCH_ZNCC_THRESHOLD: f32 = 0.6;
 const MATCH_ZNCC_PATCH_RADIUS: u32 = 7;
 
 /// 🔗️ A correspondence between descriptor/keypoint index `a` (in the first set) and `b` (in the second set), with the Hamming (or Hamming-equivalent) distance that supported it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub struct Match {
     pub a: u32,
     pub b: u32,

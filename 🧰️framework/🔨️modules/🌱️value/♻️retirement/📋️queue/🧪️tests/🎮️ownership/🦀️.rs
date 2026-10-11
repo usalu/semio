@@ -37,7 +37,7 @@ fn retirement_queue_admits_original_frames_and_releases_exact_terminal_backings(
             let (step,(a,r))=observe_retirement_allocations(||queue.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_items<=grant.maximum_items);assert!(progress.copied_bytes<=grant.maximum_copy_bytes);assert!(a<=grant.maximum_capacity_bytes);assert!(r<=grant.maximum_release_bytes);births+=a;released+=r;copied+=progress.copied_bytes;
             assert!(progress.copied_items!=0 || matches!(step,RetainedCloneStep::Complete(_)),"exact queue grant blocked on turn {turn}");
         }
-        assert!(queue.terminal_is_empty());assert_eq!(released,original+births);assert_eq!(copied,row["text"].as_str().unwrap().len()*count.as_u64().unwrap() as usize);
+        assert!(queue.terminal_is_empty());assert_eq!(released,original+births);assert_eq!(copied,0);
         eprintln!("[DEBUG] Generic admitted retirement queue count={} copy={} original={original} births={births} physical={released}",count,copy);
     }}}
 }
@@ -68,7 +68,7 @@ fn partial_retirement_queue_transfers_to_the_actual_generic_retained_owner() {
             let (step,(a,r))=observe_retirement_allocations(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(a<=grant.maximum_capacity_bytes);assert!(r<=grant.maximum_release_bytes);assert!(progress.copied_bytes<=grant.maximum_copy_bytes);births+=a;released+=r;copied+=progress.copied_bytes;
             assert!(progress.copied_items!=0 || matches!(step,RetainedCloneStep::Complete(_)),"nested exact queue grant blocked on turn {turn}");
         }
-        assert!(owner.terminal_is_empty());assert_eq!(released,original+births);assert_eq!(copied,row["text"].as_str().unwrap().len()*257);
+        assert!(owner.terminal_is_empty());assert_eq!(released,original+births);assert_eq!(copied,0);
         eprintln!("[DEBUG] Partial Generic retirement queue transfer cutoff={cut} copy={copy} original={original} births={births} physical={released}");
     }}}
 }
@@ -113,7 +113,7 @@ fn retirement_queue_retains_original_snapshot_frames_and_closes_mixed_custody() 
             if grant.maximum_release_bytes>0&&owner.next_copy_byte_demand().unwrap()==0{let (small,heap)=observe_retirement_allocations(||owner.step(RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant}).unwrap());assert_eq!(small.progress(),Default::default());assert_eq!(heap,(0,0));}
             let (step,(a,r))=observe_retirement_allocations(||owner.step(grant).unwrap());let p=step.progress();assert_eq!((p.retained_capacity_bytes,p.released_bytes),(a,r));assert!(p.fits(grant));assert!(p.copied_items!=0||matches!(step,RetainedCloneStep::Complete(_)),"mixed original queue blocked on turn {turn}");births+=a;released+=r;copied+=p.copied_bytes;
         }
-        assert!(owner.terminal_is_empty());assert_eq!(released,originals+births);assert_eq!(copied,fixture["snapshotCase"]["text"].as_str().unwrap().len()*2);let (_,heap)=observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));
+        assert!(owner.terminal_is_empty());assert_eq!(released,originals+births);assert_eq!(copied,0);let (_,heap)=observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));
         eprintln!("[DEBUG] Original mixed snapshot queue copy={copy} cancellation={cut} original={originals} births={births} physical={released} terminalDrop=0");
     }}
 }

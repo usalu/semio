@@ -22,7 +22,7 @@ use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use semio_framework::kernel::Effect;
 use {semio_framework_artifact_reference::Dialect,semio_framework::InteractiveJobClassification,semio_framework::ToolExecutionContract,semio_framework::ToolFactoryKey,semio_framework::ToolJobFactoryError};
-use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, StepContext};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedToolJobRequest, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry};
 use semio_framework_plugin::ArtifactReservedJob;
@@ -617,7 +617,6 @@ const LAYOUT_RETAINED_TOOL_IDS: &[&str] = &[
     "setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop", "translateSelection", "rotateSelection", "scaleSelection", "patchDocument",
 ];
 const LAYOUT_RETAINED_PAYLOAD_SCHEMA: &str = "layout.layout.tool-command.v1";
-const LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 16_384;
 const LAYOUT_RETAINED_RAW_BYTES: usize = 8_192;
 const LAYOUT_RETAINED_WORK_ITEMS: usize = 1;
 
@@ -635,6 +634,12 @@ impl LayoutWindowWork {
 }
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<LayoutPlayApp>> for LayoutWindowWork {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+    }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+    }
     fn tool_id(&self) -> &'static str { self.tool_id }
 
     fn extent(
@@ -714,9 +719,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
             LayoutCommand::CanvasDragOver(payload) => {
                 let view = addressed_window()?;
                 if view.window_instances.iter().any(|window| view.window_id.as_deref() == Some(&window.id) && window.window_kind_id == LAYOUT_PLAY_WINDOW_BLUEPRINT) {
-                    let camera = infinite_canvas::camera::Camera { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom.max(0.0001) };
-                    let viewport = infinite_canvas::camera::Viewport { width: payload.width.max(1.0) as u32, height: payload.height.max(1.0) as u32, dpr: 1.0 };
-                    let world = infinite_canvas::camera::screen_to_world(&camera, &viewport, infinite_canvas::Point::new(payload.x, payload.y));
+                    let camera = semio_framework_canvas::camera::Camera { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom.max(0.0001) };
+                    let viewport = semio_framework_canvas::camera::Viewport { width: payload.width.max(1.0) as u32, height: payload.height.max(1.0) as u32, dpr: 1.0 };
+                    let world = semio_framework_canvas::camera::screen_to_world(&camera, &viewport, semio_framework_canvas::Point::new(payload.x, payload.y));
                     transient.drop_preview = crate::LayoutDropPreviewState { kind: payload.kind.clone(), x: world.x, y: world.y };
                     window_transient = Some(blueprint::transient::addressed(view, transient)?);
                 }
@@ -876,11 +881,16 @@ const LAYOUT_IMPORT_PORT: &str = "fields:in";
 /// `form.dictionary` through [`LayoutPlayApp::import_media`] — the single decoding authority, shared
 /// with every non-interactive caller — then publish its mutations through the completion authority.
 struct LayoutImportJob {
-    port: String,
+    port: Option<String>,
     media: Option<Media>,
     snapshot: Option<std::sync::Arc<LayoutSnapshot>>,
     history: Option<std::sync::Arc<semio_framework_plugin::HistoryView>>,
-    mutations: Vec<LayoutMutation>,
+    mutations: Option<Vec<LayoutMutation>>,
+    active: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    checkpoint_publication: semio_framework_job::RetainedJobPublication,
+    checkpoint_delivered: bool,
+    fault_publication: semio_framework_job::RetainedJobPublication,
+    fault_detail: Option<Vec<u8>>,
     decoded: bool,
     completed: bool,
     closing: bool,
@@ -888,30 +898,21 @@ struct LayoutImportJob {
     pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<LayoutPlayApp>>>,
 }
 
-fn layout_job_payload(cx: &mut StepContext<'_>, stream: JobPayloadStream, bytes: &[u8]) -> RetainedJobPayload {
-    match cx.payload_from_bytes(stream, bytes) {
-        Ok(payload) => payload,
-        Err(rejected) => {
-            drop(rejected.into_source());
-            RetainedJobPayload::empty(stream)
-        }
-    }
-}
-
-fn layout_job_fault(cx: &mut StepContext<'_>, detail: &str) -> StepOutcome {
-    let bytes = detail.as_bytes();
-    let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
-    StepOutcome::Fault(JobFault { detail: layout_job_payload(cx, JobPayloadStream::Fault, bounded) })
-}
+type LayoutJobTurn<'a> = Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError>;
 
 impl LayoutImportJob {
     fn new(request: ArtifactReservedToolJobRequest<EditorApp<LayoutPlayApp>>, port: String, media: Media) -> Self {
         Self {
-            port,
+            port: Some(port),
             media: Some(media),
             snapshot: Some(request.snapshot),
             history: Some(request.history),
-            mutations: Vec::new(),
+            mutations: None,
+            active: None,
+            checkpoint_publication: semio_framework_job::RetainedJobPublication::new(),
+            checkpoint_delivered: false,
+            fault_publication: semio_framework_job::RetainedJobPublication::new(),
+            fault_detail: None,
             decoded: false,
             completed: false,
             closing: false,
@@ -920,143 +921,226 @@ impl LayoutImportJob {
         }
     }
 
-    fn decode(&mut self, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
-        if self.port != LAYOUT_IMPORT_PORT {
-            return Some(layout_job_fault(cx, "layout import only implements fields:in"));
+    fn fault<'a>(&'a mut self, cx: &mut StepContext<'_>, detail: &str) -> LayoutJobTurn<'a> {
+        if self.fault_detail.is_none() {
+            let bytes = detail.as_bytes();
+            self.fault_detail = Some(bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec());
+        }
+        let bytes = self.fault_detail.as_deref().unwrap_or_default();
+        self.fault_publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, bytes, cx)
+    }
+
+    fn decode(&mut self) -> Result<(), &'static str> {
+        if self.port.as_deref() != Some(LAYOUT_IMPORT_PORT) {
+            return Err("layout import only implements fields:in");
         }
         let decoded = {
             let (Some(media), Some(snapshot), Some(history)) = (self.media.as_ref(), self.snapshot.as_ref(), self.history.as_ref()) else {
-                return Some(layout_job_fault(cx, "layout import lost its media, snapshot or history authority"));
+                return Err("layout import lost its media, snapshot or history authority");
             };
             let doc = ArtifactView::new(snapshot.as_ref(), history.as_ref());
             LayoutPlayApp::import_media(LAYOUT_IMPORT_PORT, media, &doc)
         };
         match decoded {
             Ok(emit) => {
-                self.mutations = emit.artifact_mutations;
+                self.mutations = Some(emit.artifact_mutations);
                 self.decoded = true;
-                None
+                Ok(())
             }
-            Err(error) => Some(layout_job_fault(cx, &error.to_string())),
+            Err(_) => Err("layout import media decode refused"),
         }
+    }
+
+    fn nested(mut demand: semio_framework_value::RetirementDemand) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "layout import close depth overflow"))?;
+        Ok(demand)
+    }
+
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if let Some(active) = self.active.as_ref() {
+            return Self::nested(store::artifact_retirement_box_demands(active, body)?);
+        }
+        if let Some(rejected) = self.pending_completion_rejection.as_ref() {
+            if let Ok(emit) = rejected.emit.as_ref() {
+                if let Some(demand) = emit.child_close_demands(body)? {
+                    return Ok(demand);
+                }
+            }
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if self.mutations.is_some() {
+            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.mutations)?);
+        }
+        if self.media.is_some() {
+            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.media)?);
+        }
+        if self.port.is_some() {
+            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.port)?);
+        }
+        if self.history.is_some() || self.completion.is_some() {
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if self.snapshot.is_some() {
+            return Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::shared_retirement_birth_bytes::<LayoutSnapshot>(), depth: 2, ..Default::default() });
+        }
+        if !self.fault_publication.terminal_is_empty() {
+            return Self::nested(self.fault_publication.retirement_demands()?);
+        }
+        if !self.checkpoint_publication.terminal_is_empty() {
+            return Self::nested(self.checkpoint_publication.retirement_demands()?);
+        }
+        Ok(Default::default())
+    }
+
+    fn close_original(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        let unit = || Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        if self.terminal_is_empty() {
+            return Ok(RetainedCloneStep::Complete(Default::default()));
+        }
+        if grant.maximum_items == 0 {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
+        }
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
+        }
+        let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if self.active.is_some() {
+            return store::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress()));
+        }
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            if let Ok(emit) = rejected.emit.as_mut() {
+                if let Some(step) = emit.close_child_one(grant).map_err(|fault| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, fault.message))? {
+                    return Ok(RetainedCloneStep::Progress(step.progress().unwrap_or_default()));
+                }
+            }
+            self.pending_completion_rejection = None;
+            return unit();
+        }
+        if self.mutations.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, child);
+        }
+        if self.media.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.media, &mut self.active, child);
+        }
+        if self.port.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.port, &mut self.active, child);
+        }
+        if self.history.take().is_some() || self.completion.take().is_some() {
+            return unit();
+        }
+        if let Some(snapshot) = self.snapshot.take() {
+            return match semio_framework_value::admit_shared_retirement(snapshot, child, true) {
+                Ok((owner, progress)) => {
+                    self.active = Some(owner);
+                    Ok(RetainedCloneStep::Progress(progress))
+                }
+                Err((error, snapshot)) => {
+                    self.snapshot = Some(snapshot);
+                    Err(error)
+                }
+            };
+        }
+        if !self.fault_publication.terminal_is_empty() {
+            return self.fault_publication.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
+        }
+        if !self.checkpoint_publication.terminal_is_empty() {
+            return self.checkpoint_publication.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
+        }
+        Ok(RetainedCloneStep::Complete(Default::default()))
     }
 }
 
 impl InteractiveJob for LayoutImportJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> LayoutJobTurn<'a> {
         if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
+        }
+        if self.fault_detail.is_some() {
+            return self.fault(cx, "");
         }
         if self.pending_completion_rejection.is_some() {
-            return layout_job_fault(cx, "layout import completion remains rejected");
+            return self.fault(cx, "layout import completion remains rejected");
         }
         if !self.decoded {
             cx.set_stage("layout-import-decode");
-            if let Some(outcome) = self.decode(cx) {
-                return outcome;
+            if let Err(detail) = self.decode() {
+                return self.fault(cx, detail);
             }
             cx.consume_fuel(1);
-            return StepOutcome::CheckpointReady(Checkpoint { state: layout_job_payload(cx, JobPayloadStream::CheckpointState, &[1]), applied_progress: 1 });
+        }
+        if !self.checkpoint_delivered {
+            let outcome = self.checkpoint_publication.advance_from_source(semio_framework_job::JobPublicationKind::Checkpoint { applied_progress: 1 }, &[1], cx)?;
+            if outcome.is_some() {
+                self.checkpoint_delivered = true;
+            }
+            return Ok(outcome);
         }
         cx.set_stage("layout-import-publish");
         if !self.completed {
-            let mutations = std::mem::take(&mut self.mutations);
+            let mutations = self.mutations.take().unwrap_or_default();
             let Some(completion) = self.completion.as_ref() else {
-                return layout_job_fault(cx, "layout import lost its completion authority");
+                return self.fault(cx, "layout import lost its completion authority");
             };
             if !completion.has_mounted_consumer() {
-                return layout_job_fault(cx, "layout import completion consumer is absent");
+                return self.fault(cx, "layout import completion consumer is absent");
             }
             if let Err(rejected) = completion.complete(Ok(Emit { artifact_mutations: mutations, ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }), semio_framework_plugin::EphemeralEmit::default()) {
                 let message = rejected.fault.message.clone();
                 self.pending_completion_rejection = Some(rejected);
-                return layout_job_fault(cx, &message);
+                return self.fault(cx, &message);
             }
             self.completed = true;
         }
-        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
+        semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            semio_framework_job::JobOutcomeKind::Yield => descriptor.yielded(),
+            semio_framework_job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            semio_framework_job::JobOutcomeKind::Complete => descriptor.complete(None, None),
+            semio_framework_job::JobOutcomeKind::CheckpointReady { .. } => self.checkpoint_publication.borrow_outcome(descriptor),
+            semio_framework_job::JobOutcomeKind::Fault => self.fault_publication.borrow_outcome(descriptor),
+            semio_framework_job::JobOutcomeKind::PreviewReady => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "layout import publishes no preview")),
+        }
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
-            Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-            Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            Ok(semio_framework_plugin::PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
-            Ok(semio_framework_plugin::PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        ArtifactReservedJob::terminal_is_empty(self)
-    }
-}
-
-impl ArtifactReservedJob for LayoutImportJob {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         self.closing = true;
-        if maximum_items == 0 {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        match self.close_original(grant) {
+            Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)) => semio_framework_job::InteractiveJobCloseStep::Pending { progress },
+            Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => semio_framework_job::InteractiveJobCloseStep::Complete { progress },
+            Err(error) => semio_framework_job::InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
         }
-        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
-            if let Ok(emit) = rejected.emit.as_mut() {
-                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
-                    return Ok(step);
-                }
-            }
-            self.pending_completion_rejection = None;
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        // 🧊️ Every `LayoutMutation` variant wraps plain owned text/floats (no `Dictionary`/`Tree`
-        // payload rejects a bare drop), so a popped mutation closes on drop.
-        if self.mutations.pop().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.mutations.capacity() > 0 {
-            self.mutations = Vec::new();
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.media.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if !self.port.is_empty() || self.port.capacity() > 0 {
-            self.port = String::new();
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.history.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
-            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "layout import snapshot has no mounted retained authority" });
-        }
-        if self.snapshot.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
-            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "layout import completion has no mounted consumer authority" });
-        }
-        if self.completion.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(semio_framework_plugin::PluginCloseStep::Complete)
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(maximum_copy_bytes)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.depth) }
 
     fn terminal_is_empty(&self) -> bool {
         self.closing
-            && self.port.is_empty()
-            && self.port.capacity() == 0
+            && self.port.is_none()
             && self.media.is_none()
             && self.snapshot.is_none()
             && self.history.is_none()
-            && self.mutations.is_empty()
-            && self.mutations.capacity() == 0
+            && self.mutations.is_none()
+            && self.active.is_none()
             && self.completion.is_none()
             && self.pending_completion_rejection.is_none()
+            && self.fault_publication.terminal_is_empty()
+            && self.checkpoint_publication.terminal_is_empty()
     }
 }
+
+impl ArtifactReservedJob for LayoutImportJob {}
 //#endregion 🎞️ReservedImport
 
 fn layout_build_export_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<LayoutPlayApp>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
@@ -1264,57 +1348,17 @@ impl ArtifactEditor for LayoutPlayApp {
         layout_entity_label(snapshot, kinds, id)
     }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
-
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
-
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
-    }
-
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
-    }
-
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
-    }
-
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
-    }
-
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
-    }
-
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
-    }
-
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
     /// 🧾️ Store publication authority for the `Artifact` lane — without it the host refuses every
-    /// document verb at dispatch (`declares the unsupported artifact publication lane`). One retained
-    /// mutation is bounded by `LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES` (`CreatePage` carries a whole
-    /// page with its layers; `ChangeDataFields` a `fields:in` dictionary); its fold footprint is the leaf's own
-    /// schema-declared inverse rows (`ArtifactStoreOneItemFootprint::for_leaf`).
+    /// document verb at dispatch (`declares the unsupported artifact publication lane`). The paged document-lane
+    /// preparation clones the snapshot page by page, so `CreatePage` (a whole page with its layers) and
+    /// `ChangeDataFields` (a `fields:in` dictionary) are bounded only by their own encoded mutation footprint
+    /// (`ArtifactStoreOneItemFootprint::for_leaf`).
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("layout-artifact-retained", LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
@@ -1345,7 +1389,7 @@ impl ArtifactEditor for LayoutPlayApp {
         }
         let tool_id = request.command.command_id();
         let work = Box::new(LayoutWindowWork::new(tool_id));
-        let operation_context = AppOperationContext {
+        let operation_context = AppOperationContext { retained: request.retained,
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,

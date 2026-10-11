@@ -1,15 +1,7 @@
 use super::*;
 
-/// ♻️ Takes ownership of a faulting step outcome and returns its retained page to the ledger.
-/// `RetainedJobPayload::drop` asserts one-page close (`🧵️job/🦀️.rs`), so a fault detail dropped on the
-/// floor raises a second panic during unwinding and aborts the whole binary — every production caller
-/// closes it, and so must every assertion that consumes one.
-fn faulted(outcome: StepOutcome) -> bool {
-    let StepOutcome::Fault(mut fault) = outcome else { return false };
-    while !fault.detail.terminal_is_empty() {
-        fault.detail.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
-    true
+fn faulted(turn: JobTurn) -> bool {
+    matches!(turn, JobTurn::Fault(_))
 }
 
 use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, precompute_work_clock, precompute_work_done, OwnerReservationLimit, DOCUMENT_CELL_MEMBER_SLOTS, DOCUMENT_CELL_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
@@ -46,7 +38,7 @@ fn test_context<'a>(builder: &FillBuilder, cancel: semio_framework_job::CancelTo
     fn now() -> Option<u64> {
         Some(0)
     }
-    StepContext::new(builder.operation.operation, builder.operation.generation, StepBudget::new(100, 10), cancel, now, sequence)
+    StepContext::new(builder.operation.operation, builder.operation.generation, StepBudget::new(100, 10, crate::puzzle_job::testing::unbounded_grant()), cancel, now, sequence, crate::puzzle_job::testing::test_progress())
 }
 
 #[test]
@@ -150,10 +142,10 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
         );
         let mut preview_sequence = 0;
         let mut context = test_context(&rejected, root_cancel_token(), &mut preview_sequence);
-        let StepOutcome::Fault(fault) = rejected.step(&mut context) else { panic!("{expected_branch} cap + 1 faults the planner before it installs anything") };
+        let JobTurn::Fault(fault) = rejected.advance(&mut context) else { panic!("{expected_branch} cap + 1 faults the planner before it installs anything") };
         assert_eq!(fault.detail.single_page(), Some(format!("preparation-capacity:{expected_branch}:{cap}").as_bytes()));
-        assert!(faulted(StepOutcome::Fault(fault)));
-        assert!(faulted(rejected.step(&mut context)), "the refusal is permanent: every later step faults again");
+        assert!(faulted(JobTurn::Fault(fault)));
+        assert!(faulted(rejected.advance(&mut context)), "the refusal is permanent: every later step faults again");
         assert_eq!(
             (
                 rejected.base.objects.len(),
@@ -177,8 +169,8 @@ fn stale_generation_stops_preparation_before_installing_any_entry() {
     let mut builder = empty_builder();
     let before = (builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len());
     let mut sequence = 0;
-    let mut context = StepContext::new(builder.operation.operation, Generation(builder.operation.generation.0 + 1), StepBudget::new(1, 1), root_cancel_token(), || Some(0), &mut sequence);
-    assert!(faulted(builder.step(&mut context)));
+    let mut context = StepContext::new(builder.operation.operation, Generation(builder.operation.generation.0 + 1), StepBudget::new(1, 1, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), || Some(0), &mut sequence, crate::puzzle_job::testing::test_progress());
+    assert!(faulted(builder.advance(&mut context)));
     assert_eq!((builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len()), before);
 }
 
@@ -313,7 +305,7 @@ fn cancellation_is_observed_before_the_next_transition() {
     cancel.cancel_now();
     let mut sequence = 0;
     let mut context = test_context(&builder, cancel, &mut sequence);
-    assert_eq!(builder.step(&mut context), StepOutcome::Cancelled);
+    assert_eq!(builder.advance(&mut context), JobTurn::Cancelled);
 }
 
 #[test]
@@ -323,10 +315,10 @@ fn stale_generation_faults_without_progress() {
     }
     let mut builder = empty_builder();
     let mut sequence = 0;
-    let mut context = StepContext::new(OperationId(builder.operation.operation.0), Generation(builder.operation.generation.0 + 1), StepBudget::new(100, 10), root_cancel_token(), now, &mut sequence);
-    let StepOutcome::Fault(fault) = builder.step(&mut context) else { panic!("a stale generation must fault") };
+    let mut context = StepContext::new(OperationId(builder.operation.operation.0), Generation(builder.operation.generation.0 + 1), StepBudget::new(100, 10, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), now, &mut sequence, crate::puzzle_job::testing::test_progress());
+    let JobTurn::Fault(fault) = builder.advance(&mut context) else { panic!("a stale generation must fault") };
     assert_eq!(fault.detail.single_page(), Some(b"stale-fill-operation".as_slice()));
-    assert!(faulted(StepOutcome::Fault(fault)));
+    assert!(faulted(JobTurn::Fault(fault)));
     assert_eq!(builder.operation.base_revision, RevisionId(1));
 }
 
@@ -342,7 +334,7 @@ fn empty_fill_transition_stays_below_watchdog_ceiling() {
     for _ in 0..EMPTY_FILL_TRANSITION_TURNS {
         let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
         let before = precompute_work_done();
-        let _ = builder.step(&mut context);
+        let _ = builder.advance(&mut context);
         let work = precompute_work_done() - before;
         assert!(work <= FILL_STEP_WORK_CEILING, "one empty-scene step cost {work} units of primitive work, over {FILL_STEP_WORK_CEILING}");
         if matches!(builder.stage, FillJobStage::Complete(_)) {
@@ -406,7 +398,7 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
     for _ in 0..50_000 {
         let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
         let before = precompute_work_done();
-        let outcome = builder.step(&mut context);
+        let outcome = builder.advance(&mut context);
         let work = precompute_work_done() - before;
         assert!(work <= FILL_STEP_WORK_CEILING, "stage {:?} cost {work} units of primitive work, over {FILL_STEP_WORK_CEILING}", builder.stage);
         if first_candidate.is_none() && builder.current_preview.is_some() {
@@ -518,7 +510,7 @@ fn drive_nakagin_scale_fill() -> FillBuilder {
     let mut turns = 0;
     while builder.sequence.is_empty() {
         let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
-        let outcome = builder.step(&mut context);
+        let outcome = builder.advance(&mut context);
         turns += 1;
         let terminal = outcome.is_terminal();
         assert!(!faulted(outcome), "Nakagin-scale fill faulted at stage {:?} after {turns} turns: {:?}", builder.stage, builder.last_rejection);
@@ -566,7 +558,7 @@ fn drive_until_settled(builder: &mut FillBuilder, turns: usize) {
             return;
         }
         let mut context = test_context(builder, root_cancel_token(), &mut sequence);
-        let outcome = builder.step(&mut context);
+        let outcome = builder.advance(&mut context);
         assert!(!faulted(outcome), "a settled planner never faults: {:?} / end {:?}", builder.last_rejection, builder.end());
     }
     panic!("planner did not settle in {turns} turns at stage {:?} with {} placements", builder.stage, builder.sequence.len());
@@ -596,7 +588,7 @@ fn fill_plan_retries_one_drawn_vortex_until_it_places_or_is_marked_and_never_dra
             break;
         }
         let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
-        let outcome = builder.step(&mut context);
+        let outcome = builder.advance(&mut context);
         assert!(!faulted(outcome), "the planner never faults: {:?}", builder.last_rejection);
         let current = builder.current_target.as_ref().map(|target| target.full_id.clone());
         builder.swap_run_events(&mut events);
@@ -729,12 +721,6 @@ fn fill_run_job(roots: FillPreparationRoots, lane: Vec<String>, seed: u64, reque
     FillRunJob::new(FillBuilder::begin_preparation(roots, Operation::new(OperationId(71), RevisionId(1), Generation(1), seed), requested), fill_run_identity(), lane, [0; 32])
 }
 
-fn close_payload(mut payload: RetainedJobPayload) {
-    while !payload.terminal_is_empty() {
-        payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
-}
-
 /// 🚦️ What one run job turn handed its driver, with every retained page returned to its ledger.
 #[derive(Debug)]
 enum FillRunTurn {
@@ -744,25 +730,15 @@ enum FillRunTurn {
     Yield,
 }
 
-fn settle_fill_run_outcome(outcome: StepOutcome) -> FillRunTurn {
-    match outcome {
-        StepOutcome::PreviewReady(payload) => {
-            let page = payload.single_page().expect("a tick is one payload page").to_vec();
-            close_payload(payload);
+fn settle_fill_run_outcome(turn: JobTurn) -> FillRunTurn {
+    match turn {
+        JobTurn::Preview(page) => {
             assert!(page.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES && page.len() <= TOOL_RUN_TRACE_PAGE_BYTES_MAX);
             FillRunTurn::Tick(ToolRunTick::decode(&page).expect("tick decodes"))
         }
-        StepOutcome::CheckpointReady(checkpoint) => {
-            let bytes = checkpoint.state.single_page().expect("checkpoint page").to_vec();
-            close_payload(checkpoint.state);
-            FillRunTurn::Checkpoint(bytes)
-        }
-        StepOutcome::Complete(candidate) => {
-            close_payload(candidate.state);
-            close_payload(candidate.output);
-            FillRunTurn::Complete
-        }
-        StepOutcome::Yield => FillRunTurn::Yield,
+        JobTurn::Checkpoint { state, .. } => FillRunTurn::Checkpoint(state),
+        JobTurn::Complete => FillRunTurn::Complete,
+        JobTurn::Yield => FillRunTurn::Yield,
         other => {
             let described = format!("{other:?}");
             assert!(faulted(other), "unexpected run job outcome {described}");
@@ -773,8 +749,8 @@ fn settle_fill_run_outcome(outcome: StepOutcome) -> FillRunTurn {
 
 fn fill_run_turn(job: &mut FillRunJob, fuel: u64, sequence: &mut u64) -> FillRunTurn {
     let operation = job.operation();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), root_cancel_token(), never, sequence);
-    settle_fill_run_outcome(job.step(&mut context))
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), never, sequence, crate::puzzle_job::testing::test_progress());
+    settle_fill_run_outcome(job.turn(&mut context))
 }
 
 /// 🪞️ The ledger side of a run as the contract folds it: provisional ops and entities, the resident
@@ -1144,7 +1120,7 @@ fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_n
     let (mut worst, mut worst_turn, mut turns, mut worst_append, mut appends) = (0_u64, 0_usize, 0_usize, 0_usize, 0_usize);
     loop {
         let start = precompute_work_done();
-        let outcome = semio_framework_job::drive_step(&mut job, "puzzle3d-fill-run", operation.operation, operation.generation, semio_framework_job::InteractiveStage::InteractiveStep, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + budget), root_cancel_token(), precompute_work_clock, &mut sequence, &mut verdict);
+        let outcome = semio_framework_job::drive_step(&mut job, "puzzle3d-fill-run", operation.operation, operation.generation, semio_framework_job::InteractiveStage::InteractiveStep, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + budget, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), precompute_work_clock, &mut sequence, &mut verdict);
         let work = precompute_work_done() - start;
         turns += 1;
         if work > worst {
@@ -1369,10 +1345,10 @@ fn fill_run_job_capacity_refusal_publishes_a_danger_step_before_faulting() {
     assert!(tick.append_ops.is_empty(), "nothing is placed");
     assert_eq!(tick.steps.iter().map(|step| (step.kind, step.reason, step.args.clone())).collect::<Vec<_>>(), vec![(ToolRunStepKind::Danger, FillRunReason::ArtifactCapacity.code(), vec![ToolRunStepArg::Unsigned(DOCUMENT_OBJECT_SLOTS as u64)])]);
     let operation = job.operation();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), root_cancel_token(), never, &mut sequence);
-    let StepOutcome::Fault(fault) = job.step(&mut context) else { panic!("the step after the danger step faults the run") };
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), never, &mut sequence, crate::puzzle_job::testing::test_progress());
+    let JobTurn::Fault(fault) = job.turn(&mut context) else { panic!("the step after the danger step faults the run") };
     assert_eq!(fault.detail.single_page(), Some(format!("preparation-capacity:scene_snapshot-objects:{DOCUMENT_OBJECT_SLOTS}").as_bytes()));
-    assert!(faulted(StepOutcome::Fault(fault)));
+    assert!(faulted(JobTurn::Fault(fault)));
 }
 
 /// 🧱️ LAW: the placements a finalize revalidation rebuilds from the ledger's provisional ops alone are the
@@ -1404,8 +1380,8 @@ fn drive_revalidation(job: &mut FillRevalidateJob, operation: Operation) -> Vec<
     let mut ticks = Vec::new();
     let mut sequence = 0;
     for _ in 0..1_000_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), root_cancel_token(), never, &mut sequence);
-        match settle_fill_run_outcome(job.step(&mut context)) {
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), never, &mut sequence, crate::puzzle_job::testing::test_progress());
+        match settle_fill_run_outcome(job.turn(&mut context)) {
             FillRunTurn::Tick(tick) => ticks.push(tick),
             FillRunTurn::Complete => return ticks,
             FillRunTurn::Checkpoint(_) | FillRunTurn::Yield => {}

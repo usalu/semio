@@ -2,7 +2,7 @@
 //!
 //! A mesh is turned into B-Rep as triangles: polygons are triangulated first, every triangle becomes a planar face, a closed oriented mesh becomes a solid and an open one a shell. Curved surfaces are not reconstructed.
 
-use super::mesh_support::{cancelled_fault, capacity_fault, mesh_output, ratio, run, Flow, KernelResult, Machine, BATCH};
+use super::mesh_support::{cancelled_fault, capacity_fault, mesh_output, modeling_slice, ratio, run, tessellation_slice, Flow, KernelResult, Machine, BATCH};
 use super::super::prelude::*;
 use semio_framework_3d::brep::engine::{MeshImportCursor, ShapeTessellationJob, ShapeValue};
 use semio_framework_3d::brep::queries::tessellation::TessellationStep;
@@ -33,7 +33,7 @@ impl Machine for FromBrep {
             };
         }
         let Some(job) = self.job.as_mut() else { return Err(cancelled_fault()) };
-        match job.step(fuel.saturating_mul(BATCH)).kernel()? {
+        match modeling_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
             MeshModelingStep::Working(progress) => Ok(Flow::Working(0.5 + 0.5 * ratio(progress))),
             MeshModelingStep::Done(mesh) => Ok(Flow::Done(mesh_output(mesh))),
             MeshModelingStep::Cancelled(_) => Err(cancelled_fault()),
@@ -70,13 +70,13 @@ struct ToBrep {
 impl Machine for ToBrep {
     fn advance(&mut self, fuel: usize) -> Result<Flow, WidgetFault> {
         if let Some(job) = self.tessellation.as_mut() {
-            return match job.step(fuel.saturating_mul(BATCH)).kernel()? {
+            return match tessellation_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
                 MeshTessellationStep::Working(progress) => Ok(Flow::Working(0.3 * ratio(progress))),
                 MeshTessellationStep::Cancelled(_) => Err(cancelled_fault()),
                 MeshTessellationStep::Done(transfer) => {
                     self.tessellation = None;
-                    MeshImportCursor::validate_admission_counts(transfer.positions.len(), transfer.indices.len(), self.tolerance).map_err(|error| kernel_fault(&error.into()))?;
-                    self.cursor = Some(MeshImportCursor::new(transfer.positions, transfer.normals, transfer.indices, self.tolerance).map_err(|error| kernel_fault(&error.into()))?);
+                    MeshImportCursor::validate_admission_counts(transfer.positions.len(), transfer.indices.len(), self.tolerance).map_err(|error| body_fault(&error))?;
+                    self.cursor = Some(MeshImportCursor::new(transfer.positions, transfer.normals, transfer.indices, self.tolerance).map_err(|error| body_fault(&error))?);
                     Ok(Flow::Working(0.3))
                 }
             };

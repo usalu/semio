@@ -52,7 +52,7 @@ fn retained_page_selection_publishes_only_the_addressed_config_lane() {
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "tiff-page-selection".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "tiff-page-selection".into() };
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "tiff-page-selection".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "tiff-page-selection".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let emit = tiffAnyEditor_retained_reduce(&command, &snapshot, &TiffEditorConfig::default(), &history, &interaction, &hover, None, &operation).expect("retained page selection");
     assert!(emit.artifact_mutations.is_empty());
     assert!(emit.effects.is_empty());
@@ -102,7 +102,7 @@ fn drive_paint(command: &TiffAnyEditCommand, snapshot: &TiffSnapshot, config: &T
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "tiff-paint-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "tiff-paint-test".into() };
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "tiff-paint-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "tiff-paint-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = paint_region::PaintRegionWork::new();
     assert_eq!(work.extent(command, snapshot, &interaction, None), paint_region::CAPACITY.rows_for_items(1));
     let mut sequence = 0;
@@ -173,7 +173,7 @@ fn cancelled_retained_tiled_paint_discards_revision_without_publication() {
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "tiff-paint-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "tiff-paint-cancel".into() };
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "tiff-paint-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "tiff-paint-cancel".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = paint_region::PaintRegionWork::new();
     let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut sequence = 0;
@@ -182,7 +182,7 @@ fn cancelled_retained_tiled_paint_discards_revision_without_publication() {
     let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "tiff-paint-region-row", .. }));
     work.begin_close();
-    assert!(matches!(work.close_step(1, 0), semio_framework_job::InteractiveJobCloseStep::Complete));
+    assert!(matches!(work.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant()), semio_framework_job::InteractiveJobCloseStep::Complete{..}));
     assert!(work.terminal_is_empty());
     assert_eq!(snapshot, tiled_editor_snapshot());
 }

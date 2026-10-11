@@ -3,6 +3,16 @@ use super::*;
 use semio_framework_value::{FromValue,retained_clone::RetainedCloneSource};
 use semio_framework_value::retirement::SharedValueRetirementFactory;
 use crate::schema::mutations::{PaintIndexedRegion,PaintDirectRegion};
+fn encoding_grant(items:usize,copy:usize)->store::ArtifactStoreOneItemGrant{store::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
+fn close_policy()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4_096,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
+fn retire_reader<T:Send+Sync+'static>(reader:&mut store::ArtifactCanonicalJsonReader<T>){for _ in 0..100000{if matches!(reader.close_step(close_policy()).unwrap(),RetainedCloneStep::Complete(_)){return;}}panic!("canonical reader did not retire");}
+fn retire_owned_value<T:semio_framework_value::retirement::RetireOwned>(value:T){
+ let birth=close_policy();
+ let(mut owner,receipt)=semio_framework_value::retirement::admit_owned_retirement(value,birth).unwrap_or_else(|(error,_)|panic!("owned retirement birth: {error:?}"));assert!(receipt.fits(birth));
+ for _ in 0..100000{if owner.terminal_is_empty(){break;}let step=owner.close_step(birth).unwrap();assert!(step.progress().fits(birth));if matches!(step,RetainedCloneStep::Complete(_)){break;}}
+ assert!(owner.terminal_is_empty());
+}
+
 fn close(cursor:&mut BmpPublicationCursor){
  cursor.begin_close();
  for _ in 0..100000{
@@ -28,7 +38,7 @@ fn retained_bmp_publication_keeps_exact_components_indices_and_reserved_samples(
             assert_eq!(undone.image,base.image);assert_eq!(undo_cursor.take_inverse().unwrap(),vec![BmpMutation::ReplaceSamples(ReplaceSamples{region,indices:after.indices.clone(),samples:after.samples.clone()})]);close(&mut undo_cursor);
         }
         if post.image.profile==crate::schema::snapshot::BmpProfile::DirectRgb32 {let bytes=crate::standards::v_v3::subsets::any::io::encode_bmp(&post).unwrap();let (width,height,visual)=semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_visual_rgba8(&bytes).unwrap();assert_eq!((width,height),(post.image.width,post.image.height));assert_eq!(visual,crate::schema::operations::bmp_rgba8_preview(&post).unwrap());}
-        let mut retirement=semio_framework_value::retirement::owned_retirement(inverse);while retirement.close_step(1,4096).unwrap()!=SnapshotRetirementStep::Complete {}assert!(retirement.terminal_is_empty());
+        retire_owned_value(inverse);
         eprintln!("[DEBUG] retained BMP publication case={} turns={turns} preciseSamples={}",row["name"],post.image.width*post.image.height);
     }
 }
@@ -43,7 +53,7 @@ fn retained_bmp_publication_cancellation_closes_partial_result_copy() {
 fn retained_bmp_publication_canonical_reader_preserves_neutral_owned_fields() {
     use semio_framework_value::FromValue;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
-    let grant=store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:17};
+    let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let snapshot=Arc::new(snapshot);
@@ -51,9 +61,9 @@ fn retained_bmp_publication_canonical_reader_preserves_neutral_owned_fields() {
         let lifetime=Arc::downgrade(&snapshot);
         let mut reader=store::ArtifactCanonicalJsonReader::new(snapshot,Arc::new(SharedValueRetirementFactory::<BmpSnapshot>::default()));
         let mut encoded=Vec::new();let mut chunk=[0;17];let mut turns=0;
-        while !reader.is_complete() {turns+=1;assert!(turns<100000);let count=reader.encode_chunk(grant,&mut chunk).unwrap();assert!(count<=grant.maximum_bytes);encoded.extend_from_slice(&chunk[..count]);}
+        while !reader.is_complete() {turns+=1;assert!(turns<100000);let step=reader.encode_chunk(grant,&mut chunk).unwrap();assert!(step.ownership.progress().fits(grant.retained_grant()));let count=step.written_bytes;assert!(count<=grant.maximum_copy_bytes);encoded.extend_from_slice(&chunk[..count]);}
         let actual:serde_json::Value=serde_json::from_slice(&encoded).unwrap();assert_eq!(actual,expected);assert_eq!(actual,case["snapshot"]);
-        reader.begin_close();for _ in 0..100000 {if reader.close_step(store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:4096}).unwrap()==SnapshotRetirementStep::Complete {break;}}
+        reader.begin_close();retire_reader(&mut reader);
         assert!(reader.terminal_is_empty());assert_eq!(lifetime.strong_count(),0);assert!(lifetime.upgrade().is_none());
         eprintln!("[DEBUG] retained bmp canonical neutral={} turns={turns} bytes={}",case["name"],encoded.len());
     }
@@ -63,7 +73,7 @@ fn retained_bmp_publication_canonical_reader_preserves_neutral_owned_fields() {
 fn retained_bmp_publication_canonical_diff_preserves_neutral_owned_fields() {
     use crate::schema::diff::BmpDiff;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
-    let grant=store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:17};
+    let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         for image in [None,Some(snapshot.image)] {
@@ -71,9 +81,9 @@ fn retained_bmp_publication_canonical_diff_preserves_neutral_owned_fields() {
             let expected:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(diff.as_ref())).unwrap();
             let mut reader=store::ArtifactCanonicalJsonReader::new(diff,Arc::new(SharedValueRetirementFactory::<BmpDiff>::default()));
             let mut encoded=Vec::new();let mut chunk=[0;17];let mut turns=0;
-            while !reader.is_complete(){turns+=1;assert!(turns<100000);let count=reader.encode_chunk(grant,&mut chunk).unwrap();assert!(count<=grant.maximum_bytes);encoded.extend_from_slice(&chunk[..count]);}
+            while !reader.is_complete(){turns+=1;assert!(turns<100000);let step=reader.encode_chunk(grant,&mut chunk).unwrap();assert!(step.ownership.progress().fits(grant.retained_grant()));let count=step.written_bytes;assert!(count<=grant.maximum_copy_bytes);encoded.extend_from_slice(&chunk[..count]);}
             let actual:serde_json::Value=serde_json::from_slice(&encoded).unwrap();assert_eq!(actual,expected);if actual.get("image").is_some(){assert_eq!(actual["image"],case["snapshot"]["image"]);}
-            reader.begin_close();for _ in 0..100000 {if reader.close_step(store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:4096}).unwrap()==SnapshotRetirementStep::Complete{break;}}
+            reader.begin_close();retire_reader(&mut reader);
             assert!(reader.terminal_is_empty());assert!(lifetime.upgrade().is_none());
             eprintln!("[DEBUG] retained BMP diff neutral={} turns={turns} bytes={}",case["name"],encoded.len());
         }
@@ -102,7 +112,7 @@ fn retained_bmp_publication_replacement_and_inverse_use_bounded_typed_image_owne
         }
         assert_eq!(post,target);let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse.len(),1);
         let restored=protocol::apply_diff(inverse[0].diff(&post).diff(),&post).unwrap();assert_eq!(restored,base);close(&mut cursor);
-        let mut retirement=semio_framework_value::retirement::owned_retirement(inverse);while retirement.close_step(1,4096).unwrap()!=SnapshotRetirementStep::Complete{}assert!(retirement.terminal_is_empty());
+        retire_owned_value(inverse);
         eprintln!("[DEBUG] retained Bmp typed image replacement neutral={} turns={turns} inverseCapacityGranted=true nativeWordsExact=true",row["name"]);
     }
 }

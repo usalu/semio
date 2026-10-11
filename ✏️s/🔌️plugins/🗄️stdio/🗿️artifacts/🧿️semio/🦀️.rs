@@ -30,8 +30,6 @@ pub(crate) fn applied<P: Clone, M: protocol::Mutation<P>>(base: &P, mutation: &M
     (next, outcome)
 }
 
-#[path = "✏️editor/📬️preparation/🦀️.rs"]
-mod retained_native_preparation;
 
 pub use standards::v1::subsets::base::schema::diff::SemioDiff;
 pub use standards::v1::subsets::base::schema::mutations::SemioMutation;

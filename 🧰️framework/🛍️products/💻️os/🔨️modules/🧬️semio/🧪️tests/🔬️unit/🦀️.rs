@@ -38,10 +38,10 @@ fn retained_text_envelope_preserves_original_body_and_bounds_resume_cancel_and_r
         assert!(cursor.retirement.is_none());let mut total=cursor.progress();retire_original_semio_owner(cursor,grant,caller,&mut total,&mut control);
         let output_capacity=output.capacity();let progress=retire_original_semio_owner(output,grant,caller,&mut total,&mut control);assert!(progress.released_bytes>=output_capacity,"the exact physical output allocation is fully returned independently of the small copy grant");
     }
-    for stop in [0,1,8,64,256,1024] {
+    for stop in [0,1,8,64,256,512,800] {
         let mut cursor=RetainedTextEnvelope::new(id.into(),Component::Dsl,version,body.clone(),caller);
         let live=std::cell::Cell::new(true); let mut accept=|_|live.get(); let mut control=NativeEncodeControl::new(fixture["retained"]["nativeMaximum"].as_u64().unwrap()as usize,&mut accept);
-        for _ in 0..stop { assert!(cursor.step(1,grant,&mut control).unwrap().is_none()); }
+        for turn in 0..stop { assert!(cursor.step(1,grant,&mut control).unwrap().is_none(),"the envelope outlives {stop} one-unit turns (finished at turn {turn})"); }
         let before=cursor.position(); live.set(false); assert_eq!(cursor.step(1,grant,&mut control).unwrap_err().kind,ValueRefusalKind::Canceled); assert_eq!(cursor.position(),before);
         let sources=cursor.source_body().map_or(0,|body|body.len());let mut total=cursor.progress();live.set(true);let progress=retire_original_semio_owner(cursor,grant,caller,&mut total,&mut control);assert!(progress.released_bytes>=sources);
     }

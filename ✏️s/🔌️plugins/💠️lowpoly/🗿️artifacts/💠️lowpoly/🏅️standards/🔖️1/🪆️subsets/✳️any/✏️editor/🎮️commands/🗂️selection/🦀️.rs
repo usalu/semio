@@ -7,7 +7,7 @@
 //! `AppBuilder::interaction`) now own the mesh domain's selection/granularity/mode entirely; see
 //! `🧭️view/🦀️.rs`'s `🔖️MeshDomain` region for the target-id/selection-resolution boundary.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
+use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit, SetActivePaintLayerEdit};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::LowpolySnapshot;
@@ -19,7 +19,8 @@ use serde::{Deserialize, Serialize};
 pub mod set_active_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-active-object")]
     pub struct SetActiveObject {
@@ -28,7 +29,7 @@ pub mod set_active_object {
 
     pub fn handle(payload: &SetActiveObject, doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         if doc.snapshot.objects.iter().any(|object| object.id == payload.object_id) {
-            Ok(Emit::config(vec![LowpolyConfigMutation::SetActiveObject { object_id: payload.object_id.clone() }]))
+            Ok(Emit::config(vec![LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id: payload.object_id.clone() })]))
         } else {
             Ok(Emit::default())
         }
@@ -40,7 +41,8 @@ pub mod set_active_object {
 pub mod set_active_paint_layer {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-active-paint-layer")]
     pub struct SetActivePaintLayer {
@@ -48,7 +50,7 @@ pub mod set_active_paint_layer {
     }
 
     pub fn handle(payload: &SetActivePaintLayer, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(Emit::config(vec![LowpolyConfigMutation::SetActivePaintLayer { value: payload.layer_index }]))
+        Ok(Emit::config(vec![LowpolyConfigMutation::SetActivePaintLayer(SetActivePaintLayerEdit { value: payload.layer_index })]))
     }
 }
 //#endregion 🔖️SetActivePaintLayer

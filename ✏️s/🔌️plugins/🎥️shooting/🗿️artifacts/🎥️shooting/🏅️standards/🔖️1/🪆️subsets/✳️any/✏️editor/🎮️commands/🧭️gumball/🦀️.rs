@@ -115,7 +115,7 @@ impl machine::Host<gumball_tool::GumballTool> for GumballToolHost {
 /// 🛠️ Runs one gesture through a gumball tool at rest as ONE transaction of `<appId>#<verb>`, its ref minted from
 /// the admission's `authoring_seed` and the host clock. `None` when the gesture moves nothing: zero trace.
 pub fn shooting_gumball_commit(verb: &str, authoring_seed: &str, request: GumballToolRequest) -> Option<(protocol::TransactionRef, Vec<ShootingMutation>)> {
-    let mut runner = ToolMachineRunner::<gumball_tool::GumballTool, GumballToolHost>::start(format!("{SHOOTING_PLAY_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), GumballToolContext, GumballToolHost).ok()?;
+    let mut runner = ToolMachineRunner::<gumball_tool::GumballTool, GumballToolHost>::start(format!("{SHOOTING_PLAY_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.into()), GumballToolContext, GumballToolHost).ok()?;
     let clock = semio_framework_tool_machine::authoring_clock(0);
     match runner.send(gumball_tool::Event::Gesture(request), clock).ok()? {
         ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
@@ -139,7 +139,7 @@ fn gumball_emit(verb: &str, doc: &ArtifactView<'_, ShootingSnapshot>, leaf: Shoo
 pub mod translate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "translate-selection")]
     pub struct TranslateSelection {
         pub asset_ids: Vec<String>,
@@ -159,7 +159,7 @@ pub mod translate_selection {
 pub mod rotate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "rotate-selection")]
     pub struct RotateSelection {
         pub asset_ids: Vec<String>,
@@ -180,7 +180,7 @@ pub mod rotate_selection {
 pub mod scale_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "scale-selection")]
     pub struct ScaleSelection {
         pub asset_ids: Vec<String>,

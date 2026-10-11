@@ -8,7 +8,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🎛️BlockField
 /// 🔣️ One settable question field and its typed value (`None` clears an optional field) — on the wire `{field, value}`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "field", content = "value", rename_all = "camelCase")]
 pub enum BlockField {
     Label(String),
@@ -138,13 +139,35 @@ impl BlockField {
 
 //#region 🎛️ChangeBlockField
 /// 🎚️ Sets `change`'s field of the question `block_id` (in whichever step holds it) to `change`'s value.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct ChangeBlockField {
     pub block_id: String,
     #[value(flatten)]
     pub change: BlockField,
+}
+
+/// 🌲️ Canonical tree of the flattened wire `{blockId, field, value}`: `blockId` first, then the block field's own adjacent-tag keys.
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ChangeBlockField {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+        match semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_node(&self.change)? {
+            semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(count) => Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(count + 1)),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Forms block field must project a JSON object")),
+        }
+    }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
+        match ordinal {
+            0 => Ok(&self.block_id),
+            _ => semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_child(&self.change, ordinal - 1),
+        }
+    }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+        match ordinal {
+            0 => Ok("blockId".into()),
+            _ => semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_key(&self.change, ordinal - 1),
+        }
+    }
 }
 
 impl MutationKind<FormsSnapshot, FormMutation> for ChangeBlockField {

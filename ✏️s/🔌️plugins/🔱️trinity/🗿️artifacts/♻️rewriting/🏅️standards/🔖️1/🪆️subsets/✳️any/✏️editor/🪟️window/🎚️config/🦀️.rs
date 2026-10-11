@@ -50,6 +50,21 @@ impl store::ConfigRecord for RewritingWindowConfig {}
 mod mutations;
 pub use mutations::*;
 
+impl semio_framework_plugin::app::WindowConfigApplyMutation<RewritingWindowConfig> for RewritingWindowConfigMutation {
+    fn exchange(self, post: &mut RewritingWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetCamera(SetCamera { camera }) => Self::SetCamera(SetCamera { camera: std::mem::replace(&mut post.camera, camera) }),
+            Self::SetLodMode(SetLodMode { value }) => Self::SetLodMode(SetLodMode { value: std::mem::replace(&mut post.lod_mode, value) }),
+        })
+    }
+    fn payload_bytes(&self) -> usize {
+        match self {
+            Self::SetCamera(_) => 0,
+            Self::SetLodMode(SetLodMode { value }) => value.len(),
+        }
+    }
+}
+
 macro_rules! window_owner {
     ($name:ident, $kind:ident) => {
         pub struct $name;
@@ -59,6 +74,12 @@ macro_rules! window_owner {
             const MAXIMUM_PUBLICATION_BYTES: usize = 4096;
             type State = RewritingWindowConfig;
             type Mutation = RewritingWindowConfigMutation;
+            type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<RewritingWindowConfig, RewritingWindowConfigMutation>;
+            const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+
+            fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+                std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new())
+            }
 
             fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
                 semio_framework_plugin::bounded_window_config_store_owners::<Self>()

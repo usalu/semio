@@ -37,7 +37,7 @@ impl<T:Puzzle2dTextIntent> Puzzle2dTextPreparationCursor<T>{
  pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,T>,grant:RetainedCloneGrant)->Result<Puzzle2dTextPreparationStep,ValueError>{
   if self.closing||self.spent{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"text preparation is closing or spent"))}
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(Puzzle2dTextPreparationStep::Pending(Default::default()))}
-  source.bind(&mut self.source)?;mutation.bind(&mut self.mutation)?;
+  if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(Puzzle2dTextPreparationStep::Pending(progress))}if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(Puzzle2dTextPreparationStep::Pending(progress))}
   if let Some(plan)=self.output{return Ok(Puzzle2dTextPreparationStep::Complete{plan,progress:Default::default()})}
   if self.phase==0{return match self.lookup.advance(source,mutation.project(1,T::identifier),grant)?{Puzzle2dLookupStep::Pending(progress)=>Ok(Puzzle2dTextPreparationStep::Pending(progress)),Puzzle2dLookupStep::Complete{location,progress}=>{self.index=location.map(|value|value.outer);self.lookup.take();self.phase=1;Ok(Puzzle2dTextPreparationStep::Pending(progress))}}}
   if self.phase==1{
@@ -51,8 +51,8 @@ impl<T:Puzzle2dTextIntent> Puzzle2dTextPreparationCursor<T>{
    let index=self.index.expect("immutable text ordinal");
    let left=source.project(2,|snapshot|T::previous(snapshot,index).as_ref().expect("immutable previous text"));
    let right=mutation.project(2,|payload|payload.next().as_ref().expect("immutable next text"));
-   let step=self.comparison.compare(left,right,BoundedOrdGrant{maximum_items:grant.maximum_items,maximum_bytes:grant.maximum_copy_bytes})?;
-   return match step{BoundedOrdStep::Progress(progress)=>Ok(Puzzle2dTextPreparationStep::Pending(RetainedCloneProgress{copied_items:progress.compared_items,copied_bytes:progress.compared_bytes,..Default::default()})),BoundedOrdStep::Complete{ordering,progress}=>{self.disposition=if ordering==std::cmp::Ordering::Equal{Puzzle2dTextDisposition::NoOp}else{Puzzle2dTextDisposition::Changed};self.phase=3;self.comparison.begin_close();Ok(Puzzle2dTextPreparationStep::Pending(RetainedCloneProgress{copied_items:progress.compared_items,copied_bytes:progress.compared_bytes,..Default::default()}))}}
+   let step=self.comparison.compare(left,right,BoundedOrdGrant{maximum_items:grant.maximum_items,maximum_bytes:grant.maximum_copy_bytes},grant)?;
+   return match step{BoundedOrdStep::Authority(progress)=>Ok(Puzzle2dTextPreparationStep::Pending(progress)),BoundedOrdStep::Progress(progress)=>Ok(Puzzle2dTextPreparationStep::Pending(RetainedCloneProgress{copied_items:progress.compared_items,copied_bytes:progress.compared_bytes,..Default::default()})),BoundedOrdStep::Complete{ordering,progress}=>{self.disposition=if ordering==std::cmp::Ordering::Equal{Puzzle2dTextDisposition::NoOp}else{Puzzle2dTextDisposition::Changed};self.phase=3;self.comparison.begin_close();Ok(Puzzle2dTextPreparationStep::Pending(RetainedCloneProgress{copied_items:progress.compared_items,copied_bytes:progress.compared_bytes,..Default::default()}))}}
   }
   if self.phase==3{let step=self.comparison.close_step(grant)?;if self.comparison.terminal_is_empty(){self.phase=4;self.lookup.begin_close();}return Ok(Puzzle2dTextPreparationStep::Pending(step.progress()))}
   if self.phase==4{let step=self.lookup.close_step(grant)?;if self.lookup.terminal_is_empty(){self.phase=5;}return Ok(Puzzle2dTextPreparationStep::Pending(step.progress()))}

@@ -11,7 +11,7 @@ use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of studio view state (node selection, hover, camera, active/focused node).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "space.presence")]
 #[dsl(layout = "lines")]
@@ -24,6 +24,8 @@ pub struct SpacePresence {
     pub preview_off_node_ids: Vec<String>,
 }
 
+
+impl store::ArtifactPresenceSnapshot for SpacePresence {}
 
 store::sparse_record_diff! {
     record: SpacePresence,
@@ -86,7 +88,7 @@ impl ArtifactPack for SpacePresence {
 //#region 🔖️PresenceMutation
 /// 👥️ `SpacePresence`'s operation enum — one variant per settled interaction, each setting only the slots (or keyed camera rows) of the fields it owns, with the same
 /// variant carrying the base values as its inverse. There is no whole-presence variant.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum SpacePresenceMutation {
     #[dsl(key = "active-node")]
     SetActiveNode { node_id: Option<String> },

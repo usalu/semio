@@ -24,7 +24,8 @@ use store::{ArtifactEnvelope, ArtifactStore};
 /// replace is not an in-history mutation at all (routed through `ArtifactStore::reset` /
 /// `Effect::LoadDocument`, see
 /// `editor::fem3d::reset_document_effect`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Fem3dSnapshot, diff = Fem3dDiff, schema = "fem.fem3d")]
 pub enum Fem3dMutation {

@@ -2,7 +2,7 @@
 //!
 //! Writers and readers advance in bounded slices; the format codecs of the mesh engine (STL and GLB encode and decode, JSON encode) run as one unit each.
 
-use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::mesh_support::{capacity_fault, export_fault, from_source, import_fault, mesh_output, ratio, run, Flow, KernelResult, Machine, Parse, BATCH};
+use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::mesh_support::{capacity_fault, export_fault, from_source, import_fault, mesh_output, modeling_slice, ratio, run, tessellation_slice, Flow, KernelResult, Machine, Parse, BATCH};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
 use semio_framework_3d::mesh::{HalfedgeMesh, MeshModelingJob, MeshModelingStep, MeshObjExport, MeshTessellationJob, MeshTessellationStep};
 use semio_framework_io_base64::{base64_standard_decode, base64_standard_encode};
@@ -87,7 +87,7 @@ struct ExportBinary {
 impl Machine for ExportBinary {
     fn advance(&mut self, fuel: usize) -> Result<Flow, WidgetFault> {
         if let Some(job) = self.tessellation.as_mut() {
-            return match job.step(fuel.saturating_mul(BATCH)).kernel()? {
+            return match tessellation_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
                 MeshTessellationStep::Working(progress) => Ok(Flow::Working(0.4 * ratio(progress))),
                 MeshTessellationStep::Cancelled(_) => Err(crate::standards::v1::subsets::any::schema::inferences::geometry::registry::mesh_support::cancelled_fault()),
                 MeshTessellationStep::Done(transfer) => {
@@ -177,7 +177,7 @@ impl Machine for ImportBinary {
             return Ok(Flow::Working(0.35));
         }
         let Some(job) = self.job.as_mut() else { return Ok(Flow::Working(0.35)) };
-        match job.step(fuel.saturating_mul(BATCH)).kernel()? {
+        match modeling_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
             MeshModelingStep::Working(progress) => Ok(Flow::Working(0.35 + 0.65 * ratio(progress))),
             MeshModelingStep::Done(mesh) => Ok(Flow::Done(mesh_output(mesh))),
             MeshModelingStep::Cancelled(_) => Err(crate::standards::v1::subsets::any::schema::inferences::geometry::registry::mesh_support::cancelled_fault()),

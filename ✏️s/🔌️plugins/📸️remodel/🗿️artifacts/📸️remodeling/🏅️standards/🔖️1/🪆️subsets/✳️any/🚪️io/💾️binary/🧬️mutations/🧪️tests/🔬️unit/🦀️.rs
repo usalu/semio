@@ -19,13 +19,11 @@ async fn store_roundtrips_through_document_text() {
     let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     // 🏪️ A bare store carries no owner catalog and refuses its first edit; install the exact owners
     // production installs through `RemodelingPlayApp::build_document_store_owners`.
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<crate::RemodelingSnapshot, RemodelingMutation>());
+    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<crate::RemodelingSnapshot, RemodelingMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     let mut feature_params = store.snapshot().expect("initial projection").params.feature;
     feature_params.target_count = 12345;
     store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::update_feature_params(feature_params)], transaction: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
-    while !store.close_owned_terminal_is_empty() {
-        store.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("remodeling document store closes through its exact bounded owners");
-    }
+    store.close_owned_unscheduled().expect("remodeling document store closes through its exact bounded owners");
 }

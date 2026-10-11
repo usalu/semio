@@ -10,7 +10,7 @@
 //! eyedropper only samples into config (design
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
+use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetPaintColorEdit};
 use crate::editor::lowpoly::session::{lowpoly_paint_drive, lowpoly_tool_emit, paint_uv_from_command, LowpolyScratch, LowpolyTransientMutation};
 use semio_framework_tool_machine::GesturePhase;
 use crate::editor::lowpoly::view::{resolve_active_object_id, utility_param_f32, utility_params_value};
@@ -44,7 +44,7 @@ pub fn lowpoly_paint_tick(projection: &LowpolySnapshot, config: &LowpolyConfig, 
     match config.paint_utility.as_str() {
         "eyedropper" => {
             let sampled = sample_pixel_from(&composite_layer_pixels(&object.paint_layers), unit(u), unit(v));
-            LowpolyPaintTick::Sample(LowpolyConfigMutation::SetPaintColor { r: sampled[0], g: sampled[1], b: sampled[2], a: sampled[3] })
+            LowpolyPaintTick::Sample(LowpolyConfigMutation::SetPaintColor(SetPaintColorEdit { r: sampled[0], g: sampled[1], b: sampled[2], a: sampled[3] }))
         }
         "fill" => {
             let Some(layer) = object.paint_layers.get(layer_index) else { return LowpolyPaintTick::Nothing };
@@ -156,7 +156,7 @@ pub fn lowpoly_paint_step(
 pub mod paint_at {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "paint-at")]
     pub struct PaintAt {
         pub object_id: Option<String>,
@@ -185,7 +185,7 @@ pub mod paint_at {
 pub mod paint_stroke {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "paint-stroke")]
     pub struct PaintStroke {
         pub object_id: Option<String>,
@@ -214,7 +214,7 @@ pub mod paint_stroke {
 pub mod canvas_pointer_down {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "canvas-pointer-down")]
     pub struct CanvasPointerDown {
         pub object_id: Option<String>,
@@ -241,7 +241,7 @@ pub mod canvas_pointer_down {
 pub mod canvas_pointer_move {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "canvas-pointer-move")]
     pub struct CanvasPointerMove {
         pub object_id: Option<String>,
@@ -269,7 +269,7 @@ pub mod canvas_pointer_move {
 pub mod canvas_pointer_up {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "canvas-pointer-up")]
     pub struct CanvasPointerUp {
         pub cancelled: Option<bool>,
@@ -292,7 +292,7 @@ pub mod canvas_pointer_up {
 pub mod paint_fill {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "paint-fill")]
     pub struct PaintFill {
         pub object_id: Option<String>,
@@ -312,7 +312,7 @@ pub mod paint_fill {
 pub mod fill_bucket {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "fill-bucket")]
     pub struct FillBucket {
         pub object_id: Option<String>,
@@ -343,7 +343,7 @@ fn fill_once(verb: &str, object_id: Option<&str>, point: Option<(f32, f32)>, doc
 pub mod paint_sample {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "paint-sample")]
     pub struct PaintSample {
         pub object_id: Option<String>,
@@ -359,7 +359,7 @@ pub mod paint_sample {
         let Some(object) = doc.snapshot.objects.iter().find(|object| object.id == object_id) else { return Ok(Emit::default()) };
         let composite = composite_layer_pixels(&object.paint_layers);
         let color = sample_pixel_from(&composite, uu, vv);
-        Ok(Emit::config(vec![LowpolyConfigMutation::SetPaintColor { r: color[0], g: color[1], b: color[2], a: color[3] }]))
+        Ok(Emit::config(vec![LowpolyConfigMutation::SetPaintColor(SetPaintColorEdit { r: color[0], g: color[1], b: color[2], a: color[3] })]))
     }
 }
 //#endregion 🔖️PaintSample
@@ -368,7 +368,7 @@ pub mod paint_sample {
 pub mod add_paint_layer {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "add-paint-layer")]
     pub struct AddPaintLayer {
         pub object_id: Option<String>,

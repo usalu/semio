@@ -276,6 +276,31 @@ for (const row of (await import("../📥️invocation/🏃️process/🧫️fixt
   console.log(`[DEBUG] Original process envelope ${row.id} accepted=${oracle} remaining=${remaining}`);
 });
 
+test("owned child environment carries the caller's current original invocation", async () => {
+  const api = await import("../📥️invocation/🏃️process/🟦️.ts");
+  const policy = readScriptPolicy({ version: 1, owner: "original-invocation-handoff", maximumElapsedMilliseconds: 60_000 });
+  const capabilities = { command: "invocation-handoff" };
+  await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope(policy, capabilities, Date.now()), async parent => {
+    const environment = api.scriptInvocationEnvironment(parent, { KEPT: "yes" });
+    expect(environment.KEPT).toBe("yes");
+    const wire = JSON.parse(environment[api.SCRIPT_PROCESS_INVOCATION_ENV]!) as { policy: unknown; capabilities: unknown; deadlineEpochMilliseconds: number };
+    expect(wire.policy).toEqual(policy);
+    expect(wire.capabilities).toEqual(capabilities);
+    expect(wire.deadlineEpochMilliseconds - Date.now()).toBeLessThanOrEqual(parent.control.remainingMilliseconds()!);
+    await api.receiveScriptProcessInvocation(environment, async child => {
+      expect(child.policy).toEqual(policy);
+      expect(child.capabilities).toEqual(capabilities);
+      expect(child.control.remainingMilliseconds()!).toBeLessThanOrEqual(parent.control.remainingMilliseconds()!);
+    });
+  });
+  const aborted = new AbortController();
+  await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope(policy, capabilities, Date.now()), async parent => {
+    const cancelled = { ...parent, control: { ...parent.control, signal: aborted.signal } };
+    aborted.abort(Error("parent cancelled"));
+    expect(() => api.scriptInvocationEnvironment(cancelled, {})).toThrow("parent cancelled");
+  });
+});
+
 test("original process child handoff preserves deadline and real ports", async () => {
   const api = await import("../📥️invocation/🏃️process/🟦️.ts");
   const policy = readScriptPolicy({ version: 1, owner: "original-process-handoff", maximumElapsedMilliseconds: 1000 });

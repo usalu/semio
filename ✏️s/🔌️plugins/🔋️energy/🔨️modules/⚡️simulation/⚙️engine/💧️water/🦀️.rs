@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️Fixture
 /// 🚰️ Generic water fixture end use.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct WaterFixture {
     pub name: String,
     pub fixture_type: FixtureType,
@@ -17,7 +17,7 @@ pub struct WaterFixture {
 }
 
 /// 🚰️ Standard fixture categories.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum FixtureType {
     Lavatory,
     Shower,
@@ -48,7 +48,7 @@ impl WaterFixture {
 
 // #region 🔖️Tank
 /// 🛢️ Potable or process water storage tank.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct WaterTank {
     pub volume_m3: f64,
     pub level_m: f64,
@@ -76,7 +76,7 @@ impl WaterTank {
 
 // #region 🔖️Rainwater
 /// 🌧️ Rainwater harvesting from roof catchment.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct RainwaterSystem {
     pub catchment_area_m2: f64,
     pub runoff_coefficient: f64,
@@ -106,7 +106,7 @@ impl RainwaterSystem {
 
 // #region 🔖️Condensate
 /// 💧️ HVAC condensate recovery from cooling coils.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct CondensateRecovery {
     pub collection_efficiency: f64,
     pub storage_tank: WaterTank,
@@ -128,7 +128,7 @@ impl CondensateRecovery {
 
 // #region 🔖️Irrigation
 /// 🌱️ Landscape irrigation demand.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct IrrigationSystem {
     pub landscaped_area_m2: f64,
     pub crop_coefficient: f64,
@@ -150,7 +150,7 @@ impl IrrigationSystem {
 
 // #region 🔖️CoolingTowerMakeup
 /// 🌊️ Cooling tower evaporation, drift, and blowdown makeup water.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct CoolingTowerMakeup {
     pub cycles_of_concentration: f64,
     pub drift_fraction: f64,
@@ -185,7 +185,7 @@ impl CoolingTowerMakeup {
 
 // #region 🔖️Balance
 /// 💧️ Building water balance for one timestep.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct WaterBalance {
     pub fixture_demand_m3_s: f64,
     pub irrigation_demand_m3_s: f64,

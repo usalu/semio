@@ -11,7 +11,7 @@ use crate::Wfc3dSnapshot;
 async fn open_store(document: Wfc3dSnapshot) -> store::ArtifactStore<Wfc3dSnapshot, Wfc3dMutation> {
     let envelope = store::create_document_envelope("s.wfc.wfc3d/v1", "wfc3d", document, None);
     let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid wfc3d artifact store fixture");
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Wfc3dSnapshot, Wfc3dMutation>());
+    store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::funded_bounded_artifact_store_owners::<Wfc3dSnapshot, Wfc3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     store
 }
 

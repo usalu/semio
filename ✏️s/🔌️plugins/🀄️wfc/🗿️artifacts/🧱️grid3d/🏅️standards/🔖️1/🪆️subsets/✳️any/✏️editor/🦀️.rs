@@ -10,7 +10,7 @@
 use crate::editor::grid3d::modes::edit;
 use crate::editor::grid3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::grid3d::modes::edit::windows::{grid, preview};
-use crate::editor::grid3d::window::{addressed_config, config_from_view, Grid3dWindowConfig, Grid3dWindowConfigMutation};
+use crate::editor::grid3d::window::{addressed_config, config_from_view, Grid3dWindowConfig, Grid3dWindowConfigMutation, Grid3dWindowConfigSetActiveTile, Grid3dWindowConfigSetCamera, Grid3dWindowConfigSetShowMasked};
 use crate::mutations::{change_cell_sizes, change_periodicity, change_seed, change_tile_media, change_tile_weight, create_rule, create_tile, delete_rule, delete_tile, mask_cell, pin_cell, resize_grid, unmask_cell, unpin_cell};
 use crate::schema::snapshot::{tile_index, Grid3dAxis, Grid3dCell, Grid3dColor, Grid3dDirection, Grid3dMesh, Grid3dPinnedCell, Grid3dRule, Grid3dTile, Grid3dTileMedia};
 use crate::{Grid3dMutation, Grid3dSnapshot, WFC_GRID3D_DIALECT, WFC_GRID3D_DOCUMENT_SCHEMA};
@@ -41,7 +41,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// ✏️ The editor's typed command channel — one variant per document verb, plus the three the surface
 /// itself owns: `pickCell` (utility-dependent), `setActiveTile` and `setCamera`, which write the
 /// per-window config rather than the document.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum Grid3dEditorCommand {
     #[dsl(key = "changeSeed")]
     ChangeSeed { seed: u64 },
@@ -312,11 +312,11 @@ pub fn grid3d_command_emit(
         }
         Grid3dEditorCommand::SetActiveTile { tile_id } => {
             let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
-            return Ok(Emit { window_config_mutations: vec![addressed_config(view, Grid3dWindowConfigMutation::SetActiveTile { tile_id: tile_id.clone() })?], ..Default::default() });
+            return Ok(Emit { window_config_mutations: vec![addressed_config(view, Grid3dWindowConfigMutation::SetActiveTile(Grid3dWindowConfigSetActiveTile { tile_id: tile_id.clone() }))?], ..Default::default() });
         }
         Grid3dEditorCommand::SetCamera { x, y, z, target_x, target_y, target_z, zoom } => {
             let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
-            return Ok(Emit { window_config_mutations: vec![addressed_config(view, Grid3dWindowConfigMutation::SetCamera { camera_x: *x, camera_y: *y, camera_z: *z, target_x: *target_x, target_y: *target_y, target_z: *target_z, zoom: *zoom })?], ..Default::default() });
+            return Ok(Emit { window_config_mutations: vec![addressed_config(view, Grid3dWindowConfigMutation::SetCamera(Grid3dWindowConfigSetCamera { camera_x: *x, camera_y: *y, camera_z: *z, target_x: *target_x, target_y: *target_y, target_z: *target_z, zoom: *zoom }))?], ..Default::default() });
         }
         Grid3dEditorCommand::SetHover { .. } | Grid3dEditorCommand::WorldPick { .. } => return Ok(Emit::default()),
         Grid3dEditorCommand::Solve => {
@@ -571,17 +571,8 @@ impl ArtifactEditor for Grid3dEditor {
     /// 🗃️ The bounded retirement catalog every store lane is released THROUGH: a store built without
     /// owners answers `artifact store has no owner-supplied bounded disposer` the moment the close
     /// ladder reaches it, so the owners and the disposer below are one declaration in two halves.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
 
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
-    }
 
     /// ♻️ The instance close ladder walks one owned store lane per stage and faults the whole close
     /// with `interactive-job.close-owned-disposer-missing` the moment a lane answers `None`, so an
@@ -653,7 +644,7 @@ impl ArtifactEditor for Grid3dEditor {
     /// and stays dispatch-dead — the live playground answers "typed command 'worldSelect' declares the
     /// unsupported artifact publication lane" on the first pick.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("grid3d-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_tool_run_job(request: ToolRunJobRequest<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
@@ -682,6 +673,7 @@ impl ArtifactEditor for Grid3dEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = Box::new(Grid3dCommandWork { tool_id, completed: false });

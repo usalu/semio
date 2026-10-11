@@ -41,6 +41,7 @@ semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-3d = { path = "../../../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+semio-framework-mesh-engine = { path = "../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust" }
 ui_wgpu = {path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
 # 🧬️ The semantic UI contract itself — the panels author `TreeItemBuilder` rows (`granularity`,
 # `window`) that only the contract's own builder can express; `semio_framework_plugin`'s prelude

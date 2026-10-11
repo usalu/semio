@@ -6,7 +6,7 @@ use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of process3d engagement and camera state.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "process3d.presence")]
 #[dsl(layout = "lines")]
@@ -86,6 +86,9 @@ impl protocol::DiffAlgebra<Process3dPresence> for Process3dPresenceDiff {
     }
 }
 
+/// 📸️ Native snapshot codec: the canonical JSON of the value projection, no hand-written frame.
+impl store::ArtifactPresenceSnapshot for Process3dPresence {}
+
 impl store::ArtifactDsl for Process3dPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
@@ -133,7 +136,7 @@ impl ArtifactPack for Process3dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum Process3dPresenceMutation {
     #[dsl(key = "engagement-input")]
@@ -255,63 +258,17 @@ pub fn process3d_presence_is_terminal_empty(presence: &Process3dPresence) -> boo
     presence.engagement_input.is_empty()
 }
 
-/// 👥️ Exact local and peer root ownership for process3d presence: one bounded turn returns the
-/// variable-length engagement input, a second returns the inline root. Without it (and the disposer
-/// below) every close of a registry-backed app faulted `interactive-job.close-owned-disposer-missing`
-/// and the whole unit-test binary aborted in the fixture's `Drop` (ticket 26/09/15/DEV-PROCESS-REACT-E2E).
+/// 👥️ Exact local and peer root ownership for process3d presence: the original typed fields and their retained physical backing retire through the shared admitted owner.
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct Process3dPresenceRetirementFactory;
 
 impl store::SnapshotRetirementFactory<Process3dPresence> for Process3dPresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<Process3dPresence>) -> usize { std::mem::size_of::<Process3dPresenceRetirement>() }
-
-    fn retire(&self, root: std::sync::Arc<Process3dPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(Process3dPresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)), engagement_input: std::mem::ManuallyDrop::new(None) })
-    }
-}
-
-struct Process3dPresenceRetirement {
-    root: std::mem::ManuallyDrop<Option<std::sync::Arc<Process3dPresence>>>,
-    engagement_input: std::mem::ManuallyDrop<Option<String>>,
-}
-
-impl store::ErasedSnapshotRetirement for Process3dPresenceRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if let Some(root) = self.root.take() {
-            let released = std::sync::Arc::into_inner(root).map(|value| value.engagement_input).filter(|input| !input.is_empty());
-            let released_bytes = released.as_ref().map_or(0, String::len);
-            if released_bytes > maximum_bytes {
-                self.engagement_input = std::mem::ManuallyDrop::new(released);
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            drop(released);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
-        }
-        if let Some(input) = self.engagement_input.take() {
-            let released_bytes = input.len();
-            if released_bytes > maximum_bytes {
-                self.engagement_input = std::mem::ManuallyDrop::new(Some(input));
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            drop(input);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<Process3dPresence>) -> usize {
+        semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<Process3dPresence>()
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.root.is_none() && self.engagement_input.is_none()
-    }
-}
-
-impl Drop for Process3dPresenceRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            assert!(self.root.is_none() && self.engagement_input.is_none(), "process3d presence retirement requires its exact terminal-empty witness");
-        }
+    fn retire(&self, root: std::sync::Arc<Process3dPresence>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<Process3dPresence>)> {
+        semio_framework_value::retirement::shared::admit_shared_retirement(root, grant, true)
     }
 }
 

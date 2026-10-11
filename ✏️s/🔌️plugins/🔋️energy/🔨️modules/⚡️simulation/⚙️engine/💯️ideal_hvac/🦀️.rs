@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️IdealLoads
 /// 🎯️ Ideal loads physics configuration (distinct from [`crate::model::IdealLoadsSystem`] entity).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct IdealLoadsConfig {
     pub max_heating_supply_air_temp_c: f64,
     pub min_cooling_supply_air_temp_c: f64,
@@ -24,7 +24,7 @@ impl Default for IdealLoadsConfig {
 }
 
 /// 🌬️ Economizer control mode.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum EconomizerControl {
     #[default]
     None,
@@ -36,7 +36,7 @@ pub enum EconomizerControl {
 }
 
 /// 💧️ Humidity control mode.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum HumidityControl {
     #[default]
     None,
@@ -46,7 +46,7 @@ pub enum HumidityControl {
 }
 
 /// 📥️ Zone demand and boundary conditions for ideal loads.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct IdealLoadsInput {
     pub zone_temp_c: f64,
     pub zone_humidity_ratio: f64,
@@ -64,7 +64,7 @@ pub struct IdealLoadsInput {
 pub type IdealLoadsRequest = IdealLoadsInput;
 
 /// 📤️ Ideal loads delivery result per zone timestep.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct IdealLoadsOutput {
     pub sensible_heating_w: f64,
     pub sensible_cooling_w: f64,

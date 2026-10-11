@@ -9,7 +9,7 @@ use framework_schema::ArtifactSchema;
 /// fields are replaced by a fixed composed `s.stdio.semio.flow` CHILD slot — the sequence plugin no
 /// longer defines its own step-DAG content model, it composes stdio's `flow` subset instead.
 /// `#[child(...)]` drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "sequence")]
 #[artifact_schema(id = "s.sequence.sequence")]
@@ -75,7 +75,7 @@ pub fn default_persisted_snapshot() -> SequenceSnapshot {
 /// analog of `semio_framework_artifact_flow_flow::FlowHostSnapshot`: the live editing representation `SequenceHost` and the WASM
 /// bridge operate on, and the JSON wire contract `SequenceHost::to_json`/`load_json` still speak.
 /// Bridges to/from the composed-child `SequenceSnapshot` via `to_host_snapshot`/`from_host_snapshot` below.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct SequenceHostSnapshot {
     pub schema: String,

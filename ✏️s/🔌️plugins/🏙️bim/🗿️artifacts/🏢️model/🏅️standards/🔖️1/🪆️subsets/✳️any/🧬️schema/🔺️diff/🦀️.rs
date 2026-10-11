@@ -40,7 +40,8 @@ pub trait Patch<T>: Clone + Default + PartialEq {
 }
 
 /// 🎯️ An explicitly assigned optional value: keeps "set to none" distinct from "untouched" on the wire.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Assigned<T> {
     pub value: T,
 }

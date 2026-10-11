@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Topology
 /// 🧭️ Presentation's tile-filmstrip topology — see module doc for the honest-degenerate-chain shape.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PresentationTopology {
     pub topo_order: Vec<String>,

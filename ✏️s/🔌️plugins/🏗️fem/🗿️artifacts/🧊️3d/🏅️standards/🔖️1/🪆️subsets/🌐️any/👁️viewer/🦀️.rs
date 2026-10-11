@@ -28,7 +28,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant — real per-command payload modules the way `✏️editor/🎮️commands/*`
 /// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-#[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum Fem3dViewCommand {
     #[default]
     Noop,
@@ -62,12 +62,24 @@ impl ArtifactViewer for Fem3dViewer {
     const DIALECT: Dialect = crate::FEM3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::FEM_3D_SCHEMA;
 
-    fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        Ok(crate::live_visual::maintenance_step(instance_id, maximum_items, maximum_bytes))
+    fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_framework_plugin::MountedOwnerPhaseV1> {
+        (!crate::live_visual::terminal_is_empty(instance_id)).then_some(semio_framework_plugin::MountedOwnerPhaseV1::Maintenance)
     }
 
-    fn mounted_job_close_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        Ok(crate::live_visual::close_step(instance_id, maximum_items, maximum_bytes))
+    fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(crate::live_visual::close_demands(instance_id))
+    }
+
+    fn mounted_job_close_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(crate::live_visual::close_demands(instance_id))
+    }
+
+    fn mounted_job_maintenance_step(instance_id: u32, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+        Ok(crate::live_visual::maintenance_step(instance_id, grant))
+    }
+
+    fn mounted_job_close_step(instance_id: u32, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+        Ok(crate::live_visual::close_step(instance_id, grant))
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {

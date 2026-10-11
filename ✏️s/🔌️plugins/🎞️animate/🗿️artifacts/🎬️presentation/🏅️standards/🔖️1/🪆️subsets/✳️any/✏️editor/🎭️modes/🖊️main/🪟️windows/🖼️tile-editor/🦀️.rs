@@ -39,7 +39,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️CanvasLayers
-#[derive(value_derive::ToValue)]
+#[derive(value_derive::ToValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 struct TileCanvasLayer {
     id: String,

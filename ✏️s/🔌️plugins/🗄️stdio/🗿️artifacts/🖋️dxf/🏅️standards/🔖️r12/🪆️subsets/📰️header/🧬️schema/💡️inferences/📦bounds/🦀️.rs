@@ -11,11 +11,11 @@
 //! contributes nothing to the fold — never fabricated. A pure whole-snapshot scalar (one min/max
 //! fold) — no `InferredField` needed.
 
-use crate::schema::snapshot::{DxfEntity, DxfSnapshot};
+use crate::schema::snapshot::{DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfSnapshot};
 
 //#region 🔖️Bounds
 /// 📦️ Dxf's entity-derived 3D bounding box.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfBounds {
     pub min: [f64; 3],
@@ -57,26 +57,26 @@ fn expand_sphere(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, center
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn expand_entity(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, entity: &DxfEntity) {
     match entity {
-        DxfEntity::Line { start, end, .. } => {
+        DxfEntity::Line(DxfLine { start, end, .. }) => {
             expand(min, max, seen, *start);
             expand(min, max, seen, *end);
         }
-        DxfEntity::Circle { center, radius, .. } | DxfEntity::Arc { center, radius, .. } => {
+        DxfEntity::Circle(DxfCircle { center, radius, .. }) | DxfEntity::Arc(DxfArc { center, radius, .. }) => {
             expand_sphere(min, max, seen, *center, *radius);
         }
-        DxfEntity::Polyline { vertices, .. } => {
+        DxfEntity::Polyline(DxfPolyline { vertices, .. }) => {
             for v in vertices {
                 expand(min, max, seen, [v.x, v.y, v.z]);
             }
         }
-        DxfEntity::Text { position, .. } => expand(min, max, seen, *position),
-        DxfEntity::Solid { points, .. } => {
+        DxfEntity::Text(DxfText { position, .. }) => expand(min, max, seen, *position),
+        DxfEntity::Solid(DxfSolid { points, .. }) => {
             for p in points {
                 expand(min, max, seen, *p);
             }
         }
-        DxfEntity::Insert { position, .. } => expand(min, max, seen, *position),
-        DxfEntity::Other { .. } => {}
+        DxfEntity::Insert(DxfInsert { position, .. }) => expand(min, max, seen, *position),
+        DxfEntity::Other(DxfOther { .. }) => {}
     }
 }
 

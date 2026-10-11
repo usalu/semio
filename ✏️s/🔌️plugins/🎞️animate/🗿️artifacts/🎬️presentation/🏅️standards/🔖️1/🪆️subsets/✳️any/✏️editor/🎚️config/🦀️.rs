@@ -13,7 +13,7 @@ use protocol::Mutation;
 /// 🧮️ B1: animate presentation's real `ArtifactApp::Config` — absorbs every former
 /// `AnimatePresentationPlayRuntime` field (`engagement_input`). Locale and terminology come from the
 /// shared host `ViewModel` (see `crate::editor::animate::terminology`).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "presentcfg")]
 #[artifact(id = "presentation.config")]
@@ -73,7 +73,7 @@ impl store::ArtifactPack for PresentationConfig {
 impl store::ConfigRecord for PresentationConfig {}
 
 /// 🔺️ Sparse field delta over [`PresentationConfig`]: every present slot is the new value of exactly that field.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct PresentationConfigDiff {
     #[value(skip_serializing_if = "Option::is_none")]

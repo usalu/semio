@@ -14,7 +14,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// position count of the `map:in` overlay decoded from `imported_map` (see
 /// `📦bounds/🦀️.rs`). A simple whole-snapshot scalar — no `InferredField` caching, the
 /// overlay is small and re-decoding is O(positions).
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gisterrain.inference")]
 pub struct GisTerrainInference {

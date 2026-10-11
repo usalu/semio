@@ -2,7 +2,7 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.remodel.remodeling.reportwindowconfig", extension = "remodelingreportwindowcfg")]
@@ -11,7 +11,8 @@ pub struct RemodelingReportWindowConfig {
 }
 impl Default for RemodelingReportWindowConfig { fn default() -> Self { Self { report_table: "frames".into() } } }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 pub enum RemodelingReportWindowConfigMutation { SetReportTable { report_table: String } }
 impl protocol::Mutation<RemodelingReportWindowConfig> for RemodelingReportWindowConfigMutation {
@@ -75,9 +76,20 @@ impl store::ArtifactPack for RemodelingReportWindowConfig {
 impl store::ConfigRecord for RemodelingReportWindowConfig {}
 impl protocol::OpText for RemodelingReportWindowConfigMutation { fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) } fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) } }
 impl protocol::OpBinary for RemodelingReportWindowConfigMutation { fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) } fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?; semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error))) } }
+impl semio_framework_plugin::app::WindowConfigApplyMutation<RemodelingReportWindowConfig> for RemodelingReportWindowConfigMutation {
+    fn exchange(self, post: &mut RemodelingReportWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetReportTable { report_table } => Self::SetReportTable { report_table: std::mem::replace(&mut post.report_table, report_table) },
+        })
+    }
+}
+
 pub struct RemodelingReportWindowConfigOwner;
 impl semio_framework_plugin::WindowConfigOwner for RemodelingReportWindowConfigOwner {
     const WINDOW_KIND_ID: &'static str = super::REMODELING_PLAY_WINDOW_REPORT; const SCHEMA: &'static str = "remodeling.reportwindowconfig"; const MAXIMUM_PUBLICATION_BYTES: usize = 65_536; type State = RemodelingReportWindowConfig; type Mutation = RemodelingReportWindowConfigMutation;
+    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<RemodelingReportWindowConfig, RemodelingReportWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }

@@ -63,7 +63,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn pptx_round_trip_is_stable() {
         use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
-        use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx;
+        use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
 
         let pptx1 = build_minimal_pptx(
             PptxPresentation {

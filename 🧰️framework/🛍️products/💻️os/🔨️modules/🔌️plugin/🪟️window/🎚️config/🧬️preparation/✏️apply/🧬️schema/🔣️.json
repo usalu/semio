@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Field-set window config apply cases: every mutation sets the state fields named by its non-kind keys; the inverse row sets the displaced values back. copyExtra is the per-turn copy allowance above the smallest copy grant that completes the case.",
+  "type": "object",
+  "required": [
+    "maximumTurns",
+    "cancelAt",
+    "grants",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelAt": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "grants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "items",
+          "copyExtra"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "copyExtra": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "state",
+          "base",
+          "mutation",
+          "post",
+          "inverse"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "copy",
+              "text"
+            ]
+          },
+          "base": {
+            "type": "object"
+          },
+          "mutation": {
+            "$ref": "#/definitions/mutation"
+          },
+          "post": {
+            "type": "object"
+          },
+          "inverse": {
+            "$ref": "#/definitions/mutation"
+          },
+          "requiresOptionNone": {
+            "const": true
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "mutation": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "pattern": "^set-[a-z-]+$"
+        }
+      }
+    }
+  }
+}

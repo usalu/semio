@@ -1056,9 +1056,9 @@ impl FlowFeature for FlowVcsFeature {
             }
             FlowVcsFeaturePhase::AwaitAcknowledgement => FlowFeatureStep::Yield,
             FlowVcsFeaturePhase::CloseOperation | FlowVcsFeaturePhase::CloseRetired => match self.close_cursor_step(budget) {
-                Ok(false) => FlowFeatureStep::Yield,
-                Ok(true) if self.terminal_failure.is_some() => FlowFeatureStep::Failed(self.terminal_failure.take().expect("terminal Flow VCS failure")),
-                Ok(true) => FlowFeatureStep::Complete(Vec::new()),
+                Ok(RetainedCloneStep::Progress(_)) => FlowFeatureStep::Yield,
+                Ok(RetainedCloneStep::Complete(_)) if self.terminal_failure.is_some() => FlowFeatureStep::Failed(self.terminal_failure.take().expect("terminal Flow VCS failure")),
+                Ok(RetainedCloneStep::Complete(_)) => FlowFeatureStep::Complete(Vec::new()),
                 Err(failure) => FlowFeatureStep::Failed(failure),
             },
             FlowVcsFeaturePhase::Complete if self.terminal_failure.is_some() => FlowFeatureStep::Failed(self.terminal_failure.take().expect("terminal Flow VCS failure")),
@@ -4753,7 +4753,18 @@ impl FlowActionState for FlowAction2599 {
             FlowProgramPhase::Domain => {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
-                        let value = match domain.host.geometry_port().map_err(domain_error)?.tessellate_step(text(args, "handle")?, number(args, "tolerance")?, 24) {
+                        let port = domain.host.geometry_port().map_err(domain_error)?;
+                        let (handle, tolerance) = (text(args, "handle")?, number(args, "tolerance")?);
+                        let copy = port.next_tessellate_copy_byte_demand(handle, tolerance).map_err(domain_error)?;
+                        let grant = semio_framework_value::RetainedCloneGrant {
+                            maximum_items: 1,
+                            maximum_copy_bytes: copy,
+                            maximum_capacity_bytes: port.next_tessellate_capacity_byte_demand(handle, tolerance, copy).map_err(domain_error)?,
+                            maximum_release_bytes: port.next_tessellate_release_byte_demand(handle, tolerance).map_err(domain_error)?,
+                            maximum_depth: port.next_tessellate_depth_demand(handle, tolerance).map_err(domain_error)?,
+                        };
+                        let (step, _) = port.tessellate_step(handle, tolerance, 24, grant).map_err(domain_error)?;
+                        let value = match step {
                             crate::geometry::GeometryStep::Ready(mesh) => semio_framework_pack_json::to_json_string(&mesh),
                             crate::geometry::GeometryStep::Working { units_done, units_total, phase } => json!({ "done": false, "unitsDone": units_done, "unitsTotal": units_total, "phase": phase }).to_string(),
                             crate::geometry::GeometryStep::Cancelled => json!({ "error": "cancelled" }).to_string(),

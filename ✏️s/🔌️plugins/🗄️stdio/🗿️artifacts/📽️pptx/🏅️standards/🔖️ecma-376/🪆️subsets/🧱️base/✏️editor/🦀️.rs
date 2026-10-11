@@ -38,7 +38,7 @@ pub const PPTX_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx"
 /// ✏️ The editor's typed command channel — exactly the one edit `🪟️main`'s `editable_window_kind()`
 /// action (`set-page`, contract §2.6) can trigger. `index` addresses `presentation.slides` directly
 /// (one page per slide, see the window's own `render` doc comment).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum PptxEditorCommand {
     SetPage { page: u32, item: u32, revision: String, text: String },
 }

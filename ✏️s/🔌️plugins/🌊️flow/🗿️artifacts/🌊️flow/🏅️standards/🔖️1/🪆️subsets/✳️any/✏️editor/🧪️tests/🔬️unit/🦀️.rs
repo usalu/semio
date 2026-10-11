@@ -266,7 +266,9 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     assert_eq!(expected["parentMutations"], 0);
     assert_eq!(expected["childGroups"], 1);
     for _ in 0..100_000 {
-        if PluginApp::close_step(&mut *app, 1, 16_384).expect("retained addWidget app close") == semio_framework_plugin::PluginCloseStep::Complete {
+        let demand = PluginApp::close_retirement_demands(&*app, 16_384).expect("Flow app close quote");
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(16_384), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        if matches!(PluginApp::close_step(&mut *app, grant).expect("retained addWidget app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
@@ -612,7 +614,9 @@ async fn two_instances_converge_on_disjoint_edits() {
     }
     fn close(app: &mut FlowApp) {
         for _ in 0..100_000 {
-            if PluginApp::close_step(app, 1, 16_384).expect("Flow convergence app close") == semio_framework_plugin::PluginCloseStep::Complete {
+            let demand = PluginApp::close_retirement_demands(&*app, 16_384).expect("Flow convergence app close quote");
+            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(16_384), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            if matches!(PluginApp::close_step(app, grant).expect("Flow convergence app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
                 return;
             }
         }

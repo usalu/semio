@@ -22,6 +22,8 @@ pub struct FlowPresence {
     pub camera: CameraJson,
 }
 
+impl store::ArtifactPresenceSnapshot for FlowPresence {}
+
 impl Default for FlowPresence {
     fn default() -> Self {
         Self { preview_off_node_ids: Vec::new(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 } }

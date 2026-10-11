@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 /// record-backed `ArtifactDsl`/`ArtifactPack` below are written against; `id`/`extension` are stated
 /// explicitly so the derived `__DSL_ENVELOPE_ID`/`__DSL_EXTENSION` reproduce the envelope identity
 /// the three panes already shared.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.puzzle.puzzle2d.windowconfig", extension = "puzzle2dwindowcfg")]
@@ -55,9 +55,77 @@ impl Default for Puzzle2dWindowConfig {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 🧩️ Payload of [`Puzzle2dWindowConfigMutation::Set`]: the absolute value of exactly the diff's named fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle2dWindowConfigMutationSet {
+    pub patch: Puzzle2dWindowConfigDiff,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Puzzle2dWindowConfigMutation {
-    Set { patch: Puzzle2dWindowConfigDiff },
+    Set(Puzzle2dWindowConfigMutationSet),
+}
+
+impl semio_framework_plugin::WindowConfigApplyMutation<Puzzle2dWindowConfig> for Puzzle2dWindowConfigMutation {
+    fn exchange(self, post: &mut Puzzle2dWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        let Self::Set(Puzzle2dWindowConfigMutationSet { mut patch }) = self;
+        if let Some(value) = patch.camera_x.as_mut() {
+            std::mem::swap(value, &mut post.camera_x);
+        }
+        if let Some(value) = patch.camera_y.as_mut() {
+            std::mem::swap(value, &mut post.camera_y);
+        }
+        if let Some(value) = patch.camera_zoom.as_mut() {
+            std::mem::swap(value, &mut post.camera_zoom);
+        }
+        if let Some(value) = patch.lod_mode.as_mut() {
+            std::mem::swap(value, &mut post.lod_mode);
+        }
+        if let Some(value) = patch.grid_visible.as_mut() {
+            std::mem::swap(value, &mut post.grid_visible);
+        }
+        if let Some(value) = patch.grid_snap_enabled.as_mut() {
+            std::mem::swap(value, &mut post.grid_snap_enabled);
+        }
+        if let Some(value) = patch.grid_factor.as_mut() {
+            std::mem::swap(value, &mut post.grid_factor);
+        }
+        if let Some(value) = patch.suggestion_offset.as_mut() {
+            std::mem::swap(value, &mut post.suggestion_offset);
+        }
+        if let Some(value) = patch.proximity_radius.as_mut() {
+            std::mem::swap(value, &mut post.proximity_radius);
+        }
+        if let Some(value) = patch.area_brush_width.as_mut() {
+            std::mem::swap(value, &mut post.area_brush_width);
+        }
+        if let Some(value) = patch.area_brush_height.as_mut() {
+            std::mem::swap(value, &mut post.area_brush_height);
+        }
+        if let Some(value) = patch.transform_move.as_mut() {
+            std::mem::swap(value, &mut post.transform_move);
+        }
+        if let Some(value) = patch.transform_rotate.as_mut() {
+            std::mem::swap(value, &mut post.transform_rotate);
+        }
+        if let Some(value) = patch.selectable_nodes.as_mut() {
+            std::mem::swap(value, &mut post.selectable_nodes);
+        }
+        if let Some(value) = patch.selectable_handles.as_mut() {
+            std::mem::swap(value, &mut post.selectable_handles);
+        }
+        if let Some(value) = patch.selectable_edges.as_mut() {
+            std::mem::swap(value, &mut post.selectable_edges);
+        }
+        Ok(Self::Set(Puzzle2dWindowConfigMutationSet { patch }))
+    }
+
+    fn payload_bytes(&self) -> usize {
+        let Self::Set(Puzzle2dWindowConfigMutationSet { patch }) = self;
+        0 + patch.lod_mode.as_ref().map_or(0, String::len)
+    }
 }
 
 impl protocol::Mutation<Puzzle2dWindowConfig> for Puzzle2dWindowConfigMutation {
@@ -69,7 +137,7 @@ impl protocol::Mutation<Puzzle2dWindowConfig> for Puzzle2dWindowConfigMutation {
         &Self::DESCRIPTORS[0]
     }
     fn diff(&self, base: &Puzzle2dWindowConfig) -> protocol::MutationOutcome<Puzzle2dWindowConfigDiff> {
-        let Self::Set { patch } = self;
+        let Self::Set(Puzzle2dWindowConfigMutationSet { patch }) = self;
         let diff = patch.changed(base);
         if protocol::DiffAlgebra::<Puzzle2dWindowConfig>::is_empty(&diff) {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window configuration already holds these values.");
@@ -77,8 +145,8 @@ impl protocol::Mutation<Puzzle2dWindowConfig> for Puzzle2dWindowConfigMutation {
         protocol::MutationOutcome::new(diff)
     }
     fn inverse(&self, base: &Puzzle2dWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        let Self::Set { patch } = self;
-        Ok(vec![Self::Set { patch: patch.restoring(base) }])
+        let Self::Set(Puzzle2dWindowConfigMutationSet { patch }) = self;
+        Ok(vec![Self::Set(Puzzle2dWindowConfigMutationSet { patch: patch.restoring(base) })])
     }
 }
 
@@ -152,7 +220,8 @@ impl store::ArtifactPack for Puzzle2dWindowConfig {
 impl store::ConfigRecord for Puzzle2dWindowConfig {}
 
 /// 🔺️ Sparse typed delta of one Puzzle 2D pane's persisted-local options: names only the fields a mutation changes.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle2dWindowConfigDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -568,6 +637,11 @@ macro_rules! owners {
             const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
             type State = Puzzle2dWindowConfig;
             type Mutation = Puzzle2dWindowConfigMutation;
+            type Edit = semio_framework_plugin::WindowConfigApplyEdit<Puzzle2dWindowConfig, Puzzle2dWindowConfigMutation>;
+            const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+            fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+                std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
+            }
             fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
                 semio_framework_plugin::bounded_window_config_store_owners::<Self>()
             }
@@ -670,7 +744,7 @@ pub fn kind_for_view(view: &semio_framework_plugin::ViewModel) -> Option<&str> {
 
 pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle2dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let (id, kind) = kind(view).ok_or_else(|| semio_framework_plugin::Fault::from("puzzle2d-window-required"))?;
-    let mutation = Puzzle2dWindowConfigMutation::Set { patch: Puzzle2dWindowConfigDiff::of(&config) };
+    let mutation = Puzzle2dWindowConfigMutation::Set(Puzzle2dWindowConfigMutationSet { patch: Puzzle2dWindowConfigDiff::of(&config) });
     match kind {
         overview::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dOverviewWindowConfigOwner>(id, mutation)),
         detail::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dDetailWindowConfigOwner>(id, mutation)),

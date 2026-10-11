@@ -9,7 +9,7 @@ use crate::JsonSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Json` document outline.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct JsonOutline {
     pub node_count: u32,

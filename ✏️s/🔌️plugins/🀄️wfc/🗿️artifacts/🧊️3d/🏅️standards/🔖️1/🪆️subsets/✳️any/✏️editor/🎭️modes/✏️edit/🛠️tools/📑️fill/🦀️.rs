@@ -5,7 +5,7 @@
 use crate::editor::wfc3d::modes::edit::windows::preview::WFC_3D_PREVIEW_WINDOW;
 use crate::editor::wfc3d::transient::{SetSolve, Wfc3dTransientMutation};
 use crate::Wfc3dSnapshot;
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, RetainedCloneGrant, RetainedCloneProgress, StepContext};
 use semio_framework_plugin::Effect;
 use semio_framework_plugin::Fault;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -196,7 +196,7 @@ impl FillRunReason {
 //#endregion 🔖️Vocabulary
 
 //#region 🧱️Payload
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Wfc3dFillTraceEvent {
     pub slot_id: String,
@@ -205,7 +205,7 @@ pub struct Wfc3dFillTraceEvent {
 }
 
 /// 🧱️ Partial slot assignments the preview paints while a fill run is live.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Wfc3dFillTickPayload {
     pub assignments: BTreeMap<String, Option<String>>,
@@ -505,6 +505,19 @@ impl FillPreparation {
 //#endregion 🎲️Prepare
 
 //#region 🎲️Job
+/// 🚦️ What one bounded fill run decided before any outcome is lent.
+enum FillRun {
+    Yield,
+    Cancelled,
+    Staged,
+}
+
+/// 🏁️ The terminal verdict held back until its final tick has been delivered and closed.
+enum FillSettled {
+    Complete,
+    Fault,
+}
+
 enum FillPhase {
     Prepare(Box<FillPreparation>),
     Run {
@@ -526,7 +539,8 @@ pub struct Wfc3dFillRunJob {
     set_solve: Option<Vec<Wfc3dTransientMutation>>,
     pending_tick: Option<(Wfc3dFillTickPayload, FillRunStage)>,
     pending_finish: Option<Wfc3dFillTickPayload>,
-    settled: Option<StepOutcome>,
+    settled: Option<FillSettled>,
+    publication: Option<Box<semio_s_plugin_wfc_engine::job::Publication>>,
     closing: bool,
     steps: u64,
     trace: Vec<Wfc3dFillTraceEvent>,
@@ -544,6 +558,7 @@ impl Wfc3dFillRunJob {
             pending_tick: None,
             pending_finish: None,
             settled: None,
+            publication: None,
             closing: false,
             steps: 0,
             trace: Vec::new(),
@@ -579,7 +594,7 @@ impl Wfc3dFillRunJob {
         }
     }
 
-    fn publish(&mut self, cx: &mut StepContext<'_>, payload: Wfc3dFillTickPayload, stage: FillRunStage, state: ToolRunState, reason: Option<FillRunReason>) -> StepOutcome {
+    fn publish(&mut self, payload: Wfc3dFillTickPayload, stage: FillRunStage, state: ToolRunState, reason: Option<FillRunReason>, settled: Option<FillSettled>) -> FillRun {
         let decided = payload.decided_count() as u64;
         let (observations, backtracks) = if self.closing {
             (0, 0)
@@ -615,23 +630,27 @@ impl Wfc3dFillRunJob {
         let mut payload = payload;
         payload.trace.clone_from(&self.trace);
         self.writer.payload(encode_fill_payload(&payload));
-        match self.writer.finish().and_then(|tick| tick.encode().ok()).and_then(|bytes| cx.payload_from_bytes(JobPayloadStream::Preview, &bytes).map_err(|rejected| drop(rejected.into_source())).ok()) {
-            Some(payload) => StepOutcome::PreviewReady(payload),
-            None => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+        match self.writer.finish().and_then(|tick| tick.encode().ok()) {
+            Some(bytes) => {
+                self.publication = Some(semio_s_plugin_wfc_engine::job::Publication::new(semio_s_plugin_wfc_engine::job::PublicationKind::Preview, bytes, Vec::new()));
+                if settled.is_some() {
+                    self.phase = FillPhase::Settled;
+                }
+                self.settled = settled;
+            }
+            None => {
+                self.settled = None;
+                self.publication = Some(semio_s_plugin_wfc_engine::job::Publication::new(semio_s_plugin_wfc_engine::job::PublicationKind::Fault, Vec::new(), Vec::new()));
+            }
         }
+        FillRun::Staged
     }
 
-    fn finish_success(&mut self, cx: &mut StepContext<'_>, payload: Wfc3dFillTickPayload) -> StepOutcome {
+    fn finish_success(&mut self, payload: Wfc3dFillTickPayload) -> FillRun {
         self.set_solve = Some(payload.set_solve_mutations());
         self.port.dispatch(commit_fill_effect(&payload));
         let reason = if payload.contradiction { FillRunReason::Contradiction } else { FillRunReason::Collapsed };
-        let tick = self.publish(cx, payload, FillRunStage::Complete, ToolRunState::Complete, Some(reason));
-        self.settled = Some(StepOutcome::Complete(semio_framework_job::CommitCandidate {
-            state: RetainedJobPayload::empty(JobPayloadStream::CommitState),
-            output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput),
-        }));
-        self.phase = FillPhase::Settled;
-        tick
+        self.publish(payload, FillRunStage::Complete, ToolRunState::Complete, Some(reason), Some(FillSettled::Complete))
     }
 
     fn remember(&mut self, event: Wfc3dFillTraceEvent) {
@@ -642,7 +661,7 @@ impl Wfc3dFillRunJob {
         }
     }
 
-    fn drain_child(&mut self, cx: &mut StepContext<'_>, snapshot: Wfc3dSnapshot, tile_ids: Vec<String>, mut child: Box<WfcJob<semio_s_plugin_wfc_engine::topology::GraphTopology>>) -> StepOutcome {
+    fn drain_child(&mut self, cx: &mut StepContext<'_>, snapshot: Wfc3dSnapshot, tile_ids: Vec<String>, mut child: Box<WfcJob<semio_s_plugin_wfc_engine::topology::GraphTopology>>) -> FillRun {
         let cells = snapshot.slots.len();
         let mut flips = Vec::new();
         let mut fresh = 0usize;
@@ -653,7 +672,7 @@ impl Wfc3dFillRunJob {
                 if let FillPhase::Run { child: slot, .. } = &mut self.phase {
                     *slot = Some(child);
                 }
-                return StepOutcome::Cancelled;
+                return FillRun::Cancelled;
             }
             if cx.fuel_exhausted() || cx.deadline_exceeded() {
                 break;
@@ -702,7 +721,7 @@ impl Wfc3dFillRunJob {
                 }
             };
             self.pending_finish = Some(payload);
-            return StepOutcome::Yield;
+            return FillRun::Yield;
         }
         let stage = FillRunStage::from_engine(child.preview(0).stage);
         let mut patterns = Vec::new();
@@ -711,40 +730,32 @@ impl Wfc3dFillRunJob {
             *slot = Some(child);
         }
         if fresh == 0 {
-            return StepOutcome::Yield;
+            return FillRun::Yield;
         }
         let assignments = snapshot.slots.iter().enumerate().map(|(index, slot)| {
             let tile = patterns.get(index).copied().filter(|pattern| *pattern != u32::MAX).and_then(|pattern| tile_ids.get(pattern as usize).cloned());
             (slot.id.clone(), tile)
         }).collect();
         let payload = Wfc3dFillTickPayload { assignments, contradiction: false, done: false, trace: Vec::new() };
-        self.publish(cx, payload, stage, ToolRunState::Running, None)
+        self.publish(payload, stage, ToolRunState::Running, None, None)
     }
 
-    fn finish_fault(&mut self, cx: &mut StepContext<'_>, snapshot: &Wfc3dSnapshot, _detail: &str) -> StepOutcome {
+    fn finish_fault(&mut self, snapshot: &Wfc3dSnapshot, _detail: &str) -> FillRun {
         let mut payload = Self::empty_payload(snapshot);
         payload.done = true;
         let _ = self.writer.step(ToolRunStepKind::Danger, FillRunStage::Complete.index(), FillRunReason::Fault.code(), None, &[]);
-        let tick = self.publish(cx, payload, FillRunStage::Complete, ToolRunState::Faulted, Some(FillRunReason::Fault));
-        self.settled = Some(StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }));
-        self.phase = FillPhase::Settled;
-        tick
+        self.publish(payload, FillRunStage::Complete, ToolRunState::Faulted, Some(FillRunReason::Fault), Some(FillSettled::Fault))
     }
 }
 
-impl InteractiveJob for Wfc3dFillRunJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if self.closing || cx.is_cancelled() {
-            return StepOutcome::Cancelled;
-        }
-        if let Some(outcome) = self.settled.take() {
-            return outcome;
-        }
+impl Wfc3dFillRunJob {
+    /// ⏭️ Runs one bounded preparation unit or child span; payloads are staged, never lent from here.
+    fn run(&mut self, cx: &mut StepContext<'_>) -> FillRun {
         if let Some(payload) = self.pending_finish.take() {
-            return self.finish_success(cx, payload);
+            return self.finish_success(payload);
         }
         if let Some((payload, stage)) = self.pending_tick.take() {
-            return self.publish(cx, payload, stage, ToolRunState::Running, None);
+            return self.publish(payload, stage, ToolRunState::Running, None, None);
         }
         self.steps = self.steps.saturating_add(1);
         let operation = self.bind_operation(cx);
@@ -767,17 +778,17 @@ impl InteractiveJob for Wfc3dFillRunJob {
                 match result {
                     Ok(None) => {
                         cx.consume_fuel(1);
-                        self.publish(cx, Self::empty_payload(&snapshot), FillRunStage::InitializeDomains, ToolRunState::Running, None)
+                        self.publish(Self::empty_payload(&snapshot), FillRunStage::InitializeDomains, ToolRunState::Running, None, None)
                     }
                     Ok(Some(child)) => {
                         let tile_ids = preparation.tile_ids.clone();
                         self.phase = FillPhase::Run { snapshot: snapshot.clone(), tile_ids, child: Some(Box::new(child)) };
                         cx.consume_fuel(1);
-                        self.publish(cx, Self::empty_payload(&snapshot), FillRunStage::InitializeDomains, ToolRunState::Running, None)
+                        self.publish(Self::empty_payload(&snapshot), FillRunStage::InitializeDomains, ToolRunState::Running, None, None)
                     }
                     Err(error) => {
                         cx.consume_fuel(1);
-                        self.finish_fault(cx, &snapshot, &error)
+                        self.finish_fault(&snapshot, &error)
                     }
                 }
             }
@@ -788,7 +799,74 @@ impl InteractiveJob for Wfc3dFillRunJob {
                 };
                 self.drain_child(cx, snapshot, tile_ids, child)
             }
-            FillPhase::Settled | FillPhase::Closed => StepOutcome::Cancelled,
+            FillPhase::Settled | FillPhase::Closed => FillRun::Cancelled,
+        }
+    }
+
+    /// 🤝️ Closes the lent tick turn by turn from the next step's own wallet.
+    fn retire_delivered<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        let publication = self.publication.as_mut().expect("a delivered fill publication is staged");
+        let step = publication.close_step(cx.retained_grant());
+        cx.consume_retained(step.progress())?;
+        if let InteractiveJobCloseStep::Refused { kind, progress } = step {
+            return Err(semio_framework_value::ValueError::literal(kind, "fill publication close was refused").with_retained_progress(progress));
+        }
+        if publication.terminal_is_empty() {
+            self.publication = None;
+        }
+        Ok(None)
+    }
+
+    /// 📏️ Quotes the next close turn: the staged publication, then the child's own frontier.
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if let Some(publication) = self.publication.as_ref() {
+            return publication.retirement_demands();
+        }
+        if let FillPhase::Run { child: Some(child), .. } = &self.phase {
+            return Ok(semio_framework_value::RetirementDemand { copy_bytes: child.next_close_copy_byte_demand()?, capacity_bytes: child.next_close_capacity_byte_demand(0)?, release_bytes: child.next_close_release_byte_demand()?, depth: child.next_close_depth_demand()?.saturating_add(1) });
+        }
+        Ok(semio_framework_value::RetirementDemand { depth: usize::from(self.settled.is_some() || !matches!(self.phase, FillPhase::Closed)), ..Default::default() })
+    }
+}
+
+impl InteractiveJob for Wfc3dFillRunJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {
+            return self.retire_delivered(cx);
+        }
+        if self.closing || cx.is_cancelled() {
+            return JobOutcomeBorrow::admit_cancelled(cx);
+        }
+        if self.publication.is_none() {
+            match self.settled.take() {
+                Some(FillSettled::Complete) => {
+                    let result = JobOutcomeBorrow::admit_complete(cx, None, None)?;
+                    if result.is_none() {
+                        self.settled = Some(FillSettled::Complete);
+                    }
+                    return Ok(result);
+                }
+                Some(FillSettled::Fault) => {
+                    self.publication = Some(semio_s_plugin_wfc_engine::job::Publication::new(semio_s_plugin_wfc_engine::job::PublicationKind::Fault, Vec::new(), Vec::new()));
+                }
+                None => {}
+            }
+        }
+        if self.publication.is_some() {
+            return self.publication.as_mut().expect("a staged fill publication").poll(cx);
+        }
+        match self.run(cx) {
+            FillRun::Yield | FillRun::Staged => Ok(None),
+            FillRun::Cancelled => JobOutcomeBorrow::admit_cancelled(cx),
+        }
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Complete => descriptor.complete(None, None),
+            _ => self.publication.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "fill outcome has no staged publication"))?.borrow_outcome(descriptor),
         }
     }
 
@@ -801,32 +879,68 @@ impl InteractiveJob for Wfc3dFillRunJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.begin_close();
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        let demand = match self.close_demands() {
+            Ok(demand) => demand,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        if let Some(outcome) = self.settled.as_mut() {
-            if matches!(outcome.close_step(1, maximum_bytes), semio_framework_job::JobPayloadCloseStep::Complete) {
-                self.settled = None;
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        }
+        if let Some(publication) = self.publication.as_mut() {
+            let step = publication.close_step(grant);
+            if publication.terminal_is_empty() {
+                self.publication = None;
             }
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if let FillPhase::Run { child: Some(child), .. } = &mut self.phase {
-            return match InteractiveJob::close_step(child.as_mut(), maximum_items, maximum_bytes) {
-                InteractiveJobCloseStep::Complete => {
-                    self.phase = FillPhase::Closed;
-                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-                pending => pending,
+            return match step {
+                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                step => step,
             };
         }
+        if self.settled.take().is_some() {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } };
+        }
+        if let FillPhase::Run { child, .. } = &mut self.phase {
+            if let Some(child_job) = child.as_mut() {
+                let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+                let step = InteractiveJob::close_step(child_job.as_mut(), child_grant);
+                if InteractiveJob::terminal_is_empty(child_job.as_ref()) {
+                    *child = None;
+                    self.phase = FillPhase::Closed;
+                    return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } };
+                }
+                return match step {
+                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                    step => step,
+                };
+            }
+        }
         self.phase = FillPhase::Closed;
-        InteractiveJobCloseStep::Complete
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.settled.is_none() && matches!(self.phase, FillPhase::Closed)
+        self.settled.is_none() && self.publication.is_none() && matches!(self.phase, FillPhase::Closed)
     }
 }
 //#endregion 🎲️Job

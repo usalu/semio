@@ -8,12 +8,12 @@ use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "mask-from-selection")]
 pub struct MaskFromSelection {
     pub layer_id: String,
     pub expected_image_key: Option<String>,
-    pub selection: Vec<crate::RasterSelectionSpan>,
+    pub selection: Vec<crate::mutations::paint_stroke::RasterSelectionSpan>,
 }
 
 struct Candidate {
@@ -94,6 +94,11 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for MaskFromSelectionWork {
     fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>) -> Option<usize> {
         matches!(command,RasterCommand::MaskFromSelection(_)).then_some(1)
     }
+    fn work_demands(&self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
+        let RasterCommand::MaskFromSelection(command)=input.command else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"raster mask command required")); };
+        let stage=if self.encoding.is_some() {std::mem::size_of::<PngEncodeJob>()+std::mem::size_of::<Emit<RasterMutation,RasterConfigMutation>>()} else {std::mem::size_of::<Candidate>()+command.selection.len().saturating_mul(std::mem::size_of::<crate::mutations::paint_stroke::RasterSelectionSpan>())};
+        Ok(semio_framework_value::RetirementDemand {copy_bytes:stage,depth:1,..Default::default()})
+    }
     fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>,Fault> {
         if self.complete { return Err(Fault::from("raster.mask-work-complete")); }
         let RasterCommand::MaskFromSelection(command)=input.command else { return Err(Fault::from("raster.mask-work-mismatch")); };
@@ -113,10 +118,16 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for MaskFromSelectionWork {
         Ok(ArtifactCommandWorkStep::Progress {stage:"mask-create",preview:br#"{"en":"Creating selection mask","de":"Auswahlmaske wird erstellt"}"#})
     }
     fn begin_close(&mut self) { if let Some(encoder)=self.encoding.as_mut() {encoder.cancel();} }
-    fn close_step(&mut self,maximum_items:usize,_maximum_bytes:usize)->semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items==0 {return semio_framework_job::InteractiveJobCloseStep::Blocked;}
-        self.candidate=None;self.encoding=None;semio_framework_job::InteractiveJobCloseStep::Complete
+    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep {
+        if self.terminal_is_empty() {return semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()};}
+        if grant.maximum_items==0||grant.maximum_depth==0 {return semio_framework_job::InteractiveJobCloseStep::Pending {progress:Default::default()};}
+        self.candidate=None;self.encoding=None;
+        semio_framework_job::InteractiveJobCloseStep::Complete {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:1,..Default::default()}}
     }
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(0)}
+    fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError> {Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(0)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(usize::from(!self.terminal_is_empty()))}
     fn terminal_is_empty(&self)->bool {self.candidate.is_none()&&self.encoding.is_none()}
 }
 

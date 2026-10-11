@@ -7,7 +7,7 @@ use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
 //#region Artifact
 /// 🧬️ Full `stdio.xlsx` artifact state.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xlsx")]
 pub struct XlsxArtifact {

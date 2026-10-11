@@ -65,8 +65,7 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -
 }
 
 /// 🌳️ A tree row with an icon and a click action.
-pub fn tree_item_with_icon(id: impl AsRef<str>, label: impl TryInto<Label>, icon_id: &str, action: UiAssemblyResult<(ActionId, Option<UiValue>)>) -> UiAssemblyResult<BuiltNode> {
-    let label: Label = label.try_into().map_err(|_| PluginAssemblyError::new("ui.tree-item.label", "tree-item label conversion failed"))?;
+pub fn tree_item_with_icon(id: impl AsRef<str>, label: Label, icon_id: &str, action: UiAssemblyResult<(ActionId, Option<UiValue>)>) -> UiAssemblyResult<BuiltNode> {
     let mut node = tree_item_with_action(id, label.as_str(), None, action?)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
         props.icon = Some(semio_framework_plugin::UiText::try_from_str(icon_id).ok_or_else(|| PluginAssemblyError::new("ui.tree-item.icon", "fixed tree-item icon admission failed"))?);
@@ -244,7 +243,8 @@ macro_rules! window_config {
         type $Config:ident, $Diff:ident, $Mutation:ident, $Owner:ident;
         $( $(#[$attr:meta])* $field:ident : $ty:ty = $default:expr; )+
     ) => {
-        #[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+        #[derive(semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+        #[canonical_json(owner = semio_framework_pack_json)]
         #[value(rename_all = "camelCase", deny_unknown_fields)]
         #[dsl(layout = "lines")]
         #[artifact(id = $envelope, extension = $extension)]

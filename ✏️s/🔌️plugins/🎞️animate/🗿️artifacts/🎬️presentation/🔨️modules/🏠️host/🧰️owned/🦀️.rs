@@ -16,7 +16,7 @@ pub type PresentationStore = ArtifactStore<PresentationSnapshot, PresentationMut
 /// through here instead. Mirrors `🕸️dag`'s `new_dag_store`.
 pub async fn new_presentation_store(envelope: PresentationEnvelope, actor: protocol::ActorId) -> Result<OwnedPresentationStore, store::VcsError> {
     let mut store = PresentationStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<PresentationSnapshot, PresentationMutation>());
+    store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::funded_bounded_artifact_store_owners::<PresentationSnapshot, PresentationMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     Ok(OwnedPresentationStore(store))
 }
 
@@ -30,9 +30,7 @@ pub struct OwnedPresentationStore(PresentationStore);
 impl OwnedPresentationStore {
     /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
     pub fn close(&mut self) {
-        while !self.0.close_owned_terminal_is_empty() {
-            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Presentation document store closes through its exact bounded owners");
-        }
+        self.0.close_owned_unscheduled().expect("Presentation document store closes through its exact bounded owners");
     }
 }
 
@@ -59,532 +57,6 @@ impl Drop for OwnedPresentationStore {
 
 pub type PresentationEnvelope = ArtifactEnvelope<PresentationSnapshot, PresentationMutation>;
 
-struct PresentationProjectionTarget<'a> {
-    envelope: &'a mut Option<PresentationEnvelope>,
-}
-
-impl store::ArtifactEnvelopeCompletedRecordTarget<PresentationSnapshot, PresentationMutation> for PresentationProjectionTarget<'_> {
-    fn try_adopt_completed(&mut self, envelope: PresentationEnvelope) -> Result<(), PresentationEnvelope> {
-        if self.envelope.is_some() {
-            return Err(envelope);
-        }
-        *self.envelope = Some(envelope);
-        Ok(())
-    }
-}
-
-/// 🛠️ One concrete persistent production caller for the 12-field Presentation fresh-envelope catalog.
-/// The shared WorkerJobSession drives this job one step at a time; no caller-facing method loops.
-pub struct PresentationEnvelopeMaterializeJob {
-    decode: Option<store::ArtifactEnvelopeDecodeAuthority<PresentationSnapshot, PresentationMutation>>,
-    field_registry: std::sync::Arc<store::ArtifactEnvelopeFieldDecoderRegistry<PresentationSnapshot, PresentationMutation>>,
-    field_retirement: Option<store::ArtifactEnvelopeReturnedFieldDecoder<PresentationSnapshot, PresentationMutation>>,
-    completed_registry: std::sync::Arc<store::ArtifactEnvelopeCompletedRecordRegistry<PresentationSnapshot, PresentationMutation>>,
-    completed_retirement: Option<Box<dyn store::ArtifactEnvelopeCompletedRecord<PresentationSnapshot, PresentationMutation>>>,
-    decode_completion: std::sync::Arc<store::ArtifactEnvelopeDecodeCompletion>,
-    projection: std::sync::Arc<PresentationProjectionCompletion>,
-    materialize_envelope: std::mem::ManuallyDrop<Option<PresentationEnvelope>>,
-    materialize_snapshot: std::mem::ManuallyDrop<Option<PresentationSnapshot>>,
-    materialize_snapshot_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    materialize_envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    materialize_edit: usize,
-    materialize_mutation: usize,
-    state: PresentationEnvelopeMaterializeState,
-    fault_code: Option<&'static [u8]>,
-    fault_writer: std::mem::ManuallyDrop<Option<semio_framework_job::RetainedJobPayloadWriter>>,
-    fault_cursor: usize,
-    fault_payload: std::mem::ManuallyDrop<Option<semio_framework_job::RetainedJobPayload>>,
-    retained_nested_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>,
-    closing: bool,
-}
-
-impl PresentationEnvelopeMaterializeJob {
-    #[expect(clippy::result_large_err, reason = "Preserves the fixed diagnostic path inline so bounded cleanup can report failure without allocating.")]
-    fn pump_field_return(&mut self) -> Result<bool, store::OwnedSchemaDecodeDiagnostic> {
-        if let Some(retirement) = self.field_retirement.as_mut() {
-            let step = store::ErasedSnapshotRetirement::close_step(retirement, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|_| store::OwnedSchemaDecodeDiagnostic {
-                code: "presentation-envelope.field-return-fault",
-                offset: 0,
-                line: 0,
-                column: 0,
-                path: store::OwnedSchemaPath::ROOT,
-             refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
-            if step == store::SnapshotRetirementStep::Complete {
-                if !store::ErasedSnapshotRetirement::terminal_is_empty(retirement) {
-                    return Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.field-return-false-terminal", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
-                }
-                drop(self.field_retirement.take());
-            }
-            return Ok(true);
-        }
-        let Some(ticket) = self.field_registry.next_returned_ticket() else { return Ok(false) };
-        match self.field_registry.take_returned_ticket(ticket) {
-            Ok(retirement) => {
-                self.field_retirement = Some(retirement);
-                Ok(true)
-            }
-            Err(store::ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => Ok(true),
-            Err(_) => Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.field-return-stale", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }),
-        }
-    }
-
-    #[expect(clippy::result_large_err, reason = "Preserves the fixed diagnostic path inline so bounded cleanup can report failure without allocating.")]
-    fn begin_completed_close(&mut self) -> Result<(), store::OwnedSchemaDecodeDiagnostic> {
-        let Some(ticket) = self.decode_completion.ticket() else {
-            self.state = PresentationEnvelopeMaterializeState::Cancelled;
-            return Ok(());
-        };
-        self.completed_registry.try_request_close(ticket).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.completed-close-request", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
-        match self.completed_registry.try_detach(ticket) {
-            Ok(owner) => {
-                self.completed_retirement = Some(owner);
-                self.state = PresentationEnvelopeMaterializeState::CloseCompleted;
-                Ok(())
-            }
-            Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => Ok(()),
-            Err(_) => Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.completed-close-stale", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }),
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing
-            && self.decode.is_none()
-            && self.field_retirement.is_none()
-            && self.field_registry.terminal_is_empty()
-            && self.completed_retirement.is_none()
-            && self.completed_registry.terminal_is_empty()
-            && self.materialize_envelope.is_none()
-            && self.materialize_snapshot.is_none()
-            && self.materialize_snapshot_retirement.is_none()
-            && self.materialize_envelope_retirement.is_none()
-            && self.fault_payload.is_none()
-            && self.retained_nested_outcome.is_none()
-            && self.fault_writer.as_ref().is_none_or(semio_framework_job::RetainedJobPayloadWriter::terminal_is_empty)
-            && matches!(self.state, PresentationEnvelopeMaterializeState::Complete | PresentationEnvelopeMaterializeState::Cancelled | PresentationEnvelopeMaterializeState::Fault)
-    }
-
-    fn begin_materialize_retirement(&mut self, state: PresentationEnvelopeMaterializeState) {
-        if let Some(snapshot) = self.materialize_snapshot.take() {
-            *self.materialize_snapshot_retirement = Some(PresentationFreshSnapshotRetirementFactory.retire_owned(snapshot));
-        }
-        if let Some(envelope) = self.materialize_envelope.take() {
-            *self.materialize_envelope_retirement = Some(presentation_envelope_decode_owner_bundle().retire_envelope(envelope));
-        }
-        self.state = state;
-    }
-
-    fn pump_materialize_retirement(&mut self) -> Result<bool, semio_framework_value::ValueError> {
-        if let Some(retirement) = self.materialize_snapshot_retirement.as_mut() {
-            return match retirement.close_step(1, PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    drop(self.materialize_snapshot_retirement.take());
-                    Ok(false)
-                }
-                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Presentation materialized snapshot retirement completed without its terminal witness")),
-                _ => Ok(false),
-            };
-        }
-        if let Some(retirement) = self.materialize_envelope_retirement.as_mut() {
-            return match retirement.close_step(1, store::ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    drop(self.materialize_envelope_retirement.take());
-                    Ok(true)
-                }
-                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Presentation materialized envelope retirement completed without its terminal witness")),
-                _ => Ok(false),
-            };
-        }
-        Ok(true)
-    }
-
-    fn record_fault(&mut self, code: &'static [u8]) {
-        if self.fault_code.is_none() {
-            self.fault_code = Some(code);
-        }
-        self.state = PresentationEnvelopeMaterializeState::Fault;
-    }
-
-    fn fault_outcome(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        if let Some(detail) = self.fault_payload.take() {
-            return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail });
-        }
-        let detail = self.fault_code.unwrap_or(b"presentation-envelope.materialize-fault");
-        let Some(writer) = self.fault_writer.as_mut() else { return semio_framework_job::StepOutcome::Yield };
-        match writer.write_slice_page(cx, detail, &mut self.fault_cursor) {
-            Ok(true) => {
-                let writer = self.fault_writer.take().expect("Presentation fault writer remains owned until its admitted page is sealed");
-                match writer.finish() {
-                    Ok(detail) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail }),
-                    Err(writer) => {
-                        *self.fault_writer = Some(writer);
-                        semio_framework_job::StepOutcome::Yield
-                    }
-                }
-            }
-            Ok(false) | Err(_) => semio_framework_job::StepOutcome::Yield,
-        }
-    }
-}
-
-impl semio_framework_job::InteractiveJob for PresentationEnvelopeMaterializeJob {
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        if let Err(diagnostic) = self.pump_field_return() {
-            self.record_fault(diagnostic.code.as_bytes());
-        }
-        match self.state {
-            PresentationEnvelopeMaterializeState::Decode => {
-                let Some(decode) = self.decode.as_mut() else {
-                    self.record_fault(b"presentation-envelope.decode-owner-missing");
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                match semio_framework_job::InteractiveJob::step(decode, cx) {
-                    semio_framework_job::StepOutcome::Yield => semio_framework_job::StepOutcome::Yield,
-                    outcome @ (semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_)) => {
-                        *self.retained_nested_outcome = Some(outcome);
-                        self.record_fault(b"presentation-envelope.unexpected-decode-output");
-                        semio_framework_job::StepOutcome::Yield
-                    }
-                    semio_framework_job::StepOutcome::Complete(candidate) => {
-                        if !candidate.state.terminal_is_empty() || !candidate.output.terminal_is_empty() {
-                            *self.retained_nested_outcome = Some(semio_framework_job::StepOutcome::Complete(candidate));
-                            self.record_fault(b"presentation-envelope.unexpected-decode-terminal-output");
-                            return semio_framework_job::StepOutcome::Yield;
-                        }
-                        if !decode.terminal_is_empty() {
-                            self.record_fault(b"presentation-envelope.decode-false-terminal");
-                            return semio_framework_job::StepOutcome::Yield;
-                        }
-                        drop(self.decode.take());
-                        self.state = PresentationEnvelopeMaterializeState::Publish;
-                        semio_framework_job::StepOutcome::Yield
-                    }
-                    semio_framework_job::StepOutcome::Cancelled => {
-                        if decode.terminal_is_empty() {
-                            drop(self.decode.take());
-                            self.state = PresentationEnvelopeMaterializeState::Cancelled;
-                            semio_framework_job::StepOutcome::Cancelled
-                        } else {
-                            self.record_fault(b"presentation-envelope.cancel-false-terminal");
-                            semio_framework_job::StepOutcome::Yield
-                        }
-                    }
-                    semio_framework_job::StepOutcome::Fault(fault) => {
-                        if decode.terminal_is_empty() {
-                            drop(self.decode.take());
-                        }
-                        *self.fault_payload = Some(fault.detail);
-                        self.state = PresentationEnvelopeMaterializeState::Fault;
-                        semio_framework_job::StepOutcome::Yield
-                    }
-                }
-            }
-            PresentationEnvelopeMaterializeState::Publish => {
-                if cx.is_cancelled() {
-                    if let Err(diagnostic) = self.begin_completed_close() {
-                        self.record_fault(diagnostic.code.as_bytes());
-                    }
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                let Some(ticket) = self.decode_completion.ticket() else { return semio_framework_job::StepOutcome::Yield };
-                let mut target = PresentationProjectionTarget { envelope: &mut self.materialize_envelope };
-                match self.completed_registry.try_publish_to(ticket, &mut target) {
-                    Ok(true) => {
-                        self.state = PresentationEnvelopeMaterializeState::Materialize;
-                        semio_framework_job::StepOutcome::Yield
-                    }
-                    Ok(false) | Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => semio_framework_job::StepOutcome::Yield,
-                    Err(_) => {
-                        self.record_fault(b"presentation-envelope.completed-publication-stale");
-                        semio_framework_job::StepOutcome::Yield
-                    }
-                }
-            }
-            PresentationEnvelopeMaterializeState::Materialize => {
-                if cx.is_cancelled() {
-                    self.begin_materialize_retirement(PresentationEnvelopeMaterializeState::RetireEnvelopeCancelled);
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                if self.materialize_snapshot_retirement.is_some() {
-                    match self.pump_materialize_retirement() {
-                        Ok(_) => return semio_framework_job::StepOutcome::Yield,
-                        Err(_) => {
-                            self.record_fault(b"presentation-envelope.materialize-retirement");
-                            self.begin_materialize_retirement(PresentationEnvelopeMaterializeState::RetireEnvelopeFault);
-                            return semio_framework_job::StepOutcome::Yield;
-                        }
-                    }
-                }
-                let Some(envelope) = self.materialize_envelope.as_ref() else {
-                    self.record_fault(b"presentation-envelope.materialize-owner-missing");
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                if self.materialize_snapshot.is_none() {
-                    *self.materialize_snapshot = Some(envelope.vcs.genesis.facts().snapshot().clone());
-                    cx.consume_fuel(PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES as u64);
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                if let Some(edit) = envelope.vcs.edits.get(self.materialize_edit) {
-                    if let Some(mutation) = edit.forwards.get(self.materialize_mutation) {
-                        let current = self.materialize_snapshot.as_ref().expect("materialized snapshot authority was established");
-                        let (diff, messages) = mutation.diff(current).into_parts();
-                        if messages.iter().any(|message| message.level == semio_framework_diagnostic::Severity::Fatal) {
-                            self.record_fault(b"presentation-envelope.materialize-fatal-mutation");
-                            self.begin_materialize_retirement(PresentationEnvelopeMaterializeState::RetireEnvelopeFault);
-                            return semio_framework_job::StepOutcome::Yield;
-                        }
-                        match protocol::apply_diff(&diff, current) {
-                            Ok(next) => {
-                                let previous = self.materialize_snapshot.take().expect("materialized snapshot remains owned");
-                                *self.materialize_snapshot = Some(next);
-                                *self.materialize_snapshot_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&PresentationFreshSnapshotRetirementFactory, previous));
-                                self.materialize_mutation += 1;
-                                cx.consume_fuel(PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES as u64);
-                                return semio_framework_job::StepOutcome::Yield;
-                            }
-                            Err(_) => {
-                                self.record_fault(b"presentation-envelope.materialize-apply");
-                                self.begin_materialize_retirement(PresentationEnvelopeMaterializeState::RetireEnvelopeFault);
-                                return semio_framework_job::StepOutcome::Yield;
-                            }
-                        }
-                    }
-                    self.materialize_edit += 1;
-                    self.materialize_mutation = 0;
-                    cx.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                let mut projection = match self.projection.state.try_lock() {
-                    Ok(projection) => projection,
-                    Err(_) => return semio_framework_job::StepOutcome::Yield,
-                };
-                if projection.value.is_some() {
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                let snapshot = self.materialize_snapshot.take().expect("completed Presentation materialization owns its exact snapshot");
-                *projection.value = Some(snapshot);
-                drop(projection);
-                self.begin_materialize_retirement(PresentationEnvelopeMaterializeState::RetireEnvelopeComplete);
-                semio_framework_job::StepOutcome::Yield
-            }
-            PresentationEnvelopeMaterializeState::RetireEnvelopeComplete | PresentationEnvelopeMaterializeState::RetireEnvelopeCancelled | PresentationEnvelopeMaterializeState::RetireEnvelopeFault => match self.pump_materialize_retirement() {
-                Ok(false) => semio_framework_job::StepOutcome::Yield,
-                Ok(true) => match self.state {
-                    PresentationEnvelopeMaterializeState::RetireEnvelopeComplete => {
-                        self.state = PresentationEnvelopeMaterializeState::Complete;
-                        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                        })
-                    }
-                    PresentationEnvelopeMaterializeState::RetireEnvelopeCancelled => {
-                        self.state = PresentationEnvelopeMaterializeState::Cancelled;
-                        semio_framework_job::StepOutcome::Cancelled
-                    }
-                    PresentationEnvelopeMaterializeState::RetireEnvelopeFault => {
-                        self.state = PresentationEnvelopeMaterializeState::Fault;
-                        semio_framework_job::StepOutcome::Yield
-                    }
-                    _ => unreachable!("retained materialize retirement state was matched above"),
-                },
-                Err(_) => {
-                    self.record_fault(b"presentation-envelope.materialize-retirement");
-                    semio_framework_job::StepOutcome::Yield
-                }
-            },
-            PresentationEnvelopeMaterializeState::CloseCompleted => {
-                let Some(owner) = self.completed_retirement.as_mut() else {
-                    self.state = PresentationEnvelopeMaterializeState::Cancelled;
-                    return semio_framework_job::StepOutcome::Cancelled;
-                };
-                match owner.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-                    Ok(store::SnapshotRetirementStep::Complete) if owner.terminal_is_empty() => {
-                        drop(self.completed_retirement.take());
-                        self.state = PresentationEnvelopeMaterializeState::Cancelled;
-                        semio_framework_job::StepOutcome::Cancelled
-                    }
-                    Ok(_) => semio_framework_job::StepOutcome::Yield,
-                    Err(_) => {
-                        self.record_fault(b"presentation-envelope.completed-retirement");
-                        semio_framework_job::StepOutcome::Yield
-                    }
-                }
-            }
-            PresentationEnvelopeMaterializeState::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-            }),
-            PresentationEnvelopeMaterializeState::Cancelled => semio_framework_job::StepOutcome::Cancelled,
-            PresentationEnvelopeMaterializeState::Fault => self.fault_outcome(cx),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        if self.closing {
-            return;
-        }
-        self.closing = true;
-        if let Some(decode) = self.decode.as_mut() {
-            semio_framework_job::InteractiveJob::begin_close(decode);
-        }
-        if let Some(writer) = self.fault_writer.as_mut() {
-            writer.begin_close();
-        }
-    }
-
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        self.begin_close();
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if let Some(decode) = self.decode.as_mut() {
-            match semio_framework_job::InteractiveJob::close_step(decode, maximum_items, maximum_bytes) {
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::InteractiveJobCloseStep::Blocked => return semio_framework_job::InteractiveJobCloseStep::Blocked,
-                semio_framework_job::InteractiveJobCloseStep::Complete if !decode.terminal_is_empty() => return semio_framework_job::InteractiveJobCloseStep::Blocked,
-                semio_framework_job::InteractiveJobCloseStep::Complete => {
-                    drop(self.decode.take());
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-            }
-        }
-        if let Some(retirement) = self.field_retirement.as_mut() {
-            return match store::ErasedSnapshotRetirement::close_step(retirement, maximum_items, maximum_bytes) {
-                Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                Ok(store::SnapshotRetirementStep::Blocked) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                Ok(store::SnapshotRetirementStep::Complete) if !store::ErasedSnapshotRetirement::terminal_is_empty(retirement) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                Ok(store::SnapshotRetirementStep::Complete) => {
-                    drop(self.field_retirement.take());
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-                Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            };
-        }
-        if let Some(ticket) = self.field_registry.next_returned_ticket() {
-            return match self.field_registry.take_returned_ticket(ticket) {
-                Ok(retirement) => {
-                    self.field_retirement = Some(retirement);
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }
-                }
-                Err(store::ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            };
-        }
-        if !self.field_registry.terminal_is_empty() {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if let Some(retirement) = self.completed_retirement.as_mut() {
-            return match retirement.close_step(maximum_items, maximum_bytes) {
-                Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                Ok(store::SnapshotRetirementStep::Blocked) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                Ok(store::SnapshotRetirementStep::Complete) if !retirement.terminal_is_empty() => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                Ok(store::SnapshotRetirementStep::Complete) => {
-                    drop(self.completed_retirement.take());
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-                Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            };
-        }
-        if !self.completed_registry.terminal_is_empty() {
-            let Some(ticket) = self.decode_completion.ticket() else { return semio_framework_job::InteractiveJobCloseStep::Blocked };
-            match self.completed_registry.try_request_close(ticket) {
-                Ok(()) | Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => {}
-                Err(_) if self.completed_registry.terminal_is_empty() => {}
-                Err(_) => return semio_framework_job::InteractiveJobCloseStep::Blocked,
-            }
-            return match self.completed_registry.try_detach(ticket) {
-                Ok(retirement) => {
-                    self.completed_retirement = Some(retirement);
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }
-                }
-                Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                Err(_) if self.completed_registry.terminal_is_empty() => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
-                Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            };
-        }
-        if self.materialize_snapshot_retirement.is_none() {
-            if let Some(snapshot) = self.materialize_snapshot.take() {
-                *self.materialize_snapshot_retirement = Some(PresentationFreshSnapshotRetirementFactory.retire_owned(snapshot));
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-        }
-        if let Some(retirement) = self.materialize_snapshot_retirement.as_mut() {
-            return match retirement.close_step(maximum_items, maximum_bytes) {
-                Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                Ok(store::SnapshotRetirementStep::Blocked) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                Ok(store::SnapshotRetirementStep::Complete) if !retirement.terminal_is_empty() => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                Ok(store::SnapshotRetirementStep::Complete) => {
-                    drop(self.materialize_snapshot_retirement.take());
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-                Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            };
-        }
-        if self.materialize_envelope_retirement.is_none() {
-            if let Some(envelope) = self.materialize_envelope.take() {
-                *self.materialize_envelope_retirement = Some(presentation_envelope_decode_owner_bundle().retire_envelope(envelope));
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-        }
-        if let Some(retirement) = self.materialize_envelope_retirement.as_mut() {
-            return match retirement.close_step(maximum_items, maximum_bytes) {
-                Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                Ok(store::SnapshotRetirementStep::Blocked) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                Ok(store::SnapshotRetirementStep::Complete) if !retirement.terminal_is_empty() => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                Ok(store::SnapshotRetirementStep::Complete) => {
-                    drop(self.materialize_envelope_retirement.take());
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-                Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            };
-        }
-        if let Some(payload) = self.fault_payload.as_mut() {
-            return match payload.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    drop(self.fault_payload.take());
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
-        }
-        if let Some(outcome) = self.retained_nested_outcome.as_mut() {
-            return match outcome.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    drop(self.retained_nested_outcome.take());
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
-        }
-        if let Some(writer) = self.fault_writer.as_mut() {
-            return match writer.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    drop(self.fault_writer.take());
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
-        }
-        self.state = PresentationEnvelopeMaterializeState::Cancelled;
-        semio_framework_job::InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        PresentationEnvelopeMaterializeJob::terminal_is_empty(self)
-    }
-}
-
-impl Drop for PresentationEnvelopeMaterializeJob {
-    fn drop(&mut self) {
-        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
-        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
-        // Firing it while the thread is ALREADY unwinding turns a reported failure into
-        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
-        // binary and hides the first, real failure (that is how one red test took this crate's
-        // other 300 with it).
-        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Presentation envelope materialize job reached Drop before every decode/completed owner was terminal empty");
-    }
-}
-
 /// 📦️ Creates an empty typed VCS envelope for a presentation deck document.
 pub fn create_presentation_envelope(id: &str) -> PresentationEnvelope {
     create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, id, empty_presentation_snapshot(), None)
@@ -592,27 +64,18 @@ pub fn create_presentation_envelope(id: &str) -> PresentationEnvelope {
 
 const PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct PresentationFreshSnapshotRetirementFactory;
-
-impl store::ArtifactOwnedValueRetirementFactory<PresentationSnapshot> for PresentationFreshSnapshotRetirementFactory {
-    fn retire_owned(&self, value: PresentationSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(PresentationFreshSnapshotRetirement { value: std::mem::ManuallyDrop::new(Some(value)) })
-    }
-}
-
 /// 📦️ Installs Presentation's exact field catalog and nested owner retirement factories as
 /// one indivisible app decode authority.
 pub fn presentation_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwnerBundle<PresentationSnapshot, PresentationMutation> {
-    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(PresentationEnvelopeOwnedFieldCatalog), std::sync::Arc::new(PresentationFreshSnapshotRetirementFactory), std::sync::Arc::new(PresentationUnexpectedMutationRetirementFactory))
+    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(PresentationEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PresentationSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PresentationMutation>::default()))
 }
 
 impl store::ArtifactEnvelopeOwnedFieldCatalog<PresentationSnapshot, PresentationMutation> for PresentationEnvelopeOwnedFieldCatalog {
     fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<PresentationSnapshot, PresentationMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot>>> {
         store::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
-            std::sync::Arc::new(PresentationFreshSnapshotRetirementFactory),
-            std::sync::Arc::new(PresentationUnexpectedMutationRetirementFactory),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PresentationSnapshot>::default()),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PresentationMutation>::default()),
             self.edit_history_decoder(),
         )
         .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<PresentationSnapshot, PresentationMutation>>)
@@ -643,486 +106,7 @@ impl store::ArtifactEnvelopeOwnedFieldCatalog<PresentationSnapshot, Presentation
     }
 }
 
-/// 🎫️ Pollable exact-once typed result retained outside the worker job.
-pub struct PresentationProjectionCompletion {
-    state: std::sync::Mutex<PresentationProjectionCompletionState>,
-}
 
-impl PresentationProjectionCompletion {
-    fn new() -> std::sync::Arc<Self> {
-        std::sync::Arc::new(Self { state: std::sync::Mutex::new(PresentationProjectionCompletionState { value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }) })
-    }
-
-    /// 📤️ Atomically transfers the exact completed owner or retains it on backpressure.
-    pub fn try_publish_to(&self, target: &mut dyn PresentationProjectionAdoptionTarget) -> Result<bool, PresentationProjectionAccessFault> {
-        let mut state = self.state.try_lock().map_err(|_| PresentationProjectionAccessFault)?;
-        let Some(value) = state.value.take() else { return Ok(false) };
-        match target.try_adopt(value) {
-            Ok(()) => Ok(true),
-            Err(value) => {
-                *state.value = Some(value);
-                Ok(false)
-            }
-        }
-    }
-
-    fn close_step(&self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        let mut state = match self.state.try_lock() {
-            Ok(state) => state,
-            Err(_) => return Ok(store::SnapshotRetirementStep::Blocked),
-        };
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if state.retirement.is_none() {
-            if let Some(value) = state.value.take() {
-                *state.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&PresentationFreshSnapshotRetirementFactory, value));
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            return Ok(store::SnapshotRetirementStep::Complete);
-        }
-        let retirement = state.retirement.as_mut().expect("Presentation projection retirement remains retained");
-        match retirement.close_step(maximum_items, maximum_bytes)? {
-            store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                drop(state.retirement.take());
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-            store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Presentation projection retirement reported Complete without its terminal-empty witness")),
-            step => Ok(step),
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.state.try_lock().is_ok_and(|state| state.value.is_none() && state.retirement.is_none())
-    }
-}
-
-enum PresentationEnvelopeMaterializeState {
-    Decode,
-    Publish,
-    Materialize,
-    RetireEnvelopeComplete,
-    RetireEnvelopeCancelled,
-    RetireEnvelopeFault,
-    CloseCompleted,
-    Complete,
-    Cancelled,
-    Fault,
-}
-
-/// 🏗️ Builds the representative retained caller from already-admitted, sealed fixed pages.
-fn begin_materialize_presentation_projection(
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
-    pages: store::OwnedSchemaDecodePages,
-) -> Result<(PresentationEnvelopeMaterializeJob, std::sync::Arc<PresentationProjectionCompletion>), store::OwnedSchemaDecodePages> {
-    let record = store::artifact_envelope_decode_record(operation, generation, pages)?;
-    let field_registry = store::ArtifactEnvelopeFieldDecoderRegistry::new();
-    let completed_registry = store::ArtifactEnvelopeCompletedRecordRegistry::new();
-    let decode_completion = store::ArtifactEnvelopeDecodeCompletion::new();
-    let projection = PresentationProjectionCompletion::new();
-    let fields = Box::new(store::ArtifactEnvelopeFreshFieldDecoder::new(
-        operation,
-        generation,
-        std::sync::Arc::new(PresentationEnvelopeOwnedFieldCatalog),
-        std::sync::Arc::new(PresentationFreshSnapshotRetirementFactory),
-        std::sync::Arc::new(PresentationUnexpectedMutationRetirementFactory),
-        std::sync::Arc::clone(&completed_registry),
-        std::sync::Arc::clone(&decode_completion),
-    ));
-    let decode = match store::ArtifactEnvelopeDecodeAuthority::try_new(record, &field_registry, fields) {
-        Ok(decode) => decode,
-        Err(_) => unreachable!("a fresh private field registry admits its first exact decoder owner"),
-    };
-    Ok((
-        PresentationEnvelopeMaterializeJob {
-            decode: Some(decode),
-            field_registry,
-            field_retirement: None,
-            completed_registry,
-            completed_retirement: None,
-            decode_completion,
-            projection: std::sync::Arc::clone(&projection),
-            materialize_envelope: std::mem::ManuallyDrop::new(None),
-            materialize_snapshot: std::mem::ManuallyDrop::new(None),
-            materialize_snapshot_retirement: std::mem::ManuallyDrop::new(None),
-            materialize_envelope_retirement: std::mem::ManuallyDrop::new(None),
-            materialize_edit: 0,
-            materialize_mutation: 0,
-            state: PresentationEnvelopeMaterializeState::Decode,
-            fault_code: None,
-            fault_writer: std::mem::ManuallyDrop::new(Some(semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::Fault))),
-            fault_cursor: 0,
-            fault_payload: std::mem::ManuallyDrop::new(None),
-            retained_nested_outcome: std::mem::ManuallyDrop::new(None),
-            closing: false,
-        },
-        projection,
-    ))
-}
-
-/// 🎛️ App-retained worker handle for one Presentation envelope materialization. Every call
-/// submits or observes at most one shared-pool turn; close retains the exact job and result owner.
-pub struct PresentationEnvelopeMaterializeHandle {
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
-    cancel: semio_framework_job::CancelToken,
-    session: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSession<PresentationEnvelopeMaterializeJob>>>,
-    rejected: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<PresentationEnvelopeMaterializeJob>>>,
-    pending: Option<semio_framework_job::WorkerJobTicket>,
-    retained_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>,
-    completion: std::sync::Arc<PresentationProjectionCompletion>,
-    fault: std::mem::ManuallyDrop<Option<semio_framework_job::RetainedJobPayload>>,
-    fault_code: Option<&'static [u8]>,
-    close_started: bool,
-    state: PresentationEnvelopeMaterializeHandleState,
-}
-
-impl PresentationEnvelopeMaterializeHandle {
-    pub fn operation(&self) -> semio_framework_job::OperationId {
-        self.operation
-    }
-
-    pub fn generation(&self) -> semio_framework_job::Generation {
-        self.generation
-    }
-
-    pub fn cancel_now(&self) {
-        self.cancel.cancel_now();
-    }
-
-    pub fn fault(&self) -> Option<&[u8]> {
-        self.fault.as_ref().and_then(semio_framework_job::RetainedJobPayload::single_page).or(self.fault_code)
-    }
-
-    fn adopt_worker_terminal(&mut self, mut owner: semio_framework_job::WorkerJobOutcome<PresentationEnvelopeMaterializeJob>) -> PresentationEnvelopeMaterializeHandleStep {
-        let outcome = owner.take_outcome();
-        match outcome {
-            semio_framework_job::StepOutcome::Complete(candidate) if candidate.state.terminal_is_empty() && candidate.output.terminal_is_empty() => {
-                owner.begin_close();
-                self.close_started = true;
-                self.state = PresentationEnvelopeMaterializeHandleState::RetiringComplete;
-                PresentationEnvelopeMaterializeHandleStep::Progress
-            }
-            semio_framework_job::StepOutcome::Complete(candidate) => {
-                *self.retained_outcome = Some(semio_framework_job::StepOutcome::Complete(candidate));
-                owner.begin_close();
-                self.close_started = true;
-                self.fault_code = Some(b"presentation-envelope.unexpected-terminal-output");
-                self.state = PresentationEnvelopeMaterializeHandleState::WorkerFault;
-                PresentationEnvelopeMaterializeHandleStep::Fault
-            }
-            semio_framework_job::StepOutcome::Cancelled => {
-                owner.begin_close();
-                self.close_started = true;
-                self.state = PresentationEnvelopeMaterializeHandleState::RetiringCancelled;
-                PresentationEnvelopeMaterializeHandleStep::Progress
-            }
-            semio_framework_job::StepOutcome::Fault(fault) => {
-                *self.fault = Some(fault.detail);
-                owner.begin_close();
-                self.close_started = true;
-                self.state = PresentationEnvelopeMaterializeHandleState::WorkerFault;
-                PresentationEnvelopeMaterializeHandleStep::Fault
-            }
-            _ => unreachable!("only a terminal worker outcome reaches job recovery"),
-        }
-    }
-
-    fn retire_session_step(&mut self, completed: PresentationEnvelopeMaterializeHandleState) -> PresentationEnvelopeMaterializeHandleStep {
-        let Some(session) = self.session.as_ref() else {
-            self.state = completed;
-            return match completed {
-                PresentationEnvelopeMaterializeHandleState::WorkerComplete => PresentationEnvelopeMaterializeHandleStep::Ready,
-                PresentationEnvelopeMaterializeHandleState::WorkerCancelled => PresentationEnvelopeMaterializeHandleStep::Cancelled,
-                _ => PresentationEnvelopeMaterializeHandleStep::Fault,
-            };
-        };
-        if session.terminal_is_empty() {
-            drop(self.session.take());
-            self.state = completed;
-            return PresentationEnvelopeMaterializeHandleStep::Progress;
-        }
-        match session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)) {
-            // 🔁 See `reissue_session_close`: a blocked close step is the session telling us it is not
-            // in its CLOSE phase, and only `begin_close` can put it back there.
-            semio_framework_job::WorkerJobCloseStep::Blocked => match Self::reissue_session_close(session) {
-                semio_framework_job::WorkerJobCloseStep::Blocked => PresentationEnvelopeMaterializeHandleStep::Pending,
-                _ => PresentationEnvelopeMaterializeHandleStep::Progress,
-            },
-            semio_framework_job::WorkerJobCloseStep::Pending { .. } | semio_framework_job::WorkerJobCloseStep::Complete => PresentationEnvelopeMaterializeHandleStep::Progress,
-        }
-    }
-
-    /// 🔁 Re-requests the session's CLOSE phase. `WorkerJobSession::close_step` only advances a
-    /// session whose phase IS `SESSION_CLOSE`; against any other phase it answers `Blocked` and
-    /// changes nothing. `begin_close` is the only transition into that phase, and while the worker
-    /// holds the session it answers `Blocked` too — it records the request and wakes the worker, and
-    /// the worker then hands the authority back as TERMINAL/OUTCOME, NOT as CLOSE. So a caller that
-    /// issues `begin_close` exactly once and afterwards only calls `close_step` deadlocks the moment
-    /// that first call was blocked: every later step CAS-fails and the retained caller can never be
-    /// reclaimed (the fixture ceiling then trips and this handle's `Drop` assert aborts the process).
-    /// `begin_close` is idempotent — against `SESSION_CLOSE` it is a no-op — so re-issuing it on every
-    /// blocked step is both safe and the only way out.
-    fn reissue_session_close(session: &semio_framework_job::WorkerJobSession<PresentationEnvelopeMaterializeJob>) -> semio_framework_job::WorkerJobCloseStep {
-        session.begin_close()
-    }
-
-    /// 🪜️ Advances at most one retained worker submission or observation. A stale live
-    /// generation atomically requests cancellation before another turn can be submitted.
-    pub fn maintenance_step(&mut self, pool: &semio_framework_job::WorkerPool, live_generation: semio_framework_job::Generation) -> PresentationEnvelopeMaterializeHandleStep {
-        match self.state {
-            PresentationEnvelopeMaterializeHandleState::RetiringComplete => return self.retire_session_step(PresentationEnvelopeMaterializeHandleState::WorkerComplete),
-            PresentationEnvelopeMaterializeHandleState::RetiringCancelled => return self.retire_session_step(PresentationEnvelopeMaterializeHandleState::WorkerCancelled),
-            PresentationEnvelopeMaterializeHandleState::WorkerComplete => return PresentationEnvelopeMaterializeHandleStep::Ready,
-            PresentationEnvelopeMaterializeHandleState::WorkerCancelled => return PresentationEnvelopeMaterializeHandleStep::Cancelled,
-            PresentationEnvelopeMaterializeHandleState::WorkerFault => return PresentationEnvelopeMaterializeHandleStep::Fault,
-            PresentationEnvelopeMaterializeHandleState::Complete => return PresentationEnvelopeMaterializeHandleStep::Complete,
-            PresentationEnvelopeMaterializeHandleState::Active => {}
-        }
-        if live_generation != self.generation {
-            self.cancel.cancel_now();
-        }
-        let Some(session) = self.session.as_ref() else {
-            self.fault_code = Some(b"presentation-envelope.worker-session-missing");
-            self.state = PresentationEnvelopeMaterializeHandleState::WorkerFault;
-            return PresentationEnvelopeMaterializeHandleStep::Fault;
-        };
-        match session.poll() {
-            semio_framework_job::WorkerJobPoll::Submitted => return PresentationEnvelopeMaterializeHandleStep::Pending,
-            semio_framework_job::WorkerJobPoll::Outcome => {
-                let Some(ticket) = self.pending.take() else {
-                    self.fault_code = Some(b"presentation-envelope.worker-ticket-missing");
-                    let _ = session.begin_close();
-                    self.close_started = true;
-                    self.state = PresentationEnvelopeMaterializeHandleState::WorkerFault;
-                    return PresentationEnvelopeMaterializeHandleStep::Fault;
-                };
-                let Ok(mut owner) = session.take_outcome(ticket) else {
-                    self.pending = Some(ticket);
-                    return PresentationEnvelopeMaterializeHandleStep::Pending;
-                };
-                let outcome = owner.take_outcome();
-                if outcome.terminal_is_empty() && !outcome.is_terminal() {
-                    drop(outcome);
-                    return match owner.resume() {
-                        Ok(()) => PresentationEnvelopeMaterializeHandleStep::Progress,
-                        Err(owner) => {
-                            owner.begin_close();
-                            self.close_started = true;
-                            self.fault_code = Some(b"presentation-envelope.worker-resume-rejected");
-                            self.state = PresentationEnvelopeMaterializeHandleState::WorkerFault;
-                            PresentationEnvelopeMaterializeHandleStep::Fault
-                        }
-                    };
-                }
-                *self.retained_outcome = Some(outcome);
-                owner.begin_close();
-                self.close_started = true;
-                self.fault_code = Some(b"presentation-envelope.unexpected-nonterminal-output");
-                self.state = PresentationEnvelopeMaterializeHandleState::WorkerFault;
-                return PresentationEnvelopeMaterializeHandleStep::Fault;
-            }
-            semio_framework_job::WorkerJobPoll::Terminal => {
-                self.pending = None;
-                return match session.take_terminal() {
-                    Ok(owner) => self.adopt_worker_terminal(owner),
-                    Err(_) => PresentationEnvelopeMaterializeHandleStep::Pending,
-                };
-            }
-            semio_framework_job::WorkerJobPoll::Rejected => {
-                self.pending = None;
-                let Ok(rejected) = session.take_rejected() else { return PresentationEnvelopeMaterializeHandleStep::Pending };
-                return match rejected.kind() {
-                    semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated => {
-                        rejected.resume();
-                        PresentationEnvelopeMaterializeHandleStep::Progress
-                    }
-                    semio_framework_async::WorkerSubmitErrorKind::Shutdown | semio_framework_async::WorkerSubmitErrorKind::Poisoned => {
-                        rejected.begin_close();
-                        self.close_started = true;
-                        self.fault_code = Some(b"presentation-envelope.worker-pool-closed");
-                        self.state = PresentationEnvelopeMaterializeHandleState::WorkerFault;
-                        PresentationEnvelopeMaterializeHandleStep::Fault
-                    }
-                };
-            }
-            semio_framework_job::WorkerJobPoll::Closing => return PresentationEnvelopeMaterializeHandleStep::Pending,
-            semio_framework_job::WorkerJobPoll::TerminalEmpty => {
-                drop(self.session.take());
-                self.fault_code = Some(b"presentation-envelope.worker-empty-without-terminal");
-                self.state = PresentationEnvelopeMaterializeHandleState::WorkerFault;
-                return PresentationEnvelopeMaterializeHandleStep::Fault;
-            }
-            semio_framework_job::WorkerJobPoll::CheckedOut => return PresentationEnvelopeMaterializeHandleStep::Pending,
-            semio_framework_job::WorkerJobPoll::Idle => {}
-        }
-        match session.try_submit_step(pool, semio_framework_job::Lane::Interactive) {
-            Ok(ticket) => {
-                self.pending = Some(ticket);
-                PresentationEnvelopeMaterializeHandleStep::Progress
-            }
-            Err(semio_framework_job::WorkerJobSubmitFault::Contention(_)) | Err(semio_framework_job::WorkerJobSubmitFault::Pool(_)) | Err(semio_framework_job::WorkerJobSubmitFault::SequenceExhausted) => {
-                PresentationEnvelopeMaterializeHandleStep::Pending
-            }
-        }
-    }
-
-    /// 📤️ Publishes the exact ready snapshot once. Backpressure leaves it in this handle.
-    pub fn try_publish_to(&mut self, target: &mut dyn PresentationProjectionAdoptionTarget) -> Result<bool, PresentationProjectionAccessFault> {
-        if self.state != PresentationEnvelopeMaterializeHandleState::WorkerComplete {
-            return Ok(false);
-        }
-        let published = self.completion.try_publish_to(target)?;
-        if published && self.completion.terminal_is_empty() {
-            self.state = PresentationEnvelopeMaterializeHandleState::Complete;
-        }
-        Ok(published)
-    }
-
-    /// 🧹️ Cancels and cursor-retires the exact worker/result owner without a run loop.
-    pub fn close_step(&mut self, pool: &semio_framework_job::WorkerPool, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.state == PresentationEnvelopeMaterializeHandleState::Complete {
-            return Ok(store::SnapshotRetirementStep::Complete);
-        }
-        self.cancel.cancel_now();
-        if !self.close_started {
-            if let Some(rejected) = self.rejected.as_mut() {
-                rejected.begin_close();
-            } else if let Some(session) = self.session.as_ref() {
-                let _ = session.begin_close();
-            }
-            self.pending = None;
-            self.close_started = true;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(outcome) = self.retained_outcome.as_mut() {
-            return Ok(match outcome.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    drop(self.retained_outcome.take());
-                    store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            });
-        }
-        if let Some(fault) = self.fault.as_mut() {
-            return Ok(match fault.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    drop(self.fault.take());
-                    store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            });
-        }
-        if !self.completion.terminal_is_empty() {
-            return self.completion.close_step(maximum_items, maximum_bytes);
-        }
-        if let Some(rejected) = self.rejected.as_mut() {
-            if rejected.terminal_is_empty() {
-                drop(self.rejected.take());
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            return Ok(match rejected.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes },
-                semio_framework_job::InteractiveJobCloseStep::Blocked => store::SnapshotRetirementStep::Blocked,
-                semio_framework_job::InteractiveJobCloseStep::Complete => store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 },
-            });
-        }
-        if let Some(session) = self.session.as_ref() {
-            if session.terminal_is_empty() {
-                drop(self.session.take());
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            return Ok(match session.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes },
-                // 🔁 Only `begin_close` moves a session into its CLOSE phase — see
-                // `reissue_session_close`. Without this re-issue a caller whose FIRST `begin_close`
-                // was blocked by the worker stayed `Blocked` for every later step and could never be
-                // reclaimed.
-                semio_framework_job::WorkerJobCloseStep::Blocked => {
-                    let _ = pool;
-                    match Self::reissue_session_close(session) {
-                        semio_framework_job::WorkerJobCloseStep::Blocked => store::SnapshotRetirementStep::Blocked,
-                        semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes },
-                        semio_framework_job::WorkerJobCloseStep::Complete => store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 },
-                    }
-                }
-                semio_framework_job::WorkerJobCloseStep::Complete => store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 },
-            });
-        }
-        self.fault_code = None;
-        self.state = PresentationEnvelopeMaterializeHandleState::Complete;
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.state == PresentationEnvelopeMaterializeHandleState::Complete
-            && self.session.is_none()
-            && self.rejected.is_none()
-            && self.pending.is_none()
-            && self.retained_outcome.is_none()
-            && self.completion.terminal_is_empty()
-            && self.fault.is_none()
-            && self.fault_code.is_none()
-    }
-}
-
-impl Drop for PresentationEnvelopeMaterializeHandle {
-    fn drop(&mut self) {
-        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
-        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
-        // Firing it while the thread is ALREADY unwinding turns a reported failure into
-        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
-        // binary and hides the first, real failure (that is how one red test took this crate's
-        // other 300 with it).
-        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Presentation envelope materialize handle reached Drop before worker, result, and fault owners were terminal empty");
-    }
-}
-
-struct PresentationFreshSnapshotRetirement {
-    value: std::mem::ManuallyDrop<Option<PresentationSnapshot>>,
-}
-
-impl store::ErasedSnapshotRetirement for PresentationFreshSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 || maximum_bytes < PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(value) = self.value.take() {
-            drop(value);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
-    }
-}
-
-impl Drop for PresentationFreshSnapshotRetirement {
-    fn drop(&mut self) {
-        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
-        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
-        // Firing it while the thread is ALREADY unwinding turns a reported failure into
-        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
-        // binary and hides the first, real failure (that is how one red test took this crate's
-        // other 300 with it).
-        assert!(std::thread::panicking() || (self.value.is_none()), "Presentation fresh snapshot retirement reached Drop before its <=4096-byte admitted root was released");
-    }
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct PresentationUnexpectedMutationRetirementFactory;
-
-impl store::ArtifactOwnedValueRetirementFactory<PresentationMutation> for PresentationUnexpectedMutationRetirementFactory {
-    fn retire_owned(&self, value: PresentationMutation) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(PresentationUnexpectedMutationRetirement { value: std::mem::ManuallyDrop::new(Some(value)) })
-    }
-}
 
 #[expect(clippy::large_enum_variant, reason = "The active decoder keeps its fixed path and admitted hex authority inline without a second allocation at the state transition.")]
 enum PresentationPackSnapshotState {
@@ -1149,11 +133,23 @@ impl PresentationPackSnapshotAuthority {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path, refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
     fn owners_terminal_empty(&self) -> bool {
         matches!(self.state, PresentationPackSnapshotState::Published | PresentationPackSnapshotState::Complete) && self.value.is_none() && self.retirement.is_none()
+    }
+
+    /// 📏️ Quotes the next close turn: the active hex decoder, the started retirement's own frontier, or the retirement's start.
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+        if let Some(retirement) = self.retirement.as_ref() {
+            return retirement.next_demand(body).map_err(|error| self.diagnostic_from(error));
+        }
+        Ok(semio_framework_value::RetirementDemand { depth: usize::from(!self.owners_terminal_empty()), ..Default::default() })
+    }
+
+    fn diagnostic_from(&self, error: semio_framework_value::ValueError) -> store::OwnedSchemaDecodeDiagnostic {
+        store::OwnedSchemaDecodeDiagnostic { refusal_kind: error.kind, retained_progress: error.retained_progress(), ..self.diagnostic("presentation-envelope.snapshot-retirement-fault", 0) }
     }
 }
 
@@ -1166,7 +162,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot> for Pre
         cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
+        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path, refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
         if matches!(self.state, PresentationPackSnapshotState::AwaitToken) {
             if !terminal {
                 return Err(diagnostic("presentation-envelope.snapshot-pack-must-be-scalar", token.start));
@@ -1206,10 +202,6 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot> for Pre
         Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
-    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
-        Ok(usize::from(self.retirement.is_some()) * store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
-    }
-
     fn maximum_close_byte_demand(&self) -> usize {
         store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES
     }
@@ -1218,36 +210,61 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot> for Pre
         store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        let path = self.path;
-        let diagnostic = |code: &'static str| store::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(0).map(|demand| demand.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(maximum_copy_bytes).map(|demand| demand.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(0).map(|demand| demand.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(0).map(|demand| demand.depth)
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep};
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
         if let PresentationPackSnapshotState::Decode(authority) = &mut self.state {
             authority.cancel();
             self.state = PresentationPackSnapshotState::Closing;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         if self.retirement.is_none() {
             if let Some(value) = self.value.take() {
-                *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&PresentationFreshSnapshotRetirementFactory, value));
-                self.state = PresentationPackSnapshotState::Closing;
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                let factory = semio_framework_value::retirement::OwnedValueRetirementFactory::<PresentationSnapshot>::default();
+                return match store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, value, grant) {
+                    Ok((retirement, progress)) => {
+                        *self.retirement = Some(retirement);
+                        self.state = PresentationPackSnapshotState::Closing;
+                        Ok(RetainedCloneStep::Progress(progress))
+                    }
+                    Err((error, value)) => {
+                        *self.value = Some(value);
+                        if matches!(error.kind, semio_framework_value::ValueRefusalKind::InvariantViolated | semio_framework_value::ValueRefusalKind::InvalidValue) {
+                            Err(self.diagnostic_from(error))
+                        } else {
+                            Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()))
+                        }
+                    }
+                };
             }
             self.state = PresentationPackSnapshotState::Complete;
-            return Ok(store::SnapshotRetirementStep::Complete);
+            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
-        let retirement = self.retirement.as_mut().expect("Presentation snapshot retirement remains retained");
-        match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| diagnostic("presentation-envelope.snapshot-retirement-fault"))? {
-            store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                drop(self.retirement.take());
-                self.state = PresentationPackSnapshotState::Complete;
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-            store::SnapshotRetirementStep::Complete => Err(diagnostic("presentation-envelope.snapshot-retirement-false-terminal")),
-            step => Ok(step),
+        let step = self.retirement.as_mut().expect("Presentation snapshot retirement remains retained").close_step(grant).map_err(|error| self.diagnostic_from(error))?;
+        if self.retirement.as_ref().is_some_and(|retirement| retirement.terminal_is_empty()) {
+            drop(self.retirement.take());
+            self.state = PresentationPackSnapshotState::Complete;
+            return Ok(RetainedCloneStep::Complete(step.progress()));
         }
+        Ok(RetainedCloneStep::Progress(step.progress()))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1257,12 +274,6 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot> for Pre
 
 impl Drop for PresentationPackSnapshotAuthority {
     fn drop(&mut self) {
-        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
-        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
-        // Firing it while the thread is ALREADY unwinding turns a reported failure into
-        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
-        // binary and hides the first, real failure (that is how one red test took this crate's
-        // other 300 with it).
         assert!(std::thread::panicking() || (self.owners_terminal_empty()), "Presentation pack snapshot authority reached Drop before publication or bounded retirement");
     }
 }
@@ -1273,7 +284,6 @@ struct PresentationRejectedNestedAuthority {
 }
 
 impl store::ArtifactEnvelopeMutationFieldAuthority<PresentationMutation> for PresentationRejectedNestedAuthority {
-    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
     fn accept_token(
         &mut self,
         token: store::OwnedSchemaToken,
@@ -1281,7 +291,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<PresentationMutation> for Pre
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: self.code, offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+        Err(store::OwnedSchemaDecodeDiagnostic { offset: token.start, ..store::OwnedSchemaDecodeDiagnostic::before(self.code, store::OwnedSchemaPath::ROOT) })
     }
 
     fn publish_reserved(
@@ -1290,15 +300,35 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<PresentationMutation> for Pre
         _reservation: store::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: self.code, offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+        Err(store::OwnedSchemaDecodeDiagnostic::before(self.code, store::OwnedSchemaPath::ROOT))
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(usize::from(!self.terminal))
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep};
+        if self.terminal {
+            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
         self.terminal = true;
-        Ok(store::SnapshotRetirementStep::Complete)
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1318,15 +348,35 @@ impl store::ArtifactEnvelopeSprConflictAuthority for PresentationRejectedConflic
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "presentation-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+        Err(store::OwnedSchemaDecodeDiagnostic { offset: token.start, ..store::OwnedSchemaDecodeDiagnostic::before("presentation-envelope.fresh-conflict-not-admitted", store::OwnedSchemaPath::ROOT) })
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(usize::from(!self.terminal))
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep};
+        if self.terminal {
+            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
         self.terminal = true;
-        Ok(store::SnapshotRetirementStep::Complete)
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1335,317 +385,9 @@ impl store::ArtifactEnvelopeSprConflictAuthority for PresentationRejectedConflic
 }
 
 /// 🎭️ Owner-local exact catalog for the Presentation fresh-envelope decode cohort.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct PresentationEnvelopeOwnedFieldCatalog;
-
-struct PresentationProjectionCompletionState {
-    value: std::mem::ManuallyDrop<Option<PresentationSnapshot>>,
-    retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-}
-
-impl Drop for PresentationProjectionCompletionState {
-    fn drop(&mut self) {
-        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
-        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
-        // Firing it while the thread is ALREADY unwinding turns a reported failure into
-        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
-        // binary and hides the first, real failure (that is how one red test took this crate's
-        // other 300 with it).
-        assert!(std::thread::panicking() || (self.value.is_none() && self.retirement.is_none()), "Presentation projection completion reached Drop before its exact typed result was consumed or retired");
-    }
-}
-
-/// 🔐️ The retained presentation projection could not be locked for publication.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct PresentationProjectionAccessFault;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PresentationEnvelopeMaterializeHandleStep {
-    Pending,
-    Progress,
-    Ready,
-    Cancelled,
-    Fault,
-    Complete,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum PresentationEnvelopeMaterializeHandleState {
-    Active,
-    RetiringComplete,
-    RetiringCancelled,
-    WorkerComplete,
-    WorkerCancelled,
-    WorkerFault,
-    Complete,
-}
-
-/// 📨️ Creates the sole app-retained Presentation materialization handle from sealed fixed pages.
-pub fn submit_materialize_presentation_projection(
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
-    pages: store::OwnedSchemaDecodePages,
-) -> Result<PresentationEnvelopeMaterializeHandle, store::OwnedSchemaDecodePages> {
-    let (job, completion) = begin_materialize_presentation_projection(operation, generation, pages)?;
-    let cancel = semio_framework_job::root_cancel_token();
-    let params = semio_framework_job::BatchJobParams {
-        operation,
-        generation,
-        cancel: cancel.clone(),
-        config: semio_framework_job::BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "presentation_envelope_materialize", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US },
-        now_us: semio_framework_job::default_now_us,
-    };
-    let (session, rejected, state, fault_code) = match semio_framework_job::WorkerJobSession::try_new(job, params) {
-        Ok(session) => (Some(session), None, PresentationEnvelopeMaterializeHandleState::Active, None),
-        Err(rejected) => (None, Some(rejected), PresentationEnvelopeMaterializeHandleState::WorkerFault, Some(b"presentation-envelope.worker-admission" as &'static [u8])),
-    };
-    Ok(PresentationEnvelopeMaterializeHandle {
-        operation,
-        generation,
-        cancel,
-        session: std::mem::ManuallyDrop::new(session),
-        rejected: std::mem::ManuallyDrop::new(rejected),
-        pending: None,
-        retained_outcome: std::mem::ManuallyDrop::new(None),
-        completion,
-        fault: std::mem::ManuallyDrop::new(None),
-        fault_code,
-        close_started: false,
-        state,
-    })
-}
-
-struct PresentationEnvelopeMaterializeSlot {
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
-    occupied: bool,
-    handle: std::mem::MaybeUninit<PresentationEnvelopeMaterializeHandle>,
-}
-
-impl PresentationEnvelopeMaterializeRegistry {
-    pub fn new() -> Self {
-        Self {
-            slots: std::array::from_fn(|_| PresentationEnvelopeMaterializeSlot { operation: semio_framework_job::OperationId(0), generation: semio_framework_job::Generation(0), occupied: false, handle: std::mem::MaybeUninit::uninit() }),
-            live: 0,
-            occupied: 0,
-            maintenance_cursor: 0,
-        }
-    }
-
-    fn index(operation: semio_framework_job::OperationId) -> usize {
-        operation.0 as usize % PRESENTATION_ENVELOPE_MATERIALIZE_CAPACITY
-    }
-
-    pub fn can_insert(&self, operation: semio_framework_job::OperationId) -> bool {
-        !self.slots[Self::index(operation)].occupied
-    }
-
-    /// 📥️ Preflights the fixed slot before constructing any nested decode/job owner.
-    pub fn try_submit(
-        &mut self,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        pages: store::OwnedSchemaDecodePages,
-    ) -> Result<(), (PresentationEnvelopeMaterializeRegistryFault, store::OwnedSchemaDecodePages)> {
-        let index = Self::index(operation);
-        if self.slots[index].occupied {
-            let fault = if self.slots[index].operation == operation { PresentationEnvelopeMaterializeRegistryFault::Collision } else { PresentationEnvelopeMaterializeRegistryFault::Capacity };
-            return Err((fault, pages));
-        }
-        let handle = match submit_materialize_presentation_projection(operation, generation, pages) {
-            Ok(handle) => handle,
-            Err(pages) => return Err((PresentationEnvelopeMaterializeRegistryFault::Capacity, pages)),
-        };
-        let slot = &mut self.slots[index];
-        slot.operation = operation;
-        slot.generation = generation;
-        slot.handle.write(handle);
-        slot.occupied = true;
-        self.live += 1;
-        self.occupied |= 1u64 << index;
-        Ok(())
-    }
-
-    fn get_mut(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<&mut PresentationEnvelopeMaterializeHandle, PresentationEnvelopeMaterializeRegistryFault> {
-        let slot = &mut self.slots[Self::index(operation)];
-        if !slot.occupied || slot.operation != operation || slot.generation != generation {
-            return Err(PresentationEnvelopeMaterializeRegistryFault::Stale);
-        }
-        Ok(unsafe { slot.handle.assume_init_mut() })
-    }
-
-    pub fn maintenance_step(
-        &mut self,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        live_generation: semio_framework_job::Generation,
-        pool: &semio_framework_job::WorkerPool,
-    ) -> Result<PresentationEnvelopeMaterializeHandleStep, PresentationEnvelopeMaterializeRegistryFault> {
-        Ok(self.get_mut(operation, generation)?.maintenance_step(pool, live_generation))
-    }
-
-    /// 🪜️ App maintenance advances one exact live caller in stable slot order.
-    pub fn maintenance_next_step(&mut self, pool: &semio_framework_job::WorkerPool) -> Option<PresentationEnvelopeMaterializeHandleStep> {
-        if self.occupied == 0 {
-            self.maintenance_cursor = 0;
-            return None;
-        }
-        let start = self.maintenance_cursor % PRESENTATION_ENVELOPE_MATERIALIZE_CAPACITY;
-        let offset = self.occupied.rotate_right(start as u32).trailing_zeros() as usize;
-        let index = (start + offset) % PRESENTATION_ENVELOPE_MATERIALIZE_CAPACITY;
-        self.maintenance_cursor = (index + 1) % PRESENTATION_ENVELOPE_MATERIALIZE_CAPACITY;
-        let slot = &mut self.slots[index];
-        let generation = slot.generation;
-        Some(unsafe { slot.handle.assume_init_mut() }.maintenance_step(pool, generation))
-    }
-
-    pub fn cancel(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<(), PresentationEnvelopeMaterializeRegistryFault> {
-        self.get_mut(operation, generation)?.cancel_now();
-        Ok(())
-    }
-
-    pub fn fault(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<Option<&[u8]>, PresentationEnvelopeMaterializeRegistryFault> {
-        Ok(self.get_mut(operation, generation)?.fault())
-    }
-
-    pub fn try_publish_to(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, target: &mut dyn PresentationProjectionAdoptionTarget) -> Result<bool, PresentationEnvelopeMaterializeRegistryFault> {
-        let published = self.get_mut(operation, generation)?.try_publish_to(target).map_err(|_| PresentationEnvelopeMaterializeRegistryFault::Contended)?;
-        if published {
-            self.reclaim_terminal(operation, generation)?;
-        }
-        Ok(published)
-    }
-
-    fn reclaim_terminal(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<(), PresentationEnvelopeMaterializeRegistryFault> {
-        let index = Self::index(operation);
-        let slot = &mut self.slots[index];
-        if !slot.occupied || slot.operation != operation || slot.generation != generation {
-            return Err(PresentationEnvelopeMaterializeRegistryFault::Stale);
-        }
-        let handle = unsafe { slot.handle.assume_init_ref() };
-        if !handle.terminal_is_empty() {
-            return Ok(());
-        }
-        let handle = unsafe { slot.handle.assume_init_read() };
-        slot.occupied = false;
-        self.live -= 1;
-        self.occupied &= !(1u64 << index);
-        drop(handle);
-        Ok(())
-    }
-
-    pub fn close_step(
-        &mut self,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        pool: &semio_framework_job::WorkerPool,
-        maximum_items: usize,
-        maximum_bytes: usize,
-    ) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        let step = self.get_mut(operation, generation).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Presentation envelope materialize close received a stale operation/generation"))?.close_step(pool, maximum_items, maximum_bytes)?;
-        if step == store::SnapshotRetirementStep::Complete {
-            self.reclaim_terminal(operation, generation).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Presentation envelope terminal handle changed before exact registry removal"))?;
-        }
-        Ok(step)
-    }
-
-    /// 🧹️ App close advances one retained caller and removes only its witnessed terminal shell.
-    pub fn close_next_step(&mut self, pool: &semio_framework_job::WorkerPool, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.occupied == 0 {
-            return Ok(store::SnapshotRetirementStep::Complete);
-        }
-        let index = self.occupied.trailing_zeros() as usize;
-        let operation = self.slots[index].operation;
-        let generation = self.slots[index].generation;
-        let step = self.close_step(operation, generation, pool, maximum_items, maximum_bytes)?;
-        if self.occupied == 0 {
-            Ok(store::SnapshotRetirementStep::Complete)
-        } else if step == store::SnapshotRetirementStep::Complete {
-            Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-        } else {
-            Ok(step)
-        }
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.live == 0 && self.occupied == 0 && self.slots.iter().all(|slot| !slot.occupied)
-    }
-}
-
-impl Default for PresentationEnvelopeMaterializeRegistry {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Drop for PresentationEnvelopeMaterializeRegistry {
-    fn drop(&mut self) {
-        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
-        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
-        // Firing it while the thread is ALREADY unwinding turns a reported failure into
-        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
-        // binary and hides the first, real failure (that is how one red test took this crate's
-        // other 300 with it).
-        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Presentation envelope materialize registry reached Drop before every retained caller was closed and reclaimed");
-    }
-}
-
-struct PresentationUnexpectedMutationRetirement {
-    value: std::mem::ManuallyDrop<Option<PresentationMutation>>,
-}
-
-impl store::ErasedSnapshotRetirement for PresentationUnexpectedMutationRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.value.is_none() {
-            return Ok(store::SnapshotRetirementStep::Complete);
-        }
-        if maximum_items == 0 || maximum_bytes < store::ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        drop(self.value.take());
-        Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES })
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
-    }
-}
-
-impl Drop for PresentationUnexpectedMutationRetirement {
-    fn drop(&mut self) {
-        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
-        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
-        // Firing it while the thread is ALREADY unwinding turns a reported failure into
-        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
-        // binary and hides the first, real failure (that is how one red test took this crate's
-        // other 300 with it).
-        assert!(std::thread::panicking() || (self.value.is_none()), "fresh Presentation mutation retirement fail-closed with an impossible populated-history owner");
-    }
-}
-
-pub const PRESENTATION_ENVELOPE_MATERIALIZE_CAPACITY: usize = 64;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PresentationEnvelopeMaterializeRegistryFault {
-    Capacity,
-    Collision,
-    Contended,
-    Stale,
-}
-
-/// 🗄️ Fixed app-owned maintenance registry for retained Presentation envelope callers.
-pub struct PresentationEnvelopeMaterializeRegistry {
-    slots: [PresentationEnvelopeMaterializeSlot; PRESENTATION_ENVELOPE_MATERIALIZE_CAPACITY],
-    live: usize,
-    occupied: u64,
-    maintenance_cursor: usize,
-}
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-
-/// 🎯️ Nonblocking publication target for one completed Presentation snapshot owner.
-pub trait PresentationProjectionAdoptionTarget {
-    #[expect(clippy::result_large_err, reason = "Returns the exact unadopted snapshot owner for retry or incremental retirement without allocating on refusal.")]
-    fn try_adopt(&mut self, value: PresentationSnapshot) -> Result<(), PresentationSnapshot>;
-}

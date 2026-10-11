@@ -6,8 +6,9 @@ use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework_plugin::{ArtifactOwnedToolJobRequest,ArtifactToolCompletion,ArtifactDownloadOutput,EphemeralEmit};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_pixels::{compositing::layers::RasterStackJob,png_encoding::PngEncodeJob};
-use semio_framework_job::{Checkpoint,CommitCandidate,InteractiveJob,InteractiveJobCloseStep,JobFault,JobPayloadCloseStep,JobPayloadStream,Operation,RetainedJobPayload,RetainedJobPayloadWriter,StepContext,StepOutcome};
-use semio_framework_plugin::{ArtifactMediaExportJobRequest,ArtifactReservedJob,ArtifactReservedToolJob,ArtifactToolPublicationContract,ArtifactToolPublicationLane,EditorApp,Fault,MediaClass,MediaForm,MediaType,PluginCloseStep};
+use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeKind,JobOutcomeView,JobPublicationKind,Operation,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedJobPublication,StepContext};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_plugin::{ArtifactMediaExportJobRequest,ArtifactReservedJob,ArtifactReservedToolJob,ArtifactToolPublicationContract,ArtifactToolPublicationLane,EditorApp,Fault,MediaClass,MediaForm,MediaType};
 use semio_framework_plugin::app::{ArtifactMediaExportCompletion,ArtifactMediaExportCredit,ArtifactMediaExportResult,ArtifactOutputChunks,ArtifactSnapshotCloseLease};
 use std::sync::Arc;
 
@@ -49,42 +50,31 @@ impl ImageExportWork {
         } else {self.preparing=Some(RasterStackPreparation::new(document)?);}
         Ok(None)
     }
-    fn close_step(&mut self,maximum_bytes:usize)->usize {
-        self.closing=true;
-        if let Some(mut job)=self.preparing.take(){job.cancel();return 0;}
-        if let Some(mut job)=self.compositing.take(){job.cancel();return 0;}
-        if let Some(mut job)=self.encoding.take(){job.cancel();return 0;}
-        let released=self.encoded.len().min(maximum_bytes);self.encoded.truncate(self.encoded.len()-released);if self.encoded.is_empty(){self.encoded=Vec::new();}released
-    }
     fn terminal_is_empty(&self)->bool {self.preparing.is_none()&&self.compositing.is_none()&&self.encoding.is_none()&&self.encoded.is_empty()}
 }
 
-struct Publication {writer:Option<RetainedJobPayloadWriter>,bytes:Vec<u8>,cursor:usize,progress:Option<u64>}
-impl Publication {
-    fn progress(stage:&str,completed:u64)->Self {
-        let (en,de)=match stage {"prepare"=>("Preparing layers","Ebenen werden vorbereitet"),"composite"=>("Rendering layers","Ebenen werden gerendert"),"encode"=>("Encoding PNG","PNG wird kodiert"),_=>("Preparing download","Download wird vorbereitet")};
-        let bytes=format!(r#"{{"stage":"{stage}","en":"{en}","de":"{de}","completedUnits":{completed}}}"#).into_bytes();
-        Self {writer:Some(RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState)),bytes,cursor:0,progress:Some(completed)}
-    }
-    fn fault(error:&str)->Self {Self {writer:Some(RetainedJobPayloadWriter::new(JobPayloadStream::Fault)),bytes:error.chars().take(256).collect::<String>().into_bytes(),cursor:0,progress:None}}
-    fn step(&mut self,context:&mut StepContext<'_>)->StepOutcome {
-        let writer=self.writer.as_mut().unwrap();
-        match writer.write_slice_page(context,&self.bytes,&mut self.cursor) {
-            Ok(true)=>match self.writer.take().unwrap().finish(){Ok(payload)=>match self.progress{Some(applied_progress)=>StepOutcome::CheckpointReady(Checkpoint {state:payload,applied_progress}),None=>StepOutcome::Fault(JobFault {detail:payload})},Err(writer)=>{self.writer=Some(writer);StepOutcome::Yield}},
-            _=>StepOutcome::Yield,
-        }
-    }
+fn progress_payload(stage:&str,completed:u64)->Vec<u8> {
+    let (en,de)=match stage {"prepare"=>("Preparing layers","Ebenen werden vorbereitet"),"composite"=>("Rendering layers","Ebenen werden gerendert"),"encode"=>("Encoding PNG","PNG wird kodiert"),_=>("Preparing download","Download wird vorbereitet")};
+    format!(r#"{{"stage":"{stage}","en":"{en}","de":"{de}","completedUnits":{completed}}}"#).into_bytes()
 }
 
 pub struct RasterImageExportJob {
     operation:Operation,snapshot:Option<Arc<RasterSnapshot>>,snapshot_close:Option<ArtifactSnapshotCloseLease<RasterSnapshot>>,work:ImageExportWork,
-    chunks:Option<ArtifactOutputChunks>,credit:Option<ArtifactMediaExportCredit>,completion:Option<ArtifactMediaExportCompletion>,publication:Option<Publication>,completed:bool,closing:bool,units:u64,
-    rejected_download:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
-    download:Option<ArtifactToolCompletion<EditorApp<RasterPlayApp>>>,private_chunks:bool,raw_input:Option<RetainedToolWireInput>,raw_bytes:Vec<u8>,raw_cursor:usize,raw_validated:bool,
+    chunks:Option<ArtifactOutputChunks>,credit:Option<ArtifactMediaExportCredit>,completion:Option<ArtifactMediaExportCompletion>,
+    publication:RetainedJobPublication,publishing:Option<JobPublicationKind>,source:Vec<u8>,delivered:bool,
+    completed:bool,closing:bool,units:u64,
+    rejected_download:Option<ArtifactDownloadOutput>,active:Option<Box<dyn store::ErasedSnapshotRetirement>>,encoded_retiring:Option<Vec<u8>>,
+    download:Option<ArtifactToolCompletion<EditorApp<RasterPlayApp>>>,raw_input:Option<RetainedToolWireInput>,raw_bytes:Vec<u8>,raw_cursor:usize,raw_validated:bool,
 }
 impl RasterImageExportJob {
     pub fn new(request:ArtifactMediaExportJobRequest<EditorApp<RasterPlayApp>>)->Self {
-        Self {operation:request.operation,snapshot:Some(request.snapshot),snapshot_close:Some(request.snapshot_close),work:ImageExportWork::default(),chunks:Some(request.output_chunks),credit:Some(request.output_credit),completion:Some(request.completion),publication:None,completed:false,closing:false,units:0,rejected_download:None,download:None,private_chunks:false,raw_input:None,raw_bytes:Vec::new(),raw_cursor:0,raw_validated:true}
+        Self {operation:request.operation,snapshot:Some(request.snapshot),snapshot_close:Some(request.snapshot_close),work:ImageExportWork::default(),chunks:Some(request.output_chunks),credit:Some(request.output_credit),completion:Some(request.completion),publication:RetainedJobPublication::new(),publishing:None,source:Vec::new(),delivered:false,completed:false,closing:false,units:0,rejected_download:None,active:None,encoded_retiring:None,download:None,raw_input:None,raw_bytes:Vec::new(),raw_cursor:0,raw_validated:true}
+    }
+    fn stage_fault(&mut self,detail:&str) {
+        self.source=detail.chars().take(256).collect::<String>().into_bytes();self.publishing=Some(JobPublicationKind::Fault);
+    }
+    fn stage_progress(&mut self,stage:&str,completed:u64) {
+        self.source=progress_payload(stage,completed);self.publishing=Some(JobPublicationKind::Checkpoint {applied_progress:completed});
     }
     fn advance(&mut self)->Result<(),Fault> {
         let chunk=self.work.advance(self.snapshot.as_deref().ok_or_else(||Fault::from("raster.export-snapshot-missing"))?,1).map_err(Fault::from)?;
@@ -93,7 +83,7 @@ impl RasterImageExportJob {
             self.chunks.as_ref().unwrap().seal()?;
             if let Some(completion)=self.download.as_ref() {
                 if let Err(rejected)=completion.complete_download(ArtifactDownloadOutput::new("image.png","image/png",Some("base64".into()),self.chunks.take().unwrap()),EphemeralEmit::default()){
-                    if let Ok(download)=rejected.download{self.rejected_download=Some(semio_framework_value::retirement::owned_retirement(download));}return Err(rejected.fault);
+                    if let Ok(download)=rejected.download{self.rejected_download=Some(download);}return Err(rejected.fault);
                 }
             } else {
                 self.credit.as_ref().unwrap().credit(MEDIA_SCHEMA.len())?;
@@ -104,62 +94,108 @@ impl RasterImageExportJob {
         }
         Ok(())
     }
+    fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError> {
+        let item=RetirementDemand {depth:1,..Default::default()};
+        let owned=|bytes:usize|RetirementDemand {capacity_bytes:bytes,depth:2,..Default::default()};
+        if !self.publication.terminal_is_empty(){return self.publication.retirement_demands();}
+        if self.delivered{return Ok(item);}
+        if let Some(owner)=self.active.as_ref(){return store::artifact_retirement_box_demands(owner,body);}
+        if self.rejected_download.is_some(){return store::artifact_retirement_owned_birth_demands(&self.rejected_download);}
+        if self.work.preparing.is_some()||self.work.compositing.is_some()||self.work.encoding.is_some(){return Ok(item);}
+        if self.encoded_retiring.is_some()||self.work.encoded.capacity()!=0{return Ok(owned(semio_framework_value::retirement::owned_retirement_birth_bytes::<Vec<u8>>()));}
+        if let Some(input)=self.raw_input.as_ref(){return Ok(RetirementDemand {copy_bytes:input.next_close_copy_byte_demand()?,capacity_bytes:input.next_close_capacity_byte_demand(body)?,release_bytes:input.next_close_release_byte_demand()?,depth:input.next_close_depth_demand()?.max(1)});}
+        if self.raw_bytes.capacity()!=0{return Ok(RetirementDemand {release_bytes:self.raw_bytes.capacity(),depth:1,..Default::default()});}
+        if self.chunks.is_some(){return store::artifact_retirement_owned_birth_demands(&self.chunks);}
+        if self.completion.is_some()||self.download.is_some()||self.credit.is_some()||self.snapshot.is_some()||self.snapshot_close.is_some(){return Ok(item);}
+        Ok(Default::default())
+    }
+    fn close_turn(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        let demand=self.close_demands(grant.maximum_copy_bytes)?;
+        if demand==RetirementDemand::default(){return Ok(Default::default());}
+        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"raster export close exceeds its admitted depth"));}
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(Default::default());}
+        let item=RetainedCloneProgress {copied_items:1,..Default::default()};
+        let child=RetainedCloneGrant {maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
+        if !self.publication.terminal_is_empty(){return self.publication.close_step(child).map(|step|step.progress());}
+        if self.delivered{self.delivered=false;return Ok(item);}
+        if self.active.is_some(){return store::artifact_retirement_box_close_step(&mut self.active,grant).map(|step|step.progress());}
+        if self.rejected_download.is_some(){return store::artifact_retirement_admit_owned(&mut self.rejected_download,&mut self.active,grant).map(|step|step.progress());}
+        if let Some(mut job)=self.work.preparing.take(){job.cancel();return Ok(item);}
+        if let Some(mut job)=self.work.compositing.take(){job.cancel();return Ok(item);}
+        if let Some(mut job)=self.work.encoding.take(){job.cancel();return Ok(item);}
+        if self.encoded_retiring.is_none()&&self.work.encoded.capacity()!=0{self.encoded_retiring=Some(std::mem::take(&mut self.work.encoded));}
+        if self.encoded_retiring.is_some(){return store::artifact_retirement_admit_owned(&mut self.encoded_retiring,&mut self.active,grant).map(|step|step.progress());}
+        if let Some(input)=self.raw_input.as_mut(){
+            let step=input.close_step(grant);
+            if input.terminal_is_empty(){self.raw_input=None;}
+            return match step {InteractiveJobCloseStep::Pending {progress}|InteractiveJobCloseStep::Complete {progress}=>Ok(progress),InteractiveJobCloseStep::Refused {kind,progress}=>Err(ValueError::literal(kind,"raster export wire close refused").with_retained_progress(progress)),InteractiveJobCloseStep::Blocked=>Ok(Default::default())};
+        }
+        if self.raw_bytes.capacity()!=0{let released=std::mem::take(&mut self.raw_bytes).capacity();return Ok(RetainedCloneProgress {released_bytes:released,..item});}
+        if self.chunks.is_some(){return store::artifact_retirement_admit_owned(&mut self.chunks,&mut self.active,grant).map(|step|step.progress());}
+        if self.completion.take().is_some()||self.download.take().is_some()||self.credit.take().is_some(){return Ok(item);}
+        if let Some(snapshot)=self.snapshot.as_ref(){
+            if !self.snapshot_close.as_ref().map_or_else(||Arc::strong_count(snapshot)>1,|lease|lease.can_release(snapshot)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"raster export snapshot has no live close witness"));}
+            self.snapshot=None;return Ok(item);
+        }
+        self.snapshot_close=None;
+        Ok(item)
+    }
 }
 impl InteractiveJob for RasterImageExportJob {
-    fn step(&mut self,context:&mut StepContext<'_>)->StepOutcome {
-        if self.closing||context.is_cancelled(){return StepOutcome::Cancelled;}
-        if context.should_yield(){return StepOutcome::Yield;}
-        if context.operation()!=self.operation.operation||context.generation()!=self.operation.generation {return StepOutcome::Fault(JobFault {detail:RetainedJobPayload::empty(JobPayloadStream::Fault)});}
-        if let Some(publication)=self.publication.as_mut(){let outcome=publication.step(context);if !matches!(outcome,StepOutcome::Yield){self.publication=None;}return outcome;}
+    fn step<'a>(&'a mut self,context:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError> {
+        if self.delivered {
+            let step=self.publication.close_step(context.retained_grant())?;
+            context.consume_retained(step.progress())?;
+            if matches!(step,RetainedCloneStep::Complete(_)){self.delivered=false;}
+            return Ok(None);
+        }
+        if self.closing||context.is_cancelled(){return JobOutcomeBorrow::admit_cancelled(context);}
+        if context.should_yield(){return Ok(None);}
+        if context.operation()!=self.operation.operation||context.generation()!=self.operation.generation {self.stage_fault("raster.export-operation-authority-invalid");}
+        if let Some(kind)=self.publishing {
+            let result=self.publication.advance_from_source(kind,&self.source,context)?;
+            if result.is_some(){self.delivered=true;if matches!(kind,JobPublicationKind::Checkpoint {..}){self.publishing=None;}}
+            return Ok(result);
+        }
         if !self.raw_validated {
             context.set_stage("prepare");context.consume_fuel(1);
-            if let Some(page)=self.raw_input.as_ref().and_then(|input|input.page(self.raw_cursor)) {self.raw_bytes.extend_from_slice(page);self.raw_cursor+=1;return StepOutcome::Yield;}
-            if !matches!(<RasterCommand as protocol::OpBinary>::decode_op(&self.raw_bytes),Ok(RasterCommand::ExportPng(_))) {self.publication=Some(Publication::fault("raster.export-command-mismatch"));return StepOutcome::Yield;}
-            self.raw_validated=true;return StepOutcome::Yield;
+            if let Some(page)=self.raw_input.as_ref().and_then(|input|input.page(self.raw_cursor)) {self.raw_bytes.extend_from_slice(page);self.raw_cursor+=1;return Ok(None);}
+            if !matches!(<RasterCommand as protocol::OpBinary>::decode_op(&self.raw_bytes),Ok(RasterCommand::ExportPng(_))) {self.stage_fault("raster.export-command-mismatch");return Ok(None);}
+            self.raw_validated=true;return Ok(None);
         }
-        if self.completed{return StepOutcome::Fault(JobFault {detail:RetainedJobPayload::empty(JobPayloadStream::Fault)});}
+        if self.completed{return JobOutcomeBorrow::admit_complete(context,None,None);}
         let stage=self.work.stage();context.set_stage(stage);
         let result=self.advance();self.units+=1;context.consume_fuel(1);
-        if context.is_cancelled(){return StepOutcome::Cancelled;}
+        if context.is_cancelled(){return JobOutcomeBorrow::admit_cancelled(context);}
         match result {
-            Err(error)=>{self.publication=Some(Publication::fault(&error.message));StepOutcome::Yield},
-            Ok(()) if self.completed=>StepOutcome::Complete(CommitCandidate {state:RetainedJobPayload::empty(JobPayloadStream::CommitState),output:RetainedJobPayload::empty(JobPayloadStream::CommitOutput)}),
-            Ok(())=>{if self.units==1||self.units.is_multiple_of(64)||self.work.stage()!=stage {self.publication=Some(Publication::progress(self.work.stage(),self.units));}StepOutcome::Yield},
+            Err(error)=>{self.stage_fault(&error.message);Ok(None)},
+            Ok(()) if self.completed=>JobOutcomeBorrow::admit_complete(context,None,None),
+            Ok(())=>{if self.units==1||self.units.is_multiple_of(64)||self.work.stage()!=stage {let next=self.work.stage();self.stage_progress(next,self.units);}Ok(None)},
         }
     }
-    fn begin_close(&mut self){self.closing=true;self.work.closing=true;if let Some(input)=self.raw_input.as_mut(){input.begin_close();}if let Some(writer)=self.publication.as_mut().and_then(|publication|publication.writer.as_mut()){writer.begin_close();}}
-    fn close_step(&mut self,items:usize,bytes:usize)->InteractiveJobCloseStep {
-        match ArtifactReservedJob::close_step(self,items,bytes){Ok(PluginCloseStep::Complete)=>InteractiveJobCloseStep::Complete,Ok(PluginCloseStep::Pending {released_items,released_bytes})=>InteractiveJobCloseStep::Pending {released_items,released_bytes},_=>InteractiveJobCloseStep::Blocked}
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield=>descriptor.yielded(),
+            JobOutcomeKind::Cancelled=>descriptor.cancelled(),
+            JobOutcomeKind::Complete if self.completed=>descriptor.complete(None,None),
+            _=>self.publication.borrow_outcome(descriptor),
+        }
     }
-    fn terminal_is_empty(&self)->bool {ArtifactReservedJob::terminal_is_empty(self)}
-}
-impl ArtifactReservedJob for RasterImageExportJob {
-    /// ♻️ Framework operation ownership retains output queues and completion until its later drain stage.
-    fn close_step(&mut self,items:usize,bytes:usize)->Result<PluginCloseStep,Fault> {
+    fn begin_close(&mut self){self.closing=true;self.work.closing=true;if let Some(input)=self.raw_input.as_mut(){input.begin_close();}}
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError> {Ok(self.close_demands(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.close_demands(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError> {Ok(self.close_demands(0)?.depth)}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep {
         self.begin_close();
-        if let Some(retirement)=self.rejected_download.as_mut(){return match retirement.close_step(items,bytes){Ok(semio_framework_value::SnapshotRetirementStep::Complete)=>{self.rejected_download.take();Ok(PluginCloseStep::Pending{released_items:1,released_bytes:0})},Ok(semio_framework_value::SnapshotRetirementStep::Pending{released_items,released_bytes})=>Ok(PluginCloseStep::Pending{released_items,released_bytes}),_=>Err(Fault::from("raster.export-rejected-download-retirement-blocked"))};}
-        if items==0{return Ok(PluginCloseStep::Pending {released_items:0,released_bytes:0});}
-        if let Some(publication)=self.publication.as_mut() {
-            if let Some(writer)=publication.writer.as_mut(){let step=writer.close_step(1,bytes);if writer.terminal_is_empty(){publication.writer=None;}return Ok(match step{JobPayloadCloseStep::Pending {released_items,released_bytes}=>PluginCloseStep::Pending {released_items,released_bytes},_=>PluginCloseStep::Pending {released_items:0,released_bytes:0}});}
-            if publication.bytes.len()>bytes {return Ok(PluginCloseStep::Pending {released_items:0,released_bytes:0});}
-            let released_bytes=publication.bytes.len();self.publication=None;return Ok(PluginCloseStep::Pending {released_items:1,released_bytes});
+        match self.close_turn(grant) {
+            Ok(progress)=>if self.terminal_is_empty(){InteractiveJobCloseStep::Complete {progress}}else{InteractiveJobCloseStep::Pending {progress}},
+            Err(error)=>InteractiveJobCloseStep::Refused {kind:error.kind,progress:error.retained_progress()},
         }
-        if !self.work.terminal_is_empty(){if bytes==0{return Ok(PluginCloseStep::Pending {released_items:0,released_bytes:0});}let released_bytes=self.work.close_step(bytes);return Ok(PluginCloseStep::Pending {released_items:1,released_bytes});}
-        if let Some(input)=self.raw_input.as_mut() {
-            let step=input.close_step(1,bytes);if input.terminal_is_empty(){self.raw_input=None;}
-            return Ok(match step {InteractiveJobCloseStep::Pending {released_items,released_bytes}=>PluginCloseStep::Pending {released_items,released_bytes},InteractiveJobCloseStep::Complete=>PluginCloseStep::Pending {released_items:1,released_bytes:0},_=>return Err(Fault::from("raster.export-wire-close-blocked"))});
-        }
-        if !self.raw_bytes.is_empty(){let released_bytes=bytes.min(self.raw_bytes.len());self.raw_bytes.truncate(self.raw_bytes.len()-released_bytes);if self.raw_bytes.is_empty(){self.raw_bytes=Vec::new();}return Ok(PluginCloseStep::Pending {released_items:0,released_bytes});}
-        if self.private_chunks {if let Some(chunks)=self.chunks.as_ref(){if chunks.chunks_remaining()>0 {if bytes<ArtifactOutputChunks::CHUNK_BYTES{return Ok(PluginCloseStep::Pending {released_items:0,released_bytes:0});}let chunk=chunks.close_take_chunk()?;return Ok(PluginCloseStep::Pending {released_items:1,released_bytes:chunk.map_or(0,|chunk|chunk.len())});}}}
-        if self.chunks.take().is_some(){return Ok(PluginCloseStep::Pending {released_items:1,released_bytes:0});}
-        if self.completion.take().is_some(){return Ok(PluginCloseStep::Pending {released_items:1,released_bytes:0});}
-        if self.download.take().is_some(){return Ok(PluginCloseStep::Pending {released_items:1,released_bytes:0});}
-        if self.credit.take().is_some(){return Ok(PluginCloseStep::Pending {released_items:1,released_bytes:0});}
-        if let Some(snapshot)=self.snapshot.as_ref(){if !self.snapshot_close.as_ref().map_or_else(||Arc::strong_count(snapshot)>1,|lease|lease.can_release(snapshot)){return Err(Fault::from("raster.export-snapshot-unwitnessed"));}self.snapshot=None;return Ok(PluginCloseStep::Pending {released_items:1,released_bytes:0});}
-        self.snapshot_close=None;Ok(PluginCloseStep::Complete)
     }
-    fn terminal_is_empty(&self)->bool {self.rejected_download.is_none()&&self.raw_input.is_none()&&self.raw_bytes.is_empty()&&self.download.is_none()&&self.publication.is_none()&&self.work.terminal_is_empty()&&self.chunks.is_none()&&self.completion.is_none()&&self.credit.is_none()&&self.snapshot.is_none()&&self.snapshot_close.is_none()}
+    fn terminal_is_empty(&self)->bool {self.rejected_download.is_none()&&self.active.is_none()&&self.encoded_retiring.is_none()&&self.raw_input.is_none()&&self.raw_bytes.capacity()==0&&self.download.is_none()&&self.publication.terminal_is_empty()&&!self.delivered&&self.work.terminal_is_empty()&&self.work.encoded.capacity()==0&&self.chunks.is_none()&&self.completion.is_none()&&self.credit.is_none()&&self.snapshot.is_none()&&self.snapshot_close.is_none()}
 }
+impl ArtifactReservedJob for RasterImageExportJob {}
 
 pub struct RasterMediaExportJobFactory {keys:[ToolFactoryKey;1]}
 impl RasterMediaExportJobFactory {pub fn new(controller:&str)->Self {Self {keys:[ToolFactoryKey::new(controller,TOOL_ID)]}}}
@@ -184,7 +220,7 @@ mod tests;
 /// 🧾️ The command runtime retains its snapshot and completion while this private output queue is built.
 pub fn build_download_job(request:ArtifactOwnedToolJobRequest<EditorApp<RasterPlayApp>>)->Result<Option<semio_framework::ToolOperationSpec>,Fault> {
     if request.tool_id!="exportPng"||!matches!(*request.command,RasterCommand::ExportPng(_)){return Err(Fault::from("raster.export-command-mismatch"));}
-    let job=RasterImageExportJob {operation:request.operation.clone(),snapshot:Some(request.snapshot),snapshot_close:None,work:ImageExportWork::default(),chunks:Some(ArtifactOutputChunks::new(ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES)),credit:None,completion:None,publication:None,completed:false,closing:false,units:0,download:Some(request.completion),private_chunks:true,raw_input:None,raw_bytes:Vec::new(),raw_cursor:0,raw_validated:true,rejected_download:None};
+    let job=RasterImageExportJob {operation:request.operation.clone(),snapshot:Some(request.snapshot),snapshot_close:None,work:ImageExportWork::default(),chunks:Some(ArtifactOutputChunks::new(ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES)),credit:None,completion:None,publication:RetainedJobPublication::new(),publishing:None,source:Vec::new(),delivered:false,completed:false,closing:false,units:0,download:Some(request.completion),raw_input:None,raw_bytes:Vec::new(),raw_cursor:0,raw_validated:true,rejected_download:None,active:None,encoded_retiring:None};
     Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id,request.tool_id,request.payload_schema_id,job,request.operation)))
 }
 
@@ -215,24 +251,27 @@ pub(super) struct RasterExportSnapshotDisposer {
 }
 
 impl semio_framework_plugin::ArtifactSnapshotDisposer<crate::RasterSnapshot> for RasterExportSnapshotDisposer {
-    fn close_step(&mut self,snapshot:&mut Option<std::sync::Arc<crate::RasterSnapshot>>,maximum_items:usize,maximum_bytes:usize)->Result<semio_framework_plugin::PluginCloseStep,Fault> {
-        use semio_framework_plugin::PluginCloseStep;
-        if maximum_items==0{return Ok(PluginCloseStep::Pending {released_items:0,released_bytes:0});}
-        if let Some(retirement)=self.retirement.as_mut(){
-            return Ok(match retirement.close_step(1,maximum_bytes).map_err(|error|Fault::from(error.message))? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty()=>{drop(self.retirement.take());PluginCloseStep::Pending {released_items:1,released_bytes:0}},
-                store::SnapshotRetirementStep::Complete=>return Err(Fault::from("raster export snapshot reported false terminal")),
-                store::SnapshotRetirementStep::Pending {released_items,released_bytes}=>PluginCloseStep::Pending {released_items,released_bytes},
-                store::SnapshotRetirementStep::Blocked=>PluginCloseStep::Blocked {reason:"raster export snapshot retirement awaits its exact owner"},
-            });
-        }
-        let Some(owner)=snapshot.take() else{return Ok(PluginCloseStep::Complete)};
-        if let Some(value)=std::sync::Arc::into_inner(owner){
-            self.retirement=Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::owned::RasterSnapshotRetirementFactory,value));
-            return Ok(PluginCloseStep::Pending {released_items:0,released_bytes:0});
-        }
-        Ok(PluginCloseStep::Pending {released_items:1,released_bytes:0})
+    fn retirement_demands(&self,snapshot:&Option<Arc<crate::RasterSnapshot>>,body:usize)->Result<RetirementDemand,ValueError> {
+        if let Some(owner)=self.retirement.as_ref(){return store::artifact_retirement_box_demands(owner,body);}
+        let Some(owner)=snapshot.as_ref() else{return Ok(Default::default())};
+        if Arc::strong_count(owner)!=1{return Ok(RetirementDemand {depth:1,..Default::default()});}
+        Ok(RetirementDemand {capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<crate::RasterSnapshot>(),depth:2,..Default::default()})
     }
 
-    fn terminal_is_empty(&self,snapshot:&Option<std::sync::Arc<crate::RasterSnapshot>>)->bool {snapshot.is_none()&&self.retirement.is_none()}
+    fn close_step(&mut self,snapshot:&mut Option<Arc<crate::RasterSnapshot>>,grant:RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,Fault> {
+        use semio_framework_plugin::PluginLifecycleStep;
+        let fault=|error:ValueError|Fault::from(error.into_message());
+        let demand=self.retirement_demands(snapshot,grant.maximum_copy_bytes).map_err(fault)?;
+        if demand==RetirementDemand::default(){return Ok(PluginLifecycleStep::Complete(Default::default()));}
+        if grant.maximum_depth<demand.depth{return Err(Fault::from("raster.export-snapshot-depth-limit"));}
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(PluginLifecycleStep::Progress(Default::default()));}
+        if self.retirement.is_some(){return store::artifact_retirement_box_close_step(&mut self.retirement,grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(fault);}
+        if snapshot.as_ref().is_some_and(|owner|Arc::strong_count(owner)!=1){snapshot.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()}));}
+        let mut pending=snapshot.take().and_then(Arc::into_inner);
+        let step=store::artifact_retirement_admit_owned(&mut pending,&mut self.retirement,grant);
+        if let Some(original)=pending{*snapshot=Some(Arc::new(original));}
+        step.map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(fault)
+    }
+
+    fn terminal_is_empty(&self,snapshot:&Option<Arc<crate::RasterSnapshot>>)->bool {snapshot.is_none()&&self.retirement.is_none()}
 }

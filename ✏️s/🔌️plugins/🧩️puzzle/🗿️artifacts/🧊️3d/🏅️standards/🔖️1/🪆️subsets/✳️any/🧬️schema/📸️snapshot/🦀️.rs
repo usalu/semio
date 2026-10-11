@@ -13,7 +13,8 @@ use ::semio_framework_schema::ArtifactSchema;
 /// `serde_json::to_value`/`from_value` on this type directly anymore. `serde` stays derived under
 /// `#[cfg(test)]` only, as the differential oracle the `🧪️tests/**` scene_snapshot suite still checks
 /// this type's wire shape against.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

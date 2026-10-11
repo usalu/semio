@@ -48,13 +48,21 @@ impl store::ArtifactPack for Fem2dModelWindowConfig {
 
 impl store::ConfigRecord for Fem2dModelWindowConfig {}
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+/// 📬️ The one field-set payload of the window-config mutation: the patch of exactly the fields it sets.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[dsl(keyword = "update")]
+pub struct Fem2dModelWindowConfigUpdate {
+    #[dsl(block)]
+    pub patch: Box<Fem2dModelWindowConfigPatch>,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Fem2dModelWindowConfigMutation {
     #[dsl(key = "update")]
-    Update {
-        #[dsl(block)]
-        patch: Box<Fem2dModelWindowConfigPatch>,
-    },
+    Update(Fem2dModelWindowConfigUpdate),
 }
 
 impl protocol::OpText for Fem2dModelWindowConfigMutation {
@@ -97,7 +105,7 @@ impl protocol::Mutation<Fem2dModelWindowConfig> for Fem2dModelWindowConfigMutati
         &Self::DESCRIPTORS[0]
     }
     fn diff(&self, base: &Fem2dModelWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        let Self::Update { patch } = self;
+        let Self::Update(Fem2dModelWindowConfigUpdate { patch }) = self;
         let changed = patch.against(base);
         if changed == Fem2dModelWindowConfigPatch::default() {
             protocol::MutationOutcome::new(changed).warning("mutation.no-op", "Window configuration is already current.")
@@ -106,9 +114,23 @@ impl protocol::Mutation<Fem2dModelWindowConfig> for Fem2dModelWindowConfigMutati
         }
     }
     fn inverse(&self, base: &Fem2dModelWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        let Self::Update { patch } = self;
+        let Self::Update(Fem2dModelWindowConfigUpdate { patch }) = self;
         let changed = patch.against(base);
-        Ok(if changed == Fem2dModelWindowConfigPatch::default() { Vec::new() } else { vec![Self::Update { patch: Box::new(protocol::DiffAlgebra::inverse(&changed, base)) }] })
+        Ok(if changed == Fem2dModelWindowConfigPatch::default() { Vec::new() } else { vec![Self::Update(Fem2dModelWindowConfigUpdate { patch: Box::new(protocol::DiffAlgebra::inverse(&changed, base)) })] })
+    }
+}
+
+impl semio_framework_plugin::WindowConfigApplyMutation<Fem2dModelWindowConfig> for Fem2dModelWindowConfigMutation {
+    fn exchange(self, post: &mut Fem2dModelWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        let Self::Update(Fem2dModelWindowConfigUpdate { mut patch }) = self;
+        if let Some(value) = patch.camera.as_mut() {
+            std::mem::swap(value, &mut post.camera);
+        }
+        Ok(Self::Update(Fem2dModelWindowConfigUpdate { patch }))
+    }
+    fn payload_bytes(&self) -> usize {
+        let Self::Update(Fem2dModelWindowConfigUpdate { patch }) = self;
+        0
     }
 }
 
@@ -120,6 +142,11 @@ impl semio_framework_plugin::WindowConfigOwner for Fem2dModelWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 16_384;
     type State = Fem2dModelWindowConfig;
     type Mutation = Fem2dModelWindowConfigMutation;
+    type Edit = semio_framework_plugin::WindowConfigApplyEdit<Fem2dModelWindowConfig, Fem2dModelWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+        std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
+    }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()
     }
@@ -141,7 +168,7 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, config: Fem2dModelWin
     if kind != <Fem2dModelWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::WINDOW_KIND_ID {
         return Err(semio_framework_plugin::Fault::from("fem.window.kind: addressed window has the wrong kind"));
     }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<Fem2dModelWindowConfigOwner>(id, Fem2dModelWindowConfigMutation::Update { patch: Box::new(Fem2dModelWindowConfigPatch::replacing(&config)) }))
+    Ok(semio_framework_plugin::WindowConfigMutation::of::<Fem2dModelWindowConfigOwner>(id, Fem2dModelWindowConfigMutation::Update(Fem2dModelWindowConfigUpdate { patch: Box::new(Fem2dModelWindowConfigPatch::replacing(&config)) })))
 }
 
 #[cfg(test)]

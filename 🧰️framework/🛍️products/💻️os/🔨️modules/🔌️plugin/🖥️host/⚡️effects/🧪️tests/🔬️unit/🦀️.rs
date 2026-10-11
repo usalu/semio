@@ -437,8 +437,8 @@ fn router_effect_original_sources_keep_capacity_until_funded_close() {
     for row in fixture["sources"].as_array().unwrap(){
         let text=row["text"].as_str().unwrap();
         let source=||{let mut source=Vec::with_capacity(row["capacity"].as_u64().unwrap()as usize);source.extend_from_slice(text.as_bytes());source};
-        verify(FaultRouterEffectJob{detail:Some(source()),writer:Some(RetainedJobPayloadWriter::new(JobPayloadStream::Fault)),cursor:0,closing:false},|job|&job.detail,text,grant);
-        verify(CompleteRouterEffectJob{output:Some(source()),writer:Some(RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput)),cursor:0,closing:false},|job|&job.output,text,grant);
+        verify(FaultRouterEffectJob{detail:Some(source()),writer:Some(RetainedPayloadBuilder::new(JobPayloadStream::Fault)),cursor:0,closing:false},|job|&job.detail,text,grant);
+        verify(CompleteRouterEffectJob{output:Some(source()),writer:Some(RetainedPayloadBuilder::new(JobPayloadStream::CommitOutput)),cursor:0,closing:false},|job|&job.output,text,grant);
     }
 }
 
@@ -472,7 +472,7 @@ fn router_effect_recording_leases_keep_unique_shared_and_weak_backing_custody(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
     for case in fixture["recordingLeases"].as_array().unwrap(){
         let source=Arc::new(AtomicUsize::new(7));let bytes=semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>();
-        let mut alias=(case=="alias").then(||RecordingRouterJob{calls:Some(source.clone()),yielded:false,closing:false});let weak=(case=="weak").then(||Arc::downgrade(&source));let mut owner=RecordingRouterJob{calls:Some(source),yielded:false,closing:false};owner.begin_close();
+        let mut alias=(case=="alias").then(||RecordingRouterJob{calls:Some(source.clone()),yielded:false,closing:false,cancelled:false,completed:false,cursor:0,writer:None});let weak=(case=="weak").then(||Arc::downgrade(&source));let mut owner=RecordingRouterJob{calls:Some(source),yielded:false,closing:false,cancelled:false,completed:false,cursor:0,writer:None};owner.begin_close();
         let demand=owner.close_demands();
         for denied in [semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_release_bytes:bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_depth:0,..grant}]{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
         if weak.is_some(){let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}

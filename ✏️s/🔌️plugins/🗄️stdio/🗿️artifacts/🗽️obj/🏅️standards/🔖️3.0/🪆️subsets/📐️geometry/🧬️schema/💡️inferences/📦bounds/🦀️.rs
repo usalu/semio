@@ -8,7 +8,7 @@ use crate::schema::snapshot::ObjSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Obj's vertex-derived spatial bounding box.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct ObjBounds {
     pub min: [f64; 3],

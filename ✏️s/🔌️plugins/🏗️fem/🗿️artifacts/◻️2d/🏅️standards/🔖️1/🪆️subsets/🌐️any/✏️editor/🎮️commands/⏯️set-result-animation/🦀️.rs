@@ -81,7 +81,7 @@ pub fn resting_step<T: FemPlaybackTransport>(window_id: &str, current: &T::Confi
 //#endregion 🔖️Transport
 
 //#region 🔖️SetResultAnimation
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "result-animation")]
 pub struct SetResultAnimation {
     pub phase: Option<f64>,

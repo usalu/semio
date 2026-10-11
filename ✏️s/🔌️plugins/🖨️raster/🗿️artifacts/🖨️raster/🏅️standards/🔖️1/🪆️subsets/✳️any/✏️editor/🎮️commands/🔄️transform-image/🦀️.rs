@@ -14,7 +14,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🔄️ One grid change as both hosts dispatch it: the layer, the operation, the crop origin, the resize or crop extent
 /// and the resize sampling — zero and false where the operation has none.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "transform-image")]
 pub struct TransformImage {
     pub layer_id: String,

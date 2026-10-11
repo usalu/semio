@@ -38,7 +38,7 @@ fn encode_fields(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,
  let limits=control.limits();let primitive_value_limit=(!semantic_admitted).then_some(limits.max_value_bytes);
  control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
  let native_before=native_control.owned_bytes();
-    let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
+    let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
 
  let result=(||->Result<store::io::IoPayload,ValueError>{
  let envelope=|writer:&mut Writer<'_,'_,'_>|{if encoding==SnapshotEncoding::Text{writer.bytes(text_preamble.as_bytes())?;}else{writer.bytes(b"\x89SEM\r\n\x1a\n")?;writer.bytes(&u32::try_from(binary_token.len()).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"Semio native envelope width"))?.to_le_bytes())?;writer.bytes(binary_token.as_bytes())?;}fields(writer,encoding)};

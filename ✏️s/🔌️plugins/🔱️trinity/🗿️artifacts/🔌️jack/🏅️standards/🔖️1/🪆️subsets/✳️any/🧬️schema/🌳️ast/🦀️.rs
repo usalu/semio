@@ -3,12 +3,12 @@
 use crate::{JackSnapshot, PropertyValue};
 
 /// 🌳️ Jack query abstract syntax tree.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Query {
     pub clauses: Vec<Clause>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum Clause {
     Match(Vec<Pattern>),
     Where(Expr),
@@ -19,19 +19,19 @@ pub enum Clause {
     Merge(Pattern),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Pattern {
     pub nodes: Vec<PatternNode>,
     pub edge: Option<PatternEdge>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct PatternNode {
     pub var: String,
     pub kind: String,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct PatternEdge {
     pub var: Option<String>,
     pub kind: Option<String>,
@@ -39,20 +39,20 @@ pub struct PatternEdge {
     pub right: PatternNode,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum ReturnItem {
     Var(String),
     Property { var: String, prop: String },
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Assignment {
     pub var: String,
     pub prop: String,
     pub value: PropertyValue,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum Expr {
     Eq { var: String, prop: String, value: PropertyValue },
     Ne { var: String, prop: String, value: PropertyValue },
@@ -60,7 +60,7 @@ pub enum Expr {
     Or(Box<Expr>, Box<Expr>),
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum QueryResultKind {
     #[default]
@@ -68,7 +68,7 @@ pub enum QueryResultKind {
     Graph,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct QueryResult {
     #[value(default)]

@@ -1,5 +1,5 @@
 fn reactor_native_lifecycle_budget() -> Budget {
-    Budget { fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }
+    Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }
 }
 
 fn reactor_native_lifecycle_open(instance: u32, request_sequence: u64, actor: String) -> Event {
@@ -12,7 +12,7 @@ fn reactor_native_lifecycle_open(instance: u32, request_sequence: u64, actor: St
 
 async fn reactor_native_lifecycle_poll(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, events: Vec<Event>) -> TurnResult {
     for attempt in 0..64 {
-        match crate::reactor::poll_kernel(runtime, events.clone(), None, None, reactor_native_lifecycle_budget()).await {
+        match crate::reactor::poll_kernel(runtime, events.clone(), None, None, reactor_native_lifecycle_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await {
             Ok(result) => return result,
             Err(fault) if fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable => {
                 eprintln!("retained lifecycle exact-event deadline retry={} events={:?}", attempt + 1, events);
@@ -74,7 +74,7 @@ async fn reactor_native_lifecycle_retains_exact_close_until_ack() {
     assert!(!runtime.guest_lifetimes.borrow().get(instance).unwrap().cell.is_live());
     assert_eq!(crate::plugin_runtime::instance_actor(&runtime, instance).await.expect("admitted actor"), "native-fixture");
     let early = Event::InstanceClose(ActorInstanceCloseRequest { lifetime, request_sequence: 9 });
-    assert!(crate::reactor::poll_kernel(&runtime, vec![early], None, None, reactor_native_lifecycle_budget()).await.is_err());
+    assert!(crate::reactor::poll_kernel(&runtime, vec![early], None, None, reactor_native_lifecycle_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.is_err());
     assert!(crate::plugin_runtime::plugin_capture_instance_close(&runtime, instance).is_ok());
     reactor_native_lifecycle_ack(&runtime, captured).await;
     assert!(runtime.guest_lifetimes.borrow().get(instance).unwrap().cell.is_live());
@@ -86,29 +86,29 @@ async fn reactor_native_lifecycle_rejects_foreign_and_colliding_owners() {
     use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt as Receipt, Event};
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
-    assert!(crate::reactor::poll_kernel(&runtime, vec![reactor_native_lifecycle_open(7, 8, "a".repeat(super::PLUGIN_RUNTIME_ACTOR_BYTES + 1))], None, None, reactor_native_lifecycle_budget()).await.is_err());
+    assert!(crate::reactor::poll_kernel(&runtime, vec![reactor_native_lifecycle_open(7, 8, "a".repeat(super::PLUGIN_RUNTIME_ACTOR_BYTES + 1))], None, None, reactor_native_lifecycle_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.is_err());
     assert!(runtime.guest_lifetimes.borrow().get(7).is_none());
     assert!(crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).is_err());
     let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(7, 8, "native-fixture".into())]).await.lifecycle_receipt.unwrap();
     let Receipt::Captured { lifetime, .. } = captured else { panic!("real captured owner") };
-    assert!(crate::reactor::poll_kernel(&runtime, vec![reactor_native_lifecycle_open(1031, 8, "collision".into())], None, None, reactor_native_lifecycle_budget()).await.is_err());
+    assert!(crate::reactor::poll_kernel(&runtime, vec![reactor_native_lifecycle_open(1031, 8, "collision".into())], None, None, reactor_native_lifecycle_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.is_err());
     assert_eq!(runtime.guest_lifetimes.borrow().get(7).unwrap().cell.lifetime(), lifetime);
     reactor_native_lifecycle_ack(&runtime, captured).await;
     for foreign in [
         ActorInstanceLifetime { activation_generation: 42, ..lifetime },
         ActorInstanceLifetime { guest_lifetime: lifetime.guest_lifetime + 1, ..lifetime },
     ] {
-        assert!(crate::reactor::poll_kernel(&runtime, vec![Event::InstanceClose(ActorInstanceCloseRequest { lifetime: foreign, request_sequence: 9 })], None, None, reactor_native_lifecycle_budget()).await.is_err());
+        assert!(crate::reactor::poll_kernel(&runtime, vec![Event::InstanceClose(ActorInstanceCloseRequest { lifetime: foreign, request_sequence: 9 })], None, None, reactor_native_lifecycle_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.is_err());
         assert!(crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).is_ok());
         assert!(runtime.guest_lifetimes.borrow().get(7).unwrap().cell.is_live());
     }
     let wrong = Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: Receipt::Retired { lifetime, request_sequence: 9, close_generation: 1 } });
-    assert!(crate::reactor::poll_kernel(&runtime, vec![wrong], None, None, reactor_native_lifecycle_budget()).await.is_err());
+    assert!(crate::reactor::poll_kernel(&runtime, vec![wrong], None, None, reactor_native_lifecycle_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.is_err());
     reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
     let reopened = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(7, 10, "native-fixture".into())]).await.lifecycle_receipt.unwrap();
     let Receipt::Captured { lifetime: replacement, .. } = reopened else { panic!("new captured owner") };
     assert!(replacement.guest_lifetime > lifetime.guest_lifetime);
-    assert!(crate::reactor::poll_kernel(&runtime, vec![Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: captured })], None, None, reactor_native_lifecycle_budget()).await.is_err());
+    assert!(crate::reactor::poll_kernel(&runtime, vec![Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: captured })], None, None, reactor_native_lifecycle_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.is_err());
     reactor_native_lifecycle_ack(&runtime, reopened).await;
     reactor_native_lifecycle_finish(&runtime, replacement, 11).await;
 }
@@ -205,14 +205,14 @@ async fn reactor_native_open_preserves_the_neutral_actor_authority() {
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.expect("production declarations"));
     assert!(crate::plugin_runtime::instance_actor(&runtime, 23).await.is_err(), "a missing admitted actor never invents authority");
-    assert!(crate::reactor::poll_kernel(&runtime, vec![reactor_native_lifecycle_open(23, 1, String::new())], None, None, reactor_native_lifecycle_budget()).await.is_err());
+    assert!(crate::reactor::poll_kernel(&runtime, vec![reactor_native_lifecycle_open(23, 1, String::new())], None, None, reactor_native_lifecycle_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.is_err());
     assert!(runtime.guest_lifetimes.borrow().get(23).is_none(), "empty actor admission owns no instance");
     let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(23, 2, actor.into())]).await.lifecycle_receipt.expect("native open receipt");
     let ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("opened native lifetime") };
     reactor_native_lifecycle_ack(&runtime, captured).await;
     assert_eq!(crate::plugin_runtime::instance_actor(&runtime, 23).await.expect("admitted native actor"), actor);
     let document = crate::plugin_runtime::plugin_document_pack(&runtime, 23).await.expect("native stored document");
-    crate::app::artifact_app_laws::plugin_load_document(&runtime, 23, &document).await.expect("native bounded document reload");
+    crate::app::artifact_app_laws::plugin_load_document(&runtime, 23, &document, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("native bounded document reload");
     assert_eq!(crate::plugin_runtime::instance_actor(&runtime, 23).await.expect("native actor after reload"), actor);
     reactor_native_lifecycle_finish(&runtime, lifetime, 3).await;
     let reopened = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(23, 4, actor.into())]).await.lifecycle_receipt.expect("native reopen receipt");

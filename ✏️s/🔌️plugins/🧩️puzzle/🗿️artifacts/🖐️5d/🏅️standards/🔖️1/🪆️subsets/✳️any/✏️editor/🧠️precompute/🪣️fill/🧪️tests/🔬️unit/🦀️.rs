@@ -2,7 +2,8 @@ use super::*;
 use crate::editor::puzzle5d::config::Puzzle5dConfig;
 use crate::editor::puzzle5d::precompute::{puzzle3d_snapshot, puzzle5d_placement_entity, Puzzle5dPlannerToolRunJob, PUZZLE5D_PLACEMENT_OPS, PUZZLE5D_PLANNER_TRACE_SHAPE_CIRCLE, PUZZLE5D_PLANNER_TRACE_TWIN_BIT};
 use crate::editor::puzzle5d::puzzle5d_grip_full_id;
-use semio_framework_job::{InteractiveJob, RetainedJobPayload, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
+use crate::puzzle_job::JobTurn;
+use semio_framework_job::InteractiveJob;
 use semio_framework_tool_run::{ToolRunTick, ToolRunTraceOp, ToolRunTraceSubject, ToolRunVerdict};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::config::Puzzle3dConfig;
 use std::collections::HashMap;
@@ -11,7 +12,7 @@ use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d as world3d_
 use crate::editor::puzzle5d::unit_tests::context::{app_with_registry, close_app, dispatch, meta, projection_of, render_body, window_view, Puzzle5dApp};
 use crate::editor::puzzle5d::{capsule_dream_example_document, concrete_forest_example_document, nakagin_example_document};
 use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
-use semio_framework_job::{CancelToken, Generation, InteractiveStage, OperationId, StepBudget};
+use semio_framework_job::StepBudget;
 use semio_framework_plugin::{ActionMeta, ArtifactApp, ArtifactInstanceOperationOwnerHandle, PluginApp, ToolRunJobPort, ToolRunJobPurpose, ToolRunTraceKeys};
 use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunStep, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_START_ACTION_ID};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::Puzzle3dPlayApp;
@@ -103,12 +104,6 @@ fn job(document: &Puzzle5dDocument, requested: u32, purpose: ToolRunJobPurpose, 
     fill_run_job(request).expect("the fill job builds").expect("the fill tool has a run job")
 }
 
-fn close(mut payload: RetainedJobPayload) {
-    while !payload.terminal_is_empty() {
-        payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
-    }
-}
-
 /// 🪞️ What the ledger folds from a run: provisional 5d ops and entities, every trace op in order, steps.
 #[derive(Default)]
 struct Mirror {
@@ -136,30 +131,17 @@ impl Mirror {
 
     /// 🎬️ One turn: `true` once the job completed.
     fn turn(&mut self, job: &mut dyn InteractiveJob, budget: StepBudget, clock: fn() -> Option<u64>, sequence: &mut u64) -> bool {
-        let mut verdict = None;
-        match semio_framework_job::drive_step(job, "puzzle5d-fill-run", OperationId(5), Generation(1), InteractiveStage::InteractiveStep, budget, CancelToken::root_now(), clock, sequence, &mut verdict) {
-            StepOutcome::PreviewReady(payload) => {
-                let bytes: Vec<u8> = (0..payload.page_count()).flat_map(|index| payload.page(index).expect("tick page").to_vec()).collect();
-                close(payload);
+        match crate::puzzle_job::testing::drive(job, budget, clock, sequence) {
+            JobTurn::Preview(bytes) => {
                 self.apply(ToolRunTick::decode(&bytes).expect("a translated tick decodes"));
                 false
             }
-            StepOutcome::CheckpointReady(checkpoint) => {
-                close(checkpoint.state);
-                false
-            }
-            StepOutcome::Complete(candidate) => {
-                close(candidate.state);
-                close(candidate.output);
+            JobTurn::Checkpoint { .. } | JobTurn::Yield => false,
+            JobTurn::Complete => {
                 self.complete = true;
                 true
             }
-            StepOutcome::Yield => false,
-            StepOutcome::Fault(mut fault) => {
-                let detail: Vec<u8> = (0..fault.detail.page_count()).flat_map(|index| fault.detail.page(index).expect("fault page").to_vec()).collect();
-                while !fault.detail.terminal_is_empty() {
-                    fault.detail.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
-                }
+            JobTurn::Fault(detail) => {
                 self.fault = Some(String::from_utf8_lossy(&detail).into_owned());
                 true
             }
@@ -182,7 +164,7 @@ fn run_to_completion(mut job: Puzzle5dPlannerToolRunJob) -> Mirror {
     let mut mirror = Mirror::default();
     let mut sequence = 0;
     for _ in 0..FILL_RUN_TURNS {
-        if mirror.turn(&mut job, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX), never, &mut sequence) {
+        if mirror.turn(&mut job, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), never, &mut sequence) {
             assert!(mirror.fault.is_none(), "the fill run job faulted: {:?}", mirror.fault);
             return mirror;
         }
@@ -330,23 +312,17 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         let mut oracle_ops = 0;
         let mut oracle_complete = false;
         for _ in 0..FILL_RUN_TURNS {
-            let mut verdict = None;
-            match semio_framework_job::drive_step(planner.as_mut(), "puzzle3d-fill-run", OperationId(5), Generation(1), InteractiveStage::InteractiveStep, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX), CancelToken::root_now(), never, &mut sequence, &mut verdict) {
-                StepOutcome::PreviewReady(payload) => {
-                    let bytes: Vec<u8> = (0..payload.page_count()).flat_map(|index| payload.page(index).expect("tick page").to_vec()).collect();
-                    close(payload);
+            match crate::puzzle_job::testing::drive(planner.as_mut(), StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), never, &mut sequence) {
+                JobTurn::Preview(bytes) => {
                     let tick = ToolRunTick::decode(&bytes).expect("a planner tick decodes");
                     oracle_ops = tick.retract_to.map_or(oracle_ops, |length| length as usize) + tick.append_ops.len();
                     oracle_trace.extend(tick.trace.into_iter().flat_map(|page| page.ops));
                 }
-                StepOutcome::CheckpointReady(checkpoint) => close(checkpoint.state),
-                StepOutcome::Complete(candidate) => {
-                    close(candidate.state);
-                    close(candidate.output);
+                JobTurn::Checkpoint { .. } | JobTurn::Yield => {}
+                JobTurn::Complete => {
                     oracle_complete = true;
                     break;
                 }
-                StepOutcome::Yield => {}
                 other => panic!("the planner ended unexpectedly: {other:?}"),
             }
         }
@@ -435,10 +411,10 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_on_the_largest_examples
                 let (step_budget, clock): (StepBudget, fn() -> Option<u64>) = if recording {
                     let start = semio_framework_job::default_now_us().expect("clock");
                     TURN_CLOCK.with(|clock| *clock.borrow_mut() = TurnClock { deadline: start + slice, ..TurnClock::default() });
-                    (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + slice), recording_clock)
+                    (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + slice, crate::puzzle_job::testing::unbounded_grant()), recording_clock)
                 } else {
                     TURN_CLOCK.with(|clock| *clock.borrow_mut() = TurnClock { replay_expiry: expiries[turn], ..TurnClock::default() });
-                    (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, 1), replaying_clock)
+                    (StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, 1, crate::puzzle_job::testing::unbounded_grant()), replaying_clock)
                 };
                 job.clock = clock;
                 let started = Instant::now();
@@ -471,7 +447,7 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_on_the_largest_examples
 
 //#region ⏯️App
 pub(crate) fn host_turn(app: &mut Puzzle5dApp) {
-    PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance step");
+    crate::puzzle_job::testing::maintain(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance step");
     ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).expect("advance one typed operation publication unit");
     if let Some(page) = app.take_typed_operation_result_page(1) {
         assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
@@ -653,7 +629,7 @@ fn a_document_past_the_planner_capacity_refuses_with_a_visible_danger_step() {
     let mut job = job(&example("capsule-dream"), law["requested"].as_u64().expect("requested") as u32, ToolRunJobPurpose::Run, &[]);
     let mut sequence = 0;
     for _ in 0..FILL_RUN_TURNS {
-        if mirror.turn(&mut job, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX), never, &mut sequence) {
+        if mirror.turn(&mut job, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), never, &mut sequence) {
             break;
         }
     }

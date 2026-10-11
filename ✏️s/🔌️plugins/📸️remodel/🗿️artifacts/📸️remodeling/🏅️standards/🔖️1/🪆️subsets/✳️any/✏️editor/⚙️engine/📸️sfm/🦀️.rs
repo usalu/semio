@@ -332,14 +332,14 @@ impl std::error::Error for SfmError {}
 
 // #region 🔖️TwoView
 /// 📐️ One of the two planar/epipolar two-view models recovered by [`estimate_fundamental`] / [`estimate_homography`] / [`select_two_view_model`].
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum TwoViewModel {
     Fundamental([[f64; 3]; 3]),
     Homography([[f64; 3]; 3]),
 }
 
 /// 📦️ A two-view geometry fit: the recovered model, the inlier indices into the input correspondence slice, and its RANSAC score.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct TwoViewResult {
     pub model: TwoViewModel,
     pub inliers: Vec<usize>,
@@ -1595,7 +1595,7 @@ impl UnionFind {
 
 /// 🧵️ A feature track: one connected component of `(frame index, keypoint index in that frame)`
 /// observations, linked transitively across pairwise matches.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct FeatureTracks {
     pub tracks: Vec<Vec<(usize, u32)>>,
 }
@@ -1998,7 +1998,7 @@ pub fn apply_gcp_prior_residual(point: [f64; 3], known_world: [f64; 3], sigma: f
 /// 🎛️ Tuning for [`IncrementalSfm`]: RANSAC inlier threshold (pixels), minimum track length to
 /// triangulate, bundle-adjustment iteration cap, IRLS robust loss, minimum triangulation angle, and
 /// the per-camera visible-point floor used by [`IncrementalSfm::prune_outliers`].
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct SfmConfig {
     pub ransac_threshold_px: f64,
     pub min_track_length: usize,
@@ -2016,7 +2016,7 @@ impl Default for SfmConfig {
 
 /// 📦️ A finished (or in-progress) reconstruction snapshot: registered cameras (by frame index), their
 /// triangulated points, each point's originating track id, and the shared calibration.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Reconstruction {
     pub cameras: Vec<(usize, CameraPose)>,
     pub points: Vec<[f64; 3]>,
@@ -2033,6 +2033,7 @@ pub struct Reconstruction {
 /// `global_ba` are always seeded from an already-reasonable pose (PnP/triangulation output), keeping
 /// steps small. `observations` maps `(a_index, b_index)` to that camera-point pair's pixel observation,
 /// since [`BipartiteResiduals::evaluate`] receives a term but not its index into `residual_terms()`.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct SfmBundleProblem {
     pub intrinsics: Intrinsics,
     pub num_cameras: usize,
@@ -2132,6 +2133,7 @@ fn estimate_init_pair_essential(matches: &[([f64; 2], [f64; 2])], k: &Intrinsics
 
 /// 🏗️ Incremental structure-from-motion pipeline: register cameras one at a time via PnP against an
 /// already-triangulated point cloud, growing the reconstruction frame by frame.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct IncrementalSfm {
     intrinsics: Intrinsics,
     tracks: FeatureTracks,
@@ -2143,7 +2145,7 @@ pub struct IncrementalSfm {
     point_events: Option<Vec<(usize, [f64; 3], bool)>>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum SeedPairPhase {
     Collect,
     Solve,
@@ -2151,6 +2153,7 @@ pub enum SeedPairPhase {
     Done,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct SeedPairPreparation {
     frame_a: usize,
     frame_b: usize,
@@ -2187,7 +2190,7 @@ impl SeedPairPreparation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum RegistrationPhase {
     Collect,
     Solve,
@@ -2210,6 +2213,7 @@ pub enum RegistrationPhase {
 /// against the best-connected registered camera, scaled by the shared triangulated points (or, when
 /// matching left none, by the seed pair's baseline). Every field is a cursor or a fixed-size buffer,
 /// so no call materializes more than [`MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES`] items.
+#[derive(semio_framework_value::RetireOwned)]
 struct TwoViewFallback {
     reference: usize,
     correspondences: Vec<([f64; 2], [f64; 2])>,
@@ -2221,6 +2225,7 @@ struct TwoViewFallback {
     shared: Vec<([f64; 3], [f64; 2])>,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct RegistrationPreparation {
     frame: usize,
     cursor: usize,
@@ -2243,7 +2248,7 @@ impl RegistrationPreparation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum BundlePhase {
     Prune,
     Retriangulate,
@@ -2251,6 +2256,7 @@ pub enum BundlePhase {
 }
 
 /// 🎯️ A bundle adjustment in flight (see [`IncrementalSfm::begin_bundle_adjustment`]).
+#[derive(semio_framework_value::RetireOwned)]
 pub struct BundleAdjustment {
     frames: Vec<usize>,
     point_track_ids: Vec<usize>,
@@ -2259,6 +2265,7 @@ pub struct BundleAdjustment {
     preparation: SchurLmPreparation,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct BundlePreparation {
     point_track_ids: Vec<usize>,
     cursor: usize,
@@ -2267,6 +2274,7 @@ pub struct BundlePreparation {
     tolerance: f64,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ReconstructionSnapshotPreparation {
     camera_cursor: usize,
     point_cursor: usize,

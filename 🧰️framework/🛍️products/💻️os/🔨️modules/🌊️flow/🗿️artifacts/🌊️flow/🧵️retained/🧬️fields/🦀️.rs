@@ -1,6 +1,6 @@
 //! 🧬️ Flow fields delegate their original heap ownership to typed full-grant retirement.
 
-use crate::{CameraJson,FlowArtifact,FlowChannelRef,FlowGui,FlowHostSnapshot,FlowLayoutEntry,FlowNodeGui,FlowPreviewGui,NodeChrome,SynapseSpec,Widget,WidgetLayout};
+use crate::{FlowArtifact,FlowChannelRef,FlowGui,FlowHostSnapshot,FlowLayoutEntry,FlowNodeGui,FlowPreviewGui,NodeChrome,SynapseSpec,Widget,WidgetLayout};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,deferred,deferred_birth_bytes_for,sequence,sequence_birth_bytes};
 
 macro_rules! metadata {
@@ -18,7 +18,7 @@ macro_rules! owned_enum {
     }};
 }
 
-metadata!(CameraJson,WidgetLayout);
+metadata!(WidgetLayout);
 semio_framework_value::artifact_retire_struct!(FlowHostSnapshot {schema,camera,widgets,synapses,layout});
 semio_framework_value::artifact_retire_struct!(FlowArtifact {schema,tree,ui});
 semio_framework_value::artifact_retire_struct!(FlowGui {camera,nodes,previews});

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️State
 /// 💧️ Plant fluid stream state at a loop node.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct PlantStream {
     pub temperature_c: f64,
     pub mass_flow_kg_s: f64,
@@ -21,7 +21,7 @@ impl PlantStream {
 }
 
 /// 📤️ Timestep plant equipment output.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct PlantOutput {
     pub thermal_power_w: f64,
     pub electrical_power_w: f64,
@@ -33,7 +33,7 @@ pub struct PlantOutput {
 
 // #region 🔖️Pump
 /// ⚙️ Variable-speed centrifugal pump with part-load curve.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Pump {
     pub design_head_pa: f64,
     pub design_flow_kg_s: f64,
@@ -56,7 +56,7 @@ impl Pump {
 
 // #region 🔖️Boiler
 /// 🔥️ Hot-water or steam boiler with combustion efficiency curve.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Boiler {
     pub rated_capacity_w: f64,
     pub combustion_efficiency: f64,
@@ -84,7 +84,7 @@ impl Boiler {
 
 // #region 🔖️Chiller
 /// ❄️ Vapor-compression chiller with EIR part-load curve.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ChillerEir {
     pub rated_capacity_w: f64,
     pub reference_cop: f64,
@@ -113,7 +113,7 @@ impl ChillerEir {
 }
 
 /// 🔥️ Absorption chiller driven by hot water or steam.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ChillerAbsorption {
     pub rated_capacity_w: f64,
     pub heat_input_ratio: f64,
@@ -141,7 +141,7 @@ impl ChillerAbsorption {
 
 // #region 🔖️HeatPump
 /// 🌡️ Water-to-water or air-source heat pump plant component.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct HeatPump {
     pub rated_heating_w: f64,
     pub rated_cooling_w: f64,
@@ -175,7 +175,7 @@ impl HeatPump {
 }
 
 /// 🔄️ Heat pump operating mode.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum HeatPumpMode {
     Heating,
     Cooling,
@@ -184,7 +184,7 @@ pub enum HeatPumpMode {
 
 // #region 🔖️CoolingTower
 /// 🌊️ Open cooling tower with approach and fan power.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct CoolingTower {
     pub design_range_k: f64,
     pub design_approach_k: f64,
@@ -212,7 +212,7 @@ impl CoolingTower {
 
 // #region 🔖️HeatExchanger
 /// 🔀️ Counter-flow plate heat exchanger.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct HeatExchanger {
     pub ua_w_per_k: f64,
     pub effectiveness: f64,
@@ -236,7 +236,7 @@ impl HeatExchanger {
 
 // #region 🔖️Gshp
 /// 🌍️ Ground-source heat pump with borefield thermal response.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Gshp {
     pub heat_pump: HeatPump,
     pub borehole_depth_m: f64,
@@ -264,7 +264,7 @@ impl Gshp {
 
 // #region 🔖️ThermalStorage
 /// 🧊️ Stratified thermal storage tank on a plant loop.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ThermalStorage {
     pub volume_m3: f64,
     pub height_m: f64,
@@ -275,7 +275,7 @@ pub struct ThermalStorage {
 }
 
 /// 🌡️ Stratified tank nodal temperatures (top to bottom).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ThermalStorageState {
     pub node_temperatures_c: Vec<f64>,
     pub ambient_temperature_c: f64,
@@ -308,7 +308,7 @@ impl ThermalStorage {
 
 // #region 🔖️PlantLoop
 /// 🔄️ Primary plant loop connecting equipment in series.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct PlantLoopSimulation {
     pub supply: PlantStream,
     pub return_stream: PlantStream,

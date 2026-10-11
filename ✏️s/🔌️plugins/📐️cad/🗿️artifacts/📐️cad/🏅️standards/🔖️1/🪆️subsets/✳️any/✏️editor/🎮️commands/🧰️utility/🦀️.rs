@@ -14,7 +14,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod set_dislocate_option {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "dislocate-option")]
     pub struct SetDislocateOption {
         pub pane: Option<String>,

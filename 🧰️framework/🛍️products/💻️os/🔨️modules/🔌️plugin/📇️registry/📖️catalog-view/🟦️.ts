@@ -1,12 +1,15 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
-import type { DeployedRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
+import type { ComponentSourceOwnerV1, DeployedRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
 import { parseDeployedRegistryEntryV1 } from "../🔎️discovery/🧬️schema/🟦️.ts";
 import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
 import { parseModuleDirectories, type ModuleDirectory } from "../📦️deployment/🟦️.ts";
 
 export type GeneratedCatalogProjection = { readonly entries: readonly DeployedRegistryEntryV1[]; readonly playgrounds: readonly PlaygroundEntry[] };
+
+/** 🧭️ Rows plus playground declarations under one filter, whether the rows are deployed or only discovered as build sources. */
+export type CatalogSelection<T extends ComponentSourceOwnerV1 = DeployedRegistryEntryV1> = { readonly entries: readonly T[]; readonly playgrounds: readonly PlaygroundEntry[] };
 
 export const GENERATED_PLUGINS_PROJECTION = "🔌️plugins.json";
 
@@ -32,7 +35,7 @@ export function readGeneratedCatalogProjection(generatedDir = runtimeCatalogProj
 /** 🏠️ Host detection of projected rows: a variant, alias or bare plugin id whose crate declares
  * `[package.metadata.semio].host` and whose playground row names no `app`. A row that names one boots
  * that single artifact app standalone, even on the host crate (`🪐️space`'s Home and Space). */
-export function projectedHostPluginFilter(projection: GeneratedCatalogProjection, pluginFilter?: string): boolean {
+export function projectedHostPluginFilter(projection: CatalogSelection<ComponentSourceOwnerV1>, pluginFilter?: string): boolean {
   if (!pluginFilter) return true;
   const variantRow = projection.playgrounds.find((row) => row.variant === pluginFilter || row.aliases.includes(pluginFilter));
   if (variantRow?.app !== undefined) return false;
@@ -41,7 +44,7 @@ export function projectedHostPluginFilter(projection: GeneratedCatalogProjection
 }
 
 /** 🎯️ Applies registry filter semantics to already projected rows. */
-export function filterProjectedPluginRegistry(projection: GeneratedCatalogProjection, filterPlaygroundPlugin?: string): DeployedRegistryEntryV1[] {
+export function filterProjectedPluginRegistry<T extends ComponentSourceOwnerV1>(projection: CatalogSelection<T>, filterPlaygroundPlugin?: string): T[] {
   const entries = [...projection.entries].sort((a, b) => a.pluginId.localeCompare(b.pluginId));
   if (!filterPlaygroundPlugin || projectedHostPluginFilter(projection, filterPlaygroundPlugin)) return entries;
   const { resolveRegistryPluginIdsForFilter } = loadDiscovery();
@@ -50,7 +53,7 @@ export function filterProjectedPluginRegistry(projection: GeneratedCatalogProjec
 }
 
 const requireDiscovery = createRequire(import.meta.url);
-function loadDiscovery(): { resolveRegistryPluginIdsForFilter: (filter: string, entries: readonly DeployedRegistryEntryV1[], playgrounds: GeneratedCatalogProjection["playgrounds"]) => readonly string[] } {
+function loadDiscovery(): { resolveRegistryPluginIdsForFilter: (filter: string, entries: readonly ComponentSourceOwnerV1[], playgrounds: GeneratedCatalogProjection["playgrounds"]) => readonly string[] } {
   return requireDiscovery('../🔎️discovery/🟦️.ts');
 }
 

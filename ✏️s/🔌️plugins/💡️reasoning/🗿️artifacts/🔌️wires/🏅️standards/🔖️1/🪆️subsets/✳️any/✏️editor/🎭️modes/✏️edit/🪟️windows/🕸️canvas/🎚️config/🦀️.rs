@@ -46,6 +46,14 @@ impl store::ConfigRecord for WiresCanvasWindowConfig {}
 mod mutations;
 pub use mutations::*;
 
+impl semio_framework_plugin::app::WindowConfigApplyMutation<WiresCanvasWindowConfig> for WiresCanvasWindowConfigMutation {
+    fn exchange(self, post: &mut WiresCanvasWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetCamera(SetCamera { camera }) => Self::SetCamera(SetCamera { camera: std::mem::replace(&mut post.camera, camera) }),
+        })
+    }
+}
+
 pub struct WiresCanvasWindowConfigOwner;
 
 impl semio_framework_plugin::WindowConfigOwner for WiresCanvasWindowConfigOwner {
@@ -54,6 +62,12 @@ impl semio_framework_plugin::WindowConfigOwner for WiresCanvasWindowConfigOwner 
     const MAXIMUM_PUBLICATION_BYTES: usize = 1024;
     type State = WiresCanvasWindowConfig;
     type Mutation = WiresCanvasWindowConfigMutation;
+    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<WiresCanvasWindowConfig, WiresCanvasWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+        std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new())
+    }
 
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()

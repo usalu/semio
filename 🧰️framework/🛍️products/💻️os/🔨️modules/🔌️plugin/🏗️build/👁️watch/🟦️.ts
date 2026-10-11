@@ -10,17 +10,13 @@ import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRo
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
-import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
-
-import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import type { PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
 import { buildPlugin, buildPlugins } from "../🏃️execution/🟦️.ts";
 
 import { resolvePluginBuildTargets } from "../📋️plan/🟦️.ts";
-
-import { resolveCatalogFilterPluginId } from "../📋️plan/🟦️.ts";
 
 
 
@@ -33,7 +29,7 @@ import { resolveCatalogFilterPluginId } from "../📋️plan/🟦️.ts";
  * loop only ever runs one `buildPlugin` at a time. Shared by both the standalone `plugin watch` command
  * and `DevScript`'s streaming boot, which folds this in right after the initial build pass so plugin
  * edits keep hot-swapping the running shell for the rest of the dev session. */
-async function watchPluginRebuilds(targets: readonly DeployedRegistryEntryV1[]): Promise<void> {
+async function watchPluginRebuilds(targets: readonly PluginBuildTargetV1[]): Promise<void> {
   const { nativeSourceWatchPlanV1 } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🟨️.mjs");
   const { startNativeSourceWatchV1, nativeSourceWatchSelectedV1 } = await import("./📋️plan/🟦️.ts");
   const plans = new Map<string, import("./📋️plan/🟦️.ts").NativeSourceWatchPlanV1>();
@@ -87,9 +83,7 @@ class PluginWatchScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
     await buildPlugins(filterPlugin || undefined);
-    const filterPluginId = resolveCatalogFilterPluginId(filterPlugin || undefined);
-    const catalogEntries = filterProjectedPluginRegistry(readGeneratedCatalogProjection(), filterPluginId);
-    const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin || undefined);
+    const targets = resolvePluginBuildTargets(filterPlugin || undefined);
     await watchPluginRebuilds(targets);
   }
 }

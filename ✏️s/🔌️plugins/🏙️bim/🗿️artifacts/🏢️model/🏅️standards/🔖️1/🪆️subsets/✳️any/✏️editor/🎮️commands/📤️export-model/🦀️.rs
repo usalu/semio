@@ -9,8 +9,8 @@ use crate::editor::bim::kit::fault;
 use crate::editor::bim::{BimCommand, BimDispatchCtx, BimModelApp};
 use crate::standards::v1::subsets::any::io::export::ifc::{Schema, StagedExport};
 use crate::standards::v1::subsets::any::io::export::{csv, gltf, ifc, svg};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry as inference;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::Analysis;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
 use crate::{ModelInference, ModelMutation, ModelSnapshot};
 use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
@@ -131,12 +131,12 @@ pub struct ExportJob {
 
 impl ExportJob {
     /// 🏗️ A job writing `format` of the document that instance `instance` shows.
-    pub fn new(format: &str, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::Instance<'_>) -> Self {
+    pub fn new(format: &str, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>) -> Self {
         Self::with_steps(format, instance, NODES_PER_STEP)
     }
 
     /// 🏗️ A job that finishes at most `nodes` graph nodes per step (at least one).
-    pub fn with_steps(format: &str, instance: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>, nodes: usize) -> Self {
+    pub fn with_steps(format: &str, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, nodes: usize) -> Self {
         Self { format: format.to_string(), instance: instance.cloned(), analysis: Analysis::new(instance, nodes), writer: None }
     }
 

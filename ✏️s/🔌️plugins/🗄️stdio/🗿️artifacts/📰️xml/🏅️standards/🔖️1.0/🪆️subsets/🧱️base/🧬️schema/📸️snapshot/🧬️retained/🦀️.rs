@@ -15,14 +15,16 @@ pub type RetainedXmlAttributes = PagedList<RetainedXmlAttribute, RETAINED_XML_MA
 pub type RetainedXmlBoundaries = PagedList<usize, RETAINED_XML_MAX_BOUNDARIES>;
 pub type RetainedXmlDtdDeclarations = PagedList<RetainedXmlDtdDeclaration, RETAINED_XML_MAX_DTD_DECLARATIONS>;
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RetainedXmlAttribute {
     pub name: RetainedXmlText,
     pub value: RetainedXmlText,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum RetainedXmlNodeKind {
     Element { name: RetainedXmlText, first_attribute: usize, attribute_count: usize, first_child: Option<usize> },
@@ -32,27 +34,31 @@ pub enum RetainedXmlNodeKind {
     ProcessingInstruction { target: RetainedXmlText, data: RetainedXmlText },
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RetainedXmlNode {
     pub next_sibling: Option<usize>,
     pub value: RetainedXmlNodeKind,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum RetainedXmlExternalId {
     System { system_id: RetainedXmlText },
     Public { public_id: RetainedXmlText, system_id: RetainedXmlText },
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum RetainedXmlDtdDeclaration {
     Entity { parameter: bool, name: RetainedXmlText, value: RetainedXmlText },
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RetainedXmlDoctype {
     pub prolog_position: u64,
@@ -61,7 +67,8 @@ pub struct RetainedXmlDoctype {
     pub declarations: RetainedXmlDtdDeclarations,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RetainedXmlDeclaration {
     pub version: RetainedXmlText,
@@ -70,7 +77,8 @@ pub struct RetainedXmlDeclaration {
     pub quote: XmlQuote,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RetainedXmlDocument {
     pub nodes: RetainedXmlNodes,

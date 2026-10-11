@@ -35,7 +35,7 @@ pub const BINARY_VIEWER_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bin
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum BinaryViewCommand {
     #[default]
     Noop,

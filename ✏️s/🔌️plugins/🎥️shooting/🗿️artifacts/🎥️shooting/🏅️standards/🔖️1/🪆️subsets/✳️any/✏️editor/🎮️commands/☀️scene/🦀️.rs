@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod set_sun_azimuth {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "sun-azimuth")]
     pub struct SetSunAzimuth {
         pub value: f64,
@@ -28,7 +28,7 @@ pub mod set_sun_azimuth {
 pub mod set_sun_elevation {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "sun-elevation")]
     pub struct SetSunElevation {
         pub value: f64,
@@ -44,7 +44,7 @@ pub mod set_sun_elevation {
 pub mod set_sun_intensity {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "sun-intensity")]
     pub struct SetSunIntensity {
         pub value: f64,
@@ -60,7 +60,7 @@ pub mod set_sun_intensity {
 pub mod set_ambient_intensity {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "ambient-intensity")]
     pub struct SetAmbientIntensity {
         pub value: f64,
@@ -76,7 +76,7 @@ pub mod set_ambient_intensity {
 pub mod set_material_roughness {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "material-roughness")]
     pub struct SetMaterialRoughness {
         pub value: f64,
@@ -92,7 +92,7 @@ pub mod set_material_roughness {
 pub mod set_shadow_enabled {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "shadow-enabled")]
     pub struct SetShadowEnabled {
         pub value: bool,
@@ -108,7 +108,7 @@ pub mod set_shadow_enabled {
 pub mod toggle_sun {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {
         pub value: bool,

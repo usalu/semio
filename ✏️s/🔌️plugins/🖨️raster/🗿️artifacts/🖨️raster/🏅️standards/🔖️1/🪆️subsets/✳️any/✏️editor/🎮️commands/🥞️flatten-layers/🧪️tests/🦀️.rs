@@ -51,7 +51,7 @@ fn flatten_preparation_is_cancellable_and_validates_the_name() {
     for name in ["".to_owned(),"   ".into(),"x".repeat(121)] {assert!(prepare(&FlattenLayers {name},&document).is_err());}
     let mut work=LayerBakeWork::<false> {preparing:Some(prepare(&FlattenLayers {name:"Image".into()},&document).unwrap()),..Default::default()};
     work.begin_close();assert!(!work.terminal_is_empty());
-    assert!(matches!(work.close_step(1,262144),semio_framework_job::InteractiveJobCloseStep::Complete));assert!(work.terminal_is_empty());
+    assert!(matches!(work.close_step(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:0,maximum_release_bytes:262144,maximum_depth:1}),semio_framework_job::InteractiveJobCloseStep::Complete {..}));assert!(work.terminal_is_empty());
     assert!(document.layers.is_empty());assert!(document.assets.is_empty());retire(document);
 }
 fn retire(document:RasterSnapshot) {crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);}

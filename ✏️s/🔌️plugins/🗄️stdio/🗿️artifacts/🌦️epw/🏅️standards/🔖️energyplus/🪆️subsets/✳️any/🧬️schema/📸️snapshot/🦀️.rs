@@ -16,7 +16,8 @@
 //#region 🔖️Location
 /// 📍️ LOCATION header line — 9 fields + the `LOCATION` keyword itself = the spec's 10
 /// comma-separated tokens (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html#location).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct EpwLocation {
     pub city: String,
@@ -33,7 +34,8 @@ pub struct EpwLocation {
 
 //#region 🔖️DataPeriods
 /// 📅️ One named period from the DATA PERIODS header line.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct EpwDataPeriod {
     pub name: String,
@@ -45,7 +47,8 @@ pub struct EpwDataPeriod {
 /// 📅️ DATA PERIODS header line, structured: `records_per_hour` is a plain integer count (no
 /// float-formatting hazard) plus a list of named periods. The leading period-count token is
 /// derived from `periods.len()` on encode rather than stored (it is redundant, not lossy).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct EpwDataPeriods {
     pub records_per_hour: u32,
@@ -57,7 +60,8 @@ pub struct EpwDataPeriods {
 /// 🌡️ One hourly EPW data record — all 35 spec columns, in spec order, each a `String` (see
 /// module doc comment for why). Field order here is the WIRE order used by `⚙️engine`'s
 /// encoder/decoder and by this module's own diff/mutation index accessors below.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct EpwRecord {
     pub year: String,
@@ -284,7 +288,7 @@ pub const STDIO_EPW_DOCUMENT_SCHEMA: &str = "stdio.epw";
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.epw` snapshot — all 8 EPW header lines + every hourly record, lossless.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw")]
 pub struct EpwSnapshot {

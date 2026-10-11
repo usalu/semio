@@ -3,10 +3,11 @@
 use crate::LOWPOLY_PAINT_TEXTURE_SIZE;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::MeshData;
+use semio_framework_3d::mesh::HalfedgeMesh;
 
 //#region 🔖️Artifact
 /// 🧬️ lowpoly document artifact state.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.lowpoly.lowpoly")]
 pub struct LowpolyArtifact {
@@ -338,7 +339,8 @@ pub use crate::LowpolySelection;
 //#endregion 🔁️Re-exports
 
 /// 🩸 Contiguous RGBA octets shared by mutations and sparse deltas.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PixelRun {
     pub offset: u32,

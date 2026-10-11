@@ -28,7 +28,7 @@ fn asset_mutation_for_field(id: String, field: &str, value: &Value) -> Option<Sh
 pub mod set_active_asset {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
     #[dsl(keyword = "active-asset")]
     pub struct SetActiveAsset {
         pub asset_id: Option<String>,
@@ -51,7 +51,7 @@ pub mod set_active_asset {
 pub mod patch_assets {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "patch-assets")]
     pub struct PatchAssets {
         pub asset_ids: Vec<String>,
@@ -78,7 +78,7 @@ pub mod patch_assets {
 pub mod add_asset {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "add-asset")]
     pub struct AddAsset {
         pub format: String,
@@ -103,7 +103,7 @@ pub mod add_asset {
 pub mod import_asset {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "import-asset")]
     pub struct ImportAsset {
         pub payload: String,
@@ -130,7 +130,7 @@ pub mod import_asset {
 pub mod import_asset_request {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "import-asset-request")]
     pub struct ImportAssetRequest {}
 

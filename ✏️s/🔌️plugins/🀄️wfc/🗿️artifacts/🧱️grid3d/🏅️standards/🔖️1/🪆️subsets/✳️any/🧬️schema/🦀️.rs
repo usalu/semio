@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Grid3dArtifact
 /// 🧬️ `Grid3dArtifact` facet — the persisted problem spec IS the artifact; nothing is derived into
 /// it, because the solve is an inference and never lands on the document.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.wfc.grid3d")]
 pub struct Grid3dArtifact {

@@ -20,7 +20,7 @@ pub const PAYLOAD_SCHEMA: &str = "s.stdio.png.command.paint-native-region.v1";
 pub const MAXIMUM_RAW_BYTES: usize = 8_192;
 pub const CAPACITY: ArtifactRetainedWorkCapacity = ArtifactRetainedWorkCapacity::for_invertible_items(128);
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PaintNativeRegion {
     pub region: PngRegion,
@@ -139,6 +139,10 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
         CAPACITY.rows_for_items(command.validate(snapshot).ok()?.min(CAPACITY.invertible_items()).max(1))
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<PngEditor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<PngMutation>(), depth: 1, ..Default::default() })
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<PngEditor>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<PngEditor>>, Fault> {
         if self.closing || self.complete { return Err(fault("stdio.png.native-region.work-closed", "Native PNG paint work is already closed")); }
         let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(command)) = input.command else { return Err(fault("stdio.png.native-region.route-mismatch", "Native PNG paint work received another command")); };
@@ -167,21 +171,41 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
 
     fn begin_close(&mut self) {
         self.closing=true;
-        if let Some(reader)=self.reader.take() {self.retirement=Some(semio_framework_value::retirement::shared_lease_retirement(reader));}
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+        use semio_framework_value::{ValueRefusalKind, retained_clone::{RetainedCloneProgress, RetainedCloneStep}};
+        let refuse = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
         if !self.closing {return InteractiveJobCloseStep::Blocked;}
-        let Some(retirement)=self.retirement.as_mut() else {return InteractiveJobCloseStep::Complete;};
-        match retirement.close_step(maximum_items,maximum_bytes) {
-            Ok(semio_framework_value::SnapshotRetirementStep::Complete)=>{
-                if !retirement.terminal_is_empty() {return InteractiveJobCloseStep::Blocked;}
-                self.retirement=None;InteractiveJobCloseStep::Complete
-            },
-            Ok(semio_framework_value::SnapshotRetirementStep::Pending{released_items,released_bytes})=>InteractiveJobCloseStep::Pending{released_items,released_bytes},
-            _=>InteractiveJobCloseStep::Blocked,
-        }
+        let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return refuse(error) };
+        if demand == semio_framework_value::RetirementDemand::default() {return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };}
+        if grant.maximum_depth < demand.depth {return InteractiveJobCloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() };}
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };}
+        let progress = if self.retirement.is_some() {
+            match store::artifact_retirement_box_close_step(&mut self.retirement, grant) { Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => progress, Err(error) => return refuse(error) }
+        } else {
+            let Some(reader) = self.reader.take() else {return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };};
+            let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+            match semio_framework_value::retirement::shared::admit_shared_retirement(reader, child, true) {
+                Ok((owner, progress)) => { self.retirement = Some(owner); progress }
+                Err((error, reader)) => { self.reader = Some(reader); return refuse(error); }
+            }
+        };
+        if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } }
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(maximum_copy_bytes)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.depth) }
 
     fn terminal_is_empty(&self) -> bool {self.closing&&self.reader.is_none()&&self.retirement.is_none()}
+}
+
+impl PaintNativeRegionWork {
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if let Some(owner) = self.retirement.as_ref() { return store::artifact_retirement_box_demands(owner, body); }
+        if self.reader.is_some() { return Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<PngSnapshot>(), depth: 2, ..Default::default() }); }
+        Ok(Default::default())
+    }
 }

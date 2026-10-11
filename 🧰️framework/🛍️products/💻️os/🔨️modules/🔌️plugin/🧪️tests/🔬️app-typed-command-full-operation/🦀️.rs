@@ -163,22 +163,22 @@ mod typed_command_full_operation_tests {
     }
 
     impl store::ArtifactEphemeralOneItemPreparation<PublicationPresence, PublicationPresenceMutation> for TwoTurnPublicationPresencePreparation {
-        fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
             if !grant.permits_one() {
                 return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
             }
             if self.turn == 0 {
                 self.turn = 1;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [1; 32] };
-                return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+                return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
             if self.prepared.is_none() {
-                let request = self.request.take().ok_or_else(|| "two-turn publication-presence preparation lost its owner bundle".to_string())?;
-                let next_root = protocol::apply_diff(request.mutation.diff(request.base.as_ref()).diff(), request.base.as_ref()).map_err(|error| error.to_string())?;
+                let request = self.request.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "two-turn publication-presence preparation lost its owner bundle"))?;
+                let next_root = protocol::apply_diff(request.mutation.diff(request.base.as_ref()).diff(), request.base.as_ref()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))?;
                 self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: std::sync::Arc::new(next_root) });
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 2, digest: [2; 32] };
             }
-            Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+            Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
         }
 
         fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
@@ -336,7 +336,7 @@ mod typed_command_full_operation_tests {
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] original typed fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("original typed fixture supplied identity authority");
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
         let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
             let revision = app.store.content_revision_now();
             let operation = semio_framework_job::Operation::new(
@@ -383,7 +383,7 @@ mod typed_command_full_operation_tests {
                 result_page_presented: false,
                 result_sequence: 0,
                 publication_progress: 0,
-                publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None,
+                publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,
                 publication_attempt: 0,
                 ui_pending: true,
                 progress: None,
@@ -415,7 +415,7 @@ mod typed_command_full_operation_tests {
                     if pending.phase() == target {
                         break;
                     }
-                    app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+                    app.publish_mounted_typed_operation_unit(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
                 }
                 let Some(PendingArtifactStorePublication::Presence(pending)) = mounted.pending_artifact_publication.as_ref() else {
                     panic!("exact pending presence owner");
@@ -430,7 +430,7 @@ mod typed_command_full_operation_tests {
                 assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), page.bytes());
                 assert!(mounted.acknowledge_result_page(page.token).unwrap());
             }
-            app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+            app.publish_mounted_typed_operation_unit(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
             assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
             let cancelled = mounted.result_page.as_ref().unwrap();
             assert_eq!(cancelled.lane, TypedOperationResultLane::Fault);
@@ -503,15 +503,15 @@ mod typed_command_full_operation_tests {
     fn fixture_latest_wins_key(scope: &Value) -> semio_framework_value::ordered::SharedOwner<String> {
         let parts = [scope["document"].as_str().unwrap(), scope["controller"].as_str().unwrap(), scope["tool"].as_str().unwrap(), scope["target"].as_str().unwrap()];
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-        let mut copy = ToolLatestWinsKeyCopy::new(scope["instance"].as_u64().unwrap() as u32, parts).unwrap();
         let page = plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES);
-        assert_eq!(copy.advance(parts, RetainedCloneGrant { maximum_items: 0, ..page }), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-        assert_eq!(copy.advance(parts, RetainedCloneGrant { maximum_copy_bytes: 0, ..page }), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+        let (mut copy, _) = ToolLatestWinsKeyCopy::admit_original(scope["instance"].as_u64().unwrap() as u32, parts, page).unwrap().unwrap();
+        assert_eq!(copy.advance(parts, RetainedCloneGrant { maximum_items: 0, ..page }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+        assert_eq!(copy.advance(parts, RetainedCloneGrant { maximum_copy_bytes: 0, ..page }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         for _ in 0..100_000 {
-            match copy.advance(parts, page) {
+            match copy.advance(parts, page).unwrap() {
                 RetainedCloneStep::Complete(progress) => {
                     assert!(progress.fits(page));
-                    return copy.take_key(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+                    return copy.take_key(page).unwrap().unwrap().0;
                 }
                 RetainedCloneStep::Progress(progress) => assert!(progress.fits(page)),
             }
@@ -525,17 +525,18 @@ mod typed_command_full_operation_tests {
         let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
         let scope=&fixture["first"];
         let parts=[scope["document"].as_str().unwrap(),scope["controller"].as_str().unwrap(),scope["tool"].as_str().unwrap(),scope["target"].as_str().unwrap()];
-        let mut copy=ToolLatestWinsKeyCopy::new(scope["instance"].as_u64().unwrap() as u32,parts).unwrap();
         let page=plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES);
-        for turn in 0..100_000 {if matches!(copy.advance(parts,page),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {break;}assert!(turn<99_999);}
+        let (mut copy,_)=ToolLatestWinsKeyCopy::admit_original(scope["instance"].as_u64().unwrap() as u32,parts,page).unwrap().unwrap();
+        for turn in 0..100_000 {if matches!(copy.advance(parts,page).unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {break;}assert!(turn<99_999);}
         let pointer=copy.key.as_ref().unwrap().as_ptr();
         let expected=copy.key.as_ref().unwrap().clone();
         assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&expected).unwrap()).unwrap(),expected);
         let demand=SharedOwner::<String>::allocation_bytes();
-        assert!(copy.take_key(0).is_none());
-        assert!(copy.take_key(demand-1).is_none());
+        let at=|bytes:usize|RetainedCloneGrant{maximum_capacity_bytes:bytes,..page};
+        assert!(copy.take_key(at(0)).unwrap().is_none());
+        assert!(copy.take_key(at(demand-1)).unwrap().is_none());
         assert_eq!(copy.key.as_ref().unwrap().as_ptr(),pointer);
-        let mut key=copy.take_key(demand).unwrap();
+        let (mut key,_)=copy.take_key(at(demand)).unwrap().unwrap();
         assert_eq!(key.as_bytes(),expected.as_bytes());
         assert_eq!(key.as_bytes().as_ptr(),pointer);
         let mut alias=key.clone();
@@ -557,7 +558,7 @@ mod typed_command_full_operation_tests {
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] original typed fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("original typed fixture supplied identity authority");
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
         let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
                 let before = app.store.snapshot_root();
                 let revision = app.store.content_revision_now();
@@ -602,7 +603,7 @@ mod typed_command_full_operation_tests {
                     result_page_presented: false,
                     result_sequence: 0,
                     publication_progress: 0,
-                    publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None,
+                    publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,
                     publication_attempt: 0,
                     ui_pending: true,
                     progress: None,
@@ -634,7 +635,7 @@ mod typed_command_full_operation_tests {
                         if pending.phase() == target {
                             break;
                         }
-                        app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+                        app.publish_mounted_typed_operation_unit(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
                     }
                     let Some(PendingArtifactStorePublication::Artifact(pending)) = mounted.pending_artifact_publication.as_ref() else {
                         panic!("exact document pending owner");
@@ -658,7 +659,7 @@ mod typed_command_full_operation_tests {
                         assert!(mounted.acknowledge_result_page(receipt.token).unwrap());
                     }
                 }
-                app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+                app.publish_mounted_typed_operation_unit(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
                 let final_page = if delayed_ack {
                     let presented = mounted.take_result_page().unwrap();
                     let mut deliveries = 1;
@@ -711,7 +712,7 @@ mod typed_command_full_operation_tests {
                 })
                 .unwrap();
             let mut first_key=fixture_latest_wins_key(first);
-            assert!(registry.begin(first_operation.0, &first_key, &first_lease, TYPED_OPERATION_RESULT_PAGE_BYTES));
+            assert!(registry.begin(first_operation.0, &first_key, &first_lease, plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES)).unwrap().is_some());
             assert!(first_key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(first_key.next_release_byte_demand(),1)).unwrap().value.is_none());
             for _ in 0..100_000 {
                 if registry.take_outcome(first_operation.0) == Some(true) {
@@ -738,7 +739,7 @@ mod typed_command_full_operation_tests {
                 })
                 .unwrap();
             let mut next_key=fixture_latest_wins_key(next);
-            assert!(registry.begin(next_operation.0, &next_key, &next_lease, TYPED_OPERATION_RESULT_PAGE_BYTES));
+            assert!(registry.begin(next_operation.0, &next_key, &next_lease, plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES)).unwrap().is_some());
             assert!(next_key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(next_key.next_release_byte_demand(),1)).unwrap().value.is_none());
             let mut accepted = false;
             for _ in 0..100_000 {
@@ -862,7 +863,7 @@ mod typed_command_full_operation_tests {
             let mut result = None;
             for _ in 0..100_000 {
                 if !begun {
-                    begun = registry.begin(operation.0, &key, &lease, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                    begun = registry.begin(operation.0, &key, &lease, plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES)).unwrap().is_some();
                 }
                 if begun {
                     result = registry.take_outcome(operation.0);
@@ -922,7 +923,7 @@ mod typed_command_full_operation_tests {
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] original typed fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress).expect("original typed fixture supplied identity authority");
+        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
         let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
         let first = fixture["slotReservation"]["firstOperation"].as_u64().unwrap();
         let collision = fixture["slotReservation"]["collidingOperation"].as_u64().unwrap();
@@ -980,7 +981,7 @@ mod typed_command_full_operation_tests {
                     result_page_presented: false,
                     result_sequence: 0,
                     publication_progress: 0,
-                    publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None,
+                    publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,
                     publication_attempt: 0,
                     ui_pending: false,
                     progress: None,
@@ -1000,7 +1001,7 @@ mod typed_command_full_operation_tests {
             if app.presence_store.generation_now() == 1 {
                 break;
             }
-            app.advance_typed_operation_publication_one().await.unwrap();
+            app.advance_typed_operation_publication_one(crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await.unwrap();
         }
         assert_eq!(app.presence_store.generation_now(), 1);
         let stuck = app.tool_operations.get(1).expect("the structurally faulted operation stays mounted until it retires");
@@ -1027,7 +1028,7 @@ mod typed_command_full_operation_tests {
                 id,
                 MountedTypedCommandFullOperation::<A> {
                     verb: String::new(),
-                    meta: ActionMeta { actor: String::new(), instance_id: 7, view_state: None },
+                    meta: ActionMeta { actor: Default::default(), instance_id: 7, view_state: None },
                     operation,
                     canonical_revision: revision,
                     artifact_generation: 0,
@@ -1060,7 +1061,7 @@ mod typed_command_full_operation_tests {
                     result_page_presented: true,
                     result_sequence: 0,
                     publication_progress: 0,
-                    publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None,
+                    publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,
                     publication_attempt: 0,
                     ui_pending: false,
                     progress: None,
@@ -1307,27 +1308,27 @@ mod typed_command_full_operation_tests {
         let mut decoded=ChildEmit::decode_groups(&wire).expect("exact genesis wire roundtrip");
         assert_eq!(decoded[0],child);
         let pointer=child.genesis.as_ref().unwrap().initial_pack.as_ptr();
-        let bytes=child.next_close_byte_demand();
+        let bytes=child.retirement_demands().unwrap().release_bytes;
         assert!(bytes>0);
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
         let yielded=RetainedCloneStep::Progress(RetainedCloneProgress::default());
         for _ in 0..4 {
-            assert_eq!(child.close_one(RetainedCloneGrant::one_release_turn(bytes-1,1)),yielded);
+            assert_eq!(child.close_one(RetainedCloneGrant::one_release_turn(bytes-1,1)).unwrap(),yielded);
             assert_eq!(child.genesis.as_ref().unwrap().initial_pack.as_ptr(),pointer);
             assert_eq!(child.genesis.as_ref().unwrap().reference.artifact_id,reference["artifactId"].as_str().unwrap());
         }
-        assert_eq!(child.close_one(RetainedCloneGrant{maximum_items:0,..RetainedCloneGrant::one_release_turn(bytes,1)}),yielded);
-        assert_eq!(child.close_one(RetainedCloneGrant::one_release_turn(bytes,1)),RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}));
+        assert_eq!(child.close_one(RetainedCloneGrant{maximum_items:0,..RetainedCloneGrant::one_release_turn(bytes,1)}).unwrap(),yielded);
+        assert_eq!(child.close_one(RetainedCloneGrant::one_release_turn(bytes,1)).unwrap(),RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}));
         for child in std::iter::once(&mut child).chain(decoded.iter_mut()) {
             for _ in 0..32 {
-                let grant=RetainedCloneGrant::one_release_turn(child.next_close_byte_demand(),1);
-                match child.close_one(grant) {
+                let grant=RetainedCloneGrant::one_release_turn(child.retirement_demands().unwrap().release_bytes,1);
+                match child.close_one(grant).unwrap() {
                     RetainedCloneStep::Progress(progress)=>assert!(progress.fits(grant)),
                     RetainedCloneStep::Complete(_)=>break,
                 }
             }
             assert!(child.genesis.is_none());
-            assert_eq!(child.next_close_byte_demand(),0);
+            assert_eq!(child.retirement_demands().unwrap().release_bytes,0);
         }
         println!("[DEBUG] Private genesis native exact wire local={} target={} physicalBytes={bytes}",source["childId"],reference["artifactId"]);
     }
@@ -1350,12 +1351,12 @@ mod typed_command_full_operation_tests {
         };
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let page = plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES);
-        assert_eq!(child.close_one(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..page }), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+        assert_eq!(child.close_one(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..page }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         assert_eq!(child.ops[0].len(), wire_bytes);
         let mut bytes = 0;
         let mut complete = false;
         for _ in 0..wire_bytes + 128 {
-            match child.close_one(page) {
+            match child.close_one(page).unwrap() {
                 RetainedCloneStep::Progress(progress) => {
                     assert!(progress.fits(page));
                     bytes += progress.released_bytes;
@@ -1648,8 +1649,8 @@ mod child_complete_group_candidate_tests{
             let field=case["field"].as_str().unwrap();let large="m".repeat(8194);assert_eq!(large.len(),8194);let mut child=super::ChildEmit::open("","",0);
             match field{"owner"=>child.owner=large,"slot"=>child.slot=large,"child_id"=>child.child_id=large,"op_schema"=>child.op_schema.0=large,_=>{let keys:Vec<&str>=field.split('.').collect();assert_eq!(keys.len(),3);let label=semio_framework_ui_locale::LocalizedLabel::from_fn(|terminology,locale|if terminology.as_str()==keys[1]&&locale.as_str()==keys[2]{large.clone()}else{String::new()});child.labels.push(label);}}
             use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};let page=super::plugin_page_grant(4096);
-            assert_eq!(child.close_one(RetainedCloneGrant{maximum_items:0,..page}),RetainedCloneStep::Progress(RetainedCloneProgress::default()));let mut complete=false;let mut physical=0;
-            for _ in 0..8194+128{match child.close_one(page){RetainedCloneStep::Progress(progress)=>{assert!(progress.fits(page));physical+=progress.released_bytes;},RetainedCloneStep::Complete(progress)=>{assert!(progress.fits(page));complete=true;break}}}
+            assert_eq!(child.close_one(RetainedCloneGrant{maximum_items:0,..page}).unwrap(),RetainedCloneStep::Progress(RetainedCloneProgress::default()));let mut complete=false;let mut physical=0;
+            for _ in 0..8194+128{match child.close_one(page).unwrap(){RetainedCloneStep::Progress(progress)=>{assert!(progress.fits(page));physical+=progress.released_bytes;},RetainedCloneStep::Complete(progress)=>{assert!(progress.fits(page));complete=true;break}}}
             assert!(complete,"actual ChildEmit full8194 semantic owner remained held at original1/4096: {field}");assert!(physical>=8194);assert!(child.ops.is_empty());assert!(child.labels.is_empty());assert!(child.owner.is_empty());assert!(child.slot.is_empty());assert!(child.child_id.is_empty());assert!(child.op_schema.0.is_empty());
         }
     }

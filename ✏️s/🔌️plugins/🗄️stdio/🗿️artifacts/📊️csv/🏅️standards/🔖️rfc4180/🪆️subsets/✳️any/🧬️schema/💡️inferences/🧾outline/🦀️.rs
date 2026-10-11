@@ -7,7 +7,7 @@ use crate::CsvSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Csv` document outline.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct CsvOutline {
     pub record_count: u32,

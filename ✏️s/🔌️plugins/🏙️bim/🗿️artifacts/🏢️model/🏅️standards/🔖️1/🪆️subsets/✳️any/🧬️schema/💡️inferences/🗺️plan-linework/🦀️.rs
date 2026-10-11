@@ -54,7 +54,8 @@ pub mod notation;
 
 //#region 🔖️Values
 /// 🖊️ The line class of a primitive: how the plan window strokes it.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum PlanStyle {
     Cut,
     Projection,
@@ -63,7 +64,8 @@ pub enum PlanStyle {
 }
 
 /// 🏷️ What a primitive depicts.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum PlanKind {
     WallCut,
     WallLayer,
@@ -128,7 +130,8 @@ impl PlanKind {
 }
 
 /// 📍️ A path vertex: a point and the bulge `tan(sweep / 4)` of the segment leaving it (zero = straight).
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct PlanVertex {
     pub x: f64,
     pub y: f64,
@@ -136,7 +139,8 @@ pub struct PlanVertex {
 }
 
 /// 🟫️ A filled region: a closed outer loop and closed hole loops.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct PlanRegion {
     pub id: String,
     pub element: String,
@@ -147,7 +151,8 @@ pub struct PlanRegion {
 }
 
 /// 〰️ A stroked path, open or closed.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct PlanPolyline {
     pub id: String,
     pub element: String,
@@ -158,7 +163,8 @@ pub struct PlanPolyline {
 }
 
 /// 🔤️ A text anchor: `label` is the primary text (space number, grid label), `detail` the secondary (space name), `measure` a quantity (space area in square metres).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct PlanText {
     pub id: String,
     pub element: String,
@@ -176,7 +182,7 @@ pub struct PlanText {
 }
 
 /// ▭️ The rectangle that holds every primitive of a plan.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct PlanBounds {
     pub min_x: f64,
     pub min_y: f64,
@@ -185,7 +191,7 @@ pub struct PlanBounds {
 }
 
 /// 🗺️ The plan of one storey. `cut_elevation` is the height of the cut plane above the building datum, `cut_height` above the storey elevation.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct PlanLinework {
     pub storey: String,
     pub cut_height: f64,

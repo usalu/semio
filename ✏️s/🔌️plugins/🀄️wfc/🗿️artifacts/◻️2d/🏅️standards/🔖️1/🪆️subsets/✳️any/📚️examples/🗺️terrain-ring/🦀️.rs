@@ -12,7 +12,7 @@
 //! pass through a middle band — the same "propagation really follows the authored edges" property
 //! `hex-ring` proves, now over raster tiles.
 
-use crate::schema::snapshot::{Wfc2dColor, Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dTile, Wfc2dTileMedia, WFC_2D_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{Wfc2dColor, Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dBitmapMedia, Wfc2dTile, Wfc2dTileMedia, WFC_2D_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 
@@ -43,7 +43,7 @@ fn banded_tile(id: &str, label: &str, weight: f64, top: Wfc2dColor, bottom: Wfc2
         id: id.into(),
         label: Some(label.into()),
         weight,
-        media: Wfc2dTileMedia::Bitmap { width: TILE_PIXELS, height: TILE_PIXELS, palette: vec![top, bottom], pixels: base64_codec::base64_standard_encode(&indices) },
+        media: Wfc2dTileMedia::Bitmap(Wfc2dBitmapMedia { width: TILE_PIXELS, height: TILE_PIXELS, palette: vec![top, bottom], pixels: base64_codec::base64_standard_encode(&indices) }),
     }
 }
 

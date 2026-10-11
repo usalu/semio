@@ -2,7 +2,8 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RemodelingLayerVisibility {
     pub mesh: bool,
@@ -16,7 +17,7 @@ impl Default for RemodelingLayerVisibility {
     fn default() -> Self { Self { mesh: true, dense: true, sparse: true, cameras: true, gcps: true } }
 }
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.remodel.remodeling.modelwindowconfig", extension = "remodelingmodelwindowcfg")]
@@ -36,7 +37,8 @@ impl Default for RemodelingModelWindowConfig {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 pub enum RemodelingModelWindowConfigMutation {
     SetCamera { camera: store::Viewport3dOrbit },
@@ -154,6 +156,15 @@ impl protocol::OpBinary for RemodelingModelWindowConfigMutation {
     }
 }
 
+impl semio_framework_plugin::app::WindowConfigApplyMutation<RemodelingModelWindowConfig> for RemodelingModelWindowConfigMutation {
+    fn exchange(self, post: &mut RemodelingModelWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetCamera { camera } => Self::SetCamera { camera: std::mem::replace(&mut post.camera, camera) },
+            Self::SetLayers { layers } => Self::SetLayers { layers: std::mem::replace(&mut post.layers, layers) },
+        })
+    }
+}
+
 pub struct RemodelingModelWindowConfigOwner;
 
 impl semio_framework_plugin::WindowConfigOwner for RemodelingModelWindowConfigOwner {
@@ -162,6 +173,9 @@ impl semio_framework_plugin::WindowConfigOwner for RemodelingModelWindowConfigOw
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = RemodelingModelWindowConfig;
     type Mutation = RemodelingModelWindowConfigMutation;
+    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<RemodelingModelWindowConfig, RemodelingModelWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }

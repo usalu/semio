@@ -56,6 +56,17 @@ fn maintenance_fault(code: &'static str, message: &'static str) -> Fault {
     Fault::new(FaultOrigin::Framework, FaultCode::new(code), message)
 }
 
+/// 🧯️ Turns a refused owner-catalog admission into its fault, keeping the receipt the refused build actually spent.
+fn owners_admission_fault<P, Mutation>(refusal: store::DocumentStoreOwnersAdmissionError<P, Mutation>) -> Fault
+where
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
+    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P>,
+{
+    let store::DocumentStoreOwnersAdmissionError { error, owners, progress } = refusal;
+    std::mem::forget(owners);
+    plugin_retirement_fault(error).with_retained_progress(progress)
+}
+
 fn worker_pool() -> semio_framework_async::WorkerPool {
     semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)))
 }
@@ -121,6 +132,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             && self.draft_store.maintenance_retirements_terminal_is_empty()
             && self.interaction_store.maintenance_retirements_terminal_is_empty()
             && self.window_config_store.maintenance_retirements_terminal_is_empty()
+            && self.window_transient_store.maintenance_terminal_is_empty()
             && self.retired_window_transient_stores.is_empty()
             && self.presence_store.local_read_maintenance_is_idle()
             && self.snapshot_read_returns_terminal_is_empty()
@@ -165,7 +177,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             MaintenanceUnit::PrivateChildGroup(operation) => match self.close_private_child_group_operation_step(operation, grant)? {
                 semio_framework_job::InteractiveJobCloseStep::Pending { progress } | semio_framework_job::InteractiveJobCloseStep::Complete { progress } => Ok(PluginLifecycleStep::Progress(progress)),
                 semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginLifecycleStep::Blocked { reason: "private child group close awaits its owner" }),
-                semio_framework_job::InteractiveJobCloseStep::Refused(kind) => Err(plugin_sdk_fault(format!("private child group close was refused: {kind:?}"))),
+                semio_framework_job::InteractiveJobCloseStep::Refused { kind, .. } => Err(plugin_sdk_fault(format!("private child group close was refused: {kind:?}"))),
             },
             MaintenanceUnit::DirectIngress => self.window_config_store.close_direct_ingress(grant).map(progressed).map_err(plugin_retirement_fault),
             MaintenanceUnit::GrantedMounted => self.granted_mounted_retirement_step(grant).map(progressed).map_err(plugin_retirement_fault),
@@ -268,7 +280,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             4 => (!self.child_content_retirements.is_empty()).then(|| self.child_root_retirement_demands(body)).transpose()?,
             5 => {
                 let Some((_, generation)) = self.peer_presence_retirements.next_id_from(self.maintenance_peer_presence_cursor) else { return Ok(None) };
-                self.peer_presence_retirements.get(generation).map(PeerPresenceRootRetirement::retirement_demands).transpose()?
+                self.peer_presence_retirements.get(generation).map(|retirement| retirement.retirement_demands(body)).transpose()?
             }
             6 => {
                 let Some((_, generation)) = self.presence_peer_retirements.next_id_from(self.maintenance_presence_peer_cursor) else { return Ok(None) };
@@ -332,7 +344,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                     self.maintenance_tool_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
                     let pool = worker_pool();
                     let operation = self.tool_operations.get_mut(operation_id).ok_or_else(|| maintenance_fault("interactive-job.maintenance-tool-authority", "typed operation authority changed during one fixed maintenance step"))?;
-                    let stepped = operation.drive_worker_step(&pool, grant);
+                    let stepped = operation.drive_worker_step(grant);
                     #[cfg(target_arch = "wasm32")]
                     if let Some(now_ms) = semio_framework_job::default_now_ms() {
                         pool.pump(now_ms);
@@ -396,18 +408,22 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             5 => {
                 let Some((index, generation)) = self.peer_presence_retirements.next_id_from(self.maintenance_peer_presence_cursor) else { return Ok(idle()) };
                 let authority = || maintenance_fault("interactive-job.maintenance-peer-presence-authority", "live peer-presence retirement authority changed during one fixed step");
-                match self.peer_presence_retirements.get_mut(generation).ok_or_else(authority)?.close_step(grant)? {
-                    RetainedCloneStep::Progress(progress) => {
+                match self.peer_presence_retirements.get_mut(generation).ok_or_else(authority)?.close_step(grant).map_err(value_fault)? {
+                    PluginLifecycleStep::Progress(progress) => {
                         self.maintenance_peer_presence_cursor = if progress == RetainedCloneProgress::default() { (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS } else { index };
                         Ok(PluginLifecycleStep::Progress(progress))
                     }
-                    RetainedCloneStep::Complete(progress) => {
+                    PluginLifecycleStep::Complete(progress) => {
                         if !self.peer_presence_retirements.get(generation).is_some_and(PeerPresenceRootRetirement::terminal_is_empty) {
                             return Err(maintenance_fault("interactive-job.maintenance-peer-presence-terminal-not-empty", "live peer-presence retirement reported Complete without its exact terminal-empty witness"));
                         }
                         drop(self.peer_presence_retirements.remove(generation).ok_or_else(authority)?);
                         self.maintenance_peer_presence_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
                         Ok(removed(progress))
+                    }
+                    blocked => {
+                        self.maintenance_peer_presence_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                        Ok(blocked)
                     }
                 }
             }
@@ -473,15 +489,15 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             24 => self.drive_document_archive_load_retirements(grant, false),
             MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE => {
                 let step = if !self.config_store.maintenance_retirements_terminal_is_empty() {
-                    self.config_store.maintenance_retirements_step(grant)
+                    self.config_store.maintenance_retirements_step(grant).map_err(value_fault)
                 } else if !self.draft_store.maintenance_retirements_terminal_is_empty() {
-                    self.draft_store.maintenance_retirements_step(grant)
+                    self.draft_store.maintenance_retirements_step(grant).map_err(value_fault)
                 } else if !self.interaction_store.maintenance_retirements_terminal_is_empty() {
-                    self.interaction_store.maintenance_retirements_step(grant)
+                    self.interaction_store.maintenance_retirements_step(grant).map_err(value_fault)
                 } else {
                     self.window_config_store.maintenance_retirements_step(grant)
                 };
-                step.map(progressed).map_err(value_fault)
+                step.map(progressed)
             }
             _ => unreachable!("fixed maintenance stage"),
         }
@@ -624,7 +640,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         let live = matches!(active.state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews);
         Ok(match active.state {
             State::Initializing => active.initializer_demands(body)?,
-            _ if live && (closing || active.cancel.is_cancelled_now()) => item_demand(),
+            _ if live && (closing || active.cancelled()) => item_demand(),
             State::AwaitingMembers | State::ClosingRejectedMember => item_demand(),
             State::OpeningMembers => active.member_open_demands(body)?,
             State::ValidatingClosure => active.closure_demands(),
@@ -671,7 +687,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             }
             return step;
         }
-        if matches!(state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews) && active.cancel.is_cancelled_now() {
+        if matches!(state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews) && active.cancelled() {
             active.refuse(ArtifactStoreReplacementRefusal::Cancelled);
             return Ok(PluginLifecycleStep::Progress(item));
         }
@@ -732,10 +748,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             && active.candidate_content.is_some()
             && active.candidate_composition.is_some()
             && active.view_member_ordinal == active.candidate_children.as_ref().map_or(usize::MAX, ChildMemberRegistry::len);
-        if closing || active.cancel.is_cancelled_now() || active.generation != live_generation || active.base_child_content_generation != self.child_content_generation || !complete_candidate || !replacement_content_retirements.allocation_admitted || next_content_generation.is_none() {
+        if closing || active.cancelled() || active.generation != live_generation || active.base_child_content_generation != self.child_content_generation || !complete_candidate || !replacement_content_retirements.allocation_admitted || next_content_generation.is_none() {
             let guard = ArtifactStoreReplacementPublicationGuard {
                 closing,
-                cancelled: active.cancel.is_cancelled_now(),
+                cancelled: active.cancelled(),
                 parent_generation: active.generation.0,
                 live_generation: live_generation.0,
                 base_child_generation: active.base_child_content_generation,
@@ -843,23 +859,38 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
 
     /// 📏️ Quotes the next archive-load turn of the target load, in the phase its state machine is about to run.
     pub(crate) fn document_archive_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
-        let Some((_, operation)) = self.document_archive_target(closing) else { return Ok(RetirementDemand::default()) };
+        let Some((_, operation)) = self.document_archive_target(closing) else {
+            let backing = if closing { self.document_archive_loads.empty_backing_byte_demand().unwrap_or(0) } else { 0 };
+            return Ok(if backing == 0 { RetirementDemand::default() } else { RetirementDemand { release_bytes: backing, depth: 1, ..Default::default() } });
+        };
         self.document_archive_loads.get(operation).map_or(Ok(RetirementDemand::default()), |active| self.document_archive_load_demands(active, closing, body))
     }
 
-    fn retire_document_archive_envelope(envelope: ArtifactEnvelope<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant) -> Result<Box<dyn store::ErasedSnapshotRetirement>, Fault> {
-        let owners = match A::build_document_store_owners() {
-            Some(Ok(owners)) => owners,
-            _ => {
+    /// 🧺️ Builds the app's exact owner catalog and hands a rejected envelope to its original retirement; the answer carries both receipts.
+    fn retire_document_archive_envelope(envelope: ArtifactEnvelope<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), Fault> {
+        let (owners, built) = match A::build_document_store_owners(grant) {
+            Some(Ok(built)) => built,
+            Some(Err(refusal)) => {
+                std::mem::forget(envelope);
+                return Err(owners_admission_fault(refusal));
+            }
+            None => {
                 std::mem::forget(envelope);
                 return Err(document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "document archive hydration lost its exact owner catalog while retiring a rejected envelope"));
             }
         };
-        match owners.retire_envelope_uninstalled(envelope, grant) {
-            Ok((retirement, _)) => Ok(retirement),
+        let remaining = RetainedCloneGrant {
+            maximum_items: grant.maximum_items.saturating_sub(built.copied_items),
+            maximum_copy_bytes: grant.maximum_copy_bytes.saturating_sub(built.copied_bytes),
+            maximum_capacity_bytes: grant.maximum_capacity_bytes.saturating_sub(built.retained_capacity_bytes),
+            maximum_release_bytes: grant.maximum_release_bytes.saturating_sub(built.released_bytes),
+            maximum_depth: grant.maximum_depth,
+        };
+        match owners.retire_envelope_uninstalled(envelope, remaining) {
+            Ok((retirement, progress)) => Ok((retirement, built.checked_add(progress).map_err(plugin_retirement_fault)?)),
             Err((error, owners, envelope)) => {
                 std::mem::forget((owners, envelope));
-                Err(plugin_retirement_fault(error))
+                Err(plugin_retirement_fault(error).with_retained_progress(built))
             }
         }
     }
@@ -883,16 +914,16 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                 return Err(document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "ready recursive document archive lost its replacement acknowledgement authority"));
             }
         }
-        match active.close_step(grant)? {
-            PluginLifecycleStep::Complete(_) => {
+        match active.close_step(grant).map_err(plugin_retirement_fault)? {
+            RetainedCloneStep::Complete(progress) => {
                 if !active.terminal_is_empty() {
                     return Err(document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive cleanup returned Complete with a live owner"));
                 }
                 active.state = target;
                 active.phase = ActiveDocumentArchiveLoadPhase::Terminal;
-                Ok(PluginLifecycleStep::Progress(item()))
+                Ok(removed(progress))
             }
-            step => Ok(step),
+            step => Ok(progressed(step)),
         }
     }
 
@@ -959,7 +990,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             ActiveDocumentArchiveLoadPhase::MergeParent => Ok(PluginLifecycleStep::Progress(empty)),
             ActiveDocumentArchiveLoadPhase::HydrateParent => {
                 if active.hydration.is_none() {
-                    let owners = A::build_document_store_owners().ok_or_else(|| missing("document archive parent requires the app's exact document owner catalog"))?.map_err(plugin_retirement_fault)?;
+                    let (owners, built) = A::build_document_store_owners(grant).ok_or_else(|| missing("document archive parent requires the app's exact document owner catalog"))?.map_err(owners_admission_fault)?;
                     let archive = active.archive.as_mut().ok_or_else(|| missing("recursive document archive parent input owner is absent"))?;
                     let pack = std::mem::take(&mut archive.parent_pack);
                     let history = active.decoded_history.take().ok_or_else(|| missing("recursive document archive decoded history owner is absent"))?;
@@ -978,24 +1009,28 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                         store::PersistedDocumentHydrationTarget::Envelope,
                         self.store.local_actor_id().clone(),
                     ));
-                    return Ok(PluginLifecycleStep::Progress(item));
+                    return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: built.copied_items.max(1), ..built }));
                 }
                 let mut sequence = active.hydration_sequence;
+                let mut spent = RetainedCloneProgress::default();
                 let fuel = grant.maximum_items.max(grant.maximum_copy_bytes.min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)) as u64;
                 let mut cx = semio_framework_job::StepContext::new(
                     semio_framework_job::OperationId(active.operation),
                     semio_framework_job::Generation(self.store.generation_now()),
-                    semio_framework_job::StepBudget::new(fuel, u64::MAX),
+                    semio_framework_job::StepBudget::new(fuel, u64::MAX, grant),
                     semio_framework_job::CancelToken::root_now(),
                     semio_framework_job::default_now_us,
                     &mut sequence,
+                    &mut spent,
                 );
                 let step = active.hydration.as_mut().expect("recursive document parent hydration remains retained").step(&mut cx, RetainedCloneGrant { maximum_items: 1, ..grant });
+                drop(cx);
                 active.hydration_sequence = sequence;
+                let item = RetainedCloneProgress { copied_items: spent.copied_items.max(1), ..spent };
                 let envelope = match step {
                     store::PersistedDocumentHydrationStep::Pending(_) => return Ok(PluginLifecycleStep::Progress(item)),
                     store::PersistedDocumentHydrationStep::Rejected(diagnostic) => {
-                        return Err(document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, format!("document archive parent Pack and SPR hydration was rejected: {diagnostic:?}")));
+                        return Err(document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, format!("document archive parent Pack and SPR hydration was rejected: {diagnostic:?}")).with_retained_progress(spent));
                     }
                     store::PersistedDocumentHydrationStep::Ready(store::PersistedDocumentHydrationOutput::Envelope(envelope)) => envelope,
                     store::PersistedDocumentHydrationStep::Ready(store::PersistedDocumentHydrationOutput::Store(_)) => {
@@ -1005,8 +1040,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                 let hydration = active.hydration.take().ok_or_else(|| plugin_sdk_fault("ready recursive document parent hydration owner changed before handoff"))?;
                 if !store::ErasedSnapshotRetirement::terminal_is_empty(&hydration) {
                     active.hydration = Some(hydration);
-                    active.retained = Some(Self::retire_document_archive_envelope(envelope, grant)?);
-                    return Err(plugin_sdk_fault("ready recursive document parent hydration retained nonterminal ownership"));
+                    let (retained, retired) = Self::retire_document_archive_envelope(envelope, grant)?;
+                    active.retained = Some(retained);
+                    return Err(plugin_sdk_fault("ready recursive document parent hydration retained nonterminal ownership").with_retained_progress(spent.checked_add(retired).map_err(plugin_retirement_fault)?));
                 }
                 drop(hydration);
                 match self.begin_persisted_document_store_replacement(envelope) {
@@ -1017,8 +1053,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                         Ok(PluginLifecycleStep::Progress(item))
                     }
                     Err((fault, envelope)) => {
-                        active.retained = Some(Self::retire_document_archive_envelope(envelope, grant)?);
-                        Err(fault)
+                        let (retained, retired) = Self::retire_document_archive_envelope(envelope, grant)?;
+                        active.retained = Some(retained);
+                        Err(fault.with_retained_progress(spent.checked_add(retired).map_err(plugin_retirement_fault)?))
                     }
                 }
             }
@@ -1149,7 +1186,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
     /// 🎟️ One granted turn of the next archive load; a closing app cancels every load and drops it once terminal-empty.
     pub(crate) fn drive_document_archive_load_retirements(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
         let empty = RetainedCloneProgress::default();
-        let Some((index, operation)) = self.document_archive_target(closing) else { return Ok(PluginLifecycleStep::Complete(empty)) };
+        let Some((index, operation)) = self.document_archive_target(closing) else {
+            if closing && self.document_archive_loads.empty_backing_byte_demand().is_some_and(|bytes| bytes != 0) {
+                return self.document_archive_loads.close_empty_backing_step(grant).map(|step| PluginLifecycleStep::Progress(step.progress()));
+            }
+            return Ok(PluginLifecycleStep::Complete(empty));
+        };
         if grant.maximum_items == 0 {
             return Ok(PluginLifecycleStep::Progress(empty));
         }

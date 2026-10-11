@@ -2,10 +2,10 @@ use super::*;
 use crate::standards::v1::subsets::any::io::export::gltf::scene::y_up;
 use crate::standards::v1::subsets::any::io::export::gltf::testkit::{house, read};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 
 fn build(snapshot: &crate::ModelSnapshot) -> (GltfModel, Vec<String>) {
-    registry::with_inference(None, snapshot, |inferred| crate::standards::v1::subsets::any::io::export::gltf::scene::build(snapshot, inferred))
+    inference::with_inference(None, snapshot, |inferred| crate::standards::v1::subsets::any::io::export::gltf::scene::build(snapshot, inferred))
 }
 
 #[test]

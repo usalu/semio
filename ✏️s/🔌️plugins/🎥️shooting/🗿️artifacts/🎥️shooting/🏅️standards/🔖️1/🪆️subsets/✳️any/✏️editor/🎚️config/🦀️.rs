@@ -18,7 +18,8 @@ use protocol::Mutation;
 /// camera) — session-only view state now round-trips through the config `ArtifactStore` exactly like
 /// document content, with a real `backwards` per [`ShootingConfigMutation`] instead of never being
 /// VCS'd at all. OS-owned locale and active utility are read from the projected `ViewModel`.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "shooting.config")]
 #[artifact(id = "shooting.config")]

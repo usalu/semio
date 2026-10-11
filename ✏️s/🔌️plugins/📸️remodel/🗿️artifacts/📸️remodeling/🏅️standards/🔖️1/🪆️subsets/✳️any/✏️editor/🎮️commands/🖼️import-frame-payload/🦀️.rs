@@ -57,7 +57,7 @@ fn checker_image(w: u32, h: u32, cell: u32) -> remodeling_image::ImageRgba8 {
 }
 //#endregion 🧪️UnitTests
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "import-frame-payload")]
 pub struct ImportFramePayload {
     pub payload: String,

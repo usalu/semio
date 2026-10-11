@@ -10,7 +10,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 /// ✂️ Replaces the `tiles` entry addressed by `id`'s `crop` with `new_crop` — the crop rect is
 /// always authored as one atomic `x,y,width,height` block, so this is `resize` on the whole extent.
 /// Diff/inverse delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "resize-tile-crop")]

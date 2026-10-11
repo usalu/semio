@@ -34,7 +34,8 @@ use crate::standards::v1::subsets::{
 };
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = EquationSnapshot, diff = EquationDiff, schema = "s.mathematical.equation")]
 pub enum EquationMutation {
     ChangeGraphDirected(change_graph_directed::ChangeGraphDirected),

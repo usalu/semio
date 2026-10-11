@@ -104,7 +104,8 @@ pub fn host_dependency(snapshot: &ModelSnapshot, storey: &str) -> semio_framewor
 
 //#region 🔖️View
 /// 🧱️ An element and the storey it stands on.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Placement {
     pub id: String,
     pub storey: String,

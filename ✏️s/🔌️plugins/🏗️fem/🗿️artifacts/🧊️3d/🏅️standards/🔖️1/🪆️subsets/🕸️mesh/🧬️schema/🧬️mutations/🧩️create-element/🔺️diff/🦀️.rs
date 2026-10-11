@@ -14,7 +14,7 @@ pub fn diff(payload: &CreateElement, base: &Fem3dSnapshot) -> protocol::Mutation
         return refusal;
     }
     if payload.index.is_some_and(|at| at > base.elements.len()) {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), base.elements.len()), [new_id.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), base.elements.len()), [id.to_string()]);
     }
     protocol::MutationOutcome::new(Fem3dDiff { elements: Some(Fem3dElementsDelta { inserted: vec![Fem3dElementInsertion { index: payload.index.unwrap_or(base.elements.len()), row: (*payload.element).clone() }], ..Default::default() }), ..Default::default() })
 }

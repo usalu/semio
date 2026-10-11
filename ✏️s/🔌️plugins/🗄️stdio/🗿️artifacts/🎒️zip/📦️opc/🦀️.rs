@@ -195,7 +195,7 @@ pub fn xml_document_to_opc_text_checked(doc: &XmlDocument) -> Result<String, Str
 
 //#region 🔖️Part
 /// 📦️ One package part: its name (no leading `/`), resolved content type, and verbatim bytes.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct OpcPart {
     pub path: String,
@@ -208,7 +208,7 @@ pub struct OpcPart {
 //#region 🔖️ContentTypes
 /// 🏷️ Typed `[Content_Types].xml`: `Default` entries retain extension spelling (no dot),
 /// `Override` entries key by absolute part name (`/word/document.xml`). Overrides win.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct OpcContentTypes {
     #[value(default)]
@@ -331,7 +331,8 @@ fn metadata_element_name(name: &str, attrs: &[XmlAttr], inherited: &[XmlAttr], l
 
 //#region 🔖️Relationships
 /// 🎯️ Whether a relationship's `Target` is a package-internal part path or an external URI.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum OpcTargetMode {
     Internal,
@@ -339,7 +340,8 @@ pub enum OpcTargetMode {
 }
 
 /// 🔗️ One `<Relationship>` entry from some owner part's `*.rels` file.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct OpcRelationship {
     pub id: String,
@@ -488,7 +490,7 @@ fn validate_relationship_identities(relationships: &[OpcRelationship], part: &st
 /// metadata channels (content types, relationships-by-owner) that `docx`/`xlsx`/`pptx` interpret
 /// semantically on top of. Content-part payloads remain verbatim; metadata tables retain their
 /// declared semantic fields.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct OpcPackage {
     #[value(default)]

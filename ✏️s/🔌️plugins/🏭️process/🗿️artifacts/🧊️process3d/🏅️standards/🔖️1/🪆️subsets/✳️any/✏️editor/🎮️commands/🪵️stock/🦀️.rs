@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod set_stock {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "stock")]
     pub struct SetStock {
         pub kind: String,

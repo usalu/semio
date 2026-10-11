@@ -75,7 +75,8 @@ use super::change_connection_action_kind;
 use super::change_connection_load_duration;
 use super::change_connection_action_fk;
 
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = En1995Snapshot, diff = En1995Diff, schema = "s.norm.en1995")]
 pub enum En1995Mutation {

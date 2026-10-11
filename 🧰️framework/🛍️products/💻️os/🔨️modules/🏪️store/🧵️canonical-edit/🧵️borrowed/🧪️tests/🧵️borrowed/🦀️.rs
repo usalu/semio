@@ -153,10 +153,9 @@ impl ArtifactCanonicalJson for IndexedDepth {
 //#region 🧹️OwnedRetirement
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub(super) struct MapRetirementFactory;
-impl MapRetirementFactory {
-    fn birth_bytes() -> usize {
-        std::mem::size_of::<MapRetirement>() + ARTIFACT_CANONICAL_JSON_DEPTH * 2 * std::mem::size_of::<MapValue>()
-    }
+/// 🎟️ The grant that funds exactly the one quoted retirement turn: one item, the quoted currencies and at least one level.
+pub(super) fn quoted_close_grant(demand: semio_framework_value::RetirementDemand, _body: usize) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }
 impl ArtifactOwnedValueRetirementFactory<MapMutation> for MapRetirementFactory {
     fn retirement_birth_bytes(&self, _value: &MapMutation) -> usize {

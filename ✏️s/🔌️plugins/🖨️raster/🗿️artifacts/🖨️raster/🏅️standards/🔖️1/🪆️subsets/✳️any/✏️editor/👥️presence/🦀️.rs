@@ -8,7 +8,8 @@ use store::ArtifactPack;
 /// 👥️ Shareable live raster brush and camera state. Layer selection/hover
 /// deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): the `"layers"` interaction
 /// domain broadcasts automatically via the framework's typed `PresenceInteraction` field now.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "raster.presence")]
 #[dsl(layout = "lines")]
@@ -62,6 +63,8 @@ impl protocol::DiffAlgebra<RasterPresence> for RasterPresenceDiff {
     }
 }
 
+impl store::ArtifactPresenceSnapshot for RasterPresence {}
+
 impl store::ArtifactDsl for RasterPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
@@ -109,14 +112,21 @@ impl ArtifactPack for RasterPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum RasterPresenceMutation {
     #[dsl(key = "set")]
-    Set {
-        #[dsl(block)]
-        presence: RasterPresence,
-    },
+    Set(SetPresenceEdit),
+}
+
+/// 📦️ `Set` payload record, wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct SetPresenceEdit {
+    #[dsl(block)]
+    pub presence: RasterPresence,
 }
 
 impl Mutation<RasterPresence> for RasterPresenceMutation {
@@ -143,12 +153,12 @@ impl Mutation<RasterPresence> for RasterPresenceMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::Set { .. } => &Self::DESCRIPTORS[0],
+            Self::Set(_) => &Self::DESCRIPTORS[0],
         }
     }
 
     fn diff(&self, base: &RasterPresence) -> protocol::MutationOutcome<RasterPresenceDiff> {
-        let Self::Set { presence } = self;
+        let Self::Set(SetPresenceEdit { presence }) = self;
         let diff = RasterPresenceDiff {
             brush_size: (base.brush_size != presence.brush_size).then_some(presence.brush_size),
             brush_opacity: (base.brush_opacity != presence.brush_opacity).then_some(presence.brush_opacity),
@@ -161,7 +171,7 @@ impl Mutation<RasterPresence> for RasterPresenceMutation {
     }
 
     fn inverse(&self, base: &RasterPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        Ok(vec![Self::Set { presence: base.clone() }])
+        Ok(vec![Self::Set(SetPresenceEdit { presence: base.clone() })])
     }
 }
 
@@ -206,49 +216,6 @@ impl protocol::OpBinary for RasterPresenceMutation {
 /// `f64`s), so every root is terminal-empty and one bounded turn returns it.
 pub fn raster_presence_is_terminal_empty(_presence: &RasterPresence) -> bool {
     true
-}
-
-/// 👥️ Exact local and peer root ownership for raster presence (process3d precedent): without it and
-/// the disposer below, every close of a registry-backed app faulted
-/// `interactive-job.close-owned-disposer-missing … presence-store` (mounted boot test of ticket
-/// 26/09/05/RASTER-PLUGIN-END-TO-END, 2026-09-16).
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct RasterPresenceRetirementFactory;
-
-impl store::SnapshotRetirementFactory<RasterPresence> for RasterPresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<RasterPresence>) -> usize { std::mem::size_of::<RasterPresenceRetirement>() }
-
-    fn retire(&self, root: std::sync::Arc<RasterPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(RasterPresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)) })
-    }
-}
-
-struct RasterPresenceRetirement {
-    root: std::mem::ManuallyDrop<Option<std::sync::Arc<RasterPresence>>>,
-}
-
-impl store::ErasedSnapshotRetirement for RasterPresenceRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if let Some(root) = self.root.take() {
-            drop(root);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.root.is_none()
-    }
-}
-
-impl Drop for RasterPresenceRetirement {
-    fn drop(&mut self) {
-        assert!((self.root.is_none()) || std::thread::panicking(), "raster presence retirement reached Drop before its root was returned");
-        unsafe { std::mem::ManuallyDrop::drop(&mut self.root) };
-    }
 }
 
 pub fn raster_presence_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<RasterPresence, RasterPresenceMutation>>> {

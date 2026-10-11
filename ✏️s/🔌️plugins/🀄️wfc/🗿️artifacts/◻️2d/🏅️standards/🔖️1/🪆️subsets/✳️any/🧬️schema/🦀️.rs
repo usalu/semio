@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Wfc2dArtifact
 /// 🧬️ The artifact facet — a WFC problem has no ambient state beyond its own snapshot, so this is a
 /// one-field wrapper rather than a wider artifact-only projection.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.wfc.wfc2d")]
 pub struct Wfc2dArtifact {

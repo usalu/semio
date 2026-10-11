@@ -6,7 +6,8 @@
 use semio_framework_value::DslValue;
 
 /// 🌍️ Site location and orientation.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Site {
     pub latitude_deg: f64,
     pub longitude_deg: f64,
@@ -16,7 +17,8 @@ pub struct Site {
 }
 
 /// 🏠️ A thermal zone.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Zone {
     pub id: u32,
     pub name: String,
@@ -27,7 +29,8 @@ pub struct Zone {
 }
 
 /// 🪑️ A space of a zone.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Space {
     pub id: u32,
     pub name: String,
@@ -96,7 +99,8 @@ pub struct Fenestration {
 }
 
 /// 🪨️ The roughness of an exterior face.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SurfaceRoughness {
     VeryRough,
     Rough,
@@ -107,7 +111,8 @@ pub enum SurfaceRoughness {
 }
 
 /// 🧱️ An opaque material layer.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Material {
     pub id: u32,
     pub name: String,

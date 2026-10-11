@@ -863,6 +863,15 @@
       "label": "BIM",
       "panes": [
         {
+          "variant": "bim",
+          "label": "BIM Model",
+          "tagline": "Edit building models",
+          "description": "Model buildings with storeys, walls, spaces and openings and check them against rules.",
+          "icon": "building",
+          "example": "demo",
+          "exampleLabel": "Demo House"
+        },
+        {
           "variant": "stdio-ifc-2x3",
           "label": "IFC 2x3",
           "tagline": "Edit IFC 2x3 models",

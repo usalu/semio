@@ -10,7 +10,7 @@ use crate::JpgSnapshot;
 /// `⚙️engine::decode_jpg`'s documented scope), falling back to the canonical `8` a freshly
 /// hand-authored (`SetPixels`-only, no `frame` yet) snapshot always decodes to. `has_alpha` is
 /// always `false` — JPEG (T.81) has no alpha channel, this is not a heuristic.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct JpgDimensions {
     pub width: u32,

@@ -1,7 +1,7 @@
 //! 🗂️ Unique literal OPC relationship owners retain directly admitted contiguous groups.
 use super::OpcRelationship;
 use semio_framework_value::{DslValue,FromValue,ToValue,NativeDecodeControl,NativeEncodeControl,ValueEdit,ValueShape,ValueError,ValueRefusalKind};
-#[derive(Clone,Debug,Default,PartialEq)]
+#[derive(Clone,Debug,Default,PartialEq,semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 pub struct OpcRelationshipOwners{groups:Vec<(String,Vec<OpcRelationship>)>}
 trait OrderingControl{
  fn compare(&mut self,left:&str,right:&str)->Result<std::cmp::Ordering,ValueError>;

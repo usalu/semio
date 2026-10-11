@@ -8,7 +8,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Durable form definition and immutable responses with derived value/table child projections.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "forms")]
 #[artifact_schema(id = "s.forms.forms")]

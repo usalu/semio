@@ -290,7 +290,8 @@ pub fn box_object(values: [f64; 4]) -> PdfObject {
 //#endregion 🔖️Axes
 //#region 🔖️GraphRows
 /// 📍️ Where one created object lands: its object number and its position in the retained object list.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct ObjectPlacement {
     pub id: ObjRef,

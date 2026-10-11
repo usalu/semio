@@ -16,7 +16,8 @@ use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
 
 use crate::standards::v1::subsets::any::schema::mutations::{connect_handles,create_node};
 
-use semio_framework_job::{Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, OperationId, RetainedJobPayload, RevisionId, StepBudget, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
+use crate::puzzle_job::JobTurn;
+use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, Operation, OperationId, RevisionId, StepBudget, StepContext};
 use semio_framework_tool_run::{ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_REASON_CONFLICT};
 use semio_framework_pack_json::Value;
 use std::collections::HashSet;
@@ -234,13 +235,13 @@ impl FillRunReason {
 }
 
 /// 🔑️ One provisional placement of a run: its trace key and its kind (the `placement2d` shape index).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub struct FillRunPlacementKey {
     pub key: u64,
     pub shape: u32,
 }
 
-/// 📸️ Resume point a run reports through `StepOutcome::CheckpointReady`, little-endian:
+/// 📸️ Resume point a run reports through `JobTurn::Checkpoint`, little-endian:
 /// `requested u64 | tested u64 | collisions u64 | rejected u64 | nextKey u64 | placements u32 | (key u64, shape u32)*`.
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct FillRunCheckpoint {
@@ -385,28 +386,8 @@ fn fill_bounds_overlap_with(left: [f64; 4], right: [f64; 4], slack: f64) -> bool
 }
 
 
-fn fill_run_fault(context: &mut StepContext<'_>, code: &str) -> StepOutcome {
-    match context.payload_from_bytes(JobPayloadStream::Fault, code.as_bytes()) {
-        Ok(detail) => StepOutcome::Fault(JobFault { detail }),
-        Err(rejected) => {
-            drop(rejected.into_source());
-            StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
-        }
-    }
-}
-
-fn close_outcome(outcome: &mut StepOutcome) {
-    while !outcome.terminal_is_empty() {
-        let _ = outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
-    }
-}
-
-fn close_job_slot(slot: &mut Option<BoardFillJob>) {
-    let Some(job) = slot.as_mut() else { return };
-    InteractiveJob::begin_close(job);
-    if matches!(InteractiveJob::close_step(job, 1, JOB_PAYLOAD_PAGE_BYTES), InteractiveJobCloseStep::Complete) && InteractiveJob::terminal_is_empty(job) {
-        *slot = None;
-    }
+fn fill_run_fault(code: &str) -> JobTurn {
+    JobTurn::Fault(code.as_bytes().to_vec())
 }
 
 /// ⏱️ The engine search runs under a fuel-only clock: the run job enforces the wall deadline between batches.
@@ -614,14 +595,24 @@ impl FillCapture {
         Ok(None)
     }
 
-    /// 🚰️ One close unit of the ingress; `true` once nothing is left.
-    fn close_one(&mut self) -> bool {
-        let Some(ingress) = self.ingress.as_mut() else { return true };
+    /// 🚰️ One granted close turn of the ingress.
+    fn close_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let Some(ingress) = self.ingress.as_mut() else { return InteractiveJobCloseStep::Complete { progress: Default::default() } };
         ingress.begin_close();
-        if matches!(ingress.close_step(1, JOB_PAYLOAD_PAGE_BYTES), InteractiveJobCloseStep::Complete) && ingress.terminal_is_empty() {
+        let step = ingress.close_step(grant);
+        if ingress.terminal_is_empty() {
             self.ingress = None;
         }
+        step
+    }
+
+    fn is_closed(&self) -> bool {
         self.ingress.is_none()
+    }
+
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let Some(ingress) = self.ingress.as_ref() else { return Ok(Default::default()) };
+        Ok(semio_framework_value::RetirementDemand { release_bytes: ingress.next_close_release_byte_demand(), depth: 1, ..Default::default() })
     }
 }
 
@@ -1047,6 +1038,15 @@ impl FillCapture {
 //#endregion 🔬️Capture
 
 //#region ⏯️RunJob
+/// 🔎️ How one engine search batch settled, short of a plain yield.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FillSearch {
+    Cancelled,
+    Checkpoint,
+    Fault,
+    Complete,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FillRunOwed {
     Checkpoint,
@@ -1060,7 +1060,19 @@ struct FillRunLive {
     subject: ToolRunTraceSubject,
 }
 
+/// ♻️ The owners one `Puzzle2dFillRunJob` still holds once its search and capture are closed, retired as one controlled bundle.
+#[derive(semio_framework_value::RetireOwned)]
+struct Puzzle2dFillRunOwners {
+    document: Arc<Puzzle2dPlaySnapshot>,
+    kinds: Vec<Value>,
+    writer: ToolRunTickWriter,
+    replay: Option<FillRunReplay>,
+    placements: Vec<FillRunPlacementKey>,
+    target_regions: Vec<[f64; 4]>,
+}
+
 /// ⏩️ A resumed run silently replays the deterministic search up to the provisional placements it continues.
+#[derive(semio_framework_value::RetireOwned)]
 struct FillRunReplay {
     expected: Vec<Vec<u8>>,
     retire: Vec<FillRunPlacementKey>,
@@ -1074,6 +1086,10 @@ struct FillRunReplay {
 /// ids) without trace or ops, keeps every provisional placement it re-derives byte-identically, retracts
 /// the rest and continues live — so a raised count continues and a lowered one retracts the tail.
 pub(crate) struct Puzzle2dFillRunJob {
+    close_owners: crate::puzzle_job::WorkClosing<Puzzle2dFillRunOwners>,
+    owners_staged: bool,
+    retiring_placement: Option<BoardFillPlacement>,
+    outbox: crate::puzzle_job::JobOutbox,
     document: Arc<Puzzle2dPlaySnapshot>,
     kinds: Vec<Value>,
     open_handles: u64,
@@ -1118,6 +1134,10 @@ impl Puzzle2dFillRunJob {
         let kinds = fill_kind_rows(document.value());
         let target_regions = fill_visible_region_bounds(document.value());
         let mut job = Self {
+            close_owners: Default::default(),
+            owners_staged: false,
+            retiring_placement: None,
+            outbox: Default::default(),
             kinds,
             open_handles: 0,
             document,
@@ -1238,10 +1258,9 @@ impl Puzzle2dFillRunJob {
         let mut checkpoint = search.take_checkpoint().ok_or("puzzle2d-fill-checkpoint-missing")?;
         let placement = checkpoint.take_pending_placement();
         let adopted = search.adopt_checkpoint(checkpoint);
-        let mut placement = placement.ok_or("puzzle2d-fill-placement-missing")?;
+        let placement = placement.ok_or("puzzle2d-fill-placement-missing")?;
         let mutations = fill_placement_mutations(&placement);
-        while !placement.close_step(1, JOB_PAYLOAD_PAGE_BYTES) {}
-        drop(placement);
+        self.retiring_placement = Some(placement);
         if let Err(checkpoint) = adopted {
             self.closing_search = Some(checkpoint.into_closing_job());
             return Err("puzzle2d-fill-checkpoint-stale");
@@ -1340,26 +1359,23 @@ impl Puzzle2dFillRunJob {
         }
     }
 
-    fn flush(&mut self, context: &mut StepContext<'_>) -> Option<StepOutcome> {
+    fn flush(&mut self, context: &mut StepContext<'_>) -> Option<JobTurn> {
         if self.writer.is_empty() && !self.finished {
             return None;
         }
         let progress = self.progress();
         self.writer.progress(progress);
         let bytes = self.writer.finish()?.encode().ok();
-        Some(match bytes.map(|bytes| context.payload_from_bytes(JobPayloadStream::Preview, &bytes)) {
-            Some(Ok(payload)) => StepOutcome::PreviewReady(payload),
-            Some(Err(rejected)) => {
-                drop(rejected.into_source());
-                fill_run_fault(context, "puzzle2d-fill-run-tick-bytes")
-            }
-            None => fill_run_fault(context, "puzzle2d-fill-run-tick-encode"),
+        Some(match bytes {
+            Some(bytes) if bytes.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes),
+            Some(_) => fill_run_fault("puzzle2d-fill-run-tick-bytes"),
+            None => fill_run_fault("puzzle2d-fill-run-tick-encode"),
         })
     }
 
-    fn flush_then(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> StepOutcome {
+    fn flush_then(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> JobTurn {
         match self.flush(context) {
-            Some(preview @ StepOutcome::PreviewReady(_)) => {
+            Some(preview @ JobTurn::Preview(_)) => {
                 self.owed = Some(owed);
                 preview
             }
@@ -1368,44 +1384,41 @@ impl Puzzle2dFillRunJob {
         }
     }
 
-    fn settle_owed(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> StepOutcome {
+    fn settle_owed(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> JobTurn {
         match owed {
-            FillRunOwed::Complete => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) }),
-            FillRunOwed::Checkpoint => match context.payload_from_bytes(JobPayloadStream::CheckpointState, &self.checkpoint().encode()) {
-                Ok(state) => {
-                    if self.finished {
-                        self.owed = Some(FillRunOwed::Complete);
-                    }
-                    StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: self.placements.len() as u64 })
+            FillRunOwed::Complete => JobTurn::Complete,
+            FillRunOwed::Checkpoint => {
+                if self.finished {
+                    self.owed = Some(FillRunOwed::Complete);
                 }
-                Err(rejected) => {
-                    drop(rejected.into_source());
-                    self.owed = Some(FillRunOwed::Checkpoint);
-                    StepOutcome::Yield
-                }
-            },
+                JobTurn::Checkpoint { applied_progress: self.placements.len() as u64, state: self.checkpoint().encode() }
+            }
         }
     }
 
     /// 🔎️ Engine transitions until a candidate event, a non-preview outcome, a stall or the wall deadline.
-    fn search_batch(search: &mut BoardFillJob, sequence: &mut u64, context: &StepContext<'_>) -> (Option<StepOutcome>, Option<BoardFillCandidateEvent>) {
+    fn search_batch(search: &mut BoardFillJob, sequence: &mut u64, context: &StepContext<'_>) -> (Option<FillSearch>, Option<BoardFillCandidateEvent>) {
         let operation = search.operation();
-        let mut inner = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), context.cancel_token(), fill_run_monotonic_zero, sequence);
+        let mut progress = semio_framework_value::retained_clone::RetainedCloneProgress::default();
+        let unbounded = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+        let mut inner = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, unbounded), context.cancel_token(), fill_run_monotonic_zero, sequence, &mut progress);
         for transition in 0..FILL_RUN_SEARCH_BATCH {
             if search.stage() == BoardFillStage::Complete {
                 return (None, None);
             }
-            let mut outcome = InteractiveJob::step(search, &mut inner);
+            let settled = match InteractiveJob::step(search, &mut inner) {
+                Ok(None | Some(JobOutcomeBorrow::Yield { .. } | JobOutcomeBorrow::PreviewReady { .. })) => None,
+                Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => Some(FillSearch::Cancelled),
+                Ok(Some(JobOutcomeBorrow::CheckpointReady { .. })) => Some(FillSearch::Checkpoint),
+                Ok(Some(JobOutcomeBorrow::Fault { .. })) | Err(_) => Some(FillSearch::Fault),
+                Ok(Some(JobOutcomeBorrow::Complete { .. })) => Some(FillSearch::Complete),
+            };
             let _ = search.take_preview();
             let event = search.take_candidate_event();
-            match outcome {
-                StepOutcome::Yield | StepOutcome::PreviewReady(_) => {
-                    close_outcome(&mut outcome);
-                    if event.is_some() {
-                        return (None, event);
-                    }
-                }
-                other => return (Some(other), event),
+            match settled {
+                None if event.is_some() => return (None, event),
+                None => {}
+                settled => return (settled, event),
             }
             if transition % FILL_RUN_DEADLINE_CHECK == FILL_RUN_DEADLINE_CHECK - 1 && context.deadline_exceeded() {
                 return (None, None);
@@ -1415,10 +1428,20 @@ impl Puzzle2dFillRunJob {
     }
 }
 
-impl InteractiveJob for Puzzle2dFillRunJob {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+impl Puzzle2dFillRunJob {
+    fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
+        if self.closing || context.is_cancelled() {
+            return JobTurn::Cancelled;
+        }
+        if let Some(placement) = self.retiring_placement.as_mut() {
+            let step = placement.close_step(context.retained_grant());
+            if matches!(step, InteractiveJobCloseStep::Refused { .. } | InteractiveJobCloseStep::Blocked) || context.consume_retained(step.progress()).is_err() {
+                return fill_run_fault("puzzle2d-fill-placement-retirement");
+            }
+            if placement.terminal_is_empty() {
+                self.retiring_placement = None;
+            }
+            return JobTurn::Yield;
         }
         if let Some(owed) = self.owed.take() {
             return self.settle_owed(context, owed);
@@ -1429,7 +1452,7 @@ impl InteractiveJob for Puzzle2dFillRunJob {
                 return self.flush_then(context, FillRunOwed::Checkpoint);
             }
             if context.fuel_exhausted() || context.deadline_exceeded() || self.writer.pending_bytes() >= FILL_RUN_TICK_FLUSH_BYTES {
-                return self.flush(context).unwrap_or(StepOutcome::Yield);
+                return self.flush(context).unwrap_or(JobTurn::Yield);
             }
             if let Some(capture) = self.capture.as_mut() {
                 match capture.advance(self.document.value(), &self.kinds, FILL_RUN_CAPTURE_UNITS) {
@@ -1441,11 +1464,11 @@ impl InteractiveJob for Puzzle2dFillRunJob {
                         self.search = Some(BoardFillJob::with_operation(snapshot, u32::MAX, Operation::new(OperationId(serial), RevisionId(0), Generation(0), self.seed)));
                         self.stage = FillRunStage::Search;
                     }
-                    Err(code) => return fill_run_fault(context, code),
+                    Err(code) => return fill_run_fault(code),
                 }
                 continue;
             }
-            let Some(search) = self.search.as_mut() else { return fill_run_fault(context, "puzzle2d-fill-run-search-owner") };
+            let Some(search) = self.search.as_mut() else { return fill_run_fault("puzzle2d-fill-run-search-owner") };
             if search.stage() == BoardFillStage::Complete {
                 let reason = self.stall_reason();
                 self.stall(context, reason);
@@ -1453,7 +1476,7 @@ impl InteractiveJob for Puzzle2dFillRunJob {
             }
             let (outcome, event) = Self::search_batch(search, &mut self.search_sequence, context);
             let fault = match &outcome {
-                Some(StepOutcome::Fault(_)) => search.take_fault(),
+                Some(FillSearch::Fault) => search.take_fault(),
                 _ => None,
             };
             self.stage = FillRunStage::of(search.stage());
@@ -1462,52 +1485,150 @@ impl InteractiveJob for Puzzle2dFillRunJob {
             }
             match outcome {
                 None => {}
-                Some(StepOutcome::Cancelled) => return StepOutcome::Cancelled,
-                Some(mut outcome) => {
-                    let checkpoint = matches!(outcome, StepOutcome::CheckpointReady(_));
-                    close_outcome(&mut outcome);
+                Some(FillSearch::Cancelled) => return JobTurn::Cancelled,
+                Some(outcome) => {
+                    let checkpoint = matches!(outcome, FillSearch::Checkpoint);
                     match (checkpoint, fault) {
                         (true, _) => match self.accept(context) {
                             Ok(true) => return self.flush_then(context, FillRunOwed::Checkpoint),
                             Ok(false) => {}
-                            Err(code) => return fill_run_fault(context, code),
+                            Err(code) => return fill_run_fault(code),
                         },
                         (false, Some("placement-capacity")) => self.stall(context, FillRunReason::ArtifactCapacity),
-                        (false, Some(code)) => return fill_run_fault(context, code),
-                        (false, None) => return fill_run_fault(context, "puzzle2d-fill-run-search-outcome"),
+                        (false, Some(code)) => return fill_run_fault(code),
+                        (false, None) => return fill_run_fault("puzzle2d-fill-run-search-outcome"),
                     }
                 }
             }
         }
     }
+}
+
+impl InteractiveJob for Puzzle2dFillRunJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        match self.outbox.phase(cx)? {
+            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
+            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+                self.outbox.retire_step(cx)?;
+                return Ok(None);
+            }
+            crate::puzzle_job::OutboxPhase::Idle => {}
+        }
+        let turn = self.turn(cx);
+        self.outbox.settle(turn, cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        self.outbox.borrow_outcome(descriptor)
+    }
 
     fn begin_close(&mut self) {
         self.closing = true;
+        for job in [self.closing_search.as_mut(), self.search.as_mut()].into_iter().flatten() {
+            InteractiveJob::begin_close(job);
+        }
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        self.closing = true;
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+        self.begin_close();
+        if !self.outbox.terminal_is_empty() {
+            return match self.outbox.close_step(grant) {
+                Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            };
         }
+        if grant.maximum_items == 0 {
+            return InteractiveJobCloseStep::Pending { progress: Default::default() };
+        }
+        let one = semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
         if let Some(capture) = self.capture.as_mut() {
-            if capture.close_one() {
+            let step = capture.close_one(child);
+            if capture.is_closed() {
                 self.capture = None;
             }
-        } else if self.closing_search.is_some() {
-            close_job_slot(&mut self.closing_search);
-        } else if self.search.is_some() {
-            close_job_slot(&mut self.search);
-        } else {
-            self.replay = None;
-            self.placements = Vec::new();
-            return InteractiveJobCloseStep::Complete;
+            return match step {
+                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } },
+                step => step,
+            };
         }
-        InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        if let Some(placement) = self.retiring_placement.as_mut() {
+            let step = placement.close_step(child);
+            if placement.terminal_is_empty() {
+                self.retiring_placement = None;
+            }
+            return match step {
+                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } },
+                step => step,
+            };
+        }
+        for slot in [&mut self.closing_search, &mut self.search] {
+            let Some(job) = slot.as_mut() else { continue };
+            let step = InteractiveJob::close_step(job, child);
+            if InteractiveJob::terminal_is_empty(job) {
+                *slot = None;
+            }
+            return match step {
+                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } },
+                step => step,
+            };
+        }
+        if !self.owners_staged {
+            self.owners_staged = true;
+            let identity = self.writer.identity();
+            self.close_owners.stage(Puzzle2dFillRunOwners {
+                document: Arc::clone(&self.document),
+                kinds: std::mem::take(&mut self.kinds),
+                writer: std::mem::replace(&mut self.writer, ToolRunTickWriter::new(identity)),
+                replay: self.replay.take(),
+                placements: std::mem::take(&mut self.placements),
+                target_regions: std::mem::take(&mut self.target_regions),
+            });
+            return InteractiveJobCloseStep::Pending { progress: one };
+        }
+        self.close_owners.close_step(grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.capture.is_none() && self.search.is_none() && self.closing_search.is_none()
+        self.closing && self.outbox.terminal_is_empty() && self.capture.is_none() && self.search.is_none() && self.closing_search.is_none() && self.retiring_placement.is_none() && self.owners_staged && self.close_owners.is_empty()
+    }
+}
+
+impl Puzzle2dFillRunJob {
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.outbox.terminal_is_empty() {
+            return self.outbox.retirement_demands();
+        }
+        if let Some(placement) = self.retiring_placement.as_ref() {
+            return Ok(semio_framework_value::RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), depth: 1, ..Default::default() });
+        }
+        if let Some(capture) = self.capture.as_ref() {
+            let demand = capture.close_demands()?;
+            return Ok(semio_framework_value::RetirementDemand { depth: demand.depth.saturating_add(1), ..demand });
+        }
+        if let Some(job) = self.closing_search.as_ref().or(self.search.as_ref()) {
+            return Ok(semio_framework_value::RetirementDemand { copy_bytes: job.next_close_copy_byte_demand()?, capacity_bytes: job.next_close_capacity_byte_demand(0)?, release_bytes: job.next_close_release_byte_demand()?, depth: job.next_close_depth_demand()?.saturating_add(1) });
+        }
+        if self.owners_staged {
+            return self.close_owners.demands(0);
+        }
+        Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })
     }
 }
 //#endregion ⏯️RunJob
@@ -1519,7 +1640,22 @@ impl InteractiveJob for Puzzle2dFillRunJob {
 /// node. Each placement is one unit of fuel and ends `success` (`fits`) or `danger` (`TOOL_RUN_REASON_CONFLICT`);
 /// the last tick retracts to the first conflict and re-appends every later survivor's ops and entity with one
 /// `danger` conflict step, and `Complete` follows on the next call.
+/// ♻️ The owners one `Puzzle2dFillRevalidateJob` still holds when it closes, retired as one controlled bundle.
+#[derive(semio_framework_value::RetireOwned)]
+struct Puzzle2dFillRevalidateOwners {
+    writer: ToolRunTickWriter,
+    head: Arc<Puzzle2dPlaySnapshot>,
+    ops: Vec<Puzzle2dMutation>,
+    keys: Vec<FillRunPlacementKey>,
+    head_bounds: Vec<[f64; 4]>,
+    head_ids: HashSet<String>,
+    handles: HashSet<String>,
+    conflicts: Vec<bool>,
+}
+
 pub(crate) struct Puzzle2dFillRevalidateJob {
+    close_owners: crate::puzzle_job::WorkClosing<Puzzle2dFillRevalidateOwners>,
+    outbox: crate::puzzle_job::JobOutbox,
     writer: ToolRunTickWriter,
     head: Arc<Puzzle2dPlaySnapshot>,
     ops: Vec<Puzzle2dMutation>,
@@ -1540,6 +1676,8 @@ impl Puzzle2dFillRevalidateJob {
     pub(crate) fn new(identity: ToolRunIdentity, head: Arc<Puzzle2dPlaySnapshot>, provisional: &[Puzzle2dMutation], checkpoint: Option<&[u8]>, placement_slack: f64) -> Self {
         let keys = checkpoint.and_then(FillRunCheckpoint::decode).map(|checkpoint| checkpoint.placements).unwrap_or_default();
         Self {
+            close_owners: Default::default(),
+            outbox: Default::default(),
             writer: ToolRunTickWriter::with_provisional_base(identity, provisional.len() as u32),
             head,
             ops: provisional.to_vec(),
@@ -1611,7 +1749,7 @@ impl Puzzle2dFillRevalidateJob {
         self.writer.step(ToolRunStepKind::Danger, FillRunStage::Place.index(), TOOL_RUN_REASON_CONFLICT, None, &[ToolRunStepArg::Unsigned(conflicts)]).map_err(|_| "puzzle2d-fill-revalidate-step")
     }
 
-    fn flush(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+    fn flush(&mut self) -> JobTurn {
         let total = (self.ops.len() / FILL_RUN_OPS_PER_PLACEMENT) as u64;
         let conflicts = self.conflicts.iter().filter(|conflict| **conflict).count() as u64;
         self.writer.progress(ToolRunProgress {
@@ -1626,32 +1764,29 @@ impl Puzzle2dFillRevalidateJob {
             conflicts: conflicts as u32,
             steps: ToolRunStepRing::default(),
         });
-        match self.writer.finish().and_then(|tick| tick.encode().ok()).map(|bytes| context.payload_from_bytes(JobPayloadStream::Preview, &bytes)) {
-            Some(Ok(payload)) => StepOutcome::PreviewReady(payload),
-            Some(Err(rejected)) => {
-                drop(rejected.into_source());
-                fill_run_fault(context, "puzzle2d-fill-revalidate-tick-bytes")
-            }
-            None => fill_run_fault(context, "puzzle2d-fill-revalidate-tick-encode"),
+        match self.writer.finish().and_then(|tick| tick.encode().ok()) {
+            Some(bytes) if bytes.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes),
+            Some(_) => fill_run_fault("puzzle2d-fill-revalidate-tick-bytes"),
+            None => fill_run_fault("puzzle2d-fill-revalidate-tick-encode"),
         }
     }
 }
 
-impl InteractiveJob for Puzzle2dFillRevalidateJob {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+impl Puzzle2dFillRevalidateJob {
+    fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
+        if self.closed || context.is_cancelled() {
+            return JobTurn::Cancelled;
         }
         loop {
             if self.completed {
-                return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
+                return JobTurn::Complete;
             }
             if self.finished {
                 self.completed = true;
-                return self.flush(context);
+                return self.flush();
             }
             if context.fuel_exhausted() || context.deadline_exceeded() || self.writer.pending_bytes() >= FILL_RUN_TICK_FLUSH_BYTES {
-                return if self.writer.is_empty() { StepOutcome::Yield } else { self.flush(context) };
+                return if self.writer.is_empty() { JobTurn::Yield } else { self.flush() };
             }
             if self.prepare_head_one() {
                 continue;
@@ -1659,7 +1794,7 @@ impl InteractiveJob for Puzzle2dFillRevalidateJob {
             let index = self.conflicts.len();
             if index * FILL_RUN_OPS_PER_PLACEMENT >= self.ops.len() {
                 if let Err(code) = self.finish() {
-                    return fill_run_fault(context, code);
+                    return fill_run_fault(code);
                 }
                 continue;
             }
@@ -1672,24 +1807,69 @@ impl InteractiveJob for Puzzle2dFillRevalidateJob {
             context.consume_fuel(1);
         }
     }
+}
 
-    fn begin_close(&mut self) {
-        self.closed = true;
+impl InteractiveJob for Puzzle2dFillRevalidateJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        match self.outbox.phase(cx)? {
+            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
+            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+                self.outbox.retire_step(cx)?;
+                return Ok(None);
+            }
+            crate::puzzle_job::OutboxPhase::Idle => {}
+        }
+        let turn = self.turn(cx);
+        self.outbox.settle(turn, cx)
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        self.closed = true;
-        self.ops = Vec::new();
-        self.head_bounds = Vec::new();
-        self.head_ids = HashSet::new();
-        self.handles = HashSet::new();
-        InteractiveJobCloseStep::Complete
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        self.outbox.borrow_outcome(descriptor)
+    }
+
+    fn begin_close(&mut self) {
+        if std::mem::replace(&mut self.closed, true) {
+            return;
+        }
+        let identity = self.writer.identity();
+        self.close_owners.stage(Puzzle2dFillRevalidateOwners {
+            writer: std::mem::replace(&mut self.writer, ToolRunTickWriter::new(identity)),
+            head: Arc::clone(&self.head),
+            ops: std::mem::take(&mut self.ops),
+            keys: std::mem::take(&mut self.keys),
+            head_bounds: std::mem::take(&mut self.head_bounds),
+            head_ids: std::mem::take(&mut self.head_ids),
+            handles: std::mem::take(&mut self.handles),
+            conflicts: std::mem::take(&mut self.conflicts),
+        });
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+        self.begin_close();
+        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.close_owners, grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closed && self.ops.is_empty() && self.head_bounds.is_empty()
+        self.closed && self.outbox.terminal_is_empty() && self.close_owners.is_empty()
     }
 }
+
 //#endregion 🔍️RevalidateJob
 
 //#region 🧪️Tests

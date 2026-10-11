@@ -89,15 +89,7 @@ impl Drop for Members{fn drop(&mut self){while let Some((_,value))=self.0.pop(){
 
 struct Items(Vec<semio_framework_value::DslValue>);
 impl Drop for Items{fn drop(&mut self){while let Some(value)=self.0.pop(){<semio_framework_value::DslValue as semio_framework_value::FromValue>::retire_decoded(value);}}}
-pub(super) fn retire_snapshot(snapshot:RasterSnapshot){
- let mut cursor=store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::owned::RasterSnapshotRetirementFactory,snapshot);
- let mut stalled=0usize;
- loop{match cursor.close_step(256,usize::MAX).expect("Raster owned snapshot retirement"){
- store::SnapshotRetirementStep::Pending{released_items,released_bytes}=>{if released_items==0&&released_bytes==0{stalled+=1;assert!(stalled<256,"Raster cold retirement made no progress");}else{stalled=0;}},
- store::SnapshotRetirementStep::Blocked=>panic!("Raster owned snapshot retirement blocked"),
- store::SnapshotRetirementStep::Complete=>break,
- }}assert!(cursor.terminal_is_empty());
-}
+pub(super) fn retire_snapshot(snapshot:RasterSnapshot){crate::host::owned::retire_raster_value_cold(snapshot);}
 pub(super) fn retire_layer(root:RasterLayerNode){retire_snapshot(RasterSnapshot{schema:String::new(),id:String::new(),title:None,layers:vec![root],assets:RasterOwnedMap::new()});}
 struct LayerOwned(Option<RasterLayerNode>);
 impl Drop for LayerOwned{fn drop(&mut self){if let Some(node)=self.0.take(){retire_layer(node);}}}

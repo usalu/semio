@@ -150,7 +150,7 @@ pub fn note_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
 /// {@link semio_example_json} are the only ways it should be consumed.
 
 /// 🆔️ Durable identifier cursor owned by one exact app operation or importer child.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NoteIdOwner {

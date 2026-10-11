@@ -1,6 +1,6 @@
 //! 🧩️ 🧩️ S Studio app command — `paste-app-instance`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
@@ -18,14 +18,14 @@ async fn duplicate_nodes(source_ids: Vec<String>, projection: &WorkflowSnapshot)
             artifact_mutations.push(operation);
         }
     }
-    let config_mutations = new_active_node_id.into_iter().map(|node_id| SpaceConfigMutation::SetActiveNode { node_id: Some(node_id) }).collect();
+    let config_mutations = new_active_node_id.into_iter().map(|node_id| SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: Some(node_id) })).collect();
     Emit { artifact_mutations, config_mutations, ..Default::default() }
 }
 
 //#endregion 🔖️DuplicateAndPaste
 
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "paste-app-instance")]
 pub struct PasteAppInstance {}
 

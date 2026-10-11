@@ -390,6 +390,32 @@ impl<T, const N: usize> PagedList<T, N> {
         self.height().max(Self::page_height(self.capacity/self.page_items())).checked_add(3).ok_or(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list reserve depth overflow"})
     }
 
+    /// 🧮️ Quotes the original page, header and scalar moves of the next reservation before any allocation.
+    pub fn next_reserve_copy_byte_demand(&self)->Result<usize,PagedListError>{
+        if self.has_reserved_slot(){return Ok(0)}
+        self.next_page_copy_byte_demand()
+    }
+    /// 🧮️ Quotes the original page, header and scalar moves of the next allocation toward a requested logical capacity.
+    pub fn next_capacity_copy_byte_demand(&self,capacity:usize)->Result<usize,PagedListError>{
+        if capacity>N{return Err(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list logical capacity exhausted"})}
+        if capacity<=self.capacity{return Ok(0)}
+        self.next_page_copy_byte_demand()
+    }
+    fn next_page_copy_byte_demand(&self)->Result<usize,PagedListError>{
+        self.next_page_allocation_bytes()?;
+        let page=self.capacity/self.page_items();let root_height=self.height();
+        if Self::page_height(page)>root_height{return Ok(size_of::<Page<T>>()+3*size_of::<Vec<Page<T>>>()+size_of::<usize>());}
+        let mut link=&self.root;
+        for height in (0..=root_height).rev(){
+            match link.first(){
+                None=>return Ok(size_of::<Page<T>>()+size_of::<Vec<Page<T>>>()+size_of::<usize>()),
+                Some(Page::Branch{children,..})=>link=&children[Self::slot(page,height)],
+                Some(Page::Leaf{..})=>return Ok(size_of::<Vec<T>>()+3*size_of::<usize>()),
+            }
+        }
+        Err(PagedListError{kind:PagedListRefusalKind::InvariantViolated,reason:"fixed list page authority is missing"})
+    }
+
     /// 🎟️ Returns the next single backing allocation needed to reach a requested logical capacity.
     pub fn next_capacity_allocation_bytes(&self, capacity: usize) -> Result<Option<usize>, PagedListError> {
         if capacity > N {
@@ -429,6 +455,15 @@ impl<T, const N: usize> PagedList<T, N> {
         let capacity=self.next_allocation_bytes().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
         if grant.maximum_items==0||grant.maximum_depth==0||copy>grant.maximum_copy_bytes||capacity>grant.maximum_capacity_bytes { return Ok(Default::default()); }
         let progress=self.reserve_one(grant.maximum_capacity_bytes)?;
+        Ok(crate::retained_clone::RetainedCloneProgress{copied_items:usize::from(progress.progressed),copied_bytes:if progress.progressed{copy}else{0},retained_capacity_bytes:progress.allocated_bytes,released_bytes:0})
+    }
+    /// 🎟️ Reserves at most one original page toward a requested logical capacity only with independent structural funding.
+    pub fn reserve_capacity_one_funded(&mut self, capacity:usize, grant:crate::retained_clone::RetainedCloneGrant) -> Result<crate::retained_clone::RetainedCloneProgress,PagedListAllocationError> {
+        let refused=|error:PagedListError|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason};
+        let copy=self.next_capacity_copy_byte_demand(capacity).map_err(refused)?;
+        let Some(bytes)=self.next_capacity_allocation_bytes(capacity).map_err(refused)? else { return Ok(Default::default()); };
+        if grant.maximum_items==0||grant.maximum_depth==0||copy>grant.maximum_copy_bytes||bytes>grant.maximum_capacity_bytes { return Ok(Default::default()); }
+        let progress=self.reserve_capacity_one(capacity,grant.maximum_capacity_bytes)?;
         Ok(crate::retained_clone::RetainedCloneProgress{copied_items:usize::from(progress.progressed),copied_bytes:if progress.progressed{copy}else{0},retained_capacity_bytes:progress.allocated_bytes,released_bytes:0})
     }
     /// 📏️ Admits the actual remaining final payload extent without reserving a full unused page.

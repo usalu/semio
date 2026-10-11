@@ -1,7 +1,7 @@
 pub(crate) mod context {
     
     use super::super::*;
-    use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, MAINTENANCE_STAGES, PluginApp, PluginCloseStep, VcsArtifactApp, ViewModel, ViewWindowInstance, artifact_app_laws};
+    use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, MAINTENANCE_STAGES, PluginApp, PluginLifecycleStep, VcsArtifactApp, ViewModel, ViewWindowInstance, artifact_app_laws};
     
     pub type Puzzle3dRawApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
     
@@ -44,14 +44,15 @@ pub(crate) mod context {
             report
         }
 
-        fn record(&mut self, stage: u8, maximum_items: usize, maximum_bytes: usize, step: &Result<PluginCloseStep, Fault>) {
+        fn record(&mut self, stage: u8, grant: semio_framework_value::retained_clone::RetainedCloneGrant, step: &Result<PluginLifecycleStep, Fault>) {
             let index = stage as usize;
             self.units[index] += 1;
-            let Ok(PluginCloseStep::Pending { released_items, released_bytes }) = step else { return };
-            self.worst_items[index] = self.worst_items[index].max(*released_items);
-            self.worst_bytes[index] = self.worst_bytes[index].max(*released_bytes);
-            if self.first_overrun.is_none() && (*released_items > maximum_items || *released_bytes > maximum_bytes) {
-                self.first_overrun = Some((stage, *released_items, *released_bytes, maximum_items, maximum_bytes));
+            let Ok(PluginLifecycleStep::Progress(progress)) = step else { return };
+            let bytes = progress.copied_bytes.max(progress.released_bytes);
+            self.worst_items[index] = self.worst_items[index].max(progress.copied_items);
+            self.worst_bytes[index] = self.worst_bytes[index].max(bytes);
+            if self.first_overrun.is_none() && !progress.fits(grant) {
+                self.first_overrun = Some((stage, progress.copied_items, bytes, grant.maximum_items, grant.maximum_copy_bytes));
             }
         }
     }
@@ -169,10 +170,13 @@ pub(crate) mod context {
         /// against its grant and attributed to the fixed stage that ran it. The stage is read BEFORE the call:
         /// `maintenance_step`'s idle early return leaves the round-robin cursor untouched, so reading it afterwards names a
         /// stale stage.
-        pub fn measure_maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        pub fn measure_maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginLifecycleStep, Fault> {
             let stage = self.next_maintenance_stage();
-            let step = PluginApp::maintenance_step(self.raw.as_deref_mut().expect("scene_snapshot app was already consumed by close_witness"), maximum_items, maximum_bytes);
-            self.maintenance.record(stage, maximum_items, maximum_bytes, &step);
+            let raw = self.raw.as_deref_mut().expect("scene_snapshot app was already consumed by close_witness");
+            let demand = PluginApp::maintenance_retirement_demands(raw, maximum_bytes).map_err(|error| Fault::from(error.into_message()))?;
+            let grant = crate::puzzle_job::testing::funded_turn(demand, maximum_items);
+            let step = PluginApp::maintenance_step(raw, grant);
+            self.maintenance.record(stage, grant, &step);
             step
         }
 
@@ -194,10 +198,12 @@ pub(crate) mod context {
             if app.close_terminal_is_empty() {
                 return Ok(true);
             }
-            match PluginApp::close_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)? {
-                PluginCloseStep::Complete => break,
-                PluginCloseStep::Blocked { reason } | PluginCloseStep::AwaitingInput { reason } => blocked_on = Some(reason),
-                PluginCloseStep::Pending { .. } => {}
+            let demand = PluginApp::close_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.into_message()))?;
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            match PluginApp::close_step(app, grant)? {
+                semio_framework_plugin::PluginLifecycleStep::Complete(_) => break,
+                semio_framework_plugin::PluginLifecycleStep::Blocked { reason } | semio_framework_plugin::PluginLifecycleStep::AwaitingInput { reason } => blocked_on = Some(reason),
+                semio_framework_plugin::PluginLifecycleStep::Progress(_) => {}
             }
         }
         if app.close_terminal_is_empty() {
@@ -1305,7 +1311,7 @@ async fn local_interaction_query_return_does_not_fault_the_next_maintenance_step
     use semio_framework_plugin::PluginApp;
     let mut app = app().await;
     read_local_interaction(&mut app, 1).await;
-    app.maintenance_step(1, 4096).expect("maintenance step after a returned snapshot read lease must not fault");
+    crate::puzzle_job::testing::maintain(&mut *app, 4096).expect("maintenance step after a returned snapshot read lease must not fault");
 }
 //#endregion 🕹️LocalInteractionRead
 
@@ -1616,13 +1622,13 @@ fn set_active_example_hostile_static_law_rejects_whole_document_reset() {
 /// Nakagin's 180 objects admit it far inside the fixed work cap.
 #[test]
 fn world_relocate_extent_fits_within_cap_for_nakagin() {
-    use crate::retained_command::PuzzleCommandWork;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "nonexistent", "position": [0.0, 0.0, 0.0] })), None).expect("worldRelocate command decodes");
     let work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
     let pages = NAKAGIN_EXAMPLE_SNAPSHOT.objects.len().div_ceil(utilities::transform::PUZZLE3D_RELOCATE_SCAN_PAGE);
-    assert_eq!(work.extent(&command, &snapshot, &interaction), Some(2 + pages), "a relocate reads its gesture, scans one page per step, then commits it");
+    assert_eq!(work.extent(&command, &snapshot, &interaction, None), Some(2 + pages), "a relocate reads its gesture, scans one page per step, then commits it");
     assert!(2 + pages <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
 }
 
@@ -1630,7 +1636,8 @@ fn world_relocate_extent_fits_within_cap_for_nakagin() {
 /// closed in the middle of the scan retires to its terminal-empty shell without ever having published a mutation.
 #[test]
 fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
-    use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+    use crate::retained_command::testing::PuzzleCommandWorkStep;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
@@ -1639,7 +1646,7 @@ fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
     let mut work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
     let mut stages = Vec::new();
     for _ in 0..3 {
-        match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+        match crate::retained_command::testing::step(&mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { stage, en, de } => {
                 assert!(!en.is_empty() && !de.is_empty() && en != de, "every progress step is localized in both languages");
                 stages.push(stage);
@@ -1648,13 +1655,8 @@ fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
         }
     }
     assert_eq!(stages, ["puzzle3d-transform-read", "puzzle3d-transform-scan", "puzzle3d-transform-scan"], "the scan reports one progress per page");
-    work.begin_close();
-    let mut turns = 0;
-    while !matches!(work.close_step(1, 0), semio_framework_job::InteractiveJobCloseStep::Complete) {
-        turns += 1;
-        assert!(turns < 8, "closing a scanning relocate retires in a bounded number of turns");
-    }
-    assert!(work.terminal_is_empty(), "a relocate cancelled mid-scan leaves zero trace");
+    let turns = crate::retained_command::testing::close(&mut work);
+    assert!(turns < 8, "closing a scanning relocate retires in a bounded number of turns");
 }
 
 /// 🔁️ A real Nakagin drop: object `25b0dba0-8f81-423a-94a1-b911a6031010` ("Capsule With Balcony
@@ -1664,18 +1666,19 @@ fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
 /// `drag-selection` plus at least one `connect-vortices`, all stamped with the ref it minted.
 #[test]
 fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
-    use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+    use crate::retained_command::testing::PuzzleCommandWorkStep;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "25b0dba0-8f81-423a-94a1-b911a6031010", "position": [-8.84, -2.8499999999999996, 7.7] })), None).expect("worldRelocate command decodes");
     let mut work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
-    let extent = work.extent(&command, &snapshot, &interaction).expect("a relocate always fits the fixed bounded work envelope");
+    let extent = work.extent(&command, &snapshot, &interaction, None).expect("a relocate always fits the fixed bounded work envelope");
     let mut iterations = 0usize;
     let emit = loop {
         assert!(iterations <= extent, "worldRelocate step() ran past its own declared extent {extent}");
-        match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+        match crate::retained_command::testing::step(&mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
@@ -1692,12 +1695,12 @@ fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
 /// actual vortices instead of assuming every object carries the worst-case vortex count.
 #[test]
 fn create_attraction_extent_fits_within_cap_for_nakagin() {
-    use crate::retained_command::PuzzleCommandWork;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "nonexistent-a", "attracted": "nonexistent-b" })), None).expect("createAttraction command decodes");
     let work = Puzzle3dCreateAttractionWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
     assert!(extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, "createAttraction extent {extent} must not exceed the fixed cap {}", crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
 }
 
@@ -1711,7 +1714,8 @@ fn create_attraction_extent_fits_within_cap_for_nakagin() {
 /// one of the Work's several early-`Complete` short-circuits (duplicate/incompatible/empty-id).
 #[test]
 fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
-    use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+    use crate::retained_command::testing::PuzzleCommandWorkStep;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
@@ -1719,12 +1723,12 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
     let command =
         Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "25b0dba0-8f81-423a-94a1-b911a6031010:link", "attracted": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl0_d0" })), None).expect("createAttraction command decodes");
     let mut work = Puzzle3dCreateAttractionWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
     let guard = extent.saturating_mul(4).saturating_add(1000);
     let mut iterations = 0usize;
     let emit = loop {
         assert!(iterations <= guard, "createAttraction step() did not reach Complete within a generous multiple of its own extent {extent}; runaway loop suspected");
-        match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+        match crate::retained_command::testing::step(&mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
@@ -1748,12 +1752,12 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
 /// catalog kinds, not scene object instances.
 #[test]
 fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
-    use crate::retained_command::PuzzleCommandWork;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("acceptSuggestion", None, None).expect("acceptSuggestion command decodes");
     let work = Puzzle3dAcceptSuggestionWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's catalogs and real vortex count must fit the fixed bounded work envelope");
+    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's catalogs and real vortex count must fit the fixed bounded work envelope");
     assert!(extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, "acceptSuggestion extent {extent} must not exceed the fixed cap {}", crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
 }
 
@@ -1764,13 +1768,14 @@ fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
 /// instead of the "no target requested" early-`Complete` short-circuit.
 #[test]
 fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
-    use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+    use crate::retained_command::testing::PuzzleCommandWorkStep;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("acceptSuggestion", Some(json!({ "fullId": "25b0dba0-8f81-423a-94a1-b911a6031010:link" })), None).expect("acceptSuggestion command decodes");
-    let mut work = Puzzle3dAcceptSuggestionWork::default();
+    let work = Puzzle3dAcceptSuggestionWork::default();
     let kind = snapshot.typed().meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.objects.first()).expect("nakagin catalogues object kinds").id.clone();
     let owner = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default()));
     owner
@@ -1780,13 +1785,13 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
             Ok(())
         })
         .expect("the instance owner");
-    work.bind_instance_owner(owner);
-    let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's catalogs and real vortex count must fit the fixed bounded work envelope");
+    let mut work = work.bound(&Puzzle3dInstanceBinding { app_instance_id: 1, parent_document_id: "test".to_string(), owner });
+    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's catalogs and real vortex count must fit the fixed bounded work envelope");
     let guard = extent.saturating_mul(4).saturating_add(1000);
     let mut iterations = 0usize;
     let emit = loop {
         assert!(iterations <= guard, "acceptSuggestion step() did not reach Complete within a generous multiple of its own extent {extent}; runaway loop suspected");
-        match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+        match crate::retained_command::testing::step(&mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
@@ -1809,12 +1814,12 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
 /// `step()` per object, matching the `Vortices` stage's real per-object "owner advance" call.
 #[test]
 fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
-    use crate::retained_command::PuzzleCommandWork;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex" })), None).expect("patchInspector command decodes");
     let work = Puzzle3dPatchInspectorWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
     assert!(extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, "patchInspector vortex extent {extent} must not exceed the fixed cap {}", crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
 }
 
@@ -1835,19 +1840,20 @@ fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
 /// never drives the real loop, so no test previously computed the true `Progress`-call count).
 #[test]
 fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
-    use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+    use crate::retained_command::testing::PuzzleCommandWorkStep;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex", "field": "hidden", "value": true, "ids": ["25b0dba0-8f81-423a-94a1-b911a6031010:link"] })), None).expect("patchInspector command decodes");
     let mut work = Puzzle3dPatchInspectorWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
     let guard = extent.saturating_mul(4).saturating_add(1000);
     let mut iterations = 0usize;
     let emit = loop {
         assert!(iterations <= guard, "patchInspector step() did not reach Complete within a generous multiple of its own extent {extent}; runaway loop suspected");
-        match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+        match crate::retained_command::testing::step(&mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
@@ -1871,19 +1877,20 @@ fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
 /// text exists; this proves it runs.
 #[test]
 fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin() {
-    use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+    use crate::retained_command::testing::PuzzleCommandWorkStep;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlayApp::initial_snapshot();
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample command decodes");
     let mut work = Puzzle3dSetActiveExampleWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin example fits the fixed bounded work envelope");
+    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin example fits the fixed bounded work envelope");
     assert!(extent > 4, "nakagin example must require more than the handful of fixed transition steps alone");
     let mut progress_steps = 0usize;
     let emit = loop {
         assert!(progress_steps <= extent + 8, "setActiveExample work did not reach Complete within its own declared extent");
-        match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+        match crate::retained_command::testing::step(&mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => progress_steps += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
@@ -1937,7 +1944,7 @@ async fn set_active_example_dispatches_through_the_tool_job_path_and_swaps_the_d
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("dispatch setActiveExample through the migrated tool-job path");
     let mut ticks = 0usize;
     while ticks < 5_000 && (object_count(&app) == 0 || first_object_id(&app) == before_first_id) {
-        app.maintenance_step(1_048_576, 1_048_576).expect("maintenance step drives the pending typed operation forward");
+        crate::puzzle_job::testing::maintain_items(&mut *app, 1_048_576, 1_048_576).expect("maintenance step drives the pending typed operation forward");
         ticks += 1;
     }
     assert!(object_count(&app) > 0, "nakagin document did not land after {ticks} maintenance turns");
@@ -2025,18 +2032,17 @@ fn add_object_kind_hostile_static_law_rejects_whole_catalog_conversion() {
 
 fn exact_window_routes_capture_instance_owners(source: &str) -> bool {
     source.contains("struct Puzzle3dWindowCommandWork")
-        && source.contains("fn bind_window_owners")
-        && source.contains("fn take_ephemeral")
-        && source.contains("config_from_snapshot(self.window_config.as_ref())")
-        && source.contains("transient_from_snapshot(self.window_transient.as_ref())")
-        && source.contains("=> Box::new(Puzzle3dWindowCommandWork::new(tool_id))")
+        && source.contains("ArtifactCommandWorkStep::CompleteWithEphemeral")
+        && source.contains("config_from_snapshot(window_config_snapshot)")
+        && source.contains("transient_from_snapshot(window_transient_snapshot)")
+        && source.contains("=> Box::new(Puzzle3dWindowCommandWork::new(tool_id).bound(&instance))")
 }
 
 #[test]
 fn exact_window_routes_reject_missing_owner_capture() {
     let source = include_str!("../../🦀️.rs");
     assert!(exact_window_routes_capture_instance_owners(source));
-    for marker in ["fn bind_window_owners", "fn take_ephemeral", "config_from_snapshot(self.window_config.as_ref())", "transient_from_snapshot(self.window_transient.as_ref())"] {
+    for marker in ["ArtifactCommandWorkStep::CompleteWithEphemeral", "config_from_snapshot(window_config_snapshot)", "transient_from_snapshot(window_transient_snapshot)"] {
         assert!(!exact_window_routes_capture_instance_owners(&source.replace(marker, "owner-capture-removed")));
     }
 }
@@ -5558,18 +5564,15 @@ const PUZZLE3D_MEASURED_STEP_BUDGET: std::time::Duration = std::time::Duration::
 /// itself enforces at runtime; what a test can prove is that the WORK inside a turn fits it.
 const PUZZLE3D_MEASURED_STEP_RUNS: u32 = 5;
 
-/// ⏱️ Drives one retained command work to `Complete` through its REAL `step()` and answers how long
-/// every single turn took, in order. The bounds are asserted by the caller, over `measured_cold_runs`'
-/// per-turn best of several cold runs.
-fn measured_step_loop(work: &mut dyn crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>>, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dConfig, guard: usize, label: &str) -> Vec<std::time::Duration> {
-    use crate::retained_command::PuzzleCommandWorkStep;
+fn measured_step_loop(work: &mut dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dConfig, context: &semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>, guard: usize, label: &str) -> Vec<std::time::Duration> {
+    use crate::retained_command::testing::PuzzleCommandWorkStep;
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let mut turns = Vec::with_capacity(guard);
     loop {
         assert!(turns.len() <= guard, "{label} step() did not reach Complete within {guard} bounded turns");
         let started = std::time::Instant::now();
-        let outcome = work.step(command, snapshot, config, &interaction, &hover).expect("bounded step");
+        let outcome = crate::retained_command::testing::step(work, command, snapshot, config, &interaction, &hover, Some(context)).expect("bounded step");
         turns.push(started.elapsed());
         if matches!(outcome, PuzzleCommandWorkStep::Complete(_)) {
             break;
@@ -5578,23 +5581,23 @@ fn measured_step_loop(work: &mut dyn crate::retained_command::PuzzleCommandWork<
     turns
 }
 
-/// 🎛️ The exact work `build_tool_job` routes this tool id to, bound to a window context the way the
-/// framework binds every admitted tool job. The routing itself is pinned by this file's own
-/// source-text guards; this mirrors it so a measurement drives the REAL production work. Each run is
-/// bound to its OWN instance id so it starts from a cold session slot — a warm slot skips the mesh
-/// seeding that is exactly what the budget is being measured against.
-fn measured_tool_work(tool_id: &'static str, run: u32) -> Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>>> {
-    use crate::retained_command::PuzzleCommandWork;
-    let mut work: Box<dyn PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>>> = match tool_id {
-        "acceptSuggestion" => Box::new(Puzzle3dAcceptSuggestionWork::default()),
+fn measured_tool_work(tool_id: &'static str, run: u32) -> (Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>>, semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>) {
+    let instance = Puzzle3dInstanceBinding { app_instance_id: 9_000 + run, parent_document_id: format!("measured-{tool_id}-{run}"), owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default())) };
+    let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>> = match tool_id {
+        "acceptSuggestion" => Box::new(Puzzle3dAcceptSuggestionWork::default().bound(&instance)),
         "setActiveExample" => Box::new(Puzzle3dSetActiveExampleWork::default()),
-        "openVortexSuggestions" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
+        "openVortexSuggestions" => Box::new(Puzzle3dWindowCommandWork::new(tool_id).bound(&instance)),
         _ => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent)),
     };
-    work.bind_view_state(Some(measured_view_state()));
-    work.bind_window_owners(None, None);
-    work.bind_instance(9_000 + run, &format!("measured-{tool_id}-{run}"));
-    work
+    let context = semio_framework_plugin::app::ArtifactOwnedToolJobContext::new(
+        instance.app_instance_id,
+        Some(measured_view_state()),
+        [0; 32],
+        0,
+        0,
+        semio_framework_plugin::app::ArtifactOwnedToolJobSnapshots { children: Default::default(), draft: Default::default(), transient: Default::default(), window_config: None, window_transient: None },
+    );
+    (work, context)
 }
 
 /// ⏱️ Drives one tool id's REAL work to `Complete` `PUZZLE3D_MEASURED_STEP_RUNS` times, each from its
@@ -5606,8 +5609,8 @@ fn measured_tool_work(tool_id: &'static str, run: u32) -> Box<dyn crate::retaine
 fn measured_cold_runs(tool_id: &'static str, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dConfig) -> (usize, std::time::Duration) {
     let mut best: Vec<std::time::Duration> = Vec::new();
     for run in 0..PUZZLE3D_MEASURED_STEP_RUNS {
-        let mut work = measured_tool_work(tool_id, run);
-        let turns = measured_step_loop(work.as_mut(), command, snapshot, config, crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, tool_id);
+        let (mut work, context) = measured_tool_work(tool_id, run);
+        let turns = measured_step_loop(work.as_mut(), command, snapshot, config, &context, crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, tool_id);
         if best.is_empty() {
             best = turns;
             continue;

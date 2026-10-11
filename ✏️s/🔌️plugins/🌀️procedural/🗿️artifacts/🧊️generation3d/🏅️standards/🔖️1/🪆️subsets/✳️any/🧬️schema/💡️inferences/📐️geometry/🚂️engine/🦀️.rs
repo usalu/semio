@@ -206,6 +206,21 @@ impl GeometryEngine {
         self.cache.used_bytes()
     }
 
+    /// 🧹️ Closes every owner the engine holds: the run, the retained evaluations, the cache and the retired base snapshot.
+    pub fn retire_cold(&mut self) {
+        self.run = None;
+        self.previous.clear();
+        semio_framework_async::poll::resolve_ready(self.cache.clear());
+        if let Some(base) = self.base.take() {
+            base.snapshot.retire_cold();
+        }
+    }
+
+    /// 🧾️ Whether the engine holds no run, no evaluation and no base.
+    pub fn terminal_is_empty(&self) -> bool {
+        self.run.is_none() && self.previous.is_empty() && self.base.is_none()
+    }
+
     /// 📸️ The base snapshot of the current run.
     pub fn base(&self) -> Option<&Generation3dSnapshot> {
         self.base.as_ref().map(|base| &base.snapshot)

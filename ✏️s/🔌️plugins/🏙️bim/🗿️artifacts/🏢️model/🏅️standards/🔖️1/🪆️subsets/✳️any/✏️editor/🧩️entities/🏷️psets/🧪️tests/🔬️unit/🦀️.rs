@@ -63,7 +63,7 @@ async fn a_classification_system_is_edited_by_name_edition_and_source_and_a_blan
 #[semio_framework_async_macros::async_test]
 async fn the_inferred_rows_count_the_definitions_the_entries_and_the_holders_that_use_them() {
     let snapshot = model();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, Clone::clone);
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     let template = kind_of("property-template").expect("the kind");
     let system = kind_of("classification-system").expect("the kind");
     let read = |row: &'static EntityKind, key: &str, id: &str| row.inferred.iter().find(|inferred| inferred.key == key).and_then(|inferred| (inferred.read)(&snapshot, &inference, id));

@@ -20,7 +20,7 @@
 
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_pdf::{io::text_document, PdfSnapshot};
+use semio_s_artifact_stdio_pdf::{standards::v1_7::subsets::base::io::text_document, PdfSnapshot};
 
 /// 📐️ US Letter, the only page size this subset can honestly claim.
 const PAGE_WIDTH: f64 = 612.0;

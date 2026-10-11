@@ -53,7 +53,7 @@ pub(crate) mod paint_region;
 pub(crate) mod publication;
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum BmpNativeEditCommand {
     PaintIndexedRegion(paint_region::PaintIndexedRegionCommand),
     PaintDirectRegion(paint_region::PaintDirectRegionCommand),
@@ -305,6 +305,7 @@ impl ArtifactEditor for BmpEditor {
                 generation: request.operation.generation.0,
                 canonical_base_revision: request.canonical_base_revision,
                 authoring_seed: request.authoring_seed.clone(),
+                retained: request.retained,
             };
             let tool_id = paint_region::TOOL_IDS.iter().copied().find(|tool_id| *tool_id == request.tool_id).expect("checked BMP paint tool");
             let payload = ArtifactRetainedCommandPayload::new(
@@ -339,6 +340,7 @@ impl ArtifactEditor for BmpEditor {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
+            retained: request.retained,
         };
         let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {

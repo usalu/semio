@@ -20,7 +20,7 @@ pub mod bcf;
 /// 🔮️ Reads the inference of `model` from the shared session (the one path every consumer takes), so an export after an edit recomputes only what the edit touched; a fault of the run is a refusal of `leaf`.
 pub fn with_inferred<R>(leaf: &str, model: &crate::ModelSnapshot, read: impl FnOnce(&crate::ModelInference) -> R) -> Result<R, semio_framework::io_schema::IoError> {
     use semio_framework_value::{ValueError, ValueRefusalKind};
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::try_with_inference(None, model, read).map_err(|error| semio_framework::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, format!("{leaf}: {error}"))))
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, read).map_err(|error| semio_framework::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, format!("{leaf}: {error}"))))
 }
 //#endregion 🔖️Inference
 

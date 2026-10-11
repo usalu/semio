@@ -6,7 +6,13 @@ use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,
 mod snapshot;
 pub use snapshot::SnapshotRetirementFactory;
 
-pub fn store_owners()->store::DocumentStoreOwners<FlowSnapshot,FlowMutation>{store::DocumentStoreOwners::new(Arc::new(SnapshotRetirementFactory),Arc::new(SnapshotRetirementFactory),Arc::new(MutationRetirementFactory),Box::new(store::ArtifactStoreCursorDisposer::<FlowSnapshot,FlowMutation>::new()))}
+pub fn store_owners_source_demands()->Result<semio_framework_value::RetirementDemand,ValueError>{
+ Ok(semio_framework_value::RetirementDemand{capacity_bytes:store::DocumentStoreOwners::<FlowSnapshot,FlowMutation>::source_birth_bytes::<SnapshotRetirementFactory,SnapshotRetirementFactory,MutationRetirementFactory,store::ArtifactStoreCursorDisposer<FlowSnapshot,FlowMutation>>()?,depth:1,..Default::default()})
+}
+
+pub fn store_owners(grant:RetainedCloneGrant)->Result<(store::DocumentStoreOwners<FlowSnapshot,FlowMutation>,RetainedCloneProgress),store::DocumentStoreOwnersAdmissionError<FlowSnapshot,FlowMutation>>{
+ store::DocumentStoreOwners::admit_source_constructor(grant,||(SnapshotRetirementFactory,SnapshotRetirementFactory,MutationRetirementFactory,store::ArtifactStoreCursorDisposer::<FlowSnapshot,FlowMutation>::new()))
+}
 
 impl RetireOwned for FlowMutation{
  fn retirement(self)->Box<dyn RetirementCursor>{match self{}}

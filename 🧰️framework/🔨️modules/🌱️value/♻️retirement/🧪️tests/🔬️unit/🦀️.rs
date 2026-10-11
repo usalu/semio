@@ -20,7 +20,7 @@ fn shared_full_grant_owns_original_aliases_weak_backing_and_each_physical_releas
             for denied in [(grant.maximum_capacity_bytes!=0).then_some(RetainedCloneGrant {maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant}),(grant.maximum_release_bytes!=0).then_some(RetainedCloneGrant {maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(1),..grant})].into_iter().flatten(){let (step,heap)=observe_retirement_allocations(||owner.step(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));}
             let (step,(a,r))=observe_retirement_allocations(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_bytes<=copy);births+=a;released+=r;copied+=progress.copied_bytes;assert!(progress.copied_items!=0,"exact shared retirement stalled on turn {turn}");
         }
-        assert!(owner.terminal_is_empty());assert_eq!(copied,row["text"].as_str().unwrap().len());assert_eq!(released,original+births);
+        assert!(owner.terminal_is_empty());assert_eq!(copied,0,"String payload retirement is native length metadata, copy0");assert_eq!(released,original+births);
         eprintln!("[DEBUG] Full shared owner copy={copy} logical={copied} original={original} births={births} physical={released}");
     }}
 }
@@ -89,7 +89,7 @@ fn erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_
         if matches!(step, RetainedCloneStep::Complete(_)) { break; }
     }
     assert!(owner.terminal_is_empty());
-    assert_eq!(processed, text.len());
+    assert_eq!(processed, 0);
     let frame = owner.frame_release_bytes();
     assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, frame));
     released += frame;
@@ -147,7 +147,7 @@ fn native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_re
             if matches!(step, RetainedCloneStep::Complete(_)) { break; }
         }
         assert!(owner.terminal_is_empty(), "intrinsic exact retirement must finish: {}", row["kind"]);
-        assert_eq!(copied, row["payloadBytes"].as_u64().unwrap() as usize);
+        assert_eq!(copied, row["payloadBytes"].as_u64().unwrap() as usize, "{}", row["kind"]);
         assert!(released >= born);
         assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, 0));
         println!("[DEBUG] Intrinsic retirement kind={} copy={copied} birth={born} release={released}; exact heap receipts, zero/below nonmovement, terminal0heap", row["kind"]);
@@ -229,7 +229,7 @@ fn paged_native_controlled_retirement_observes_copy_demand_without_releasing_bac
             released += step.progress().released_bytes;
             if matches!(step, RetainedCloneStep::Complete(_)) { break; }
         }
-        assert!(observed && owner.terminal_is_empty());
+        assert_eq!(observed, row["totalCopyBytes"].as_u64().unwrap() > 0);assert!(owner.terminal_is_empty());
         assert_eq!(copied, row["totalCopyBytes"].as_u64().unwrap() as usize);
         assert_eq!(owner.next_copy_byte_demand().unwrap(), 0);
         assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, 0));
@@ -830,7 +830,7 @@ fn controlled_retirement_separates_logical_work_from_exact_physical_release_cold
         let (step,heap)=observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;physical+=heap.1;copied+=progress.copied_bytes;
         if terminal{assert_eq!(heap,(0,frame));terminal_frame+=1;}
     }
-    assert!(slot.is_none());assert_eq!(terminal_frame,1);assert_eq!(copied,text.len());assert_eq!(physical,original+born);
+    assert!(slot.is_none());assert_eq!(terminal_frame,1);assert_eq!(copied,0);assert_eq!(physical,original+born);
     println!("[DEBUG] full typed retirement original UTF8 work physical0; all scaffolds born={born}/released={physical}; exact outer frame={frame}");
 }
 
@@ -852,7 +852,7 @@ fn shared_retirement_physical_demand_preserves_original_backing_and_terminal_fra
             let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
             let (step,heap)=observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;physical+=heap.1;copied+=progress.copied_bytes;
         }
-        assert!(slot.is_none());assert_eq!(copied,row["text"].as_str().unwrap().len());assert_eq!(physical,backing+required+born);
+        assert!(slot.is_none());assert_eq!(copied,0);assert_eq!(physical,backing+required+born);
         println!("[DEBUG] shared original backing row={} pointer={pointer:p} copy={copy} logical={copied} independent birth={born} physical={physical}",row["id"]);
     }}
 }
@@ -906,7 +906,7 @@ fn erased_snapshot_full_grant_admission_preserves_original_owner_and_all_four_cu
                 released += progress.released_bytes;
             }
             assert!(slot.is_none());
-            assert_eq!(copied, text.len());
+            assert_eq!(copied, 0);
             assert_eq!(released, original + born);
             eprintln!("[DEBUG] erased full-grant original-pointer admitted work={work} copy={copied} births={born} physical={released}");
         }

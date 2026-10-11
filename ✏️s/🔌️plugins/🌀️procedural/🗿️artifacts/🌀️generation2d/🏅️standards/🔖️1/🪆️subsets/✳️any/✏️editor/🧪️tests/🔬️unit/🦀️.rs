@@ -592,25 +592,7 @@ fn demo_owner(window: (&str, &'static str)) -> semio_framework_plugin::ArtifactI
 }
 
 fn retire_owner(handle: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) {
-    use semio_framework_plugin::ArtifactInstanceOperationOwner;
-    for _ in 0..1_000_000 {
-        if handle.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| Ok(matches!(ArtifactInstanceOperationOwner::close_step(owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete)))).expect("the owner lends itself to its close ladder") {
-            return;
-        }
-    }
-    panic!("the demo owner did not reach terminal-empty");
-}
-
-fn close_job(job: &mut crate::preview_eval::PreviewEvalRunJob<Generation2dInstanceOperationOwner>) {
-    use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep};
-    job.begin_close();
-    for _ in 0..1_000 {
-        if matches!(job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), InteractiveJobCloseStep::Complete) {
-            assert!(job.terminal_is_empty());
-            return;
-        }
-    }
-    panic!("the run job close never completed");
+    crate::retirement_driver::close_instance_owner::<Generation2dInstanceOperationOwner>(handle, "the demo owner");
 }
 
 /// ⚖️ LAW (`⏯️preview-eval-run.json` `demoRun`): the run job over the bundled demo — every hop performed by
@@ -619,7 +601,8 @@ fn close_job(job: &mut crate::preview_eval::PreviewEvalRunJob<Generation2dInstan
 /// overruns the interactive ceiling.
 #[test]
 fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ceiling() {
-    use semio_framework_job::{Generation, InteractiveStage, OperationId, StepBudget, StepOutcome};
+    use crate::retirement_driver::{close_job, step_once, Stepped};
+    use semio_framework_job::{Generation, OperationId};
     use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunTick, ToolRunTraceOp};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/⏯️preview-eval-run.json")).expect("run fixture");
     let row = &fixture["demoRun"];
@@ -634,22 +617,16 @@ fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ce
     let history = context::empty_history_view();
     let config = Generation2dConfig::default();
     let tick = Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.into(), window_kind_id: kind.into() });
+    let cancel = semio_framework_job::root_cancel_token();
     let (mut sequence, mut worst_us, mut hops_performed) = (0_u64, 0_u64, 0_usize);
     let mut ticks: Vec<ToolRunTick> = Vec::new();
     let settled = loop {
         let started = semio_framework_job::default_now_us().expect("clock");
-        let mut verdict = None;
-        let outcome = semio_framework_job::drive_step(&mut job, "generation2d.preview-eval.run.test", OperationId(1), Generation(0), InteractiveStage::InteractiveStep, StepBudget::new(1, started + semio_framework_job::INTERACTIVE_LANE_WALL_US * 8), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut verdict);
+        let outcome = step_once(&mut job, 1, started + semio_framework_job::INTERACTIVE_LANE_WALL_US * 8, &cancel, OperationId(1), Generation(0), &mut sequence);
         worst_us = worst_us.max(semio_framework_job::default_now_us().expect("clock").saturating_sub(started));
         match outcome {
-            StepOutcome::Yield => {}
-            StepOutcome::PreviewReady(mut payload) => {
-                let bytes: Vec<u8> = (0..payload.page_count()).flat_map(|index| payload.page(index).expect("tick page").to_vec()).collect();
-                while !payload.terminal_is_empty() {
-                    let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                }
-                ticks.push(ToolRunTick::decode(&bytes).expect("tick decodes"));
-            }
+            Stepped::Yield => {}
+            Stepped::Preview(bytes) => ticks.push(ToolRunTick::decode(&bytes).expect("tick decodes")),
             other => break other,
         }
         let armed = handle.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| Ok(owner.parts()?.0.document.window_tick_is_armed(window_id))).expect("owner");
@@ -674,12 +651,12 @@ fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ce
     let settle_reasons: Vec<&str> = ticks.iter().flat_map(|tick| tick.steps.iter()).map(|step| crate::preview_eval::PreviewEvalRunReason::ALL[usize::from(step.reason)].id()).collect();
     let hops_counted = ticks.last().and_then(|tick| tick.progress.as_ref()).and_then(|progress| progress.counters.iter().find(|counter| counter.counter == crate::preview_eval::PreviewEvalRunCounter::Hops.index())).map_or(0, |counter| counter.value);
     println!("[STATS] demoRun ticks={} hops_performed={hops_performed} hops_counted={hops_counted} worst_drive_step_us={worst_us} verdicts={verdicts:?} steps={settle_reasons:?}", ticks.len());
-    assert!(matches!(settled, StepOutcome::Complete(_)), "the run completes: {:?}", std::mem::discriminant(&settled));
+    assert_eq!(settled, Stepped::Complete, "the run completes");
     assert_eq!(final_nodes, expected_nodes, "every node's final traced verdict");
     assert_eq!(settle_reasons.last().copied(), expected["settleReason"].as_str(), "the settle step");
     assert!(hops_counted >= expected["hopsAtLeast"].as_u64().unwrap() && hops_counted as usize == hops_performed, "one counted hop per performed hop");
     assert!(worst_us <= expected["ceilingMicros"].as_u64().unwrap(), "worst drive_step {worst_us} µs overran the interactive ceiling");
-    close_job(&mut job);
+    close_job(&mut job, "the demo run job");
     drop(snapshot);
     retire_owner(&handle);
 }
@@ -688,24 +665,19 @@ fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ce
 /// armed window owes nothing afterwards, so no poll restarts what the user stopped.
 #[test]
 fn closing_an_unsettled_run_job_quiesces_its_window() {
-    use semio_framework_job::{Generation, InteractiveStage, OperationId, StepBudget};
+    use crate::retirement_driver::{close_job, step_once};
+    use semio_framework_job::{Generation, OperationId};
     use semio_framework_tool_run::{ToolRunId, ToolRunIdentity};
     let window_id = "preview-1";
     let handle = demo_owner((window_id, edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW));
     let port = semio_framework_plugin::ToolRunJobPort::default();
     let mut job = crate::preview_eval::PreviewEvalRunJob::<Generation2dInstanceOperationOwner>::new(handle.clone(), port, ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32])).expect("the run job attaches");
     let mut sequence = 0;
-    let mut verdict = None;
     let started = semio_framework_job::default_now_us().expect("clock");
-    let outcome = semio_framework_job::drive_step(&mut job, "generation2d.preview-eval.close.test", OperationId(1), Generation(0), InteractiveStage::InteractiveStep, StepBudget::new(1, started + semio_framework_job::INTERACTIVE_LANE_WALL_US * 8), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut verdict);
-    if let semio_framework_job::StepOutcome::PreviewReady(mut payload) = outcome {
-        while !payload.terminal_is_empty() {
-            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-        }
-    }
+    let _ = step_once(&mut job, 1, started + semio_framework_job::INTERACTIVE_LANE_WALL_US * 8, &semio_framework_job::root_cancel_token(), OperationId(1), Generation(0), &mut sequence);
     let armed = handle.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| Ok(owner.parts()?.0.document.window_tick_is_armed(window_id))).expect("owner");
     assert!(armed, "the first step dispatches the first hop");
-    close_job(&mut job);
+    close_job(&mut job, "the unsettled run job");
     let (owed, still_armed) = handle.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
         let (sessions, _) = owner.parts()?;
         Ok((sessions.document.window_tick_owed(window_id), sessions.document.window_tick_is_armed(window_id)))
@@ -855,10 +827,7 @@ fn canvas_pointer_wire_defaults_samples_and_cancelled() {
     let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { cancelled: true }, &view, &cfg, &mut session).expect("cancel");
     assert!(emit.artifact_mutations.is_empty() && emit.effects.is_empty() && emit.config_mutations.is_empty(), "a cancel never selects or commits");
     document.retire_cold();
-    session.begin_close();
-    while !session.terminal_is_empty() {
-        let _ = session.close_step(usize::MAX, usize::MAX);
-    }
+    session.retire_cold();
 }
 
 /// 🎥️ LAW: `nodeGraphViewport` declares no args, so the shell stages nothing for it. An absent `viewport`

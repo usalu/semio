@@ -80,6 +80,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type ParityDump = import("../../⚖️parity/🏗️structure/🟦️.ts").ParityDump;
   type ParityNode = import("../../⚖️parity/🏗️structure/🟦️.ts").ParityNode;
   type DeployedRegistryEntryV1 = import("../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts").DeployedRegistryEntryV1;
+  type PluginBuildTargetV1 = import("../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts").PluginBuildTargetV1;
   type PluginSourceEvent = import("../../../../../../🔨️modules/🎠️kernel/🟦️.ts").PluginSourceEvent;
   type SpawnDaemonHandle = import("../../../../../🦑️repo/🔨️modules/📚️library/🟦️.ts").SpawnDaemonHandle;
 
@@ -1515,19 +1516,16 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       expect(() => assertPluginCatalogComplete(["cargo-fails", "materialize-fails"])).toThrow("plugin catalog build failed: cargo-fails, materialize-fails");
     });
 
-    const fakeTarget = (pluginId: string): DeployedRegistryEntryV1 => ({
+    const fakeTarget = (pluginId: string): PluginBuildTargetV1 => ({
       pluginId,
       packageId: `semio-s-plugin-${pluginId}`,
       cratePath: "",
       packageName: pluginId,
       wasmOut: `${pluginId}.wasm`,
+      directoryName: `🧪️${pluginId}` as PluginBuildTargetV1["directoryName"],
       role: "plugin",
-      capabilities: [],
-      contributes: [],
       consumes: [],
       dependsOn: [],
-      activationEvents: [],
-      extensionPoints: [],
     });
 
     it("overlaps cargo and materialize up to the cap, and emits every plugin", async () => {
@@ -1537,14 +1535,14 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       let materializeActive = 0;
       let maxMaterializeActive = 0;
       const materialized: string[] = [];
-      const cargoFn = async (target: DeployedRegistryEntryV1) => {
+      const cargoFn = async (target: PluginBuildTargetV1) => {
         cargoActive++;
         maxCargoActive = Math.max(maxCargoActive, cargoActive);
         await new Promise((r) => setTimeout(r, 5));
         cargoActive--;
         return { artifact: `${target.pluginId}.wasm` };
       };
-      const materializeFn = async (target: DeployedRegistryEntryV1) => {
+      const materializeFn = async (target: PluginBuildTargetV1) => {
         materializeActive++;
         maxMaterializeActive = Math.max(maxMaterializeActive, materializeActive);
         await new Promise((r) => setTimeout(r, 15));
@@ -1566,12 +1564,12 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
 
     it("continues past both a cargo failure and a materialize failure, reporting each pluginId exactly once", async () => {
       const targets = [fakeTarget("ok"), fakeTarget("cargo-fails"), fakeTarget("materialize-fails")];
-      const cargoFn = async (target: DeployedRegistryEntryV1) => {
+      const cargoFn = async (target: PluginBuildTargetV1) => {
         if (target.pluginId === "cargo-fails") throw new Error("boom");
         return { artifact: `${target.pluginId}.wasm` };
       };
       const materialized: string[] = [];
-      const materializeFn = async (target: DeployedRegistryEntryV1) => {
+      const materializeFn = async (target: PluginBuildTargetV1) => {
         if (target.pluginId === "materialize-fails") throw new Error("boom");
         materialized.push(target.pluginId);
       };

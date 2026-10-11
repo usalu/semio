@@ -12,7 +12,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🧮️ `Wfc3dEditor::Config` — the camera this pane looks through, plus the tile `pin-slot` arms.
 /// `camera_*` are the 2d graph pane's pan/zoom; `orbit_*` are the 3d preview pane's orbit pose, kept
 /// as plain scalars so one config type serves both panes without a variant per surface kind.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "wfc3dcfg")]
 #[artifact(id = "wfc.wfc3d.config")]
@@ -80,7 +81,7 @@ impl Default for Wfc3dConfig {
 impl store::ConfigRecord for Wfc3dConfig {}
 
 /// 🔺️ Field-sparse diff of [`Wfc3dConfig`]: each field is an optional absolute value.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Wfc3dConfigDiff {
     pub camera_x: Option<f64>,

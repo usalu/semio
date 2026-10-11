@@ -42,7 +42,7 @@ pub(crate) fn text_edit_operations(text: &str, current: &VcsSnapshot) -> Emit<Vc
 }
 
 /// 🩹️ Alias for [`text_edit::TextEdit`] — same payload shape, same handler body.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "edit")]
 pub struct Edit {
     pub text: String,

@@ -51,7 +51,8 @@ pub const PROCESS3D_DIALECT: Dialect = Dialect { artifact_kind: "s.process.proce
 
 //#region 🔖️Workshop
 /// 📏️ A stock dimension a capability rule checks against a capability's own parameter value.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum StockQuantity {
     #[default]
     Width,
@@ -106,7 +107,8 @@ pub enum MeasureKind {
 /// ✅️ "the named stock quantity must be at least/at most the named capability parameter's value (±
 /// margin)" — a capability's rules are ANDed together, e.g. a crosscut capability needs stock width
 /// AND height above the blade diameter.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum CapabilityRule {
     Min {
@@ -125,7 +127,8 @@ pub enum CapabilityRule {
 
 /// 🔧️ One named numeric parameter of a capability (e.g. blade diameter) — workshop-editable, and
 /// referenced by id from the capability's own `MeasureRecipe`/`CapabilityRule`s.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CapabilityParameter {
     pub id: String,
@@ -137,7 +140,8 @@ pub struct CapabilityParameter {
 /// 🪚️ How a capability's parameters build a kernel `ProcessMeasure` — every field names a
 /// `Capability::parameters` entry by id, resolved at measure-build time; `measure_kind()` derives the
 /// fixed Cut/Drill/Attach effect so it never needs to be stored redundantly alongside the recipe.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "recipe", rename_all = "camelCase")]
 pub enum MeasureRecipe {
     /// ✂️ A disc-shaped cut tool sized from a blade `diameter` and `kerf` (tool thickness).
@@ -172,7 +176,8 @@ controlled_tagged_variant_field!(MeasureRecipe, WorkingSolid, ProcessMeasure);
 
 /// 🪚️ One thing a machine can do; every capability turns into a step: `recipe` fixes the geometric
 /// effect and how it's sized, `parameters` size the tool, `rules` gate legality against the stock.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Capability {
     pub id: String,
@@ -189,7 +194,8 @@ pub struct Capability {
 /// 🛠️ A machine in the document's workshop — an embedded snapshot, never a reference; consistent with
 /// `StepOrigin`'s never-resolve invariant (see its doc comment), and robust to catalog drift: editing
 /// or removing an installed catalog can never retroactively change an already-configured workshop.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WorkshopMachine {
     pub id: String,
@@ -236,7 +242,8 @@ impl Patchable<WorkshopMachinePatch> for WorkshopMachine {
 }
 
 /// 🏭️ The document's configured workshop: the machines available to build steps from.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Workshop {
     #[value(default)]
@@ -356,7 +363,8 @@ fn default_true() -> bool {
 }
 
 /// 🧭️ Position + axis-angle rotation applied via the brep kernel's `rotate_sync`/`translate_sync`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Pose {
     #[value(default)]
@@ -380,7 +388,8 @@ impl Default for Pose {
 /// Purely informational — kernel replay only ever reads `ProcessMeasure`, never resolves this back to a
 /// workshop entry, so editing or removing the machine/capability can never retroactively change
 /// already-authored geometry.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct StepOrigin {
     pub machine_id: String,
@@ -403,7 +412,8 @@ pub struct StepOrigin {
 /// builds fresh input for) before it can call the kernel — see `brep_snapshot_for_working_solid`
 /// (WRITE, real) below for the analytic converter that turns a `WorkingSolid` into real,
 /// content-addressable `SemioBrepSnapshot` topology.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum WorkingSolid {
     Box {
@@ -450,7 +460,8 @@ impl Default for WorkingSolid {
 
 /// 🪵️ The raw workpiece the process starts from — ephemeral working-scene counterpart of the
 /// persisted `stock_id`/`stock_label`/`stock_pose`/`stock_solid` fields on `Process3dSnapshot`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Stock {
     pub id: String,
@@ -469,7 +480,8 @@ impl Default for Stock {
 /// Ephemeral working-scene counterpart of a `flow` node's `kind`/`params` — see
 /// `flow_node_from_process_step`/`process_step_from_flow_node` below for the real bidirectional
 /// converter.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "measure", rename_all = "camelCase")]
 pub enum ProcessMeasure {
     /// ✂️ Subtractive: subtracts an arbitrary tool solid (e.g. a thin box as a saw blade).
@@ -504,7 +516,8 @@ impl ProcessMeasure {
 
 /// 🎞️ One ordered step of the process timeline — ephemeral working-scene counterpart of one
 /// `SemioFlowSnapshot` `FlowNode` (see `flow_node_from_process_step`/`process_step_from_flow_node`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct ProcessStep {
     pub id: String,

@@ -127,6 +127,8 @@ cross-fem = ["semio-s-artifact-norm-en1992/cross-fem", "semio-s-artifact-norm-en
 semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-s-artifact-norm-din4108 = { workspace = true }
 semio-s-artifact-norm-din16798 = { workspace = true }
@@ -148,7 +150,6 @@ semio-s-artifact-stdio-semio = { workspace = true }
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
 semio-s-artifact-norm-contract = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

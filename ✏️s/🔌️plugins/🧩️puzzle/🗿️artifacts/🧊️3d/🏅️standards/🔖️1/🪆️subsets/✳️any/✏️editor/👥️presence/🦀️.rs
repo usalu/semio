@@ -11,7 +11,7 @@ use store::ArtifactPack;
 /// `InteractionView::peers_selecting`/`peers_hovering`). Adding app-owned copies here would be a
 /// second, divergent authority over the same state — see
 /// `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "puzzle3d.presence")]
 #[dsl(layout = "lines")]
@@ -105,6 +105,9 @@ impl protocol::DiffAlgebra<Puzzle3dPresence> for Puzzle3dPresenceDiff {
     }
 }
 
+/// 📸️ Native snapshot codec: the canonical JSON of the value projection, no hand-written frame.
+impl store::ArtifactPresenceSnapshot for Puzzle3dPresence {}
+
 impl store::ArtifactDsl for Puzzle3dPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
@@ -152,7 +155,7 @@ impl ArtifactPack for Puzzle3dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum Puzzle3dPresenceMutation {
     #[dsl(key = "snapshot")]
@@ -253,61 +256,17 @@ pub fn puzzle3d_presence_is_terminal_empty(presence: &Puzzle3dPresence) -> bool 
     presence.active_tool_id.is_none()
 }
 
-/// 👥️ Exact local and peer root ownership for puzzle3d presence: one bounded turn returns the
-/// variable-length active-tool identifier, a second returns the inline root.
+/// 👥️ Exact local and peer root ownership for puzzle3d presence: the original typed fields and their retained physical backing retire through the shared admitted owner.
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct Puzzle3dPresenceRetirementFactory;
 
 impl store::SnapshotRetirementFactory<Puzzle3dPresence> for Puzzle3dPresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<Puzzle3dPresence>) -> usize { std::mem::size_of::<Puzzle3dPresenceRetirement>() }
-
-    fn retire(&self, root: std::sync::Arc<Puzzle3dPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(Puzzle3dPresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)), tool_id: std::mem::ManuallyDrop::new(None) })
-    }
-}
-
-struct Puzzle3dPresenceRetirement {
-    root: std::mem::ManuallyDrop<Option<std::sync::Arc<Puzzle3dPresence>>>,
-    tool_id: std::mem::ManuallyDrop<Option<String>>,
-}
-
-impl store::ErasedSnapshotRetirement for Puzzle3dPresenceRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if let Some(root) = self.root.take() {
-            let released = std::sync::Arc::into_inner(root).and_then(|value| value.active_tool_id);
-            let released_bytes = released.as_ref().map_or(0, String::len);
-            if released_bytes > maximum_bytes {
-                self.tool_id = std::mem::ManuallyDrop::new(released);
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            drop(released);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
-        }
-        if let Some(tool_id) = self.tool_id.take() {
-            let released_bytes = tool_id.len();
-            if released_bytes > maximum_bytes {
-                self.tool_id = std::mem::ManuallyDrop::new(Some(tool_id));
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            drop(tool_id);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<Puzzle3dPresence>) -> usize {
+        semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<Puzzle3dPresence>()
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.root.is_none() && self.tool_id.is_none()
-    }
-}
-
-impl Drop for Puzzle3dPresenceRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            assert!(self.root.is_none() && self.tool_id.is_none(), "puzzle3d presence retirement requires its exact terminal-empty witness");
-        }
+    fn retire(&self, root: std::sync::Arc<Puzzle3dPresence>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<Puzzle3dPresence>)> {
+        semio_framework_value::retirement::shared::admit_shared_retirement(root, grant, true)
     }
 }
 

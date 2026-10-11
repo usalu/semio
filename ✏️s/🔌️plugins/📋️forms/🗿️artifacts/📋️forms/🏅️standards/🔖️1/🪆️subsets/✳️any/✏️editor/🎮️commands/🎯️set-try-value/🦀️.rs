@@ -24,24 +24,24 @@ const MAX_COMMAND_INPUT_CHUNKS: u64 = 16_384;
 const MAX_LIVE_TRY_VALUE_SESSIONS: usize = 64;
 static NEXT_TRY_VALUE_REQUEST: AtomicU64 = AtomicU64::new(20_000);
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct ChunkAddressableJson(Arc<str>);
+#[derive(Clone, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
+pub struct ChunkAddressableJson(semio_framework_value::SharedUtf8);
 
 impl ChunkAddressableJson {
-    pub(crate) fn owner(&self) -> Arc<str> { self.0.clone() }
+    pub(crate) fn owner(&self) -> Arc<str> { Arc::from(self.0.as_str()) }
 }
 
 impl std::ops::Deref for ChunkAddressableJson {
     type Target = str;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target { self.0.as_str() }
 }
 
 impl From<String> for ChunkAddressableJson {
-    fn from(value: String) -> Self { Self(Arc::from(value)) }
+    fn from(value: String) -> Self { Self(value.into()) }
 }
 
 impl From<&str> for ChunkAddressableJson {
-    fn from(value: &str) -> Self { Self(Arc::from(value)) }
+    fn from(value: &str) -> Self { Self(value.into()) }
 }
 
 #[cfg(test)]
@@ -96,7 +96,7 @@ impl semio_framework_dsl_record::DslField for ChunkAddressableJson {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "try-value")]
 pub struct SetTryValue {
@@ -112,7 +112,7 @@ pub struct SetTryValue {
     pub window_kind_id: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "try-value-step")]
 pub struct SetTryValueStep {

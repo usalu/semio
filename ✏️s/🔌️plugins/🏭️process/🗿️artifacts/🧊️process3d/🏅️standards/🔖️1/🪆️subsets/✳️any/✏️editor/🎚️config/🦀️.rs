@@ -18,7 +18,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub const PROCESS3D_DEFAULT_UTILITY: &str = "select";
 
 //#region 🔖️Config
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "process3dcfg")]
 #[artifact(id = "process3d.config")]
@@ -248,28 +249,66 @@ impl protocol::DiffAlgebra<Process3dConfig> for Process3dConfigDiff {
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
+/// 🎥️ Payload of [`Process3dConfigMutation::SetEngagementInput`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Process3dConfigSetEngagementInput {
+    pub value: String,
+}
+
+/// 🎥️ Payload of [`Process3dConfigMutation::SetCamera`].
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Process3dConfigSetCamera {
+    #[dsl(coord)]
+    pub position: [f64; 3],
+    #[dsl(coord)]
+    pub target: [f64; 3],
+    pub fov: f64,
+}
+
+/// 🌞️ Payload of [`Process3dConfigMutation::SetSun`].
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Process3dConfigSetSun {
+    pub enabled: bool,
+    pub azimuth: f64,
+    pub elevation: f64,
+    pub intensity: f64,
+    pub color: String,
+}
+
+/// 🧩️ Payload of [`Process3dConfigMutation::SetContributions`].
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Process3dConfigSetContributions {
+    pub json: String,
+}
+
+/// ⏱️ Payload of [`Process3dConfigMutation::SetCursor`].
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Process3dConfigSetCursor {
+    pub value: Option<usize>,
+}
+
 /// 🧮️ [`Process3dConfig`]'s operation enum — one variant per settled interaction (mirrors the pre-B1
 /// `Process3dRuntime` field writes). Every field already carries its own setter, so `backwards()`
 /// returns the SAME variant re-addressed at `base`'s old value — a targeted, in-kind inverse per
 /// this ticket's ban on whole-record replace, rather than a generic whole-config snapshot.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Process3dConfigMutation {
     #[dsl(key = "engagement-input")]
-    SetEngagementInput { value: String },
+    SetEngagementInput(Process3dConfigSetEngagementInput),
     #[dsl(key = "camera")]
-    SetCamera {
-        #[dsl(coord)]
-        position: [f64; 3],
-        #[dsl(coord)]
-        target: [f64; 3],
-        fov: f64,
-    },
+    SetCamera(Process3dConfigSetCamera),
     #[dsl(key = "sun")]
-    SetSun { enabled: bool, azimuth: f64, elevation: f64, intensity: f64, color: String },
+    SetSun(Process3dConfigSetSun),
     #[dsl(key = "contributions")]
-    SetContributions { json: String },
+    SetContributions(Process3dConfigSetContributions),
     #[dsl(key = "cursor")]
-    SetCursor { value: Option<usize> },
+    SetCursor(Process3dConfigSetCursor),
 }
 
 //#region 🔖️OpCodec
@@ -408,24 +447,24 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Process3dConfigMutation::SetEngagementInput { .. } => &Self::DESCRIPTORS[0],
-            Process3dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[1],
-            Process3dConfigMutation::SetSun { .. } => &Self::DESCRIPTORS[2],
-            Process3dConfigMutation::SetContributions { .. } => &Self::DESCRIPTORS[3],
-            Process3dConfigMutation::SetCursor { .. } => &Self::DESCRIPTORS[4],
+            Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ .. }) => &Self::DESCRIPTORS[0],
+            Process3dConfigMutation::SetCamera(Process3dConfigSetCamera{ .. }) => &Self::DESCRIPTORS[1],
+            Process3dConfigMutation::SetSun(Process3dConfigSetSun{ .. }) => &Self::DESCRIPTORS[2],
+            Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ .. }) => &Self::DESCRIPTORS[3],
+            Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ .. }) => &Self::DESCRIPTORS[4],
         }
     }
 
     fn diff(&self, base: &Process3dConfig) -> protocol::MutationOutcome<Process3dConfigDiff> {
         protocol::MutationOutcome::new(match self {
-            Process3dConfigMutation::SetEngagementInput { value } => Process3dConfigDiff { engagement_input: (base.engagement_input != *value).then(|| value.clone()), ..Default::default() },
-            Process3dConfigMutation::SetCamera { position, target, fov } => Process3dConfigDiff {
+            Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ value }) => Process3dConfigDiff { engagement_input: (base.engagement_input != *value).then(|| value.clone()), ..Default::default() },
+            Process3dConfigMutation::SetCamera(Process3dConfigSetCamera{ position, target, fov }) => Process3dConfigDiff {
                 camera_position: (base.camera_position != *position).then_some(*position),
                 camera_target: (base.camera_target != *target).then_some(*target),
                 camera_fov: (base.camera_fov != *fov).then_some(*fov),
                 ..Default::default()
             },
-            Process3dConfigMutation::SetSun { enabled, azimuth, elevation, intensity, color } => Process3dConfigDiff {
+            Process3dConfigMutation::SetSun(Process3dConfigSetSun{ enabled, azimuth, elevation, intensity, color }) => Process3dConfigDiff {
                 sun_enabled: (base.sun_enabled != *enabled).then_some(*enabled),
                 sun_azimuth: (base.sun_azimuth != *azimuth).then_some(*azimuth),
                 sun_elevation: (base.sun_elevation != *elevation).then_some(*elevation),
@@ -433,18 +472,18 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
                 sun_color: (base.sun_color != *color).then(|| color.clone()),
                 ..Default::default()
             },
-            Process3dConfigMutation::SetContributions { json } => Process3dConfigDiff { contributions_json: (base.contributions_json != *json).then(|| json.clone()), ..Default::default() },
-            Process3dConfigMutation::SetCursor { value } => Process3dConfigDiff { resolved_up_to: (base.resolved_up_to != *value).then(|| Process3dOptionalCursor { value: *value }), ..Default::default() },
+            Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json }) => Process3dConfigDiff { contributions_json: (base.contributions_json != *json).then(|| json.clone()), ..Default::default() },
+            Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value }) => Process3dConfigDiff { resolved_up_to: (base.resolved_up_to != *value).then(|| Process3dOptionalCursor { value: *value }), ..Default::default() },
         })
     }
 
     fn inverse(&self, base: &Process3dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            Process3dConfigMutation::SetEngagementInput { .. } => Process3dConfigMutation::SetEngagementInput { value: base.engagement_input.clone() },
-            Process3dConfigMutation::SetCamera { .. } => Process3dConfigMutation::SetCamera { position: base.camera_position, target: base.camera_target, fov: base.camera_fov },
-            Process3dConfigMutation::SetSun { .. } => Process3dConfigMutation::SetSun { enabled: base.sun_enabled, azimuth: base.sun_azimuth, elevation: base.sun_elevation, intensity: base.sun_intensity, color: base.sun_color.clone() },
-            Process3dConfigMutation::SetContributions { .. } => Process3dConfigMutation::SetContributions { json: base.contributions_json.clone() },
-            Process3dConfigMutation::SetCursor { .. } => Process3dConfigMutation::SetCursor { value: base.resolved_up_to },
+            Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ .. }) => Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ value: base.engagement_input.clone() }),
+            Process3dConfigMutation::SetCamera(Process3dConfigSetCamera{ .. }) => Process3dConfigMutation::SetCamera(Process3dConfigSetCamera{ position: base.camera_position, target: base.camera_target, fov: base.camera_fov }),
+            Process3dConfigMutation::SetSun(Process3dConfigSetSun{ .. }) => Process3dConfigMutation::SetSun(Process3dConfigSetSun{ enabled: base.sun_enabled, azimuth: base.sun_azimuth, elevation: base.sun_elevation, intensity: base.sun_intensity, color: base.sun_color.clone() }),
+            Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ .. }) => Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: base.contributions_json.clone() }),
+            Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ .. }) => Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: base.resolved_up_to }),
         }])
     }
 }
@@ -464,9 +503,9 @@ mod law_tests {
     #[semio_framework_async_macros::async_test]
     async fn inverse_diffs_sum_to_the_negative_diff() {
         let base = Process3dConfig::default();
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetEngagementInput { value: "x".into() }, &base).await;
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 1.0], fov: 30.0 }, &base).await;
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#fff".into() }, &base).await;
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetCursor { value: Some(2) }, &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ value: "x".into() }), &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetCamera(Process3dConfigSetCamera{ position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 1.0], fov: 30.0 }), &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetSun(Process3dConfigSetSun{ enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#fff".into() }), &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: Some(2) }), &base).await;
     }
 }

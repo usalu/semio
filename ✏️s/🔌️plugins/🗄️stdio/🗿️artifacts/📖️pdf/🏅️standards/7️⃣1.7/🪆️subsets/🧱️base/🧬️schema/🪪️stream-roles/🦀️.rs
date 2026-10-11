@@ -2,7 +2,8 @@
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfObject, PdfIndirectObject, PdfOp, PdfToUnicode, PdfEmbeddedCMap, PdfFontProgram, PdfImage};
 
 /// 🧭️ An exact location within an indirect logical object.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PdfGraphIdentity {
     pub owner: ObjRef,
@@ -10,7 +11,8 @@ pub struct PdfGraphIdentity {
 }
 
 /// 🗺️ Dictionary keys and array ordinals occupy distinct namespaces.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfGraphPath {
     Entry { key: String },
@@ -18,7 +20,8 @@ pub enum PdfGraphPath {
 }
 
 /// 🧬️ Semantic stream words admitted by native IO.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfStreamRoleValue {
     Operators { content: Vec<PdfOp> },
@@ -60,7 +63,8 @@ impl PdfStreamRoleValue {
 }
 
 /// 🧷️ Every role names its owner and the graph inputs its admission consumed.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PdfAdmittedStreamRole {
     pub identity: PdfGraphIdentity,

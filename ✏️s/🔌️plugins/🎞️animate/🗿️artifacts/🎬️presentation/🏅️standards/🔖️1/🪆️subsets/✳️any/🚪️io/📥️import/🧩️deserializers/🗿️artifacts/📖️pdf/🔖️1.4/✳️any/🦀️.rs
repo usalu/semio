@@ -22,7 +22,7 @@ impl Deserializer<PresentationSnapshot> for PdfIntoPresentation {
         };
         let wire = <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(match error.into_value_error() { Ok(cause) => semio_framework_value::ValueError::new(cause.kind, format!("PdfIntoPresentation: {}", cause.message)), Err(error) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("PdfIntoPresentation: in-memory decode reported a transport failure: {error}")) }))?;
         let json = semio_framework_pack_json::to_json_string(&wire);
-        let snapshot: PresentationSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| { let mut cause=error;cause.message=format!("PdfIntoPresentation: {}",cause.message);IoError::from_value_error(cause) })?;
+        let snapshot: PresentationSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| { let mut cause=error;cause.message=format!("PdfIntoPresentation: {}",cause.message).into();IoError::from_value_error(cause) })?;
         Ok(IoOutcome::clean(snapshot))
     }
 }

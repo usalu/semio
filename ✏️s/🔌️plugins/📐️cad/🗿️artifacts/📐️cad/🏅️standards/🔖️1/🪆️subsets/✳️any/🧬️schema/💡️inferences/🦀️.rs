@@ -13,7 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// bounding box across every pane's object origins and vertex positions (see
 /// `📦bounds/🦀️.rs`). A simple whole-snapshot scalar — no `InferredField` caching, a full
 /// scan over the document is cheap at cad scale.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad.inference")]
 pub struct CadInference {

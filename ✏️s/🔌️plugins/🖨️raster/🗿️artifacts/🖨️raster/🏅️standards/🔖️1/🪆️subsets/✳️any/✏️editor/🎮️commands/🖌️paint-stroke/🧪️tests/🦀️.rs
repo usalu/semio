@@ -56,7 +56,7 @@ fn a_mask_stroke_paints_the_session_mask_value_as_its_grey_level() {
 #[test]
 fn the_session_selection_clips_only_strokes_on_its_own_layer_and_target() {
     let document = document(false, true);
-    let selected = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: vec![crate::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, crate::RasterSelectionSpan { start: 6, length: 3, coverage: 128 }] }), ..config("pixels") };
+    let selected = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, crate::mutations::paint_stroke::RasterSelectionSpan { start: 6, length: 3, coverage: 128 }] }), ..config("pixels") };
     let built = leaf(paint_stroke_leaf(&stroke("ink", "brush"), &document, &selected).expect("the clipped stroke paints"));
     assert_eq!(built.selection, Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, RasterSelectionSpan { start: 6, length: 3, coverage: 128 }]));
     let elsewhere = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "other".into(), ..selected.pixel_selection.clone().expect("a selection") }), ..selected };

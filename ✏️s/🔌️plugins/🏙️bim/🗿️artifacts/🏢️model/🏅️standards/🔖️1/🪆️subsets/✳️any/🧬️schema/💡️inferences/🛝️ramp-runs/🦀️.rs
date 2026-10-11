@@ -26,7 +26,7 @@ pub const LENGTH_EPS: f64 = 1e-9;
 pub const TURN_EPS: f64 = 1e-3;
 
 /// 🛝️ One sloped stretch of the path between two landings (or the path ends): arc lengths `from` and `to` along the centre line, the heights at both ends.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct RampFlight {
     pub from: f64,
     pub to: f64,
@@ -36,7 +36,7 @@ pub struct RampFlight {
 }
 
 /// 🟫️ One flat stretch of the path: arc lengths `from` and `to` along the centre line and its height.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct RampLanding {
     pub from: f64,
     pub to: f64,
@@ -45,7 +45,7 @@ pub struct RampLanding {
 }
 
 /// 🚦️ The code flags of one ramp run: it has a sloped run when it has a rise, the slope is within the limit, and both together.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct RampCompliance {
     pub run_ok: bool,
     pub slope_ok: bool,
@@ -53,7 +53,7 @@ pub struct RampCompliance {
 }
 
 /// 🛝️ Resolved run of one ramp, in metres and radians: `length` the whole path, `run_length` its sloped part, `slope = |rise| / run_length`, `angle = atan(slope)`.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct RampRun {
     pub base_z: f64,
     pub top_z: f64,

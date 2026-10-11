@@ -16,7 +16,8 @@ mod controlled;
 
 //#region 🔖️Value
 /// 🔢️ Exact logical STEP real: decimal coefficient/scale plus an optional base-10 exponent.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields )]
 pub struct Part21Decimal {
     pub negative: bool,
@@ -191,7 +192,8 @@ impl Part21Instance {
 //#region 🔖️Header
 /// 📇️ The three standard `HEADER;` records (`FILE_DESCRIPTION`/`FILE_NAME`/`FILE_SCHEMA`),
 /// each a parenthesized tuple of typed values — kept verbatim, not schema-interpreted.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields )]
 pub struct Part21Header {
     pub file_description: Vec<Part21Value>,
@@ -257,7 +259,8 @@ impl Default for Part21Header {
 
 //#region 🔖️Document
 /// 📦️ The full, lossless generic Part-21 graph: header + every `DATA;` instance.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(deny_unknown_fields )]
 pub struct Part21Document {
     pub header: Part21Header,
@@ -1151,6 +1154,129 @@ impl FromValue for Part21Instance {
     }
 }
 //#endregion 🔖️ValueCodec
+
+
+//#region 🌲️CanonicalTree
+use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
+
+static PART21_KINDS: [&str; 9] = ["ref", "str", "enum", "int", "real", "list", "typed", "unset", "derived"];
+
+fn part21_tree_refusal(reason: &'static str) -> ValueError {
+    ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, reason)
+}
+
+/// 🌲️ Projects the kind-tagged value exactly as [`ToValue`] emits it: `kind`, then `value`, `values` or `typeName` + `values`.
+impl ArtifactCanonicalJsonTree for Part21Value {
+    fn canonical_tree_node(&self) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> {
+        Ok(ArtifactCanonicalJsonNode::Object(match self {
+            Self::Unset | Self::Derived => 1,
+            Self::Typed { .. } => 3,
+            _ => 2,
+        }))
+    }
+
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, ValueError> {
+        let kind = match self {
+            Self::Ref(_) => 0,
+            Self::Str(_) => 1,
+            Self::Enum(_) => 2,
+            Self::Int(_) => 3,
+            Self::Real(_) => 4,
+            Self::List(_) => 5,
+            Self::Typed { .. } => 6,
+            Self::Unset => 7,
+            Self::Derived => 8,
+        };
+        match (self, ordinal) {
+            (_, 0) => Ok(&PART21_KINDS[kind]),
+            (Self::Ref(id), 1) => Ok(id),
+            (Self::Str(text) | Self::Enum(text), 1) => Ok(text),
+            (Self::Int(value), 1) => Ok(value),
+            (Self::Real(decimal), 1) => Ok(decimal),
+            (Self::List(items), 1) => Ok(items),
+            (Self::Typed { name, .. }, 1) => Ok(name),
+            (Self::Typed { items, .. }, 2) => Ok(items),
+            _ => Err(part21_tree_refusal("canonical Part-21 value ordinal is absent")),
+        }
+    }
+
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> {
+        let key = match (self, ordinal) {
+            (_, 0) => "kind",
+            (Self::List(_), 1) => "values",
+            (Self::Typed { .. }, 1) => "typeName",
+            (Self::Typed { .. }, 2) => "values",
+            (Self::Ref(_) | Self::Str(_) | Self::Enum(_) | Self::Int(_) | Self::Real(_), 1) => "value",
+            _ => return Err(part21_tree_refusal("canonical Part-21 value key is absent")),
+        };
+        Ok(ArtifactCanonicalJsonText::from(key))
+    }
+}
+
+#[repr(transparent)]
+struct Part21Entity((String, Vec<Part21Value>));
+
+#[repr(transparent)]
+struct Part21Entities(Vec<(String, Vec<Part21Value>)>);
+
+impl ArtifactCanonicalJsonTree for Part21Entity {
+    fn canonical_tree_node(&self) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> {
+        Ok(ArtifactCanonicalJsonNode::Object(2))
+    }
+
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, ValueError> {
+        match ordinal {
+            0 => Ok(&self.0 .0),
+            1 => Ok(&self.0 .1),
+            _ => Err(part21_tree_refusal("canonical Part-21 entity ordinal is absent")),
+        }
+    }
+
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> {
+        match ordinal {
+            0 => Ok(ArtifactCanonicalJsonText::from("typeName")),
+            1 => Ok(ArtifactCanonicalJsonText::from("arguments")),
+            _ => Err(part21_tree_refusal("canonical Part-21 entity key is absent")),
+        }
+    }
+}
+
+impl ArtifactCanonicalJsonTree for Part21Entities {
+    fn canonical_tree_node(&self) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> {
+        Ok(ArtifactCanonicalJsonNode::Array(self.0.len()))
+    }
+
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, ValueError> {
+        let entity = self.0.get(ordinal).ok_or_else(|| part21_tree_refusal("canonical Part-21 entity list ordinal is absent"))?;
+        // SAFETY: `Part21Entity` is `repr(transparent)` over exactly the borrowed tuple, so the reference keeps its layout and lifetime.
+        Ok(unsafe { &*(entity as *const (String, Vec<Part21Value>) as *const Part21Entity) })
+    }
+}
+
+/// 🌲️ Projects an instance as [`ToValue`] emits it: `id`, then `entities` as `{typeName, arguments}` records.
+impl ArtifactCanonicalJsonTree for Part21Instance {
+    fn canonical_tree_node(&self) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> {
+        Ok(ArtifactCanonicalJsonNode::Object(2))
+    }
+
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, ValueError> {
+        match ordinal {
+            0 => Ok(&self.id),
+            // SAFETY: `Part21Entities` is `repr(transparent)` over exactly the borrowed vector.
+            1 => Ok(unsafe { &*(&self.entities as *const Vec<(String, Vec<Part21Value>)> as *const Part21Entities) }),
+            _ => Err(part21_tree_refusal("canonical Part-21 instance ordinal is absent")),
+        }
+    }
+
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> {
+        match ordinal {
+            0 => Ok(ArtifactCanonicalJsonText::from("id")),
+            1 => Ok(ArtifactCanonicalJsonText::from("entities")),
+            _ => Err(part21_tree_refusal("canonical Part-21 instance key is absent")),
+        }
+    }
+}
+//#endregion 🌲️CanonicalTree
 
 //#region 🧪️Tests
 #[cfg(test)]

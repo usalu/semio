@@ -38,9 +38,9 @@ pub fn puzzle2d_import_value(args: &Value) -> Result<Value, Puzzle2dImportFault>
     let value = match args.get(IMPORT_ARGUMENT_PAYLOAD).and_then(Value::as_str) {
         Some(text) if text.len() > PUZZLE_IMPORT_TOTAL_BYTES => return Err(Puzzle2dImportFault::Capacity),
         Some(text) => semio_framework_pack_json::from_json_str::<Value>(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| Puzzle2dImportFault::Payload)?,
-        None => args.get(IMPORT_ARGUMENT_PAYLOAD).cloned().filter(Value::is_object).ok_or(Puzzle2dImportFault::Payload)?,
+        None => args.get(IMPORT_ARGUMENT_PAYLOAD).cloned().filter(|payload| payload.as_object().is_some()).ok_or(Puzzle2dImportFault::Payload)?,
     };
-    let is_snapshot = value.get("schema").and_then(Value::as_str) == Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) || value.get("nodes").is_some_and(Value::is_array);
+    let is_snapshot = value.get("schema").and_then(Value::as_str) == Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) || value.get("nodes").is_some_and(|nodes| nodes.as_array().is_some());
     if !is_snapshot {
         return Err(Puzzle2dImportFault::Payload);
     }
@@ -62,8 +62,12 @@ pub fn import_snapshot(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
         }
     };
     if let Some(object) = snapshot.as_object_mut() {
-        object.entry("schema").or_insert_with(|| Value::String(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA.into()));
-        object.entry("edges").or_insert_with(|| Value::Array(Vec::new()));
+        if !object.contains_key("schema") {
+            object.insert("schema", Value::String(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA.into()));
+        }
+        if !object.contains_key("edges") {
+            object.insert("edges", Value::Array(Vec::new()));
+        }
     }
     let Ok(document) = <crate::Puzzle2dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&snapshot)) else {
         ctx.notice(|labels| labels.import_invalid.as_str());

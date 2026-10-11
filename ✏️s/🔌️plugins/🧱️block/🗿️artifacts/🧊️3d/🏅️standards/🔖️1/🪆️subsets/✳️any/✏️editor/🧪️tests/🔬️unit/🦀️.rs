@@ -36,7 +36,11 @@ pub(crate) mod context {
                 if self.0.close_terminal_is_empty() {
                     return;
                 }
-                if self.0.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).is_err() {
+                let Ok(demand) = self.0.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) else {
+                    break;
+                };
+                let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+                if self.0.close_step(grant).is_err() {
                     break;
                 }
             }

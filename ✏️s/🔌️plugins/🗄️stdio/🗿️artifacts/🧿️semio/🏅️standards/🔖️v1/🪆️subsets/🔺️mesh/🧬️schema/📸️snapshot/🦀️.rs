@@ -14,7 +14,8 @@ use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRg
 /// 🔺️ Primitive draw mode — the gltf 2.0 `mode` enumeration, named (never a bare integer tag).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-#[derive(Default)]
+#[derive(Default, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SemioTopology {
     Points,
     Lines,
@@ -32,7 +33,8 @@ pub enum SemioTopology {
 /// `mesh.primitives` array lacks; every W2 subset id-keys its repeating structures per the
 /// schema-design.md recipe). `positions`/`normals`/`uvs`/`colors`/`indices` are weak, parallel
 /// buffer-shaped data — whole-value replaced in diffs, never sub-diffed per vertex.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioPrimitive {
     pub id: String,
@@ -55,7 +57,8 @@ pub struct SemioPrimitive {
 
 //#region 🔖️Mesh
 /// 🕸️ A mesh is an id-keyed collection of `SemioPrimitive`s (gltf's `mesh.primitives`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioMesh {
     pub id: String,
@@ -67,7 +70,8 @@ pub struct SemioMesh {
 //#region 🔖️Material
 /// 🎨️ PBR metallic-roughness material (gltf's `material.pbrMetallicRoughness`, the spec-mandated
 /// field set per the master plan's row: "materials (PBR base_color/metallic/roughness)").
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioMaterial {
     pub id: String,
@@ -93,7 +97,8 @@ pub struct SemioMaterial {
 //#region 🔖️Texture
 /// 🖼️ Raw texture payload (gltf's `image` + embedded `bufferView`/data-uri collapsed into one
 /// typed-raw-retention entity — mime + bytes, per the master plan's row: "textures{mime, bytes}").
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioTexture {
     pub id: String,
@@ -111,7 +116,8 @@ pub const STDIO_SEMIOMESH_DOCUMENT_SCHEMA: &str = "stdio.semio.mesh";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.mesh")]
 pub struct SemioMeshSnapshot {

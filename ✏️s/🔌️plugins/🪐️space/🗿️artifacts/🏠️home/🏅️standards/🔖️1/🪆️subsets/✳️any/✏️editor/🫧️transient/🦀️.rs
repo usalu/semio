@@ -412,24 +412,44 @@ impl store::ArtifactPack for HomeTransient {
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct HomeTransientRetirementFactory;
 
+const HOME_TRANSIENT_RELEASE_SLICE_BYTES: usize = 4_096;
+
 struct HomeTransientRootRetirement {
-    root: Option<Arc<HomeTransient>>,
+    root: std::mem::ManuallyDrop<Option<Arc<HomeTransient>>>,
     retained_bytes: usize,
 }
 
+impl HomeTransientRootRetirement {
+    fn admit(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::ValueError> {
+        semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Self>(), depth: 1 }.admit(grant)
+    }
+
+    fn born(root: Arc<HomeTransient>) -> Box<dyn store::ErasedSnapshotRetirement> {
+        let retained_bytes = root.directory().retained_bytes();
+        Box::new(Self { root: std::mem::ManuallyDrop::new(Some(root)), retained_bytes })
+    }
+}
+
 impl store::ErasedSnapshotRetirement for HomeTransientRootRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retained_bytes.min(HOME_TRANSIENT_RELEASE_SLICE_BYTES)) }
+    fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(usize::from(!self.terminal_is_empty())) }
+
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if grant.maximum_depth == 0 { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "Home transient retirement requires admitted depth")); }
+        let slice = self.next_release_byte_demand()?;
+        if grant.maximum_release_bytes < slice { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        self.retained_bytes -= slice;
+        let receipt = RetainedCloneProgress { copied_items: 1, released_bytes: slice, ..Default::default() };
+        if self.retained_bytes == 0 {
+            drop(self.root.take());
+            return Ok(RetainedCloneStep::Complete(receipt));
         }
-        if self.retained_bytes > maximum_bytes {
-            self.retained_bytes -= maximum_bytes;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: maximum_bytes });
-        }
-        if self.root.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+        Ok(RetainedCloneStep::Progress(receipt))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -437,18 +457,31 @@ impl store::ErasedSnapshotRetirement for HomeTransientRootRetirement {
     }
 }
 
+impl Drop for HomeTransientRootRetirement {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.root.is_none(), "Home transient root reached Drop before terminal-empty close");
+    }
+}
+
 impl store::SnapshotRetirementFactory<HomeTransient> for HomeTransientRetirementFactory {
     fn retirement_birth_bytes(&self, _snapshot: &Arc<HomeTransient>) -> usize { std::mem::size_of::<HomeTransientRootRetirement>() }
 
-    fn retire(&self, snapshot: Arc<HomeTransient>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        let retained_bytes = snapshot.directory().retained_bytes();
-        Box::new(HomeTransientRootRetirement { root: Some(snapshot), retained_bytes })
+    fn retire(&self, snapshot: Arc<HomeTransient>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, Arc<HomeTransient>)> {
+        match HomeTransientRootRetirement::admit(grant) {
+            Ok(progress) => Ok((HomeTransientRootRetirement::born(snapshot), progress)),
+            Err(error) => Err((error, snapshot)),
+        }
     }
 }
 
 impl store::ArtifactOwnedValueRetirementFactory<HomeTransient> for HomeTransientRetirementFactory {
-    fn retire_owned(&self, value: HomeTransient) -> Box<dyn store::ErasedSnapshotRetirement> {
-        store::SnapshotRetirementFactory::retire(self, Arc::new(value))
+    fn retirement_birth_bytes(&self, _value: &HomeTransient) -> usize { std::mem::size_of::<HomeTransientRootRetirement>() }
+
+    fn retire_owned(&self, value: HomeTransient, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, HomeTransient)> {
+        match HomeTransientRootRetirement::admit(grant) {
+            Ok(progress) => Ok((HomeTransientRootRetirement::born(Arc::new(value)), progress)),
+            Err(error) => Err((error, value)),
+        }
     }
 }
 //#endregion 🔖️Retirement

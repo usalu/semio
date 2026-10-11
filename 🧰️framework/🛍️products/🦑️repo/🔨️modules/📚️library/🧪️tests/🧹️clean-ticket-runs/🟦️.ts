@@ -4,8 +4,12 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES, CLEAN_TICKET_FILE_MAX_BYTES } from "../../🧼️workspace-cleanup/🔍️candidate-discovery/🟦️.ts";
 import { CleanScript } from "../../🧼️workspace-cleanup/🎮️command/🟦️.ts";
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import type { ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
-test("clean removes generated ticket run output without removing ticket material", () => {
+const clean = (root: string): Promise<void> => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "clean-ticket-runs-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async (invocation: ScriptInvocation) => { await new CleanScript(root, root, invocation).run([]); });
+
+test("clean removes generated ticket run output without removing ticket material", async () => {
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for cleanup fixture output.");
   mkdirSync(artifactRoot, { recursive: true });
@@ -25,7 +29,7 @@ test("clean removes generated ticket run output without removing ticket material
     }
     writeFileSync(material, "ticket material\n");
     try { symlinkSync(material, join(dirname(runs[0]!), "alias")); } catch {}
-    new CleanScript(root, root).run([]);
+    await clean(root);
     for (const run of runs) expect(existsSync(run)).toBe(false);
     for (const probe of probes) expect(existsSync(probe)).toBe(false);
     expect(existsSync(material)).toBe(true);
@@ -34,7 +38,7 @@ test("clean removes generated ticket run output without removing ticket material
   }
 });
 
-test("clean removes root Generation3d transient mounts without removing ordinary directories", () => {
+test("clean removes root Generation3d transient mounts without removing ordinary directories", async () => {
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for cleanup fixture output.");
   mkdirSync(artifactRoot, { recursive: true });
@@ -47,7 +51,7 @@ test("clean removes root Generation3d transient mounts without removing ordinary
       writeFileSync(join(directory, "state"), "transient\n");
     }
     mkdirSync(retained, { recursive: true });
-    new CleanScript(root, root).run([]);
+    await clean(root);
     for (const directory of transients) expect(existsSync(directory)).toBe(false);
     expect(existsSync(retained)).toBe(true);
   } finally {
@@ -55,7 +59,7 @@ test("clean removes root Generation3d transient mounts without removing ordinary
   }
 });
 
-test("clean removes oversized ignored files from open tickets", () => {
+test("clean removes oversized ignored files from open tickets", async () => {
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for cleanup fixture output.");
   mkdirSync(artifactRoot, { recursive: true });
@@ -72,7 +76,7 @@ test("clean removes oversized ignored files from open tickets", () => {
     truncateSync(huge, CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES + 1);
     writeFileSync(join(ticket, "🎫️ticket.json"), JSON.stringify({ status: "open" }, null, 2));
     writeFileSync(retained, "ticket material\n");
-    new CleanScript(root, root).run([]);
+    await clean(root);
     expect(existsSync(huge)).toBe(false);
     expect(existsSync(retained)).toBe(true);
   } finally {
@@ -80,7 +84,7 @@ test("clean removes oversized ignored files from open tickets", () => {
   }
 });
 
-test("clean removes files above the ticket limit from open tickets", () => {
+test("clean removes files above the ticket limit from open tickets", async () => {
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for cleanup fixture output.");
   mkdirSync(artifactRoot, { recursive: true });
@@ -94,7 +98,7 @@ test("clean removes files above the ticket limit from open tickets", () => {
     truncateSync(huge, CLEAN_TICKET_FILE_MAX_BYTES + 1);
     writeFileSync(join(ticket, "🎫️ticket.json"), JSON.stringify({ status: "open" }, null, 2));
     writeFileSync(retained, "ticket material\n");
-    new CleanScript(root, root).run([]);
+    await clean(root);
     expect(existsSync(huge)).toBe(false);
     expect(existsSync(retained)).toBe(true);
   } finally {

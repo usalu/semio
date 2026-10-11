@@ -21,7 +21,7 @@ fn far_deadline() -> std::time::Instant {
 }
 
 fn generous_budget() -> usize {
-    turn_patch_budget_bytes(semio_framework::kernel::Budget { fuel: u64::MAX, deadline_ms: 1_000, max_effects: 64, max_patch_bytes: u32::MAX, max_frames: 8 })
+    turn_patch_budget_bytes(semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: u64::MAX, deadline_ms: 1_000, max_effects: 64, max_patch_bytes: u32::MAX, max_frames: 8 })
 }
 
 fn retire_pending_authority() {
@@ -232,7 +232,7 @@ fn a_turn_patch_page_never_asks_the_guest_for_more_than_one_contiguous_ceiling()
         semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES
     );
     assert_eq!(UI_TURN_PATCH_BUDGET_BYTES, semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES / 4);
-    let window = |declared: usize| turn_patch_budget_bytes(semio_framework::kernel::Budget { fuel: 0, deadline_ms: 0, max_effects: 0, max_patch_bytes: declared as u32, max_frames: 0 });
+    let window = |declared: usize| turn_patch_budget_bytes(semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 0, deadline_ms: 0, max_effects: 0, max_patch_bytes: declared as u32, max_frames: 0 });
     for declared in budget()["laneDeclarations"].as_array().expect("declared lane budgets").iter().map(|value| value.as_u64().expect("lane budget") as usize) {
         assert!(declared >= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES && declared <= UI_TURN_PATCH_BUDGET_BYTES, "a lane declaring {declared} B is outside the budget window");
         assert_eq!(window(declared), declared, "a lane inside the window is admitted verbatim");

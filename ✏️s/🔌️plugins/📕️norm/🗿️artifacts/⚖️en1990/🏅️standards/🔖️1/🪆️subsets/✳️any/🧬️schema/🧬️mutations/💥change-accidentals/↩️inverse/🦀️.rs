@@ -7,6 +7,6 @@ use crate::{En1990Mutation, En1990Snapshot};
 
 pub fn inverse(mutation: &ChangeAccidentals, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
     let removed = mutation.new_accidentals.iter().map(|_| En1990Mutation::RemoveAccidental(RemoveAccidental { index: 0 }));
-    let inserted = base.accidentals.iter().cloned().enumerate().map(|(index, item)| En1990Mutation::InsertAccidental(InsertAccidental { index, item }));
+    let inserted = base.accidentals.iter().cloned().enumerate().map(|(index, item)| En1990Mutation::InsertAccidental(InsertAccidental { index: Some(index), item }));
     Ok(removed.chain(inserted).rev().collect())
 }

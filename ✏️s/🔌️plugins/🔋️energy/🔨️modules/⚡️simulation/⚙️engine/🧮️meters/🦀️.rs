@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️Fuel
 /// ⛽️ Fuel/resource type for meters.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum FuelType {
     Electricity,
     NaturalGas,
@@ -20,7 +20,7 @@ pub enum FuelType {
 }
 
 /// 📊️ End-use category.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum EndUse {
     Heating,
     Cooling,
@@ -42,7 +42,7 @@ pub enum EndUse {
 
 // #region 🔖️Meter
 /// ⚡️ Single meter reading accumulator.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Meter {
     pub name: String,
     pub fuel: FuelType,
@@ -67,7 +67,7 @@ impl Meter {
 }
 
 /// 📦️ All meters in a simulation run.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct MeterTable {
     pub(crate) meters: FixedTable<String, Meter>,
 }

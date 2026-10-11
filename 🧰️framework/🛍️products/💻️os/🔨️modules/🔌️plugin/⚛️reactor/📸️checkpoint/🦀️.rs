@@ -17,7 +17,7 @@
 //! report rather than reached into silently.
 
 use crate::plugin_runtime;
-use semio_framework::Fault;
+use semio_framework::{Fault, FaultFrom};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -91,6 +91,9 @@ pub async fn checkpoint<PA: crate::app::PluginApp>(runtime: &plugin_runtime::Plu
 /// fresh and owns at most one load.
 pub(crate) const RESTORE_DOCUMENT_LOAD_OPERATION: u64 = 1 << 62;
 
+/// 🧮️ Native ownership ceiling of the one local authority a checkpoint restore spends on actor admission and app construction.
+pub(crate) const RESTORE_AUTHORITY_BYTES: usize = 1 << 20;
+
 /// 🫴️ Admits the original decoded actor text through the same decoder and caller wallet before its shared frame is born.
 pub(crate) fn admit_restored_actor(source:&mut Option<String>,original:&mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>)->Result<crate::protocol::ActorId,semio_framework_value::ValueError>{
     use semio_framework_value::{SharedUtf8,ValueError,ValueRefusalKind};
@@ -119,13 +122,15 @@ pub struct RestoredCheckpoint {
 /// whole-document archive load (`📓️api-stepped-document-load.md` §4), which `⚛️reactor`'s turn drives to `Ready` while
 /// the instance answers `document.loading`. `⚛️reactor::poll`'s caller is responsible for re-arming
 /// `timers`/treating `pending_requests` as stale (design-abi.md §4).
-pub async fn restore<PA: crate::app::PluginApp>(runtime: &plugin_runtime::PluginRuntime<PA>, state: &[u8]) -> Result<RestoredCheckpoint, Fault> {
+pub async fn restore<PA: crate::app::PluginApp>(runtime: &plugin_runtime::PluginRuntime<PA>, state: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, original: &mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<RestoredCheckpoint, Fault> {
     let state_text = std::str::from_utf8(state).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
-    let pack: CheckpointPack = semio_framework_pack_json::from_json_str(state_text, semio_framework_pack_json::JsonMemberPolicy::Reject)
+    let mut pack: CheckpointPack = semio_framework_pack_json::from_json_str(state_text, semio_framework_pack_json::JsonMemberPolicy::Reject)
         .map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
     let mut document_loads = Vec::with_capacity(pack.instances.len());
-    for instance in &pack.instances {
-        let id = plugin_runtime::plugin_create_app_with_id(runtime, instance.id, &instance.app_id, crate::protocol::ActorId(instance.actor.clone())).await?;
+    for instance in &mut pack.instances {
+        let mut source = Some(std::mem::take(&mut instance.actor));
+        let actor = admit_restored_actor(&mut source, original).map_err(semio_framework_value::ValueError::into_fault)?;
+        let id = plugin_runtime::plugin_create_app_with_id(runtime, instance.id, &instance.app_id, actor, identity).await?;
         if !instance.document_pack.is_empty() {
             let (parent_pack, parent_spr) =
                 store::decode_document_pack_bytes(&instance.document_pack).await.map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode-document"), format!("{error:?}")))?;

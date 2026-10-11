@@ -3,9 +3,8 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::mutations::*;
-use crate::::*;
-use set_payload::SetPayload;
+use crate::component::{ModulePayloadMutation, SetPayload};
+use semio_framework_diagnostic::TextError;
 
 impl protocol::OpText for ModulePayloadMutation {
     fn parse_op(line: &str) -> Result<Self, TextError> {

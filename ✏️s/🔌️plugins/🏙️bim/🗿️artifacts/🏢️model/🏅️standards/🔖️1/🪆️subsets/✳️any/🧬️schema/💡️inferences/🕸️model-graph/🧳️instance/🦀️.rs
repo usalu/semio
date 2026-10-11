@@ -1,4 +1,4 @@
-//! 🧳️ The inference sessions of a mounted instance. The framework owns them: one `ModelInferenceSession` per mounted artifact instance lives in the instance's `ArtifactInstanceOperationOwnerHandle` (see `lend_inference`),
+//! 🧳️ The inference sessions of a mounted instance. The framework owns them: one `ModelInferenceSession` per mounted artifact instance lives in the instance's `ArtifactInstanceOperationOwnerHandle` (see `with_inference_session`),
 //! created on first use, dropped by the close ladder with the instance and never held by a process or thread global. This module only supplies what the BIM model adds: the session type, the names of its two sessions
 //! (the document and the probe) and the calls every window, gesture, export and job reads derived values through. A render after a mutation brings its instance's session up to the snapshot from the concrete diffs the editor
 //! recorded ([`record_mutations`]); a change nobody explains (undo, a peer's edit, a load) walks the plan and the cache serves every node whose dependency chain is unchanged. A job that must not block steps the same session
@@ -26,10 +26,19 @@ pub const DOCUMENT: &str = "bim.model-graph";
 /// 🔭️ The name of the probe session in the instance.
 pub const PROBE: &str = "bim.model-graph.probe";
 
-/// 🧠️ Lends the session `name` of `instance` to `act`. No lock is held while `act` runs, so a read may itself reach the instance again.
+/// 🧠️ Lends the session `name` of `handle` to `act`, creating it on first use. An instance whose close ladder already dropped its sessions serves `act` a throwaway session instead.
+fn lend_handle<R>(handle: &ArtifactInstanceOperationOwnerHandle, name: &'static str, act: impl FnOnce(&mut ModelInferenceSession) -> R) -> R {
+    let mut act = Some(act);
+    match handle.with_inference_session(name, ModelInferenceSession::default, |session| Ok(act.take().map(|act| act(session)))) {
+        Ok(Some(out)) => out,
+        _ => act.take().map_or_else(|| unreachable!("the session closure ran without producing a value"), |act| act(&mut ModelInferenceSession::default())),
+    }
+}
+
+/// 🧠️ Lends the session `name` of `instance` to `act`; a call without an instance works on a throwaway session.
 fn lend<R>(instance: Instance<'_>, name: &'static str, act: impl FnOnce(&mut ModelInferenceSession) -> R) -> R {
     match instance {
-        Some(handle) => handle.lend_inference::<ModelInferenceSession, R>(name, act),
+        Some(handle) => lend_handle(handle, name, act),
         None => act(&mut ModelInferenceSession::default()),
     }
 }
@@ -78,7 +87,7 @@ pub fn record_mutations(instance: Instance<'_>, snapshot: &ModelSnapshot, mutati
         }
         sum.absorb(diff);
     }
-    handle.lend_inference::<ModelInferenceSession, ()>(DOCUMENT, |session| session.record(sum));
+    lend_handle(handle, DOCUMENT, |session| session.record(sum));
 }
 
 /// 📊️ What the last run of one instance's session did: the proof an edit recomputed only what it touched.
@@ -145,7 +154,7 @@ impl Analysis {
     fn session<R>(&mut self, act: impl FnOnce(&mut ModelInferenceSession, &mut Option<SessionRun>, usize) -> R) -> R {
         let Self { instance, local, run, fuel, .. } = self;
         match instance {
-            Some(handle) => handle.lend_inference::<ModelInferenceSession, R>(DOCUMENT, |session| act(session, run, *fuel)),
+            Some(handle) => lend_handle(handle, DOCUMENT, |session| act(session, run, *fuel)),
             None => act(local.get_or_insert_with(ModelInferenceSession::default), run, *fuel),
         }
     }

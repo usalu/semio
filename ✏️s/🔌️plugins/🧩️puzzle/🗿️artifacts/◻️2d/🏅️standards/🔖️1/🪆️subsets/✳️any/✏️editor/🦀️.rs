@@ -281,6 +281,13 @@ pub fn puzzle2d_clear_selection_write(snapshot: &Value, selected: &[String]) -> 
     Some(semio_framework_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(snapshot, selected), merge: MergeMode::Subtractive })
 }
 
+/// 🧷️ Writes `member` under `key` of a JSON object `Value`; any other `Value` is left untouched.
+pub fn set_member(target: &mut Value, key: &str, member: Value) {
+    if let Some(object) = target.as_object_mut() {
+        object.insert(key, member);
+    }
+}
+
 pub fn empty_board_snapshot() -> Value {
     json!({
         "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA,
@@ -443,7 +450,7 @@ fn document_board_kind_catalogs_json(catalogs: &Value) -> Option<String> {
                     let handles: Vec<Value> = row.get("handles").and_then(Value::as_array).map_or_else(Vec::new, |templates| {
                         templates.iter().filter(|template| template.get("handleKind").and_then(Value::as_str).is_some_and(|kind| !kind.trim().is_empty())).map(|template| catalog_row_subset(template, &["handleKind", "angle", "radius"])).collect()
                     });
-                    node["handles"] = Value::Array(handles);
+                    set_member(&mut node, "handles", Value::Array(handles));
                     node
                 })
                 .collect(),
@@ -479,7 +486,7 @@ pub fn board_kind_catalogs_json_or_inferred(snapshot: &Value) -> Option<String> 
     let Some(json) = board_kind_catalogs_json(snapshot) else {
         return inferred().map(|rows| json!({ "nodeKinds": Value::Array(rows) }).to_string());
     };
-    let Some(mut catalogs) = semio_framework_pack_json::parse(&json,semio_framework_pack_json::JsonMemberPolicy::Reject).ok().filter(Value::is_object) else {
+    let Some(mut catalogs) = semio_framework_pack_json::parse(&json,semio_framework_pack_json::JsonMemberPolicy::Reject).ok().filter(|value| value.as_object().is_some()) else {
         return Some(json);
     };
     let templated = catalogs.get("nodeKinds").and_then(Value::as_array).is_some_and(|rows| rows.iter().any(|row| row.get("handles").and_then(Value::as_array).is_some_and(|handles| !handles.is_empty())));
@@ -488,7 +495,7 @@ pub fn board_kind_catalogs_json_or_inferred(snapshot: &Value) -> Option<String> 
     }
     match inferred() {
         Some(rows) => {
-            catalogs["nodeKinds"] = Value::Array(rows);
+            set_member(&mut catalogs, "nodeKinds", Value::Array(rows));
             Some(catalogs.to_string())
         }
         None => Some(json),
@@ -551,7 +558,7 @@ pub fn inferred_node_kind_rows(snapshot: &Value) -> Vec<Value> {
                     .map(|handle| {
                         let mut template = json!({ "handleKind": handle.get("handleKind").and_then(Value::as_str).unwrap_or("port"), "angle": handle.get("angle").and_then(Value::as_f64).unwrap_or(0.0) });
                         if let Some(radius) = handle.get("radius").and_then(Value::as_f64) {
-                            template["radius"] = json!(radius);
+                            set_member(&mut template, "radius", json!(radius));
                         }
                         template
                     })
@@ -560,7 +567,7 @@ pub fn inferred_node_kind_rows(snapshot: &Value) -> Vec<Value> {
             .unwrap_or_default();
         let mut row = json!({ "id": kind, "name": kind, "shape": if rectangle { "rectangle" } else { "circle" }, "scale": size / 96.0, "radius": size * 0.5, "width": size, "height": size, "handles": handles });
         if let Some(icon) = node.get("iconKind").and_then(Value::as_str) {
-            row["iconKind"] = json!(icon);
+            set_member(&mut row, "iconKind", json!(icon));
         }
         rows.push(row);
     }
@@ -937,7 +944,7 @@ fn puzzle2d_placed_handles(node_id: &str, handles: Option<&Value>) -> Value {
         let mut handle = handle.clone();
         if let Some(object) = handle.as_object_mut() {
             if object.get("id").and_then(Value::as_str).is_none_or(str::is_empty) {
-                object.insert("id".into(), json!(format!("{node_id}:v{index}")));
+                object.insert("id", json!(format!("{node_id}:v{index}")));
             }
         }
         handle
@@ -960,7 +967,10 @@ fn puzzle2d_push_entity(snapshot: &mut Value, key: &str, entity: Value) {
     let Some(object) = snapshot.as_object_mut() else {
         return;
     };
-    if let Some(entities) = object.entry(key.to_string()).or_insert_with(|| json!([])).as_array_mut() {
+    if !object.contains_key(key) {
+        object.insert(key, json!([]));
+    }
+    if let Some(entities) = object.get_mut(key).and_then(Value::as_array_mut) {
         entities.push(entity);
     }
 }
@@ -1315,7 +1325,7 @@ pub fn puzzle2d_select_scope() -> UiDirtyScope {
 /// variant list byte-for-byte stable.
 macro_rules! puzzle2d_command_variants {
     ($($Variant:ident = $id:tt),* $(,)?) => {
-        #[derive(Clone, Debug, PartialEq)]
+        #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
         pub enum Puzzle2dCommand {
             $($Variant { window_id: Option<String>, args: Option<Value> }),*
         }
@@ -1931,8 +1941,8 @@ impl Puzzle2dRetainedCommandJobFactory {
 }
 
 impl ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
-    type Payload = crate::retained_command::RetainedPuzzleCommandPayload<EditorApp<Puzzle2dPlayApp>>;
-    type Job = crate::retained_command::RetainedPuzzleCommandJob<EditorApp<Puzzle2dPlayApp>>;
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Puzzle2dPlayApp>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Puzzle2dPlayApp>>;
 
     fn keys(&self) -> &[ToolFactoryKey] {
         &self.keys
@@ -1950,29 +1960,24 @@ impl ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
         self.contract
     }
 
-    fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(crate::retained_command::RetainedPuzzleCommandJob::new(operation, payload))
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
     }
 
     fn create_job_from_wire_pages_with_payload(
         &mut self,
-        operation: semio_framework_job::Operation,
+        _operation: semio_framework_job::Operation,
         payload: Self::Payload,
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > self.contract.max_raw_wire_bytes {
-            return Err((ToolJobFactoryError::new("Puzzle 2d retained command rejects an oversized wire owner"), input, checkpoint));
+        if input.declared_bytes() > payload.maximum_raw_bytes || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
+            return Err((ToolJobFactoryError::new("Puzzle 2d retained command rejects an oversized wire or checkpoint owner"), input, checkpoint));
         }
-        match checkpoint {
-            Some(checkpoint) => {
-                if let Err(error) = crate::retained_command::RetainedPuzzleCommandJob::validate_wire_checkpoint(operation, &payload, &input, &checkpoint) {
-                    return Err((error, input, Some(checkpoint)));
-                }
-                Ok(crate::retained_command::RetainedPuzzleCommandJob::from_validated_wire_checkpoint(operation, payload, input, checkpoint))
-            }
-            None => Ok(crate::retained_command::RetainedPuzzleCommandJob::from_wire(operation, payload, input)),
-        }
+        Ok(match checkpoint {
+            Some(checkpoint) => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
+            None => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input),
+        })
     }
 }
 
@@ -2049,15 +2054,11 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
 const PUZZLE2D_CONFIG_STORE_MAXIMUM_BYTES: usize = 65_536;
 
 struct Puzzle2dConfigStorePreparation {
-    base: Option<store::SnapshotRead<Puzzle2dConfig>>,
-    mutation: Option<Puzzle2dConfigMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    candidate: Option<(Puzzle2dConfig, Vec<Puzzle2dConfigMutation>, Puzzle2dConfigMutation, usize)>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<Puzzle2dConfig, Puzzle2dConfigMutation>>,
+    owners: store::OneItemOwners<Puzzle2dConfig, Puzzle2dConfigMutation>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    completed_bytes: usize,
     phase: u8,
     cancelled: bool,
-    closing: bool,
 }
 
 /// 🎚️ Config-lane preparation factory — the precondition every `Config` publication contract above
@@ -2083,39 +2084,53 @@ fn puzzle2d_config_store_mutation_bytes(mutation: &Puzzle2dConfigMutation) -> Op
 }
 
 impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::{Mutation as _, MutationDiff as _};
-        if !grant.permits_one() || self.cancelled {
+        use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() || self.phase >= 2 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.refused.is_some() {
+            return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle2d Config preparation retains its original Store refusal"));
+        }
+        if self.owners.prepared.is_some() || self.phase >= 2 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
         match self.phase {
             0 => {
-                let base = self.base.as_ref().ok_or_else(|| "Puzzle2d Config preparation lost its exact base root".to_string())?;
-                let mutation = self.mutation.take().ok_or_else(|| "Puzzle2d Config preparation lost its mutation owner".to_string())?;
-                if puzzle2d_config_store_mutation_bytes(&mutation).is_none() {
-                    return Err("Puzzle2d Config preparation rejected its exact mutation envelope".into());
+                let base = self.owners.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle2d Config preparation lost its exact base root"))?;
+                let mutation = self.owners.mutation.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle2d Config preparation lost its mutation owner"))?;
+                if puzzle2d_config_store_mutation_bytes(mutation).is_none() {
+                    return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "Puzzle2d Config preparation rejected its exact mutation envelope"));
                 }
-                let completed_bytes = puzzle2d_config_store_bounded_bytes(base.get())?;
-                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle2d Config mutation could not produce its post root".to_string())?;
-                self.candidate = Some((post, inverse, mutation, completed_bytes));
+                let completed_bytes = puzzle2d_config_store_bounded_bytes(base.get()).map_err(|message| ValueError::new(ValueRefusalKind::OwnershipLimit, message))?;
+                let inverse = mutation.inverse(base.get())?;
+                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle2d Config mutation could not produce its post root"))?;
+                let mutation = self.owners.mutation.take().expect("observed original mutation owner");
+                *self.owners.candidate = Some((post, inverse, mutation));
+                self.completed_bytes = completed_bytes;
                 self.phase = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: completed_bytes as u64, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.completed_bytes as u64, digest: [0; 32] };
+                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
             }
             1 => {
-                let (post, inverse, mutation, completed_bytes) = self.candidate.take().ok_or_else(|| "Puzzle2d Config preparation lost its semantic candidate".to_string())?;
-                let authority = self.authority.as_ref().ok_or_else(|| "Puzzle2d Config preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post))?;
+                let Some(authority) = self.owners.authority.as_ref() else {
+                    return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle2d Config preparation lost its Store authority"));
+                };
+                let (post, inverse, mutation) = self.owners.candidate.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle2d Config preparation lost its semantic candidate"))?;
+                let prepared = match authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post)) {
+                    Ok(prepared) => prepared,
+                    Err((error, edit, post)) => {
+                        *self.owners.refused = Some((edit, post));
+                        return Err(error);
+                    }
+                };
                 self.phase = 2;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: completed_bytes as u64, digest: prepared.edit_digest() };
-                self.prepared = Some(prepared);
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.completed_bytes as u64, digest: prepared.edit_digest() };
+                *self.owners.prepared = Some(prepared);
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
             }
-            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)),
+            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
         }
     }
 
@@ -2124,11 +2139,11 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
     }
 
     fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Puzzle2dConfig, Puzzle2dConfigMutation>> {
-        self.prepared.as_ref()
+        self.owners.prepared.as_ref()
     }
 
     fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Puzzle2dConfig, Puzzle2dConfigMutation>> {
-        self.prepared.take()
+        self.owners.prepared.take()
     }
 
     fn cancel(&mut self) {
@@ -2136,38 +2151,43 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
     }
 
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle2d Config preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        self.owners.close_step(grant.retained_grant())
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.owners.terminal_is_empty()
     }
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparationFactory {
+    fn begin_batch_digest(
+        &self,
+        edit: &mut Option<Box<protocol::Edit<Puzzle2dConfigMutation>>>,
+        grant: semio_framework_value::retained_clone::RetainedCloneGrant,
+    ) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Puzzle2dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &Puzzle2dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("Puzzle2d Config preparation rejected its lane".into());
@@ -2176,29 +2196,27 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfi
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
     }
 
+    fn begin_demand(&self, _mutation: &Puzzle2dConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Puzzle2dConfigStorePreparation>(), depth: 1 })
+    }
+
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Puzzle2dConfig, Puzzle2dConfigMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Puzzle2dConfig, Puzzle2dConfigMutation>> {
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err(request);
+        request: store::ArtifactStoreOneItemPreparationRequest<Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dConfigMutation>,
+        grant: store::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dConfigMutation>)> {
+        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle2d Config preparation rejected its original publication authority"), request));
         }
-        Ok(Box::new(Puzzle2dConfigStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            candidate: None,
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            phase: 0,
-            cancelled: false,
-            closing: false,
-        }))
+        let demand = match self.begin_demand(&request.mutation, request.lane) {
+            Ok(demand) => demand,
+            Err(error) => return Err((error, request)),
+        };
+        let progress = match demand.admit(grant.retained_grant()) {
+            Ok(progress) => progress,
+            Err(error) => return Err((error, request)),
+        };
+        Ok((Box::new(Puzzle2dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
     }
 }
 
@@ -2211,18 +2229,22 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfi
 struct Puzzle2dArtifactStorePreparationFactory;
 
 struct Puzzle2dArtifactStorePreparation {
-    base: Option<store::SnapshotRead<Puzzle2dPlaySnapshot>>,
-    mutation: Option<Puzzle2dMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    candidate: Option<(Puzzle2dPlaySnapshot, Vec<Puzzle2dMutation>, Puzzle2dMutation)>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<Puzzle2dPlaySnapshot, Puzzle2dMutation>>,
+    owners: store::OneItemOwners<Puzzle2dPlaySnapshot, Puzzle2dMutation>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    completed_bytes: usize,
     phase: u8,
     cancelled: bool,
-    closing: bool,
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparationFactory {
+    fn begin_batch_digest(
+        &self,
+        edit: &mut Option<Box<protocol::Edit<Puzzle2dMutation>>>,
+        grant: semio_framework_value::retained_clone::RetainedCloneGrant,
+    ) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Puzzle2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     /// 🧾️ The forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`): `delete-node`
     /// re-creates the node and re-connects every edge on its handles, a selection transform restores each target.
     fn preflight(&self, mutation: &Puzzle2dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
@@ -2232,62 +2254,74 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<Puzzle2dPlaySnapshot, _>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
+    fn begin_demand(&self, _mutation: &Puzzle2dMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Puzzle2dArtifactStorePreparation>(), depth: 1 })
+    }
+
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Puzzle2dPlaySnapshot, Puzzle2dMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Puzzle2dPlaySnapshot, Puzzle2dMutation>> {
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err(request);
+        request: store::ArtifactStoreOneItemPreparationRequest<Puzzle2dPlaySnapshot, Puzzle2dMutation, Puzzle2dMutation>,
+        grant: store::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Puzzle2dPlaySnapshot, Puzzle2dMutation, Puzzle2dMutation>)> {
+        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle2d Artifact preparation rejected its original publication authority"), request));
         }
-        Ok(Box::new(Puzzle2dArtifactStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            candidate: None,
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            phase: 0,
-            cancelled: false,
-            closing: false,
-        }))
+        let demand = match self.begin_demand(&request.mutation, request.lane) {
+            Ok(demand) => demand,
+            Err(error) => return Err((error, request)),
+        };
+        let progress = match demand.admit(grant.retained_grant()) {
+            Ok(progress) => progress,
+            Err(error) => return Err((error, request)),
+        };
+        Ok((Box::new(Puzzle2dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::{Mutation as _, MutationDiff as _};
-        if !grant.permits_one() || self.cancelled {
+        use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() || self.phase >= 2 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.refused.is_some() {
+            return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle2d Artifact preparation retains its original Store refusal"));
+        }
+        if self.owners.prepared.is_some() || self.phase >= 2 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
         match self.phase {
             0 => {
-                let base = self.base.as_ref().ok_or_else(|| "Puzzle2d Artifact preparation lost its exact base root".to_string())?;
-                let mutation = self.mutation.take().ok_or_else(|| "Puzzle2d Artifact preparation lost its mutation owner".to_string())?;
-                let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle2d Artifact mutation could not produce its post root".to_string())?;
-                self.candidate = Some((post, inverse, mutation));
+                let base = self.owners.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle2d Artifact preparation lost its exact base root"))?;
+                let mutation = self.owners.mutation.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle2d Artifact preparation lost its mutation owner"))?;
+                let inverse = mutation.inverse(base.get())?;
+                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle2d Artifact mutation could not produce its post root"))?;
+                let mutation = self.owners.mutation.take().expect("observed original mutation owner");
+                *self.owners.candidate = Some((post, inverse, mutation));
+                self.completed_bytes = 1;
                 self.phase = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.completed_bytes as u64, digest: [0; 32] };
+                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
             }
             1 => {
-                let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| "Puzzle2d Artifact preparation lost its semantic candidate".to_string())?;
-                let authority = self.authority.as_ref().ok_or_else(|| "Puzzle2d Artifact preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post))?;
+                let Some(authority) = self.owners.authority.as_ref() else {
+                    return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle2d Artifact preparation lost its Store authority"));
+                };
+                let (post, inverse, mutation) = self.owners.candidate.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle2d Artifact preparation lost its semantic candidate"))?;
+                let prepared = match authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post)) {
+                    Ok(prepared) => prepared,
+                    Err((error, edit, post)) => {
+                        *self.owners.refused = Some((edit, post));
+                        return Err(error);
+                    }
+                };
                 self.phase = 2;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1, digest: prepared.edit_digest() };
-                self.prepared = Some(prepared);
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.completed_bytes as u64, digest: prepared.edit_digest() };
+                *self.owners.prepared = Some(prepared);
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
             }
-            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)),
+            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
         }
     }
 
@@ -2296,11 +2330,11 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
     }
 
     fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Puzzle2dPlaySnapshot, Puzzle2dMutation>> {
-        self.prepared.as_ref()
+        self.owners.prepared.as_ref()
     }
 
     fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Puzzle2dPlaySnapshot, Puzzle2dMutation>> {
-        self.prepared.take()
+        self.owners.prepared.take()
     }
 
     fn cancel(&mut self) {
@@ -2308,34 +2342,31 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
     }
 
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle2d Artifact preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        self.owners.close_step(grant.retained_grant())
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.owners.terminal_is_empty()
     }
 }
 //#endregion 📬️StorePreparation
@@ -2372,16 +2403,11 @@ struct Puzzle2dWindowCommandWork {
     authoring_seed: String,
     base_revision: String,
     consumed: bool,
-    view_state: Option<semio_framework_plugin::ViewModel>,
-    window_config: Option<semio_framework_plugin::WindowConfigSnapshot>,
-    window_transient: Option<semio_framework_plugin::WindowTransientSnapshot>,
-    ephemeral: Option<EphemeralEmit<EditorApp<Puzzle2dPlayApp>>>,
-    context: Option<std::sync::Arc<semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>>,
 }
 
 impl Puzzle2dWindowCommandWork {
     fn new(tool_id: &'static str, extent: crate::retained_command::PuzzleCommandExtent<EditorApp<Puzzle2dPlayApp>>, authoring_seed: String, base_revision: String) -> Self {
-        Self { tool_id, extent, authoring_seed, base_revision, consumed: false, view_state: None, window_config: None, window_transient: None, ephemeral: None, context: None }
+        Self { tool_id, extent, authoring_seed, base_revision, consumed: false }
     }
 }
 
@@ -2390,53 +2416,35 @@ fn puzzle2d_revision_hex(revision: &[u8; 32]) -> String {
     revision.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dWindowCommandWork {
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dWindowCommandWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
 
-    fn bind_job_context(&mut self, context: std::sync::Arc<semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>) {
-        self.context = Some(context);
-    }
-
-    fn bind_view_state(&mut self, view_state: Option<semio_framework_plugin::ViewModel>) {
-        self.view_state = view_state;
-    }
-
-    fn bind_window_owners(&mut self, config: Option<semio_framework_plugin::WindowConfigSnapshot>, transient: Option<semio_framework_plugin::WindowTransientSnapshot>) {
-        self.window_config = config;
-        self.window_transient = transient;
-    }
-
-    fn take_ephemeral(&mut self) -> EphemeralEmit<EditorApp<Puzzle2dPlayApp>> {
-        self.ephemeral.take().unwrap_or_default()
-    }
-
-    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>) -> Option<usize> {
         (self.extent)(command, snapshot, interaction)
     }
 
-    fn step(
-        &mut self,
-        command: &Puzzle2dCommand,
-        snapshot: &Puzzle2dPlaySnapshot,
-        config: &Puzzle2dConfig,
-        interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
         if self.consumed {
             return Err(Fault::from("puzzle2d-window-work-repeated"));
         }
-        let window_config = window::config_from_snapshot_or_document(self.window_config.as_ref(), snapshot.value());
-        let window_transient = window::transient_from_snapshot(self.window_transient.as_ref());
-        let window_kind = self.window_config.as_ref().map(semio_framework_plugin::WindowConfigSnapshot::window_kind_id).or_else(|| self.view_state.as_ref().and_then(window::kind_for_view)).unwrap_or(overview::WINDOW_KIND_ID);
+        let view_state = context.and_then(|context| context.view_state.as_ref());
+        let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
+        let window_config = window::config_from_snapshot_or_document(window_config_snapshot, snapshot.value());
+        let window_transient = window::transient_from_snapshot(context.and_then(|context| context.window_transient.as_ref()));
+        let window_kind = window_config_snapshot.map(semio_framework_plugin::WindowConfigSnapshot::window_kind_id).or_else(|| view_state.and_then(window::kind_for_view)).unwrap_or(overview::WINDOW_KIND_ID);
         let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
         let detached = semio_framework_plugin::app::GestureSlot::detached();
-        let gesture = self.context.as_ref().map_or(&detached, |context| context.gesture());
-        let (emit, ephemeral) = puzzle2d_dispatch_emit(command, snapshot, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, &self.authoring_seed, &self.base_revision, gesture, None)?;
+        let gesture = context.map_or(&detached, |context| context.gesture());
+        let (emit, ephemeral) = puzzle2d_dispatch_emit(command, snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), &selection, &self.authoring_seed, &self.base_revision, gesture, None)?;
         self.consumed = true;
-        self.ephemeral = Some(ephemeral);
-        Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
+        Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
     }
 }
 
@@ -2449,31 +2457,29 @@ struct Puzzle2dExportWork {
     consumed: bool,
 }
 
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dExportWork {
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dExportWork {
     fn tool_id(&self) -> &'static str {
         "exportSnapshot"
     }
 
-    fn extent(&self, _command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    fn extent(&self, _command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>) -> Option<usize> {
         Some(1)
     }
 
-    fn step(
-        &mut self,
-        _command: &Puzzle2dCommand,
-        snapshot: &Puzzle2dPlaySnapshot,
-        _config: &Puzzle2dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         if self.consumed {
             return Err(Fault::from("puzzle2d-export-work-repeated"));
         }
         self.consumed = true;
         Ok(match export_snapshot::puzzle2d_export_publication(snapshot.value())? {
-            export_snapshot::Puzzle2dExportPublication::Inline(effect) => crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { effects: vec![effect], ui_scope: UiDirtyScope::None, ..Default::default() }),
-            export_snapshot::Puzzle2dExportPublication::Segmented(download) => crate::retained_command::PuzzleCommandWorkStep::Download(download),
-            export_snapshot::Puzzle2dExportPublication::Refused(message) => crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { effects: vec![Effect::Notify { message }], ui_scope: UiDirtyScope::None, ..Default::default() }),
+            export_snapshot::Puzzle2dExportPublication::Inline(effect) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { effects: vec![effect], ui_scope: UiDirtyScope::None, ..Default::default() }),
+            export_snapshot::Puzzle2dExportPublication::Segmented(download) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteDownload { download: download, ephemeral: Default::default() },
+            export_snapshot::Puzzle2dExportPublication::Refused(message) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { effects: vec![Effect::Notify { message }], ui_scope: UiDirtyScope::None, ..Default::default() }),
         })
     }
 }
@@ -2676,6 +2682,11 @@ fn puzzle2d_active_example_emit(command: &Puzzle2dCommand, _snapshot: &Puzzle2dP
     Ok(Emit { effects: vec![puzzle2d_load_document_effect(set_active_example::target(id))], ui_scope: UiDirtyScope::Full, ..Default::default() })
 }
 
+/// ➕️ `addNode` places one node through the shared window-command dispatch, so it is one admitted unit.
+fn puzzle2d_add_node_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    (command.action_id() == "addNode").then_some(1)
+}
+
 fn puzzle2d_active_example_reduce(
     command: &Puzzle2dCommand,
     snapshot: &Puzzle2dPlaySnapshot,
@@ -2754,6 +2765,23 @@ enum Puzzle2dForceStage {
     Closing,
 }
 
+/// ♻️ The owners one `Puzzle2dForceLayoutWork` still holds when its job closes, retired as one controlled bundle.
+#[derive(semio_framework_value::RetireOwned)]
+struct Puzzle2dForceLayoutWorkOwners {
+    node_ids: Vec<String>,
+    raw_node_indices: Vec<usize>,
+    original: Vec<Option<[f64; 2]>>,
+    positions: Vec<[f64; 2]>,
+    velocities: Vec<[f64; 2]>,
+    forces: Vec<[f64; 2]>,
+    radii: Vec<f64>,
+    id_to_index: HashMap<String, usize>,
+    handle_to_node: HashMap<String, String>,
+    edges: Vec<(usize, usize)>,
+    edge_set: HashSet<(usize, usize)>,
+    mutations: Vec<Puzzle2dMutation>,
+}
+
 struct Puzzle2dForceLayoutWork {
     tool_id: &'static str,
     stage: Puzzle2dForceStage,
@@ -2782,6 +2810,7 @@ struct Puzzle2dForceLayoutWork {
     edge_set: HashSet<(usize, usize)>,
     mutations: Vec<Puzzle2dMutation>,
     retained_bytes: usize,
+    close_owners: crate::puzzle_job::WorkClosing<Puzzle2dForceLayoutWorkOwners>,
 }
 
 impl Default for Puzzle2dForceLayoutWork {
@@ -2795,7 +2824,7 @@ impl Puzzle2dForceLayoutWork {
     /// tool id travels with the work — the retained job's decode phase rejects a payload whose
     /// action id does not equal [`crate::retained_command::PuzzleCommandWork::tool_id`].
     fn new(tool_id: &'static str) -> Self {
-        Self {
+        Self { close_owners: Default::default(),
             tool_id,
             stage: Puzzle2dForceStage::Nodes,
             node_cursor: 0,
@@ -2849,10 +2878,6 @@ impl Puzzle2dForceLayoutWork {
     fn random_unit(&mut self) -> f64 {
         self.rng = Self::split_mix64(self.rng);
         (self.rng as f64) / (u64::MAX as f64)
-    }
-
-    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>> {
-        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
     }
 
     fn pop_one(&mut self) -> bool {
@@ -3115,7 +3140,7 @@ impl Puzzle2dForceLayoutWork {
     }
 }
 
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dForceLayoutWork {
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dForceLayoutWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -3126,7 +3151,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
     /// repulsion/spring chunks, and the epilogue emits one mutation pass. Handles are counted here
     /// too, so a document that would trip `PUZZLE2D_FORCE_MAX_HANDLES` mid-run is refused at
     /// preflight instead.
-    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>) -> Option<usize> {
         if command.action_id() != self.tool_id || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) {
             return None;
         }
@@ -3153,14 +3178,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
     /// 🍰️ Each call drains one chunk of the current stage and yields a progress boundary, so the
     /// number of `step()` calls matches [`Puzzle2dForceLayoutWork::extent`] instead of running one
     /// force evaluation per checkpoint.
-    fn step(
-        &mut self,
-        _command: &Puzzle2dCommand,
-        snapshot: &Puzzle2dPlaySnapshot,
-        _config: &Puzzle2dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-force-nodes-missing"))?;
         let edges = snapshot.value().get("edges").and_then(Value::as_array);
         let iterations = puzzle2d_force_iterations(nodes.len(), edges.map_or(0, Vec::len));
@@ -3173,7 +3196,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                         _ => break,
                     }
                 }
-                Ok(Self::progress("puzzle2d-force-node", "Reading layout node", "Layout-Knoten wird gelesen"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-force-node", "Reading layout node", "Layout-Knoten wird gelesen"))
             }
             Puzzle2dForceStage::Edges => {
                 for _ in 0..PUZZLE2D_FORCE_SCAN_PER_STEP {
@@ -3182,7 +3205,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     }
                     self.scan_edge_one(edges)?;
                 }
-                Ok(Self::progress("puzzle2d-force-edge", "Indexing layout edge", "Layout-Kante wird indiziert"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-force-edge", "Indexing layout edge", "Layout-Kante wird indiziert"))
             }
             Puzzle2dForceStage::Seed => {
                 for _ in 0..PUZZLE2D_FORCE_NODES_PER_STEP {
@@ -3191,7 +3214,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     }
                     self.seed_one();
                 }
-                Ok(Self::progress("puzzle2d-force-seed", "Seeding layout node", "Layout-Knoten wird initialisiert"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-force-seed", "Seeding layout node", "Layout-Knoten wird initialisiert"))
             }
             Puzzle2dForceStage::Center => {
                 for _ in 0..PUZZLE2D_FORCE_NODES_PER_STEP {
@@ -3200,7 +3223,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     }
                     self.center_one();
                 }
-                Ok(Self::progress("puzzle2d-force-center", "Centering layout", "Layout wird zentriert"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-force-center", "Centering layout", "Layout wird zentriert"))
             }
             Puzzle2dForceStage::Reset => {
                 for _ in 0..PUZZLE2D_FORCE_NODES_PER_STEP {
@@ -3209,7 +3232,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     }
                     self.reset_one();
                 }
-                Ok(Self::progress("puzzle2d-force-reset", "Resetting layout force", "Layout-Kraft wird zurückgesetzt"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-force-reset", "Resetting layout force", "Layout-Kraft wird zurückgesetzt"))
             }
             Puzzle2dForceStage::Repel => {
                 for _ in 0..PUZZLE2D_FORCE_UNITS_PER_STEP {
@@ -3218,7 +3241,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     }
                     self.repel_one(iterations);
                 }
-                Ok(Self::progress("puzzle2d-force-repel", "Applying layout repulsion", "Layout-Abstoßung wird angewendet"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-force-repel", "Applying layout repulsion", "Layout-Abstoßung wird angewendet"))
             }
             Puzzle2dForceStage::Springs => {
                 for _ in 0..PUZZLE2D_FORCE_UNITS_PER_STEP {
@@ -3227,7 +3250,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     }
                     self.spring_one(iterations);
                 }
-                Ok(Self::progress("puzzle2d-force-spring", "Applying layout spring", "Layout-Feder wird angewendet"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-force-spring", "Applying layout spring", "Layout-Feder wird angewendet"))
             }
             Puzzle2dForceStage::Integrate => {
                 for _ in 0..PUZZLE2D_FORCE_NODES_PER_STEP {
@@ -3236,16 +3259,16 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     }
                     self.integrate_one(iterations);
                 }
-                Ok(Self::progress("puzzle2d-force-integrate", "Integrating layout node", "Layout-Knoten wird integriert"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-force-integrate", "Integrating layout node", "Layout-Knoten wird integriert"))
             }
             Puzzle2dForceStage::Emit => {
                 for _ in 0..PUZZLE2D_FORCE_NODES_PER_STEP {
                     if self.emit_one() {
                         let mutations = std::mem::take(&mut self.mutations);
-                        return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }));
+                        return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }));
                     }
                 }
-                Ok(Self::progress("puzzle2d-force-emit", "Preparing layout mutation", "Layout-Mutation wird vorbereitet"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-force-emit", "Preparing layout mutation", "Layout-Mutation wird vorbereitet"))
             }
             Puzzle2dForceStage::Complete => Err(Fault::from("puzzle2d-force-complete-repolled")),
             Puzzle2dForceStage::Closing => Err(Fault::from("puzzle2d-force-closing")),
@@ -3254,32 +3277,35 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
 
     fn begin_close(&mut self) {
         self.stage = Puzzle2dForceStage::Closing;
+        self.close_owners.stage(Puzzle2dForceLayoutWorkOwners { node_ids: std::mem::take(&mut self.node_ids), raw_node_indices: std::mem::take(&mut self.raw_node_indices), original: std::mem::take(&mut self.original), positions: std::mem::take(&mut self.positions), velocities: std::mem::take(&mut self.velocities), forces: std::mem::take(&mut self.forces), radii: std::mem::take(&mut self.radii), id_to_index: std::mem::take(&mut self.id_to_index), handle_to_node: std::mem::take(&mut self.handle_to_node), edges: std::mem::take(&mut self.edges), edge_set: std::mem::take(&mut self.edge_set), mutations: std::mem::take(&mut self.mutations) });
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if self.pop_one() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        self.close_owners.close_step(grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_owners.demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_owners.demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_owners.demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_owners.demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle2dForceStage::Closing
-            && self.node_ids.is_empty()
-            && self.raw_node_indices.is_empty()
-            && self.original.is_empty()
-            && self.positions.is_empty()
-            && self.velocities.is_empty()
-            && self.forces.is_empty()
-            && self.radii.is_empty()
-            && self.id_to_index.is_empty()
-            && self.handle_to_node.is_empty()
-            && self.edges.is_empty()
-            && self.edge_set.is_empty()
-            && self.mutations.is_empty()
+        self.stage == Puzzle2dForceStage::Closing && self.close_owners.is_empty()
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
     }
 }
 
@@ -3312,10 +3338,21 @@ struct Puzzle2dRedrawShape {
     rectangle: Option<[f64; 2]>,
 }
 
+semio_framework_value::artifact_retire_leaf!(Puzzle2dRedrawShape);
+
 /// 🕸️ `redrawHandles` as a bounded, resumable walk. `Nodes`/`Handles` index every visible handle to
 /// its owning node, `Edges` resolves each visible edge into one angle per endpoint (last edge wins
 /// on a shared handle, matching the engine), and `Emit` publishes one `replace-node-handle` per
 /// handle whose angle actually changed, each from the handle's own snap geometry — never a whole-board difference.
+/// ♻️ The owners one `Puzzle2dRedrawHandlesWork` still holds when its job closes, retired as one controlled bundle.
+#[derive(semio_framework_value::RetireOwned)]
+struct Puzzle2dRedrawHandlesWorkOwners {
+    shapes: Vec<Option<Puzzle2dRedrawShape>>,
+    handle_locations: HashMap<String, (usize, usize)>,
+    angles: std::collections::BTreeMap<(usize, usize), f64>,
+    mutations: Vec<Puzzle2dMutation>,
+}
+
 struct Puzzle2dRedrawHandlesWork {
     stage: Puzzle2dRedrawStage,
     node_cursor: usize,
@@ -3326,11 +3363,12 @@ struct Puzzle2dRedrawHandlesWork {
     angles: std::collections::BTreeMap<(usize, usize), f64>,
     mutations: Vec<Puzzle2dMutation>,
     retained_bytes: usize,
+    close_owners: crate::puzzle_job::WorkClosing<Puzzle2dRedrawHandlesWorkOwners>,
 }
 
 impl Default for Puzzle2dRedrawHandlesWork {
     fn default() -> Self {
-        Self {
+        Self { close_owners: Default::default(),
             stage: Puzzle2dRedrawStage::Nodes,
             node_cursor: 0,
             handle_cursor: 0,
@@ -3369,10 +3407,6 @@ impl Puzzle2dRedrawHandlesWork {
             Some([width, height]) => crate::editor::puzzle2d::engine::rectangle_handle_angle_toward(center, width, height, target),
             None => crate::editor::puzzle2d::engine::circle_handle_angle_toward(center, target),
         })
-    }
-
-    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>> {
-        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
     }
 
     fn admit_bytes(&mut self, bytes: usize) -> Result<(), Fault> {
@@ -3490,14 +3524,14 @@ impl Puzzle2dRedrawHandlesWork {
     }
 }
 
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dRedrawHandlesWork {
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dRedrawHandlesWork {
     fn tool_id(&self) -> &'static str {
         "redrawHandles"
     }
 
     /// 📐️ One index chunk per [`PUZZLE2D_REDRAW_UNITS_PER_STEP`] node-or-handle records, one chunk
     /// per that many edges, one chunk per that many published handles, plus one stage handover each.
-    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>) -> Option<usize> {
         if command.action_id() != "redrawHandles" || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) {
             return None;
         }
@@ -3517,14 +3551,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items.max(1))
     }
 
-    fn step(
-        &mut self,
-        _command: &Puzzle2dCommand,
-        snapshot: &Puzzle2dPlaySnapshot,
-        _config: &Puzzle2dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-redraw-nodes-missing"))?;
         match self.stage {
             Puzzle2dRedrawStage::Nodes | Puzzle2dRedrawStage::Handles => {
@@ -3535,7 +3567,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                         _ => break,
                     }
                 }
-                Ok(Self::progress("puzzle2d-redraw-node", "Indexing board node", "Board-Knoten wird indiziert"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-redraw-node", "Indexing board node", "Board-Knoten wird indiziert"))
             }
             Puzzle2dRedrawStage::Edges => {
                 let edges = snapshot.value().get("edges").and_then(Value::as_array);
@@ -3545,16 +3577,16 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                     }
                     self.resolve_edge_one(edges)?;
                 }
-                Ok(Self::progress("puzzle2d-redraw-edge", "Resolving handle angle", "Anschlusswinkel wird bestimmt"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-redraw-edge", "Resolving handle angle", "Anschlusswinkel wird bestimmt"))
             }
             Puzzle2dRedrawStage::Emit => {
                 for _ in 0..PUZZLE2D_REDRAW_UNITS_PER_STEP {
                     if self.publish_handle_one(nodes)? {
                         let mutations = std::mem::take(&mut self.mutations);
-                        return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }));
+                        return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }));
                     }
                 }
-                Ok(Self::progress("puzzle2d-redraw-emit", "Publishing handle angle", "Anschlusswinkel wird veröffentlicht"))
+                Ok(crate::puzzle_progress_step!("puzzle2d-redraw-emit", "Publishing handle angle", "Anschlusswinkel wird veröffentlicht"))
             }
             Puzzle2dRedrawStage::Complete => Err(Fault::from("puzzle2d-redraw-complete-repolled")),
             Puzzle2dRedrawStage::Closing => Err(Fault::from("puzzle2d-redraw-closing")),
@@ -3563,28 +3595,43 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
 
     fn begin_close(&mut self) {
         self.stage = Puzzle2dRedrawStage::Closing;
+        self.close_owners.stage(Puzzle2dRedrawHandlesWorkOwners { shapes: std::mem::take(&mut self.shapes), handle_locations: std::mem::take(&mut self.handle_locations), angles: std::mem::take(&mut self.angles), mutations: std::mem::take(&mut self.mutations) });
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if self.pop_one() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        self.close_owners.close_step(grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_owners.demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_owners.demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_owners.demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_owners.demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle2dRedrawStage::Closing && self.shapes.is_empty() && self.handle_locations.is_empty() && self.angles.is_empty() && self.mutations.is_empty()
+        self.stage == Puzzle2dRedrawStage::Closing && self.close_owners.is_empty()
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
     }
 }
 //#endregion 🧵️RetainedCommands
 
 //#region 🧵️ReservedJobs
-use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, StepContext};
 use semio_framework_plugin::app::ArtifactToolCompletionRejection;
-use semio_framework_plugin::{ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, MediaPayload, PluginCloseStep};
+use semio_framework_plugin::{ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, MediaPayload};
 
 /// 🔢️ Fixed per-collection descriptor budget for one `kit:in` fragment — an oversized collection is
 /// refused outright rather than silently truncated.
@@ -3602,74 +3649,18 @@ const PUZZLE2D_IMPORT_PORT: &str = "kit:in";
 const PUZZLE2D_IMPORT_ROOT_KEYS: &[&str] = &["schema", "id", "name", "axes", "portKinds", "wireKinds", "edgeKinds", "nodeKinds", "kindCompatibility"];
 const PUZZLE2D_IMPORT_COLLECTIONS: &[&str] = &["portKinds", "wireKinds", "edgeKinds", "nodeKinds", "kindCompatibility"];
 
-fn puzzle2d_job_payload(cx: &mut StepContext<'_>, stream: JobPayloadStream, bytes: &[u8]) -> RetainedJobPayload {
-    match cx.payload_from_bytes(stream, bytes) {
-        Ok(payload) => payload,
-        Err(rejected) => {
-            drop(rejected.into_source());
-            RetainedJobPayload::empty(stream)
-        }
-    }
-}
-
-fn puzzle2d_job_fault(cx: &mut StepContext<'_>, detail: &str) -> StepOutcome {
+fn puzzle2d_job_fault(detail: &str) -> crate::puzzle_job::JobTurn {
     let bytes = detail.as_bytes();
-    let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
-    StepOutcome::Fault(JobFault { detail: puzzle2d_job_payload(cx, JobPayloadStream::Fault, bounded) })
+    crate::puzzle_job::JobTurn::Fault(bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec())
 }
 
-fn puzzle2d_import_checkpoint(stage: u8, cursor: usize, decoded_items: usize, progress: u64, cx: &mut StepContext<'_>) -> StepOutcome {
+fn puzzle2d_import_checkpoint(stage: u8, cursor: usize, decoded_items: usize, progress: u64) -> crate::puzzle_job::JobTurn {
     let mut state = [0u8; 25];
     state[0] = stage;
     state[1..9].copy_from_slice(&(cursor as u64).to_le_bytes());
     state[9..17].copy_from_slice(&(decoded_items as u64).to_le_bytes());
     state[17..25].copy_from_slice(&progress.to_le_bytes());
-    StepOutcome::CheckpointReady(Checkpoint { state: puzzle2d_job_payload(cx, JobPayloadStream::CheckpointState, &state), applied_progress: progress })
-}
-
-/// 🧹️ One bounded unit of a retained `String`'s retirement: its content in ONE item (clearing a `String` frees
-/// nothing and drops nothing per char), then its heap backing, shrunk by at most `maximum_bytes` per unit.
-///
-/// 🐛️ This used to pop ONE char per unit and then REFUSE (`Err`) a backing larger than one unit's byte grant.
-/// A `kit:in` label at the `puzzle2d` import media cap (one `JOB_PAYLOAD_PAGE_BYTES` = 16 KiB page) leaves a
-/// backing above that grant, so after ~16 000 single-char units every later unit answered the same `Err`,
-/// the job's close mapped it to `Blocked`, and the close spun for ever — measured 2026-09-23 as
-/// `kit_in_retained_import_media_enforces_exact_media_max_plus_one_before_decode` running past the 30-minute
-/// test watchdog with `Fault::from` the hottest frame of the retirement (`sample`, `📓️block-puzzle.md` §11).
-fn puzzle2d_retire_string_step(owner: &mut String, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
-    if !owner.is_empty() {
-        owner.clear();
-        return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
-    }
-    let bytes = owner.capacity();
-    if bytes == 0 {
-        return Ok(None);
-    }
-    if bytes > maximum_bytes {
-        owner.shrink_to(bytes - maximum_bytes);
-        return Ok(Some(PluginCloseStep::Pending { released_items: 0, released_bytes: bytes - owner.capacity() }));
-    }
-    *owner = String::new();
-    Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }))
-}
-
-fn puzzle2d_retire_vec_backing<T>(owners: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
-    // 🐛️ A `Vec` of a ZERO-SIZED element never allocates and reports `usize::MAX` capacity by
-    // definition, so `capacity() == 0` is false forever and this answered
-    // `Pending { released_items: 1 }` on every call for a lane with no backing at all — an
-    // unterminating close. `Emit::draft_mutations` is exactly that lane
-    // (`NoDraftMutation = NoConfigMutation`, the uninhabited `pub enum NoConfigMutation {}`).
-    // Measured on `🖐️5d`'s identical helper, whose four `*_completion_rejection_*` laws spun 100 000
-    // bounded turns; fixed here at the same time because the code is the same code.
-    if !owners.is_empty() || owners.capacity() == 0 || size_of::<T>() == 0 {
-        return Ok(None);
-    }
-    let bytes = owners.capacity().saturating_mul(size_of::<T>());
-    if bytes > maximum_bytes {
-        return Err(Fault::from("puzzle2d import vector backing exceeds its bounded disposal byte slice"));
-    }
-    *owners = Vec::new();
-    Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }))
+    crate::puzzle_job::JobTurn::Checkpoint { applied_progress: progress, state: state.to_vec() }
 }
 
 fn puzzle2d_import_text(row: &Value, key: &str) -> semio_framework_value::paged::PagedUtf8<{ usize::MAX }> {
@@ -3826,7 +3817,23 @@ struct Puzzle2dImportJob {
     completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
     pending_completion_rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
     completed: bool,
+    outbox: crate::puzzle_job::JobOutbox,
     closing: bool,
+    owners: crate::puzzle_job::WorkClosing<Puzzle2dImportOwners>,
+}
+
+/// ♻️ The owners one `Puzzle2dImportJob` still holds when it closes, retired as one controlled bundle.
+#[derive(semio_framework_value::RetireOwned)]
+struct Puzzle2dImportOwners {
+    port: String,
+    media_json: Option<String>,
+    snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
+    fragment: Option<Value>,
+    catalogs: crate::Puzzle2dKindCatalogs,
+    compatibility: Vec<crate::Puzzle2dKindCompatibility>,
+    mutations: Vec<Puzzle2dMutation>,
+    completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
+    pending_completion_rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
 }
 
 impl Puzzle2dImportJob {
@@ -3852,12 +3859,14 @@ impl Puzzle2dImportJob {
             completion: Some(request.completion),
             pending_completion_rejection: None,
             completed: false,
+            outbox: Default::default(),
             closing: false,
+            owners: Default::default(),
         }
     }
 
-    fn checkpoint(&self, cx: &mut StepContext<'_>) -> StepOutcome {
-        puzzle2d_import_checkpoint(self.stage as u8, self.cursor, self.decoded_items, self.progress, cx)
+    fn checkpoint(&self) -> crate::puzzle_job::JobTurn {
+        puzzle2d_import_checkpoint(self.stage as u8, self.cursor, self.decoded_items, self.progress)
     }
 
     fn rows(&self, key: &str) -> &[Value] {
@@ -3876,30 +3885,30 @@ impl Puzzle2dImportJob {
         Ok(())
     }
 
-    fn decode(&mut self, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
+    fn decode(&mut self) -> Option<crate::puzzle_job::JobTurn> {
         if self.port != PUZZLE2D_IMPORT_PORT {
-            return Some(puzzle2d_job_fault(cx, "puzzle2d import only implements kit:in"));
+            return Some(puzzle2d_job_fault("puzzle2d import only implements kit:in"));
         }
         let Some(media_json) = self.media_json.as_ref() else {
-            return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in requires a structured payload"));
+            return Some(puzzle2d_job_fault("puzzle2d kit:in requires a structured payload"));
         };
         let Ok(fragment) = semio_framework_pack_json::parse(media_json,semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-            return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in payload is not valid json"));
+            return Some(puzzle2d_job_fault("puzzle2d kit:in payload is not valid json"));
         };
         if fragment.as_object().is_none() {
-            return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in root must be an object"));
+            return Some(puzzle2d_job_fault("puzzle2d kit:in root must be an object"));
         }
-        if fragment.as_object().is_some_and(|root| root.keys().any(|key| !PUZZLE2D_IMPORT_ROOT_KEYS.contains(&key.as_str()))) {
-            return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in root contains an unknown field"));
+        if fragment.as_object().is_some_and(|root| root.iter().any(|(key, _)| !PUZZLE2D_IMPORT_ROOT_KEYS.contains(&key))) {
+            return Some(puzzle2d_job_fault("puzzle2d kit:in root contains an unknown field"));
         }
         if fragment.get("schema").is_some_and(|value| value.as_str() != Some("manifest")) {
-            return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in schema must be manifest when present"));
+            return Some(puzzle2d_job_fault("puzzle2d kit:in schema must be manifest when present"));
         }
         if PUZZLE2D_IMPORT_COLLECTIONS.iter().any(|key| fragment.get(*key).is_some_and(|value| value.as_array().is_none())) {
-            return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in collection must be an array"));
+            return Some(puzzle2d_job_fault("puzzle2d kit:in collection must be an array"));
         }
         if PUZZLE2D_IMPORT_COLLECTIONS.iter().any(|key| fragment.get(*key).and_then(Value::as_array).is_some_and(|rows| rows.len() > PUZZLE2D_IMPORT_SEMANTIC_ITEMS)) {
-            return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in collection exceeds its fixed descriptor cap"));
+            return Some(puzzle2d_job_fault("puzzle2d kit:in collection exceeds its fixed descriptor cap"));
         }
         let existing_catalogs = self.meta("kindCatalogs").cloned();
         let existing_compatibility = self.meta("kindCompatibility").and_then(|value| value.as_array().cloned()).unwrap_or_default();
@@ -3907,19 +3916,19 @@ impl Puzzle2dImportJob {
         let catalog_items = existing_catalogs.as_ref().map(|catalogs| ["nodes", "handles", "edges", "wires"].into_iter().map(|slice| catalogs.get(slice).and_then(Value::as_array).map_or(0, Vec::len)).sum::<usize>()).unwrap_or_default();
         self.decoded_items = match fragment_items.and_then(|items| items.checked_add(catalog_items)).and_then(|items| items.checked_add(existing_compatibility.len())) {
             Some(items) if items <= PUZZLE2D_IMPORT_DECODED_ITEMS => items,
-            _ => return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in decoded item limit exceeded")),
+            _ => return Some(puzzle2d_job_fault("puzzle2d kit:in decoded item limit exceeded")),
         };
         self.catalogs = match existing_catalogs.as_ref() {
             Some(value) => match <crate::Puzzle2dKindCatalogs as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(value)) {
                 Ok(catalogs) => catalogs,
-                Err(_) => return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in cannot read the document's own kind catalogs")),
+                Err(_) => return Some(puzzle2d_job_fault("puzzle2d kit:in cannot read the document's own kind catalogs")),
             },
             None => crate::Puzzle2dKindCatalogs::default(),
         };
         for row in &existing_compatibility {
             match <crate::Puzzle2dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(row)) {
                 Ok(parsed) => self.compatibility.push(parsed),
-                Err(_) => return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in cannot read the document's own kind relations")),
+                Err(_) => return Some(puzzle2d_job_fault("puzzle2d kit:in cannot read the document's own kind relations")),
             }
         }
         self.catalog_changed = existing_catalogs.is_none() && PUZZLE2D_IMPORT_COLLECTIONS.iter().any(|key| fragment.get(*key).and_then(Value::as_array).is_some_and(|rows| !rows.is_empty()));
@@ -3928,18 +3937,18 @@ impl Puzzle2dImportJob {
     }
 }
 
-impl InteractiveJob for Puzzle2dImportJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+impl Puzzle2dImportJob {
+    fn turn(&mut self, cx: &mut StepContext<'_>) -> crate::puzzle_job::JobTurn {
+        if self.closing || cx.is_cancelled() {
+            return crate::puzzle_job::JobTurn::Cancelled;
         }
         if self.pending_completion_rejection.is_some() {
-            return puzzle2d_job_fault(cx, "puzzle2d import completion remains rejected");
+            return puzzle2d_job_fault("puzzle2d import completion remains rejected");
         }
         match self.stage {
             Puzzle2dImportStage::Decode => {
                 cx.set_stage("puzzle2d-import-decode");
-                if let Some(outcome) = self.decode(cx) {
+                if let Some(outcome) = self.decode() {
                     return outcome;
                 }
                 self.stage = Puzzle2dImportStage::HandleKinds;
@@ -3949,7 +3958,7 @@ impl InteractiveJob for Puzzle2dImportJob {
                 cx.set_stage("puzzle2d-import-handle-kind");
                 let admitted = self.rows("portKinds").get(self.cursor).map(puzzle2d_import_handle_kind);
                 match admitted {
-                    Some(None) => return puzzle2d_job_fault(cx, "puzzle2d kit:in port kind is missing its identity"),
+                    Some(None) => return puzzle2d_job_fault("puzzle2d kit:in port kind is missing its identity"),
                     Some(Some(kind)) => {
                         let id = kind.id.clone();
                         let changed = puzzle2d_upsert_catalog_row(&mut self.catalogs.handles, kind, |row| row.id == id);
@@ -3966,7 +3975,7 @@ impl InteractiveJob for Puzzle2dImportJob {
                 cx.set_stage("puzzle2d-import-node-kind");
                 let admitted = self.rows("nodeKinds").get(self.cursor).map(puzzle2d_import_node_kind);
                 match admitted {
-                    Some(None) => return puzzle2d_job_fault(cx, "puzzle2d kit:in node kind is missing its identity"),
+                    Some(None) => return puzzle2d_job_fault("puzzle2d kit:in node kind is missing its identity"),
                     Some(Some(kind)) => {
                         let id = kind.id.clone();
                         let changed = puzzle2d_upsert_catalog_row(&mut self.catalogs.nodes, kind, |row| row.id == id);
@@ -3983,7 +3992,7 @@ impl InteractiveJob for Puzzle2dImportJob {
                 cx.set_stage("puzzle2d-import-edge-kind");
                 let admitted = self.rows("edgeKinds").get(self.cursor).map(puzzle2d_import_edge_kind);
                 match admitted {
-                    Some(None) => return puzzle2d_job_fault(cx, "puzzle2d kit:in edge kind is missing its identity"),
+                    Some(None) => return puzzle2d_job_fault("puzzle2d kit:in edge kind is missing its identity"),
                     Some(Some(kind)) => {
                         let id = kind.id.clone();
                         let changed = puzzle2d_upsert_catalog_row(&mut self.catalogs.edges, kind, |row| row.id == id);
@@ -4000,7 +4009,7 @@ impl InteractiveJob for Puzzle2dImportJob {
                 cx.set_stage("puzzle2d-import-wire-kind");
                 let admitted = self.rows("wireKinds").get(self.cursor).map(puzzle2d_import_wire_kind);
                 match admitted {
-                    Some(None) => return puzzle2d_job_fault(cx, "puzzle2d kit:in wire kind is missing its identity"),
+                    Some(None) => return puzzle2d_job_fault("puzzle2d kit:in wire kind is missing its identity"),
                     Some(Some(kind)) => {
                         let id = kind.id.clone();
                         let changed = puzzle2d_upsert_catalog_row(&mut self.catalogs.wires, kind, |row| row.id == id);
@@ -4021,10 +4030,10 @@ impl InteractiveJob for Puzzle2dImportJob {
                     self.cursor = 0;
                     self.progress = self.progress.saturating_add(1);
                     cx.consume_fuel(1);
-                    return self.checkpoint(cx);
+                    return self.checkpoint();
                 };
                 let Ok(parsed) = <crate::Puzzle2dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&row)) else {
-                    return puzzle2d_job_fault(cx, "puzzle2d kit:in kind relation is malformed");
+                    return puzzle2d_job_fault("puzzle2d kit:in kind relation is malformed");
                 };
                 let existing = self.compatibility.iter().position(|entry| entry.source == parsed.source && entry.target == parsed.target);
                 if !existing.is_some_and(|index| self.compatibility[index] == parsed) {
@@ -4033,7 +4042,7 @@ impl InteractiveJob for Puzzle2dImportJob {
                         None => self.compatibility.push(parsed.clone()),
                     }
                     if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(parsed.source, parsed.target, parsed.bidirectional, parsed.important, parsed.specificity, None)) {
-                        return puzzle2d_job_fault(cx, error);
+                        return puzzle2d_job_fault(error);
                     }
                 }
                 self.cursor += 1;
@@ -4043,7 +4052,7 @@ impl InteractiveJob for Puzzle2dImportJob {
                 if self.catalog_changed {
                     let mutation = crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(Some(std::mem::take(&mut self.catalogs)));
                     if let Err(error) = self.push_mutation(mutation) {
-                        return puzzle2d_job_fault(cx, error);
+                        return puzzle2d_job_fault(error);
                     }
                     self.catalog_changed = false;
                 }
@@ -4054,149 +4063,89 @@ impl InteractiveJob for Puzzle2dImportJob {
                 if !self.completed {
                     let mutations = std::mem::take(&mut self.mutations);
                     let Some(completion) = self.completion.as_ref() else {
-                        return puzzle2d_job_fault(cx, "puzzle2d import lost its completion authority");
+                        return puzzle2d_job_fault("puzzle2d import lost its completion authority");
                     };
                     if !completion.has_mounted_consumer() {
-                        return puzzle2d_job_fault(cx, "puzzle2d import completion consumer is absent");
+                        return puzzle2d_job_fault("puzzle2d import completion consumer is absent");
                     }
                     if let Err(rejected) = completion.complete(Ok(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }), EphemeralEmit::default()) {
                         let message = rejected.fault.message.clone();
                         self.pending_completion_rejection = Some(rejected);
-                        return puzzle2d_job_fault(cx, &message);
+                        return puzzle2d_job_fault(&message);
                     }
                     self.completed = true;
                 }
-                return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
+                return crate::puzzle_job::JobTurn::Complete;
             }
         }
         self.progress = self.progress.saturating_add(1);
         cx.consume_fuel(1);
-        self.checkpoint(cx)
+        self.checkpoint()
+    }
+}
+
+impl InteractiveJob for Puzzle2dImportJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        match self.outbox.phase(cx)? {
+            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
+            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+                self.outbox.retire_step(cx)?;
+                return Ok(None);
+            }
+            crate::puzzle_job::OutboxPhase::Idle => {}
+        }
+        let turn = if cx.fuel_exhausted() || cx.deadline_exceeded() { crate::puzzle_job::JobTurn::Yield } else { self.turn(cx) };
+        self.outbox.settle(turn, cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        self.outbox.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
-        self.closing = true;
+        if std::mem::replace(&mut self.closing, true) {
+            return;
+        }
+        self.owners.stage(Puzzle2dImportOwners {
+            port: std::mem::take(&mut self.port),
+            media_json: self.media_json.take(),
+            snapshot: self.snapshot.take(),
+            fragment: self.fragment.take(),
+            catalogs: std::mem::take(&mut self.catalogs),
+            compatibility: std::mem::take(&mut self.compatibility),
+            mutations: std::mem::take(&mut self.mutations),
+            completion: self.completion.take(),
+            pending_completion_rejection: self.pending_completion_rejection.take(),
+        });
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
-            Ok(PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-            Ok(PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            Ok(PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
-            Ok(PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-        }
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        self.begin_close();
+        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        ArtifactReservedJob::terminal_is_empty(self)
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.copy_bytes)
     }
-}
 
-impl ArtifactReservedJob for Puzzle2dImportJob {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        self.closing = true;
-        if maximum_items == 0 {
-            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
-            if let Ok(emit) = rejected.emit.as_mut() {
-                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
-                    return Ok(step);
-                }
-            }
-            self.pending_completion_rejection = None;
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.mutations.pop().is_some() {
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(step) = puzzle2d_retire_vec_backing(&mut self.mutations, maximum_bytes)? {
-            return Ok(step);
-        }
-        if self.compatibility.pop().is_some() {
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(step) = puzzle2d_retire_vec_backing(&mut self.compatibility, maximum_bytes)? {
-            return Ok(step);
-        }
-        macro_rules! retire_catalog_slice {
-            ($slice:expr) => {
-                if $slice.pop().is_some() {
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                let step = $slice.release_empty_page(maximum_bytes).map_err(|error| Fault::from(error.reason))?;
-                if step.progressed {
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: step.released_allocation_bytes });
-                }
-                if $slice.capacity() != 0 {
-                    return Ok(PluginCloseStep::Blocked { reason: "puzzle2d catalog page requires its exact physical disposal grant" });
-                }
-            };
-        }
-        retire_catalog_slice!(self.catalogs.nodes);
-        retire_catalog_slice!(self.catalogs.handles);
-        retire_catalog_slice!(self.catalogs.edges);
-        retire_catalog_slice!(self.catalogs.wires);
-        if let Some(fragment) = self.fragment.take() {
-            let bytes = match &fragment {
-                Value::Object(object) => object.len().saturating_mul(size_of::<Value>()),
-                Value::Array(values) => values.len().saturating_mul(size_of::<Value>()),
-                _ => size_of::<Value>(),
-            };
-            if bytes > maximum_bytes {
-                self.fragment = Some(fragment);
-                return Err(Fault::from("puzzle2d kit:in fragment exceeds its bounded disposal byte slice"));
-            }
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
-        }
-        if let Some(text) = self.media_json.as_mut() {
-            if let Some(step) = puzzle2d_retire_string_step(text, maximum_bytes)? {
-                return Ok(step);
-            }
-            self.media_json = None;
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(step) = puzzle2d_retire_string_step(&mut self.port, maximum_bytes)? {
-            return Ok(step);
-        }
-        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
-            return Ok(PluginCloseStep::Blocked { reason: "puzzle2d import snapshot has no mounted retained authority" });
-        }
-        if self.snapshot.take().is_some() {
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
-            return Ok(PluginCloseStep::Blocked { reason: "puzzle2d import completion has no mounted consumer authority" });
-        }
-        if self.completion.take().is_some() {
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(PluginCloseStep::Complete)
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing
-            && self.port.is_empty()
-            && self.port.capacity() == 0
-            && self.media_json.is_none()
-            && self.snapshot.is_none()
-            && self.fragment.is_none()
-            && self.completion.is_none()
-            && self.pending_completion_rejection.is_none()
-            && self.mutations.is_empty()
-            && self.mutations.capacity() == 0
-            && self.compatibility.is_empty()
-            && self.compatibility.capacity() == 0
-            && self.catalogs.nodes.is_empty()
-            && self.catalogs.nodes.capacity() == 0
-            && self.catalogs.handles.is_empty()
-            && self.catalogs.handles.capacity() == 0
-            && self.catalogs.edges.is_empty()
-            && self.catalogs.edges.capacity() == 0
-            && self.catalogs.wires.is_empty()
-            && self.catalogs.wires.capacity() == 0
+        self.closing && self.outbox.terminal_is_empty() && self.owners.is_empty()
     }
 }
+
+impl ArtifactReservedJob for Puzzle2dImportJob {}
 
 /// 📋️ One-step reserved copy/cut/paste job — the framework route is an empty stub unless the app owns
 /// this producer, so puzzle2d owning it is what makes `mod+c`/`mod+x`/`mod+v` and the context-menu
@@ -4205,24 +4154,45 @@ impl ArtifactReservedJob for Puzzle2dImportJob {
 struct Puzzle2dClipboardJob {
     tool_id: String,
     labels: Option<&'static crate::editor::puzzle2d::terminology::Puzzle2dLabels>,
-    snapshot: std::sync::Arc<Puzzle2dPlaySnapshot>,
+    snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
     raw_wire: Vec<u8>,
-    input: Option<ArtifactReservedToolInput>,
+    args: Option<semio_framework_value::DslValue>,
+    interaction: Option<semio_framework::InteractionState>,
+    hover: Option<semio_framework_plugin::app::InteractionHoverState>,
     completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
+    rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
+    outbox: crate::puzzle_job::JobOutbox,
     closing: bool,
+    owners: crate::puzzle_job::WorkClosing<Puzzle2dClipboardOwners>,
+}
+
+/// ♻️ The owners one `Puzzle2dClipboardJob` still holds when it closes, retired as one controlled bundle.
+#[derive(semio_framework_value::RetireOwned)]
+struct Puzzle2dClipboardOwners {
+    args: Option<semio_framework_value::DslValue>,
+    interaction: Option<semio_framework::InteractionState>,
+    hover: Option<semio_framework_plugin::app::InteractionHoverState>,
+    tool_id: String,
+    snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
+    raw_wire: Vec<u8>,
+    completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
+    rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
 }
 
 impl Puzzle2dClipboardJob {
     fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>) -> Self {
+        let ArtifactReservedToolInput::Action { args, interaction, hover } = request.input else { unreachable!("clipboard routes carry action input") };
         let labels = request.ui_axes.map(|(locale, terminology)| puzzle2d_labels(&semio_framework_plugin::ViewModel::new(locale, terminology)));
-        Self { tool_id: request.tool_id, labels, snapshot: request.snapshot, raw_wire: request.raw_wire, input: Some(request.input), completion: Some(request.completion), closing: false }
+        Self { tool_id: request.tool_id, labels, snapshot: Some(request.snapshot), raw_wire: request.raw_wire, args, interaction: Some(interaction), hover: Some(hover), completion: Some(request.completion), rejection: None, outbox: Default::default(), closing: false, owners: Default::default() }
     }
 
     fn emit(&mut self) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, NoDraftMutation>, Fault> {
-        let Some(ArtifactReservedToolInput::Action { args, interaction, hover }) = self.input.take() else {
+        let (Some(interaction), Some(hover)) = (self.interaction.as_ref(), self.hover.as_ref()) else {
             return Ok(Emit::default());
         };
-        let snapshot = self.snapshot.value();
+        let args = self.args.as_ref();
+        let Some(owned) = self.snapshot.clone() else { return Ok(Emit::default()) };
+        let snapshot = owned.value();
         let marks = Puzzle2dInteractionSnapshot::from_state(&interaction, &hover);
         let selected = puzzle2d_selected_node_ids(snapshot, marks.selected_ids());
         Ok(match self.tool_id.as_str() {
@@ -4238,7 +4208,7 @@ impl Puzzle2dClipboardJob {
                     let labels = self.labels.ok_or_else(|| Fault::from("puzzle2d clipboard notification requires the caller's explicit presentation axes"))?;
                     return Ok(Emit { effects: vec![Effect::Notify { message: labels.cut_locked.as_str().to_string() }], ui_scope: UiDirtyScope::None, ..Default::default() });
                 }
-                let mutations = puzzle2d_cut_operations_from(&self.snapshot, &selected);
+                let mutations = puzzle2d_cut_operations_from(&owned, &selected);
                 let clear = puzzle2d_clear_selection_write(snapshot, &selected).into_iter().collect();
                 Emit { artifact_mutations: mutations, effects: vec![Effect::ClipboardWrite { fragment }], interaction_writes: clear, ..Default::default() }
             }
@@ -4247,7 +4217,7 @@ impl Puzzle2dClipboardJob {
                     return Ok(Emit::default());
                 };
                 let placement = PastePlacement::default();
-                match puzzle2d_paste_operations_on(&self.snapshot, &fragment, &placement) {
+                match puzzle2d_paste_operations_on(&owned, &fragment, &placement) {
                     Ok((mutations, pasted)) => Emit { artifact_mutations: mutations, interaction_writes: vec![puzzle2d_selection_write(snapshot, &pasted)], ..Default::default() },
                     Err(_) => Emit::default(),
                 }
@@ -4258,62 +4228,77 @@ impl Puzzle2dClipboardJob {
 }
 
 impl InteractiveJob for Puzzle2dClipboardJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        match self.outbox.phase(cx)? {
+            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
+            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+                self.outbox.retire_step(cx)?;
+                return Ok(None);
+            }
+            crate::puzzle_job::OutboxPhase::Idle => {}
         }
-        let emit = self.emit();
-        let Some(completion) = self.completion.as_ref() else {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
-        };
-        if completion.complete(emit, EphemeralEmit::default()).is_err() {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
-        }
-        let output = puzzle2d_job_payload(cx, JobPayloadStream::CommitOutput, &self.raw_wire);
-        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output })
+        let turn = self.turn(cx);
+        self.outbox.settle(turn, cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        self.outbox.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
-        self.closing = true;
+        if std::mem::replace(&mut self.closing, true) {
+            return;
+        }
+        self.owners.stage(Puzzle2dClipboardOwners { args: self.args.take(), interaction: self.interaction.take(), hover: self.hover.take(), tool_id: std::mem::take(&mut self.tool_id), snapshot: self.snapshot.take(), raw_wire: std::mem::take(&mut self.raw_wire), completion: self.completion.take(), rejection: self.rejection.take() });
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        self.closing = true;
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        self.begin_close();
+        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.depth)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.outbox.terminal_is_empty() && self.owners.is_empty()
+    }
+}
+
+impl Puzzle2dClipboardJob {
+    fn turn(&mut self, cx: &StepContext<'_>) -> crate::puzzle_job::JobTurn {
+        if self.closing || cx.is_cancelled() {
+            return crate::puzzle_job::JobTurn::Cancelled;
+        }
         if !self.raw_wire.is_empty() {
-            if maximum_items == 0 || maximum_bytes == 0 {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            let released_bytes = self.raw_wire.len().min(maximum_bytes);
-            self.raw_wire.truncate(self.raw_wire.len() - released_bytes);
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            return crate::puzzle_job::JobTurn::Prepare(std::mem::take(&mut self.raw_wire));
         }
-        if self.input.take().is_some() || self.completion.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        let emit = self.emit();
+        let Some(completion) = self.completion.as_ref() else { return crate::puzzle_job::JobTurn::Fault(b"puzzle2d-clipboard-completion-owner".to_vec()) };
+        if let Err(rejected) = completion.complete(emit, EphemeralEmit::default()) {
+            self.rejection = Some(rejected);
+            return crate::puzzle_job::JobTurn::Fault(b"puzzle2d-clipboard-completion-rejected".to_vec());
         }
-        semio_framework_job::InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.raw_wire.is_empty() && self.input.is_none() && self.completion.is_none()
+        crate::puzzle_job::JobTurn::Complete
     }
 }
 
-impl ArtifactReservedJob for Puzzle2dClipboardJob {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        Ok(match InteractiveJob::close_step(self, maximum_items, maximum_bytes) {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-            semio_framework_job::InteractiveJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "puzzle2d clipboard route close is blocked" },
-            semio_framework_job::InteractiveJobCloseStep::Complete => PluginCloseStep::Complete,
-        })
-    }
+impl ArtifactReservedJob for Puzzle2dClipboardJob {}
 
-    fn terminal_is_empty(&self) -> bool {
-        InteractiveJob::terminal_is_empty(self)
-    }
-}
-//#endregion 🧵️ReservedJobs
 
-//#region 📜️ToolProofs
 /// 📜️ The retained command catalog's own bounded first-step proofs — one per
 /// [`PUZZLE2D_RETAINED_TOOL_IDS`] entry, all joined to the single concrete
 /// [`Puzzle2dRetainedCommandJobFactory`].
@@ -4463,13 +4448,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         puzzle2d_entity_label(snapshot.value(), kinds, id)
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Puzzle2dConfigStorePreparationFactory))
@@ -4487,9 +4466,6 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
-    }
 
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(semio_framework_plugin::no_draft_store_disposer())
@@ -4552,7 +4528,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         if let Some(flag) = puzzle2d_flag_value_argument(action) {
             args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle2d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
         }
-        let args = args.map(Value::from);
+        let args = args.map(semio_framework_pack_json::from_dsl_value);
         Puzzle2dCommand::try_from_action(action, args, window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 2D action '{action}'")))
     }
 
@@ -4611,11 +4587,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         if request.command.action_id() != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "puzzle2d-command-tool-mismatch"));
         }
-        let mut work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match request.command.action_id() {
+        let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> = match request.command.action_id() {
             "setActiveExample" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("setActiveExample", puzzle2d_active_example_reduce, puzzle2d_active_example_extent)),
             "forceLayout" => Box::new(Puzzle2dForceLayoutWork::default()),
             "reorganize" => Box::new(Puzzle2dForceLayoutWork::new("reorganize")),
-            "addNode" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("addNode", puzzle2d_retained_reduce, puzzle2d_retained_extent)),
+            "addNode" => Box::new(Puzzle2dWindowCommandWork::new("addNode", puzzle2d_add_node_extent, request.authoring_seed.clone(), puzzle2d_revision_hex(&request.canonical_base_revision))),
             "exportSnapshot" => Box::new(Puzzle2dExportWork::default()),
             "applyBoardEvents" => Box::new(Puzzle2dWindowCommandWork::new("applyBoardEvents", puzzle2d_board_events_extent, request.authoring_seed.clone(), puzzle2d_revision_hex(&request.canonical_base_revision))),
             generic if PUZZLE2D_GENERIC_TOOL_IDS.contains(&generic) => Box::new(Puzzle2dWindowCommandWork::new(generic, puzzle2d_generic_extent, request.authoring_seed.clone(), puzzle2d_revision_hex(&request.canonical_base_revision))),
@@ -4623,21 +4599,32 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             "redrawHandles" => Box::new(Puzzle2dRedrawHandlesWork::default()),
             _ => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), "puzzle2d-command-tool-unmapped")),
         };
-        work.bind_view_state(request.context.view_state.clone());
-        work.bind_job_context(std::sync::Arc::clone(&request.context));
-        let payload = crate::retained_command::RetainedPuzzleCommandPayload {
-            command: *request.command,
-            snapshot: request.snapshot,
-            config: request.config,
-            interaction_state: request.interaction_state,
-            interaction_hover: request.interaction_hover,
-            window_config: request.window_config,
-            window_transient: request.context.window_transient.clone(),
-            context_identity: request.context.identity_digest(),
-            completion: request.completion,
-            command_id: Puzzle2dCommand::action_id,
-            work,
+        let operation_context = semio_framework_plugin::AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
+            authoring_seed: request.authoring_seed.clone(),
         };
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
+            Puzzle2dCommand::action_id,
+            PUZZLE2D_COMMAND_RAW_BYTES,
+            crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,
+            work,
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 

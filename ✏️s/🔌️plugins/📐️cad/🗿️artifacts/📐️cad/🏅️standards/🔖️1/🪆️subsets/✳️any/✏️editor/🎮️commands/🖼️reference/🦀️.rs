@@ -18,7 +18,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod patch_cad_play_reference {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "patch-cad-play-reference")]
     pub struct PatchCadPlayReference {
         pub model_definition_id: String,
@@ -72,7 +72,7 @@ fn addressed_reference<'a>(document: &'a CadSnapshot, model_definition_id: &str,
 pub mod set_reference_hidden {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "set-reference-hidden")]
     pub struct SetReferenceHidden {
         pub model_definition_id: String,
@@ -93,7 +93,7 @@ pub mod set_reference_hidden {
 pub mod set_reference_locked {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "set-reference-locked")]
     pub struct SetReferenceLocked {
         pub model_definition_id: String,
@@ -114,7 +114,7 @@ pub mod set_reference_locked {
 pub mod set_reference_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "reference-selection")]
     pub struct SetReferenceSelection {
         pub pane: Option<String>,
@@ -151,7 +151,7 @@ pub mod set_reference_selection {
 pub mod reference_hover {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "reference-hover")]
     pub struct ReferenceHover {
         pub reference_id: Option<String>,

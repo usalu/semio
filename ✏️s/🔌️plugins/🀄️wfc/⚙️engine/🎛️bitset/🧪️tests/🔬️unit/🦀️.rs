@@ -119,8 +119,8 @@ fn stray_bits_past_len_in_final_word_are_not_well_formed() {
 #[test]
 fn serde_round_trip_preserves_bits_and_len() {
     let s = from_indices(70, &[3, 64, 69]);
-    let json = semio_framework_os_kernel::json::to_json_string(&s);
-    let back: PatternSet = semio_framework_os_kernel::json::from_json_str(&json).unwrap();
+    let json = semio_framework_pack_json::to_json_string(&s);
+    let back: PatternSet = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(back, s);
     assert!(back.is_well_formed());
 }

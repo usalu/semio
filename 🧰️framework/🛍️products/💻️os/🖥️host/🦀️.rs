@@ -15,7 +15,7 @@ pub mod host {
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-    use semio_framework::{AppDefinition, PluginManifest, TopicContribution, ViewModel};
+    use semio_framework::{AppDefinition, PluginManifest, ProgramContributionEntry, ViewModel};
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
@@ -65,13 +65,6 @@ use semio_framework_value::ValueError;
         pub plugin_id: String,
         pub manifest: PluginManifest,
         pub artifact_uri: String,
-    }
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct ProgramContributionEntry {
-        pub plugin_id: String,
-        pub topic_contribution: TopicContribution,
     }
 
     pub struct PluginHost {
@@ -200,14 +193,14 @@ use semio_framework_value::ValueError;
             let mut entries = Vec::new();
             for loaded in self.programs.values() {
                 for topic_contribution in &loaded.manifest.topic_contributions {
-                    entries.push(ProgramContributionEntry { plugin_id: loaded.plugin_id.clone(), topic_contribution: topic_contribution.clone() });
+                    entries.push(ProgramContributionEntry { plugin_id: loaded.plugin_id.clone(), topic_contribution: Some(topic_contribution.clone()) });
                 }
             }
             entries
         }
 
         pub fn contributions_json(&self) -> String {
-            serde_json::to_string(&self.contributions()).unwrap_or_else(|_| "[]".into())
+            semio_framework_pack_json::to_json_string(&self.contributions())
         }
 
         pub fn create_instance(&mut self, app_id: &str, document_json: String, view_state: ViewModel) -> Option<u32> {
@@ -506,7 +499,7 @@ use semio_framework_value::ValueError;
             dialect: None,
             migrated_from: None,
             owner: None,
-            lanes: std::collections::BTreeMap::new(),
+            lanes: protocol::causal::HistoryFoldIndex::new(),
             viewer_checkpoint_id: None,
             edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages.clone()),
             conflicts: document.conflicts.clone(),
@@ -528,7 +521,7 @@ use semio_framework_value::ValueError;
             dialect: None,
             migrated_from: None,
             owner: None,
-            lanes: std::collections::BTreeMap::new(),
+            lanes: protocol::causal::HistoryFoldIndex::new(),
             viewer_checkpoint_id: None,
             edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages),
             conflicts: document.conflicts,
@@ -542,17 +535,25 @@ use semio_framework_value::ValueError;
     /// 🧺️ Retires a copied backbone envelope through its exact bounded owner catalogue.
     fn close_backbone_envelope<P, Op>(envelope: ArtifactEnvelope<P, Op>) -> Result<(), VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
     {
-        let mut retirement = store::bounded_artifact_store_owners::<P, Op>().retire_envelope_uninstalled(envelope).map_err(VcsError::ValidationFailed)?;
+        use store::ErasedSnapshotRetirement as _;
+        fn grant_of(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+            semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+        }
+        let fault = |error: semio_framework_value::ValueError| VcsError::ValidationFailed(error.to_string());
+        let owners = store::funded_bounded_artifact_store_owners::<P, Op>().map_err(fault)?;
+        let birth = grant_of(owners.uninstalled_envelope_retirement_demands(&envelope));
+        let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, birth).map_err(|(error, _, _)| fault(error))?;
         loop {
-            match retirement.close_step(1, retirement.next_close_byte_demand().max(4096)).map_err(|error| VcsError::ValidationFailed(error.into_message()))? {
-                store::SnapshotRetirementStep::Complete => {
+            let demand = retirement.next_demand(4096).map_err(fault)?;
+            match retirement.close_step(grant_of(demand)).map_err(fault)? {
+                semio_framework_value::retained_clone::RetainedCloneStep::Complete(_) => {
                     assert!(retirement.terminal_is_empty(), "backbone envelope retirement reports its exact terminal");
                     return Ok(());
                 }
-                store::SnapshotRetirementStep::Pending { .. } | store::SnapshotRetirementStep::Blocked => std::thread::yield_now(),
+                semio_framework_value::retained_clone::RetainedCloneStep::Progress(_) => std::thread::yield_now(),
             }
         }
     }
@@ -560,8 +561,8 @@ use semio_framework_value::ValueError;
     /// 🧺️ Lends a copied authoritative envelope, then retires every exact nested owner.
     fn with_backbone_envelope<P, Op, R>(document: &BackboneDocument<P, Op>, read: impl FnOnce(&ArtifactEnvelope<P, Op>) -> Result<R, VcsError>) -> Result<R, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
     {
         let envelope = backbone_envelope_of(document);
         let result = read(&envelope);
@@ -571,8 +572,8 @@ use semio_framework_value::ValueError;
 
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(materialize_document_snapshot(envelope, applied_edit_ids)))
     }
@@ -580,8 +581,8 @@ use semio_framework_value::ValueError;
     /// 📤️ Exports an already-loaded backbone document as pack bytes + ops text.
     pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactPackFiles, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_pack(envelope)))
     }
@@ -589,8 +590,8 @@ use semio_framework_value::ValueError;
     /// 📤️ DSL-text counterpart of `export_backbone_pack`.
     pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactTextFiles, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static + store::ArtifactDsl,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static + store::ArtifactDsl,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_text(envelope)))
     }
@@ -601,8 +602,8 @@ use semio_framework_value::ValueError;
     /// undo/redo/checkpoint position.
     pub fn encode_backbone_payload<P, Op>(document: &BackboneDocument<P, Op>) -> Result<Vec<u8>, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
     {
         let files = with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_pack(envelope)))?;
         let inner = resolve_kernel_future(store::encode_document_pack_bytes(&files.pack, &files.spr));
@@ -613,8 +614,8 @@ use semio_framework_value::ValueError;
     /// document kind's bytes as another.
     pub fn decode_backbone_payload<P, Op>(bytes: &[u8], expected_schema: &str) -> Result<BackboneDocument<P, Op>, VcsError>
     where
-        P: Clone + store::ArtifactPack,
-        Op: Clone + protocol::OpText + protocol::OpBinary + Mutation<P>,
+        P: Clone + store::ArtifactPack + 'static,
+        Op: Clone + protocol::OpText + protocol::OpBinary + Mutation<P> + 'static,
     {
         let (name_bytes, inner) = resolve_kernel_future(store::decode_document_pack_bytes(bytes))?;
         let name = String::from_utf8(name_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
@@ -851,7 +852,7 @@ use semio_framework_value::ValueError;
         pub fn new(document: OsWorkflowArtifactDocument, actor: protocol::ActorId) -> Result<Self, VcsError> {
             let (name, envelope) = take_backbone_envelope(document);
             let mut inner = resolve_kernel_future(ArtifactStore::new(envelope, actor))?;
-            inner.install_document_store_owners_exact(store::bounded_artifact_store_owners());
+            inner.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners().map_err(|error| VcsError::ValidationFailed(error.to_string()))?).map_err(|(error, owners)| { std::mem::forget(owners); VcsError::ValidationFailed(error.to_string()) })?;
             Ok(Self { inner, name })
         }
 
@@ -885,16 +886,16 @@ use semio_framework_value::ValueError;
             }
         }
 
-        pub fn dispatch_text(&mut self, command_text: &str) -> Result<(), VcsError> {
-            resolve_kernel_future(self.inner.dispatch_text(command_text)).map(|_| ())
+        pub fn dispatch_text(&mut self, command_text: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+            resolve_kernel_future(self.inner.dispatch_text(command_text, identity)).map(|_| ())
         }
 
-        pub fn dispatch_binary(&mut self, command_bytes: &[u8]) -> Result<(), VcsError> {
-            resolve_kernel_future(self.inner.dispatch_binary(command_bytes)).map(|_| ())
+        pub fn dispatch_binary(&mut self, command_bytes: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+            resolve_kernel_future(self.inner.dispatch_binary(command_bytes, identity)).map(|_| ())
         }
 
-        pub fn dispatch_apply(&mut self, mutations: Vec<workflow::WorkflowMutation>) -> Result<(), VcsError> {
-            resolve_kernel_future(self.inner.dispatch(ArtifactCommand::Apply { mutations, transaction: None })).map(|_| ())
+        pub fn dispatch_apply(&mut self, mutations: Vec<workflow::WorkflowMutation>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+            resolve_kernel_future(self.inner.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, identity)).map(|_| ())
         }
 
         pub fn set_workflow_name(&mut self, name: &str) {
@@ -908,7 +909,7 @@ use semio_framework_value::ValueError;
         /// `programs` list moved off the dissolved `OsSnapshot` onto `space::SpaceSnapshot` (see
         /// `## The inversion` in the plan), so spawning a node into the workflow graph and installing its
         /// plugin into the space are now two operations against two separate documents.
-        pub fn add_workflow_node(&mut self, plugin_id: &str, app_id: &str, label: Option<&str>, x: f64, y: f64, space_store: &mut OsSpaceStore) -> Result<String, VcsError> {
+        pub fn add_workflow_node(&mut self, plugin_id: &str, app_id: &str, label: Option<&str>, x: f64, y: f64, space_store: &mut OsSpaceStore, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
             let app = resolve_os_app_definition(plugin_id, app_id).ok_or_else(|| VcsError::Deserialize(format!("unknown app {plugin_id}/{app_id}")))?;
             let node_id = create_os_id("node");
             let position = workflow::WorkflowPosition { x, y, width: 0.0, height: 0.0 };
@@ -916,23 +917,23 @@ use semio_framework_value::ValueError;
             if let Some(label) = label {
                 node.label = label.into();
             }
-            self.dispatch_apply(vec![workflow::WorkflowMutation::AddNode(workflow::AddNode { node })])?;
-            resolve_kernel_future(space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into(), index: None }], transaction: None }))?;
+            self.dispatch_apply(vec![workflow::WorkflowMutation::AddNode(workflow::AddNode { node })], identity)?;
+            resolve_kernel_future(space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into(), index: None }], transaction: None }, identity))?;
             Ok(node_id)
         }
 
-        pub fn add_parameter(&mut self, parameter_type: &workflow::WorkflowParameterType, name: &str) -> Result<String, VcsError> {
+        pub fn add_parameter(&mut self, parameter_type: &workflow::WorkflowParameterType, name: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
             let parameter = resolve_kernel_future(workflow::create_default_workflow_parameter(parameter_type, name, None));
             let parameter_id_value = workflow::workflow_parameter_id(&parameter).to_string();
-            self.dispatch_apply(vec![workflow::WorkflowMutation::AddParameter(workflow::AddParameter { parameter: Box::new(parameter) })])?;
+            self.dispatch_apply(vec![workflow::WorkflowMutation::AddParameter(workflow::AddParameter { parameter: Box::new(parameter) })], identity)?;
             Ok(parameter_id_value)
         }
 
-        pub fn patch_parameter(&mut self, target_parameter_id: &str, patch: &workflow::WorkflowParameterPatch) -> Result<(), VcsError> {
+        pub fn patch_parameter(&mut self, target_parameter_id: &str, patch: &workflow::WorkflowParameterPatch, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
             let document = self.snapshot()?;
             let current = document.parameters.iter().find(|parameter| workflow::workflow_parameter_id(parameter) == target_parameter_id).cloned().ok_or_else(|| VcsError::Deserialize(format!("unknown parameter {target_parameter_id}")))?;
             let next = resolve_kernel_future(workflow::patch_workflow_parameter(&current, patch));
-            self.dispatch_apply(vec![workflow::WorkflowMutation::ChangeParameter(workflow::ChangeParameter { parameter_id: target_parameter_id.into(), parameter: Box::new(next) })])
+            self.dispatch_apply(vec![workflow::WorkflowMutation::ChangeParameter(workflow::ChangeParameter { parameter_id: target_parameter_id.into(), parameter: Box::new(next) })], identity)
         }
 
         /// 📡️ Pumps any queued inbound backbone messages into the edit timeline.
@@ -1032,8 +1033,8 @@ use semio_framework_value::ValueError;
     /// shared by every catalog write path below (space manifests, collections).
     fn sync_backbone_document<P, Op>(document: &BackboneDocument<P, Op>, backbone_uri: &str, port: &Arc<OsBackbonePorts>) -> Result<(), VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + Send + 'static,
+        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
     {
         let mut synced = document.clone();
         synced.backbone = Some(resolve_kernel_future(document_backbone_ref(backbone_uri)));
@@ -2211,7 +2212,7 @@ pub mod media_export_raster {
     }
 
     /// 🧵️ Registers a mesh exporter supplied by an artifact.
-    pub fn register_mesh_exporter(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>, exporter: Box<dyn semio_framework_plugin::MeshExporter>) {
+    pub fn register_mesh_exporter(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework::MeshData, String>, exporter: Box<dyn semio_framework::mesh_io::MeshExporter>) {
         let format_kind = exporter.format_kind();
         register_os_media_export_handler_kind(artifact_kind, format_kind, move |doc| {
             let descriptor = semio_framework_os_kernel::io::format_descriptor(format_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown mesh export format kind `{format_kind}`"))?;
@@ -2225,7 +2226,7 @@ pub mod media_export_raster {
     }
 
     /// 🧵️ Registers one `MeshImporter` format (Obj/Glb/Stl/…) for a mesh resource kind; `document_from_mesh` bridges the decoded `MeshData` back into the app's own document shape.
-    pub fn register_mesh_importer(artifact_kind: &'static str, document_from_mesh: fn(&semio_framework_plugin::MeshData) -> Result<Value, String>, importer: Box<dyn semio_framework_plugin::MeshImporter>) {
+    pub fn register_mesh_importer(artifact_kind: &'static str, document_from_mesh: fn(&semio_framework::MeshData) -> Result<Value, String>, importer: Box<dyn semio_framework::mesh_io::MeshImporter>) {
         let format_kind = importer.format_kind();
         register_os_media_import_handler_kind(artifact_kind, format_kind, move |bytes| {
             let mesh = importer.import(bytes)?;
@@ -2893,8 +2894,13 @@ pub mod workflow {
 
     /// 📤️ Export via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn export_os_app_instance_media_kind(node: &WorkflowNode, source_document: &Value, format_artifact_kind: &str) -> Result<OsMediaExportResult, String> {
+        export_os_app_instance_media_kind_cancellable(node, source_document, format_artifact_kind, &semio_framework_async::CancelToken::root_now())
+    }
+
+    /// 📤️ Export that stops at its next IO checkpoint once `cancel` fires; the refusal is the exact string `media export was cancelled`.
+    pub fn export_os_app_instance_media_kind_cancellable(node: &WorkflowNode, source_document: &Value, format_artifact_kind: &str, cancel: &semio_framework_async::CancelToken) -> Result<OsMediaExportResult, String> {
         let format_kind = semio_framework_os_kernel::io::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
-        if let Some(result) = registry_export_media(&node.yields, &format_kind, source_document) {
+        if let Some(result) = registry_export_media(&node.yields, &format_kind, source_document, cancel) {
             return result;
         }
         let handlers = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -2903,6 +2909,49 @@ pub mod workflow {
             .or_else(|| handlers.get(&os_media_handler_key(&node.yields, format_artifact_kind)))
             .ok_or_else(|| format!("no export handler for {}:{}", node.yields, format_artifact_kind))?;
         handler(source_document)
+    }
+
+    /// 🏁️ How one host IO route run ended.
+    enum HostIoRun {
+        Done(semio_framework::io_schema::IoPayload),
+        Failed,
+        Cancelled,
+    }
+
+    /// 📏️ A hop may expand its payload (base64, pack framing, text to binary); the host funds this many input extents per hop.
+    const HOST_IO_EXPANSION: usize = 8;
+    /// 📏️ Smallest and largest physical extent, in bytes, one host IO run may own at once.
+    const HOST_IO_MINIMUM_BYTES: usize = 1 << 20;
+    const HOST_IO_MAXIMUM_BYTES: usize = 1 << 30;
+    /// 📏️ One item (row, span, frame) is funded per this many bytes of the physical extent.
+    const HOST_IO_BYTES_PER_ITEM: usize = 64;
+
+    /// 🫴️ The host's IO route run. The kernel route runner is one call that checkpoints at every hop and inside every native
+    /// codec span, not a per-grant stepper, so the host cannot slice it into turns; it bounds and interrupts it instead. The five
+    /// currencies are sized from the operation itself - the input extent times the route's hops times [`HOST_IO_EXPANSION`], clamped
+    /// to [`HOST_IO_MINIMUM_BYTES`]..[`HOST_IO_MAXIMUM_BYTES`] - and every native decode, encode and SQLite callback observes `cancel`,
+    /// so a cancelled export or import stops at its next checkpoint with its partial owners returned to the controls.
+    fn host_io_run(route: &semio_framework::io_schema::IoRoute, payload: semio_framework::io_schema::IoPayload, cancel: &semio_framework_async::CancelToken) -> HostIoRun {
+        use semio_framework_os_kernel::io::io_mechanism::{io_run_with_snapshot_control, IoRunControl};
+        let input = match &payload {
+            semio_framework::io_schema::IoPayload::Text(text) => text.len(),
+            semio_framework::io_schema::IoPayload::Binary(bytes) => bytes.len(),
+        };
+        let bytes = input.saturating_mul(HOST_IO_EXPANSION).saturating_mul(route.hops.len().max(1)).clamp(HOST_IO_MINIMUM_BYTES, HOST_IO_MAXIMUM_BYTES);
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: bytes / HOST_IO_BYTES_PER_ITEM, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 64 };
+        let mut decode_callback = |_| !cancel.is_cancelled_now();
+        let mut encode_callback = |_| !cancel.is_cancelled_now();
+        let mut decode = semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes, &mut decode_callback);
+        let mut encode = semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes, &mut encode_callback);
+        let mut control = IoRunControl::new(&mut decode, &mut encode, grant);
+        let mut snapshot_callback = |_| !cancel.is_cancelled_now();
+        let mut snapshot = semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut snapshot_callback, Default::default());
+        let mut input = Some(payload);
+        match crate::host::resolve_kernel_future(io_run_with_snapshot_control(route, &mut input, &mut control, &mut snapshot)) {
+            Ok(outcome) => HostIoRun::Done(outcome.value),
+            Err(_) if cancel.is_cancelled_now() => HostIoRun::Cancelled,
+            Err(_) => HostIoRun::Failed,
+        }
     }
 
     /// 🎯️🆕️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1b task 1: the io-mechanism
@@ -2924,8 +2973,8 @@ pub mod workflow {
     /// subset has migrated onto `declare_artifact`/`io_register` yet, W1-D openQuestion #4), so
     /// `registry_export_media` below falls through to the OLD path for every production caller until
     /// W2+ cuts real subsets over -- this is debt D2's "coexist, do not bridge" shape, not a silent gap.
-    fn registry_export_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, format_kind: &str, source_document: &Value, file_stem: &str) -> Option<Result<OsMediaExportResult, String>> {
-        use semio_framework_os_kernel::io::io_mechanism::{io_route, io_run};
+    fn registry_export_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, format_kind: &str, source_document: &Value, file_stem: &str, cancel: &semio_framework_async::CancelToken) -> Option<Result<OsMediaExportResult, String>> {
+        use semio_framework_os_kernel::io::io_mechanism::io_route;
         use semio_framework::io_schema::{IoPayload as NewIoPayload, CARRIER_BINARY, CARRIER_TEXT};
 
         let is_binary = semio_framework_os_kernel::io::format_descriptor(format_kind).ok().flatten()?.is_binary;
@@ -2941,8 +2990,12 @@ pub mod workflow {
         // `None`, and `registry_export_media` safely falls through to the OLD path -- never a silent
         // wrong-content export.
         let json_text = serde_json::to_string(source_document).ok()?;
-        let outcome = crate::host::resolve_kernel_future(io_run(&route, NewIoPayload::Text(json_text))).ok()?;
-        let bytes = match outcome.value {
+        let outcome = match host_io_run(&route, NewIoPayload::Text(json_text), cancel) {
+            HostIoRun::Done(outcome) => outcome,
+            HostIoRun::Failed => return None,
+            HostIoRun::Cancelled => return Some(Err("media export was cancelled".into())),
+        };
+        let bytes = match outcome {
             NewIoPayload::Binary(b) => b,
             NewIoPayload::Text(t) => t.into_bytes(),
         };
@@ -2996,9 +3049,9 @@ pub mod workflow {
     /// first (task 1's real fix), falls through to the OLD `io_dispatch` path (debt D2) when no route
     /// exists yet, falls through again to the stringly handler map at the call site. One path wins per
     /// call -- never merged (design.md's rejected-approaches list; `📌️important.md`).
-    fn registry_export_media(artifact_kind: &str, format_kind: &str, source_document: &Value) -> Option<Result<OsMediaExportResult, String>> {
+    fn registry_export_media(artifact_kind: &str, format_kind: &str, source_document: &Value, cancel: &semio_framework_async::CancelToken) -> Option<Result<OsMediaExportResult, String>> {
         let dialect = crate::registry::os_artifact_dialect(artifact_kind);
-        if let Some(result) = registry_export_media_via_io_mechanism(&dialect, format_kind, source_document, artifact_kind) {
+        if let Some(result) = registry_export_media_via_io_mechanism(&dialect, format_kind, source_document, artifact_kind, cancel) {
             return Some(result);
         }
         registry_export_media_legacy(artifact_kind, format_kind, source_document)
@@ -3022,8 +3075,13 @@ pub mod workflow {
 
     /// 📥️ Import via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn import_os_app_instance_media_kind(node: &WorkflowNode, data: &[u8], format_artifact_kind: &str) -> Result<Value, String> {
+        import_os_app_instance_media_kind_cancellable(node, data, format_artifact_kind, &semio_framework_async::CancelToken::root_now())
+    }
+
+    /// 📥️ Import that stops at its next IO checkpoint once `cancel` fires; the refusal is the exact string `media import was cancelled`.
+    pub fn import_os_app_instance_media_kind_cancellable(node: &WorkflowNode, data: &[u8], format_artifact_kind: &str, cancel: &semio_framework_async::CancelToken) -> Result<Value, String> {
         let format_kind = semio_framework_os_kernel::io::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
-        if let Some(result) = registry_import_media(&node.yields, &format_kind, data) {
+        if let Some(result) = registry_import_media(&node.yields, &format_kind, data, cancel) {
             return result;
         }
         let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -3041,18 +3099,22 @@ pub mod workflow {
     /// already are), so per design.md §3 ("When the caller already knows the dialect, skip identify")
     /// this is a SINGLE `io_route(carrier -> artifact_dialect)` + `io_run`, never `io_identify` --
     /// `io_identify` is for the genuinely-unknown-dialect "open this file" case, not this one.
-    fn registry_import_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, format_kind: &str, data: &[u8]) -> Option<Result<Value, String>> {
-        use semio_framework_os_kernel::io::io_mechanism::{io_route, io_run};
+    fn registry_import_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, format_kind: &str, data: &[u8], cancel: &semio_framework_async::CancelToken) -> Option<Result<Value, String>> {
+        use semio_framework_os_kernel::io::io_mechanism::io_route;
         use semio_framework::io_schema::{IoPayload as NewIoPayload, CARRIER_BINARY, CARRIER_TEXT};
 
         let is_binary = semio_framework_os_kernel::io::format_descriptor(format_kind).ok().flatten()?.is_binary;
         let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
         let carrier_payload = if is_binary { NewIoPayload::Binary(data.to_vec()) } else { NewIoPayload::Text(String::from_utf8(data.to_vec()).ok()?) };
         let route = crate::host::resolve_kernel_future(io_route(&carrier, artifact_dialect, 3)).ok()?.value;
-        let outcome = crate::host::resolve_kernel_future(io_run(&route, carrier_payload)).ok()?;
+        let outcome = match host_io_run(&route, carrier_payload, cancel) {
+            HostIoRun::Done(outcome) => outcome,
+            HostIoRun::Failed => return None,
+            HostIoRun::Cancelled => return Some(Err("media import was cancelled".into())),
+        };
         // 🌉️ Mirrors the export side: the JSON text this yields is read back as this artifact's own
         // OS-document-store shape, not re-wrapped through the deleted `s.stdio.json` bridge dialect.
-        let json_text = match outcome.value {
+        let json_text = match outcome {
             NewIoPayload::Text(t) => t,
             NewIoPayload::Binary(b) => String::from_utf8(b).ok()?,
         };
@@ -3116,9 +3178,9 @@ pub mod workflow {
     /// 🚪️ Entry point `import_os_app_instance_media_kind` calls: tries the NEW io-mechanism path
     /// first, falls through to the OLD `io_dispatch` path (debt D2) when no route exists yet, falls
     /// through again to the stringly handler map at the call site. One path wins per call.
-    fn registry_import_media(artifact_kind: &str, format_kind: &str, data: &[u8]) -> Option<Result<Value, String>> {
+    fn registry_import_media(artifact_kind: &str, format_kind: &str, data: &[u8], cancel: &semio_framework_async::CancelToken) -> Option<Result<Value, String>> {
         let dialect = crate::registry::os_artifact_dialect(artifact_kind);
-        if let Some(result) = registry_import_media_via_io_mechanism(&dialect, format_kind, data) {
+        if let Some(result) = registry_import_media_via_io_mechanism(&dialect, format_kind, data, cancel) {
             return Some(result);
         }
         registry_import_media_legacy(artifact_kind, format_kind, data)

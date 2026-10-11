@@ -81,7 +81,7 @@ pub fn options(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels) -> WindowMeas
 //#region 🎬️Record
 /// 🎬️ How one selection transform moves its targets: a board drag of the flat poses, or a world motion of
 /// the spatial ones — puzzle 3d's own [`Puzzle3dSelectionMotion`], so both artifacts read one gesture vocabulary.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum Puzzle5dSelectionMotion {
     Board { dx: f64, dy: f64 },
     World(Puzzle3dSelectionMotion),
@@ -99,7 +99,7 @@ impl Puzzle5dSelectionMotion {
 
 /// 🎬️ One selection transform the transform tool yields: the literal target ids, the motion, and the
 /// `(source, target)` full grip ids its drop fastens once the targets moved.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Puzzle5dSelectionRecord {
     pub targets: Vec<String>,
     pub motion: Puzzle5dSelectionMotion,
@@ -165,7 +165,7 @@ pub const PUZZLE5D_RELOCATE_SCAN_PAGE: usize = 16;
 /// fastened to the moved one, every [`Self::step`] measures the grips of one page of parts, and [`Self::finish`]
 /// hands over the record — so a drop on a large puzzle reports progress page by page and stays cancellable between
 /// pages, with exactly the pairs (and order) the one-call scan finds.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Puzzle5dRelocateScan {
     record: Puzzle5dSelectionRecord,
     source: Option<(String, [f64; 3])>,

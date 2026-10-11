@@ -5,45 +5,25 @@ struct NeutralWindowFixture {
     windows: Vec<NeutralWindowCase>,
 }
 
+fn retire_note_window_mutation(mutation: NoteCompositeWindowTransientMutation) {
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<NoteCompositeWindowTransientMutation>(), maximum_depth: 4, ..Default::default() };
+    let (mut retirement, birth) = semio_framework_value::retirement::admit_owned_retirement(mutation, grant).map_err(|(error, _)| error).expect("Note transient owner admission");
+    assert!(birth.fits(grant));
+    store::test_support::drive_retirement(retirement.as_mut()).expect("Note transient owner retirement");
+    assert!(retirement.terminal_is_empty());
+}
+
 #[test]
-fn transient_string_retirement_reaches_terminal_empty_with_tiny_grants() {
+fn transient_string_retirement_reaches_terminal_empty_through_quoted_grants() {
     let mutation = NoteCompositeWindowTransientMutation::Snapshot {
         transient: NoteCompositeWindowTransient { engagement_input: "retire-owned-note-input".repeat(512), ink_tool: None },
     };
     assert!(note_composite_window_transient_preflight(&mutation).expect("large Note transient admission").is_admissible());
-    let mut retirement = semio_framework_value::retirement::owned_retirement(mutation);
-    for _ in 0..32_768 {
-        match retirement.close_step(1, 1).expect("bounded retirement") {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                return;
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= 1);
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("owned Note transient retirement blocked"),
-        }
-    }
-    panic!("owned Note transient retirement exceeded its bounded cursor turns");
+    retire_note_window_mutation(mutation);
 }
 
 fn retire_returned_note_transient(transient: NoteCompositeWindowTransient) {
-    let mut retirement = semio_framework_value::retirement::owned_retirement(NoteCompositeWindowTransientMutation::Snapshot { transient });
-    for _ in 0..4_096 {
-        match retirement.close_step(1, 1).expect("returned Note owner retirement") {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                return;
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= 1);
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("returned Note owner retirement blocked"),
-        }
-    }
-    panic!("returned Note owner retirement exceeded its bounded cursor turns");
+    retire_note_window_mutation(NoteCompositeWindowTransientMutation::Snapshot { transient });
 }
 
 #[test]
@@ -92,7 +72,7 @@ fn neutral_window_schema_round_trips_match_the_serde_json_oracle() {
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&transient)).expect("transient JSON"), case.transient);
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
         store::os_store::test_support::assert_dsl_pack_equivalence(&transient);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowConfigMutation::SetCamera { camera: config.camera.clone() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowConfigMutation::SetCamera(config.camera.clone()));
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowTransientMutation::Snapshot { transient });
     }
 }

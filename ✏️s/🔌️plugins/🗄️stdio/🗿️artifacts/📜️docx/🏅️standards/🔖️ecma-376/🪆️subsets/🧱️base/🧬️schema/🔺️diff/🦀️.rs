@@ -45,6 +45,9 @@ impl BuildList<DocxXmlPart> for DocxXmlPartRows {
     fn from_rows(rows: Vec<DocxXmlPart>) -> Self {
         Self(rows.into_iter().collect())
     }
+    fn into_rows(self) -> Vec<DocxXmlPart> {
+        self.0.into_iter().collect()
+    }
 }
 
 /// 👁️ The XML parts of a DOCX read in place, so the inverse of a delta never clones a retained document it does not reinsert.
@@ -63,7 +66,8 @@ impl ItemList<DocxXmlPart> for DocxXmlPartsView<'_> {
 }
 
 /// 🩹 The sparse patch of one XML part: its content type and its document diff.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocxXmlPartDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -102,7 +106,8 @@ pub struct DocxDiff {
 //#region 🔖️PathAddressing
 /// 🧭️ One step down into a nested table cell's block list: `body[block_index]` must be a `Table`;
 /// descend to `rows[row].cells[cell].blocks`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocxPathSegment {
     pub block_index: usize,
@@ -113,7 +118,8 @@ pub struct DocxPathSegment {
 /// 🧭️ Addresses one block-list slot: `segments` navigate through nested `Table`s (mirrors svg's
 /// `NodePath` chain-of-indices precedent, adapted for docx's Paragraph/Table mixed tree),
 /// `index` is the slot within the innermost list.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocxBlockPath {
     #[value(default)]

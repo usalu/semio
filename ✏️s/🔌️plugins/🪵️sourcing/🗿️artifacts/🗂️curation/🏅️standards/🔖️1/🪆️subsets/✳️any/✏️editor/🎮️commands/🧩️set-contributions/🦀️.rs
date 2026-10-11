@@ -2,11 +2,12 @@
 
 use crate::{schema::mutations::SourcingMutation, CurationSnapshot};
 use crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES;
-use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
+use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation, SetContributionsEdit};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "contributions")]
 pub struct SetContributions {
     pub json: String,
@@ -19,5 +20,5 @@ pub struct SetContributions {
 /// foreign pack installs what fits instead of being refused whole.
 pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, CurationSnapshot>, _cfg: &ConfigView<'_, SourcingCurationConfig>) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation>, Fault> {
     let json = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&payload.json, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
-    Ok(Emit::config(vec![SourcingCurationConfigMutation::SetContributions { json }]))
+    Ok(Emit::config(vec![SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json })]))
 }

@@ -10,7 +10,9 @@ use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted trinity graph document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.jack")]
 pub struct JackSnapshot {
     #[state(artifact)]
@@ -18,6 +20,7 @@ pub struct JackSnapshot {
     #[state(artifact)]
     pub name: String,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub manifest_id: Option<String>,
     #[state(artifact)]
     pub manifest: Manifest,
@@ -27,6 +30,7 @@ pub struct JackSnapshot {
     #[child(kind = "s.stdio.semio")]
     pub content: JackContentChild,
     #[state(artifact)]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub root_node_id: Option<String>,
     /// 🔎️ The document's Jack query — the query editor's text, document content like the graph it runs against.
     #[state(artifact)]

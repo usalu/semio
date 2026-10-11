@@ -18,7 +18,7 @@ pub use super::entries::CurationEntries;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a curation snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `entries`, backed by the `🗃️entries/` slug dir).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curation.inference")]
 pub struct CurationInference {

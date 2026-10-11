@@ -132,7 +132,16 @@ pub fn preflight_xml_document(schema: &str, doc: &XmlDocument, encoding: semio_f
 
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 impl ArtifactSqliteSnapshot for XmlSnapshot {
-    fn decode_sqlite_snapshot_native(payload: &semio_framework_os_kernel::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self,ValueError> { crate::standards::v1_0::subsets::base::io::sqlite::snapshot::native_decoding::decode(payload, control,native_control) }
+    fn decode_sqlite_snapshot_native(payload: &semio_framework_os_kernel::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native_owner: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self,ValueError> {
+        native_owner.receive::<Self, Self>(|slot, native, body| {
+            let value = crate::standards::v1_0::subsets::base::io::sqlite::snapshot::native_decoding::decode(payload, control, native)?;
+            let inline = std::mem::size_of::<Self>();
+            body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: inline, maximum_depth: 1, ..Default::default() })?;
+            *slot = Some(value);
+            body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: inline, ..Default::default() })?;
+            Ok(slot.take().expect("received XML snapshot slot"))
+        })
+    }
     fn retire_sqlite_snapshot(self) { drop(XmlDocumentOwner(Some(self.doc))); }
     fn encode_sqlite_snapshot_native(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError> { crate::standards::v1_0::subsets::base::io::sqlite::snapshot::native_encoding::encode(self, encoding, control,native_owner) }
     fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> { preflight_xml_document(&self.schema, &self.doc, encoding, control) }

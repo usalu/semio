@@ -7,8 +7,8 @@ import { runtimeComponentClosure } from "../../../../../🦑️repo/🔨️modul
 
 
 
-import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1, type DeployedRegistryEntryV1, type PluginDescriptorHashes } from "./🧬️schema/🟦️.ts";
-export type { ComponentSourceOwnerV1, CompiledComponentOwnerV1, DeployedRegistryEntryV1, PluginDescriptorHashes, PluginHostMetadata } from "./🧬️schema/🟦️.ts";
+import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, parsePluginBuildTargetV1, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1, type DeployedRegistryEntryV1, type PluginBuildTargetV1, type PluginDescriptorHashes } from "./🧬️schema/🟦️.ts";
+export type { ComponentSourceOwnerV1, CompiledComponentOwnerV1, DeployedRegistryEntryV1, PluginBuildTargetV1, PluginDescriptorHashes, PluginHostMetadata } from "./🧬️schema/🟦️.ts";
 
 export const COMPONENT_MANIFEST_MAX_BYTES = 64 * 1024;
 
@@ -333,6 +333,15 @@ export function generateComponentSourceRegistry(repoRoot = getWorkspaceRoot(), o
   return paths.map(path => parseComponentSourceOwnerV1(path, repoRoot, options.view)).sort((a,b) => a.pluginId.localeCompare(b.pluginId));
 }
 
+/** 🔨️ Every discovered plugin crate that declares a deployment directory, whatever the state of its descriptor.
+ * Builds take their targets from here, never from the deployed rows: a stale-channel or stale-dependency descriptor
+ * is exactly what a build must refresh, while deployment keeps refusing it through [[generatePluginRegistryReport]]. */
+export function discoverPluginBuildTargets(repoRoot = getWorkspaceRoot(), options: Pick<GeneratePluginRegistryOptions, "packages" | "view"> = {}): PluginBuildTargetV1[] {
+  const paths = findPluginCargoFiles(repoRoot, options.packages ?? (options.view ? discoverCatalogPackages(repoRoot, TAXONOMY, options.view) : undefined), options.view);
+  return paths.map((path) => parsePluginBuildTargetV1(parseComponentSourceOwnerV1(path, repoRoot, options.view))).sort((a, b) => a.pluginId.localeCompare(b.pluginId));
+}
+
+
 /** 📇️ The deployed catalog rows; refuses every stale-channel descriptor unless `staleChannel: "exclude"` withholds it. */
 export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): DeployedRegistryEntryV1[] {
   return generatePluginRegistryReport(repoRoot, options).entries;
@@ -517,7 +526,7 @@ export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspac
 
 
 /** 🎯️ Resolves aliases and runtime dependencies within the supplied catalog, or discovers an omitted catalog. */
-export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly ComponentSourceOwnerV1[] = generatePluginRegistry(getWorkspaceRoot()), playgrounds?: readonly { readonly variant: string; readonly aliases: readonly string[]; readonly pluginId: string; readonly app?: string }[]): readonly string[] {
+export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly ComponentSourceOwnerV1[] = generateComponentSourceRegistry(getWorkspaceRoot()), playgrounds?: readonly { readonly variant: string; readonly aliases: readonly string[]; readonly pluginId: string; readonly app?: string }[]): readonly string[] {
   const variantRow = playgrounds?.find((p) => p.variant === filterPlaygroundPlugin || p.aliases.includes(filterPlaygroundPlugin)) ?? (playgrounds === undefined ? resolvePlaygroundFilterRow(filterPlaygroundPlugin) : undefined);
   const targetPluginId = variantRow?.pluginId ?? filterPlaygroundPlugin;
   return allEntries.some(row => row.pluginId === targetPluginId) ? runtimeComponentClosure(allEntries, [{ id: targetPluginId, appScoped: variantRow?.app !== undefined }]) : [];

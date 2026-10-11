@@ -139,7 +139,7 @@ async fn a_gumball_drag_edited_in_history_replays_its_downstream() {
     let drag = |dx: f64, dy: f64| ShootingMutation::DragAssets(DragAssets { asset_ids: asset_ids.clone(), dx, dy, dz: 0.0 });
     let log = [drag(1.0, 0.0), ShootingMutation::RotateAssets(RotateAssets { asset_ids: asset_ids.clone(), ax: 0.0, ay: 0.0, az: 1.0, angle: 0.5 }), ShootingMutation::ScaleAssets(ScaleAssets { asset_ids: asset_ids.clone(), sx: 2.0, sy: 1.0, sz: 1.0 })];
     let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new(store::create_document_envelope::<ShootingSnapshot, ShootingMutation>(crate::SHOOTING_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ShootingSnapshot, ShootingMutation>());
+    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<ShootingSnapshot, ShootingMutation>().expect("funded document owners")).unwrap_or_else(|(error, _owners)| panic!("{}", error.into_message()));
     for mutation in &log {
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
     }
@@ -158,11 +158,14 @@ async fn a_gumball_drag_edited_in_history_replays_its_downstream() {
     store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
     assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
     let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<ShootingSnapshot, ShootingMutation>();
-    for _ in 0..4_096 {
+    for _ in 0..65_536 {
         if disposer.terminal_is_empty(&store) {
             break;
         }
-        disposer.close_step(&mut store, 1, 1 << 20).expect("the store retires");
+        let demand = disposer.retirement_demands(&store, 4_096).expect("the store quotes its close");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(4_096), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let step = disposer.close_step(&mut store, grant).expect("the store retires");
+        assert!(step.progress().is_none_or(|progress| progress.fits(grant)), "every close receipt fits its grant");
     }
     assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
 }

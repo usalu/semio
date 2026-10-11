@@ -32,11 +32,11 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// builder runs leaves its `.routed_inference(…)` row addressing a tool nothing can execute.
 fn register_inference_factories() -> Result<(), PluginAssemblyError> {
     let bus = ActionBus::production();
-    semio_s_artifact_wfc_bitmap::standards::v1::subsets::any::schema::inferences::register_bitmap_inference_factory(&bus).map_err(|error| PluginAssemblyError::new("bitmap-inference-factory", error.to_string()))?;
-    semio_s_artifact_wfc_grid2d::standards::v1::subsets::any::schema::inferences::register_grid2d_inference_factory(&bus).map_err(|error| PluginAssemblyError::new("grid2d-inference-factory", error.to_string()))?;
-    semio_s_artifact_wfc_2d::standards::v1::subsets::any::schema::inferences::register_wfc2d_inference_factory(&bus).map_err(|error| PluginAssemblyError::new("wfc2d-inference-factory", error.to_string()))?;
-    semio_s_artifact_wfc_grid3d::standards::v1::subsets::any::schema::inferences::register_grid3d_inference_factory(&bus).map_err(|error| PluginAssemblyError::new("grid3d-inference-factory", error.to_string()))?;
-    semio_s_artifact_wfc_3d::standards::v1::subsets::any::schema::inferences::register_wfc3d_inference_factory(&bus).map_err(|error| PluginAssemblyError::new("wfc3d-inference-factory", error.to_string()))?;
+    semio_s_artifact_wfc_bitmap::host::inferences::register_bitmap_inference_factory(&bus).map_err(|error| PluginAssemblyError::new("bitmap-inference-factory", error.to_string()))?;
+    semio_s_artifact_wfc_grid2d::host::inferences::register_grid2d_inference_factory(&bus).map_err(|error| PluginAssemblyError::new("grid2d-inference-factory", error.to_string()))?;
+    semio_s_artifact_wfc_2d::host::inferences::register_wfc2d_inference_factory(&bus).map_err(|error| PluginAssemblyError::new("wfc2d-inference-factory", error.to_string()))?;
+    semio_s_artifact_wfc_grid3d::host::inferences::register_grid3d_inference_factory(&bus).map_err(|error| PluginAssemblyError::new("grid3d-inference-factory", error.to_string()))?;
+    semio_s_artifact_wfc_3d::host::inferences::register_wfc3d_inference_factory(&bus).map_err(|error| PluginAssemblyError::new("wfc3d-inference-factory", error.to_string()))?;
     Ok(())
 }
 
@@ -50,11 +50,11 @@ pub fn plugin() -> Result<Plugin<WfcApps>, PluginAssemblyError> {
         .label("WFC")
         .version("0.1.0")
         .package_id("semio:wfc")
-        .routed_inference(semio_s_artifact_wfc_bitmap::standards::v1::subsets::any::schema::inferences::bitmap_inference_metadata())
-        .routed_inference(semio_s_artifact_wfc_grid2d::standards::v1::subsets::any::schema::inferences::grid2d_inference_metadata())
-        .routed_inference(semio_s_artifact_wfc_2d::standards::v1::subsets::any::schema::inferences::wfc2d_inference_metadata())
-        .routed_inference(semio_s_artifact_wfc_grid3d::standards::v1::subsets::any::schema::inferences::grid3d_inference_metadata())
-        .routed_inference(semio_s_artifact_wfc_3d::standards::v1::subsets::any::schema::inferences::wfc3d_inference_metadata())
+        .routed_inference(semio_s_artifact_wfc_bitmap::host::inferences::bitmap_inference_metadata())
+        .routed_inference(semio_s_artifact_wfc_grid2d::host::inferences::grid2d_inference_metadata())
+        .routed_inference(semio_s_artifact_wfc_2d::host::inferences::wfc2d_inference_metadata())
+        .routed_inference(semio_s_artifact_wfc_grid3d::host::inferences::grid3d_inference_metadata())
+        .routed_inference(semio_s_artifact_wfc_3d::host::inferences::wfc3d_inference_metadata())
         .declare_artifact(semio_s_artifact_wfc_bitmap::artifact::<WfcApps>())
         .declare_artifact(semio_s_artifact_wfc_grid2d::artifact::<WfcApps>())
         .declare_artifact(semio_s_artifact_wfc_2d::artifact::<WfcApps>())

@@ -20,8 +20,8 @@ fn original_result_variants_preserve_native_payload_and_all_axis_receipts(){
     let(step,heap)=crate::value::observe_retirement_allocations(||owner.step(denied.1));assert_eq!(heap,(0,0));match step{Ok(step)=>assert_eq!(step.progress(),RetainedCloneProgress::default()),Err(e)=>assert_eq!(e.retained_progress(),RetainedCloneProgress::default())};
     if let Some(original)=owner.original(){assert_eq!(match original{Ok(v)|Err(v)=>v.as_ptr()},pointer);assert_eq!(original.is_ok(),ok);}
    }
-   let transfer=owner.original().is_some()&&capacity==size_of::<OriginalResult<String,String>>();if transfer{assert_eq!(copy,size_of::<Result<String,String>>());}
-   let(step,heap)=crate::value::observe_retirement_allocations(||owner.step(grant).unwrap());if transfer{assert_eq!(step.progress().copied_bytes,size_of::<Result<String,String>>());}assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),heap);assert_eq!(owner.step_progress(),step.progress());births+=heap.0;releases+=heap.1;
+   let transfer=owner.original().is_some()&&capacity==size_of::<OriginalResult<String,String>>();if transfer{assert_eq!(copy,0);}
+   let(step,heap)=crate::value::observe_retirement_allocations(||owner.step(grant).unwrap());if transfer{assert_eq!(step.progress().copied_bytes,0);}assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),heap);assert_eq!(owner.step_progress(),step.progress());births+=heap.0;releases+=heap.1;
   }
   let(_,heap)=crate::value::observe_retirement_allocations(||drop(owner));assert_eq!(heap,(0,0));assert_eq!(births,releases);println!("[DEBUG] original Result {} repeat{n} pointer{pointer:?} turns{turns} birth{births} release{releases}, independent axis denials0/0 and terminalDrop0",variant.as_str().unwrap());
  }}

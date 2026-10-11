@@ -24,8 +24,9 @@
 //! the chain itself is made of lives here exactly once (CLAUDE.md: repeated code MUST be close to
 //! each other). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 
-use semio_framework_job::{CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
-use semio_framework_os_flow::{flow_host_with_session, FlowEvalPublication, FlowEvalSession};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
+use crate::standards::v1::subsets::any::schema::host_with_session;
+use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin::Effect;
 use semio_framework_plugin::ExtensionInvocation;
@@ -52,7 +53,7 @@ use std::collections::{BTreeMap, HashSet};
 /// its own: the shell redispatches it under whichever window is current. Carrying the id ON THE
 /// PAYLOAD is how `retained_window_transient_target` can capture the preview window's transient
 /// authority (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "flow-eval-tick")]
 pub struct FlowEvalTick {
     pub window_id: String,
@@ -62,7 +63,7 @@ pub struct FlowEvalTick {
 /// ✅️ One `evaluate` round trip's answer, echoed back onto the response action by
 /// `reactor::extension_response_args` — including the window address, so the re-armed tick keeps
 /// addressing the preview window that owns this evaluation.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "flow-eval-resolve")]
 pub struct FlowEvalResolve {
     pub window_id: String,
@@ -86,7 +87,7 @@ pub struct FlowEvalResolve {
 
 /// 🔺️ One budgeted `tessellate` round trip's answer, carrying the same echoed window address so a
 /// resumable tessellation re-arms the tick on the window that owns the mesh it is building.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "flow-tessellate-resolve")]
 pub struct FlowTessellateResolve {
     pub window_id: String,
@@ -100,7 +101,7 @@ pub struct FlowTessellateResolve {
 /// extension actor actually retired — publication-free bookkeeping, kept because a cancel that
 /// retires nothing on an actor that was supposed to be busy is the one symptom that distinguishes
 /// "the gesture reached the kernel" from "the gesture reached only this process".
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "flow-tessellate-cancel-resolve")]
 pub struct FlowTessellateCancelResolve {
     pub window_id: String,
@@ -116,7 +117,7 @@ pub struct FlowTessellateCancelResolve {
 /// gesture, and this hop is how its close reaches the registries the guest cannot see. Addressed at a
 /// preview window because `reactor::extension_response_args` echoes the request's fields onto
 /// `flowTessellateCancelResolve`, whose retained route needs a window it may name.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "flow-eval-release")]
 pub struct FlowEvalRelease {
     #[value(default)]
@@ -218,12 +219,13 @@ pub fn applied_document_edits_digest(history: &semio_framework_plugin::HistoryVi
 /// commands, every viewer view command). The window's latch keeps the debt until a hop pays it, so a
 /// window already chasing an answer is evaluated again the moment that answer settles; the live run
 /// job is woken, and a surface without a live run starts one from its next `pending_effects`.
-pub fn owe_attached_previews(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)]) {
+pub fn owe_attached_previews(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     for (window_id, _) in windows {
-        session.note_window_tick_outcome(window_id, true);
+        session.note_window_tick_outcome(window_id, true, grant)?;
     }
     link.requested = None;
     link.wake();
+    Ok(())
 }
 
 /// 🩹️ What a LANDED GESTURE owes the attached previews, read off the gesture's own emit instead of a
@@ -249,13 +251,13 @@ pub fn owe_attached_previews(session: &mut FlowEvalSession, link: &mut PreviewEv
 /// silent for 60 s with not one poll to read it. So a gesture with no live run carries the run start on
 /// its OWN emit, under the same one-request latch `preview_eval_run_effects` asks through, and an
 /// unservable graph carries nothing for the reason that function refuses one.
-pub fn owe_attached_previews_for_mutations<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_framework_plugin::Emit<M, C, D>) -> bool {
+pub fn owe_attached_previews_for_mutations<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_framework_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, semio_framework_value::ValueError> {
     if emit.artifact_mutations.is_empty() {
         link.wake();
-        return false;
+        return Ok(false);
     }
-    owe_attached_previews_carrying(session, link, windows, servable, emit);
-    true
+    owe_attached_previews_carrying(session, link, windows, servable, emit, grant)?;
+    Ok(true)
 }
 
 /// 🚦️ Owes every attached preview window an evaluation AND puts on `emit` whatever asks for it: a live
@@ -269,8 +271,8 @@ pub fn owe_attached_previews_for_mutations<M, C, D>(session: &mut FlowEvalSessio
 /// preview empty for 120 s with not one `toolRunStart` in the console, and as an inspector slider that
 /// moved `height` 6 → 7 against a preview that never re-evaluated
 /// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
-pub fn owe_attached_previews_carrying<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_framework_plugin::Emit<M, C, D>) {
-    owe_attached_previews(session, link, windows);
+pub fn owe_attached_previews_carrying<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_framework_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+    owe_attached_previews(session, link, windows, grant)?;
     // ⏰️ Only a job that has NOT settled can be woken into more work: a settled one answers `Complete`
     // to every wake, so a surface holding one is exactly as unable to pay a fresh debt as a surface
     // holding none. Reading "a job is attached" as "a run will pick this up" left the edit preview
@@ -281,6 +283,7 @@ pub fn owe_attached_previews_carrying<M, C, D>(session: &mut FlowEvalSession, li
         link.requested = Some((PreviewEvalRunRequest::Start, None));
         emit.effects.push(run_action_effect(TOOL_RUN_START_ACTION_ID, semio_framework_value::DslValue::object([(TOOL_RUN_ARG_TOOL_ID.to_string(), semio_framework_value::DslValue::String(PREVIEW_EVAL_TOOL_ID.into()))])));
     }
+    Ok(())
 }
 
 /// 🪟️ The preview window kind this surface recognises, or `None` — the surface hands in its own
@@ -649,8 +652,10 @@ pub fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Optio
         }
     }
     let port = session?.geometry_port()?;
-    match port.tessellate_step(handle, tolerance, 24) {
-        semio_framework_os_flow::geometry::GeometryStep::Ready(data) => mesh_has_preview_geometry(&data).then_some(data),
+    let copy_bytes = port.next_tessellate_copy_byte_demand(handle, tolerance).ok()?;
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy_bytes, maximum_capacity_bytes: port.next_tessellate_capacity_byte_demand(handle, tolerance, copy_bytes).ok()?, maximum_release_bytes: port.next_tessellate_release_byte_demand(handle, tolerance).ok()?, maximum_depth: port.next_tessellate_depth_demand(handle, tolerance).ok()? };
+    match port.tessellate_step(handle, tolerance, 24, grant) {
+        Ok((semio_framework_os_flow::geometry::GeometryStep::Ready(data), _)) => mesh_has_preview_geometry(&data).then_some(data),
         _ => None,
     }
 }
@@ -836,9 +841,9 @@ pub fn pending_preview_tessellate_handles(eval: &semio_framework_pack_json::Valu
 /// mints the `req`, parks the continuation and dispatches the mesh JSON straight back into the
 /// addressed surface — a hand-minted `RequestId` owns no registry slot, so every tessellation result
 /// would be discarded and the 3d preview could never paint.
-pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, tolerance: f64) -> Vec<ExtensionInvocation> {
+pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, tolerance: f64, grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<ExtensionInvocation>, semio_framework_value::ValueError> {
     let Ok(geometry_extension_address) = geometry_extension_address() else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
     let tolerance_bits = tolerance.to_bits();
     // 🖼️ The PAINTED evaluation, not the live walk's own: `retain_preview_meshes` below drops every
@@ -850,13 +855,13 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
     let (live, pending) = {
         let eval_json = session.painted_eval_json();
         if eval_json.is_empty() {
-            return Vec::new();
+            return Ok(Vec::new());
         }
         let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
         let live = preview_mesh_retention_handles(&eval, host_snapshot, session);
         (live, pending_preview_tessellate_handles(&eval, host_snapshot, session))
     };
-    session.retain_preview_meshes(&live);
+    retain_preview_meshes(session, live, grant)?;
     let mut invocations = Vec::new();
     for handle in pending {
         let node_hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance_bits);
@@ -874,7 +879,19 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
             invocations.push(ExtensionInvocation::new(geometry_extension_address.clone(), "tessellate", request_json, "flowTessellateResolve"));
         }
     }
-    invocations
+    Ok(invocations)
+}
+
+/// 🧹️ Retains exactly the live roster of preview meshes, one granted retention turn at a time, and refuses a retention that stops making progress.
+pub fn retain_preview_meshes(session: &mut FlowEvalSession, live: HashSet<String>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+    session.begin_retain_preview_meshes(live.into_iter().collect()).map_err(|(error, _)| error)?;
+    while !session.preview_retention_terminal_is_empty() {
+        session.retain_preview_meshes_step(grant)?;
+        if session.preview_retention_step_progress() == Default::default() && !session.preview_retention_terminal_is_empty() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "preview mesh retention was granted too little to advance"));
+        }
+    }
+    Ok(())
 }
 //#endregion 🧊️Geometry
 
@@ -952,13 +969,13 @@ pub fn evaluate_tick(
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
     retained_grant: semio_framework_value::RetainedCloneGrant,
-) -> FlowEvalTickOutcome {
+) -> Result<FlowEvalTickOutcome, semio_framework_value::ValueError> {
     let started_us = semio_framework_job::runtime_diagnostics_enabled().then(semio_framework_job::default_now_us).flatten();
     // ▶️ The armed tick is now RUNNING, so its latch is free for whatever THIS tick decides to arm.
-    session.begin_window_tick(window_id);
+    session.begin_window_tick(window_id, retained_grant)?;
     let census_before = node_census_digest(session.status_json());
-    let mut host = flow_host_with_session(host_snapshot, session);
-    let more = session.tick(&mut host, turn_started_us);
+    let mut host = host_with_session(host_snapshot, session, retained_grant)?;
+    let more = session.tick_cold(&mut host, turn_started_us);
     let pending_extension_evals = host.take_pending_extension_evals();
     host.retire_cold();
     let mut extension_invocations = Vec::new();
@@ -970,49 +987,47 @@ pub fn evaluate_tick(
     // example spend seven `flowEvalTick` hops at roughly a second apiece
     // (`📓️react-perf-ceilings-audit-2026-09-14.md` §1, §3 item 3).
     for pending in pending_extension_evals {
-        let resume=session.has_evaluation_progress(pending.node_hash);
-        // 🪪️ `extensionId` is CORRELATION, not payload: `reactor::extension_response_args` echoes the
-        // request's own fields back onto `flowEvalResolve`, and a refused answer has to be able to
-        // name which extension refused it — the tick's geometry address is a different extension
-        // from the one an operator hop was routed to (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
-            ("retained".to_string(), semio_framework_value::ToValue::to_value(&retained_grant)),
-            ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
-            ("inputJson".to_string(), semio_framework_value::DslValue::String(if resume {String::new()}else{pending.input_json})),
-            ("dependencyJson".to_string(), semio_framework_value::DslValue::String(if resume {String::new()}else{geometry_dependency_json(host_snapshot, &pending.neuron_id)})),
-            ("operatorVersion".to_string(), semio_framework_value::DslValue::String(format!("registry:{};geometry:1;policy:1", semio_framework_os_flow::flow_extension_registry_generation()))),
-            ("nodeHash".to_string(), semio_framework_value::DslValue::uint(pending.node_hash)),
-            ("resume".to_string(),semio_framework_value::DslValue::Bool(resume)),
-            // ⏱️ The budget the extension's `evaluate` step honours. `nodeHash` doubles as the key
-            // its retained job is resumed by, so an identical re-emitted request continues the SAME
-            // evaluation instead of restarting it — the exact resumption mechanism budgeted
-            // `tessellate` already uses (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-            ("budget".to_string(), semio_framework_value::DslValue::uint(EVALUATE_STEP_BUDGET)),
-            ("wallMicros".to_string(), semio_framework_value::DslValue::uint(EVALUATE_STEP_WALL_MICROS)),
-            ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
-            ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
-            ("extensionId".to_string(), semio_framework_value::DslValue::String(pending.extension_id.clone())),
-        ]));
-        extension_invocations.push(ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve"));
+        let resume = session.has_evaluation_progress(pending.node_hash);
+        let dependency_json = if resume { String::new() } else { geometry_dependency_json(host_snapshot, &pending.neuron_id) };
+        extension_invocations.push(evaluate_invocation(pending, resume, dependency_json, window_id, window_kind_id, &retained_grant));
     }
     if extension_invocations.is_empty() && !more {
-        extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, tolerance));
+        extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, tolerance, retained_grant)?);
     }
     // ⏳️ A tick that parked extension work is emphatically NOT FINISHED, whatever the evaluation's own
     // `more` says: `!more` is exactly the branch above that parks `tessellate`, and a window recorded
     // finished while it still owes mesh round trips strands its surface at `inFlight: 1`
     // (`📓️wgpu-example-chain-2026-09-13.md` §6.1). A graph nothing in this process can serve gives up.
-    session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()));
+    session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()), retained_grant)?;
     if !extension_invocations.is_empty() {
-        session.note_window_extensions_in_flight(window_id, extension_invocations.len());
+        session.note_window_extensions_in_flight(window_id, extension_invocations.len(), retained_grant)?;
     } else if more && !may_rearm(host_snapshot) {
-        session.abandon_window_tick(window_id);
+        session.abandon_window_tick(window_id, retained_grant)?;
     }
     let publication = preview_eval_publication_for(session, host_snapshot, retained_eval);
     if let (Some(started_us), Some(finished_us)) = (started_us, started_us.and_then(|_| semio_framework_job::default_now_us())) {
         semio_framework_os_flow::record_flow_eval_step(finished_us.saturating_sub(started_us));
     }
-    FlowEvalTickOutcome { extension_invocations, publication, census_moved: node_census_digest(session.status_json()) != census_before }
+    Ok(FlowEvalTickOutcome { extension_invocations, publication, census_moved: node_census_digest(session.status_json()) != census_before })
+}
+
+/// 📨️ The budgeted `evaluate` request one parked extension evaluation crosses to its plugin with, addressed back at the window that owes the answer. A resumed request carries neither input nor dependency: its job is keyed by `nodeHash`.
+pub fn evaluate_invocation(pending: semio_framework_artifact_flow_flow::neural::PendingExtensionEval, resume: bool, dependency_json: String, window_id: &str, window_kind_id: &str, retained_grant: &semio_framework_value::RetainedCloneGrant) -> ExtensionInvocation {
+    let request_json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
+        ("retained".to_string(), semio_framework_value::ToValue::to_value(retained_grant)),
+        ("operatorId".to_string(), semio_framework_value::DslValue::String(pending.operator_id.clone())),
+        ("inputJson".to_string(), semio_framework_value::DslValue::String(if resume { String::new() } else { pending.input_json })),
+        ("dependencyJson".to_string(), semio_framework_value::DslValue::String(dependency_json)),
+        ("operatorVersion".to_string(), semio_framework_value::DslValue::String(format!("registry:{};geometry:1;policy:1", semio_framework_os_flow::flow_extension_registry_generation()))),
+        ("nodeHash".to_string(), semio_framework_value::DslValue::uint(pending.node_hash)),
+        ("resume".to_string(), semio_framework_value::DslValue::Bool(resume)),
+        ("budget".to_string(), semio_framework_value::DslValue::uint(EVALUATE_STEP_BUDGET)),
+        ("wallMicros".to_string(), semio_framework_value::DslValue::uint(EVALUATE_STEP_WALL_MICROS)),
+        ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
+        ("windowKindId".to_string(), semio_framework_value::DslValue::String(window_kind_id.to_string())),
+        ("extensionId".to_string(), semio_framework_value::DslValue::String(pending.extension_id.clone())),
+    ]));
+    ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve")
 }
 
 /// 🕸️ One number over the part of the per-node census that is worth re-rendering the GRAPH body for:
@@ -1086,32 +1101,37 @@ pub fn census_chrome_marks(status_json: &str) -> String {
 /// ⏱️ A budgeted `evaluate` answers an ENVELOPE: a step that spent its wall allowance without
 /// finishing says `done: false` and parks its job under this same `nodeHash`, so the window stays
 /// unfinished and owes one more identical hop (`📓️extension-evaluate-budget-2026-09-12.md`).
-pub fn resolve_eval(payload: &FlowEvalResolve, session: &mut FlowEvalSession) {
-    let outcome = session.resolve_preview_eval(payload.node_hash, &payload.output_json);
-    note_eval_answer_fault(payload, session);
+pub fn resolve_eval(payload: &FlowEvalResolve, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<ExtensionInvocation>, semio_framework_value::ValueError> {
+    let outcome = session.resolve_preview_eval_cold(payload.node_hash, &payload.output_json)?;
+    note_eval_answer_fault(payload, session, grant)?;
+    if let semio_framework_os_flow::PreviewEvalOutcome::Pending(pending) = outcome {
+        return Ok(vec![evaluate_invocation(pending, true, String::new(), &payload.window_id, &payload.window_kind_id, &grant)]);
+    }
     let given_up = match &outcome {
         semio_framework_os_flow::PreviewEvalOutcome::Complete { output_json } => semio_framework_os_flow::host::io::evaluation_response::decode_flow_node_output_json(output_json).map(|output|session.seed_node_cache(payload.node_hash,output)).is_err(),
         semio_framework_os_flow::PreviewEvalOutcome::Cancelled => true,
-        semio_framework_os_flow::PreviewEvalOutcome::Working => false,
+        semio_framework_os_flow::PreviewEvalOutcome::Working | semio_framework_os_flow::PreviewEvalOutcome::Pending(_) => false,
     };
     if given_up {
-        session.abandon_window_tick(&payload.window_id);
+        session.abandon_window_tick(&payload.window_id, grant)?;
     }
-    session.settle_window_extension(&payload.window_id);
+    session.settle_window_extension(&payload.window_id, grant)?;
+    Ok(Vec::new())
 }
 
 /// 💥 Retains (or forgets) the evaluate fault one answer carried. Publication only — no arming.
-fn note_eval_answer_fault(payload: &FlowEvalResolve, session: &mut FlowEvalSession) {
+fn note_eval_answer_fault(payload: &FlowEvalResolve, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     if payload.ok || payload.fault_code.is_empty() {
-        session.clear_extension_evaluate_fault();
-        return;
+        session.clear_extension_evaluate_fault(grant)?;
+        return Ok(());
     }
     session.note_extension_evaluate_fault(semio_framework_os_flow::ExtensionEvaluateFault {
         extension_id: payload.extension_id.clone(),
         capability: "evaluate".to_string(),
         code: payload.fault_code.clone(),
         message: payload.fault_message.clone(),
-    });
+    }, grant).map_err(|(error, _)| error)?;
+    Ok(())
 }
 
 /// 🧯️ A closed run reaches the geometry extension's owned Session jobs and parked evaluations through
@@ -1158,9 +1178,10 @@ pub fn resolve_tessellate_cancel_for(payload: &FlowTessellateCancelResolve, sess
 /// [`resolve_eval`] now runs inline and for the same reason: this route is window-addressed too, and
 /// the surface continues the chain here whenever
 /// [`FlowEvalSession::inline_continuation_admitted`] says the turn still has room.
-pub fn resolve_tessellate(payload: &FlowTessellateResolve, session: &mut FlowEvalSession) {
+pub fn resolve_tessellate(payload: &FlowTessellateResolve, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     session.resolve_preview_tessellate(payload.node_hash, &payload.output_json);
-    session.settle_window_extension(&payload.window_id);
+    session.settle_window_extension(&payload.window_id, grant)?;
+    Ok(())
 }
 //#endregion ⏱️Tick
 

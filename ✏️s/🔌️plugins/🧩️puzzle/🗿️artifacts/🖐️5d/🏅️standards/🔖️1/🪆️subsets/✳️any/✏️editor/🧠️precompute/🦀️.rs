@@ -15,7 +15,8 @@ use crate::editor::puzzle5d::{
 use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::{connect_grips,create_part,Puzzle5dMutation};
 
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepBudget, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
+use crate::puzzle_job::JobTurn;
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, RetainedJobPayload, StepBudget, StepContext, JOB_PAYLOAD_PAGE_BYTES};
 use semio_framework_plugin::{Fault, ToolRunJob};
 use semio_framework_tool_run::{ToolRunIdentity, ToolRunTick, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_TRACE_PAGE_OPS_MAX};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::config::Puzzle3dConfig;
@@ -214,7 +215,7 @@ fn schema_part(part: &Puzzle5dPart) -> Result<crate::Puzzle5dPart, Fault> {
 
 //#region 🔖️Board
 /// 🧩️ One part as the board synthesis sees it: flat center and radius, its kind and grips.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 struct Puzzle5dPlannerBoardPart {
     part_kind: String,
     center: [f64; 2],
@@ -225,7 +226,7 @@ struct Puzzle5dPlannerBoardPart {
 
 /// 🗺️ A run's board: the committed parts plus every provisional placement in op order, with a grip grid for host
 /// lookups. Retracting truncates the provisional tail.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct Puzzle5dPlannerBoard {
     catalogs: Puzzle5dDocument,
     parts: Vec<Puzzle5dPlannerBoardPart>,
@@ -429,6 +430,13 @@ impl Puzzle5dPlannerBoard {
 //#endregion 🔖️Board
 
 //#region 🔖️Job
+/// ♻️ The owners one `Puzzle5dPlannerToolRunJob` still holds once its inner planner closes, retired as one controlled bundle.
+#[derive(semio_framework_value::RetireOwned)]
+struct Puzzle5dPlannerOwners {
+    board: Option<Puzzle5dPlannerBoard>,
+    pending: VecDeque<Vec<u8>>,
+}
+
 /// ⏯️ A 5d planner run job as the framework ledger steps it (fill run, fill revalidation, brush suggestions): the
 /// planner job steps inside its own
 /// step context under this step's fuel, deadline and cancellation, and every tick it reports is translated
@@ -436,46 +444,87 @@ impl Puzzle5dPlannerBoard {
 /// than a page leaves as consecutive ticks over the following steps, before the planner steps again.
 pub struct Puzzle5dPlannerToolRunJob {
     inner: ToolRunJob,
-    board: Puzzle5dPlannerBoard,
+    board: Option<Puzzle5dPlannerBoard>,
     pending: VecDeque<Vec<u8>>,
+    close_owners: crate::puzzle_job::WorkClosing<Puzzle5dPlannerOwners>,
     preview_sequence: u64,
+    outbox: crate::puzzle_job::JobOutbox,
+    closing: bool,
     pub(crate) clock: fn() -> Option<u64>,
 }
 
 impl Puzzle5dPlannerToolRunJob {
     pub fn new(inner: ToolRunJob, board: Puzzle5dPlannerBoard) -> Self {
-        Self { inner, board, pending: VecDeque::new(), preview_sequence: 0, clock: semio_framework_job::default_now_us }
+        Self { inner, board: Some(board), close_owners: Default::default(), pending: VecDeque::new(), preview_sequence: 0, outbox: Default::default(), closing: false, clock: semio_framework_job::default_now_us }
     }
 
-    fn fault(context: &mut StepContext<'_>, fault: Fault) -> StepOutcome {
-        let detail = context.payload_from_bytes(JobPayloadStream::Fault, fault.message.as_bytes()).unwrap_or_else(|rejected| {
-            drop(rejected.into_source());
-            RetainedJobPayload::empty(JobPayloadStream::Fault)
-        });
-        StepOutcome::Fault(JobFault { detail })
-    }
-
-    fn admit(context: &mut StepContext<'_>, bytes: &[u8]) -> StepOutcome {
-        match context.payload_from_bytes(JobPayloadStream::Preview, bytes) {
-            Ok(payload) => StepOutcome::PreviewReady(payload),
-            Err(rejected) => {
-                drop(rejected.into_source());
-                Self::fault(context, Fault::from("puzzle5d-planner-tick-admission"))
-            }
-        }
-    }
-
-    fn translate(&mut self, mut payload: RetainedJobPayload) -> Result<(), Fault> {
+    fn payload_bytes(payload: &RetainedJobPayload) -> Result<Vec<u8>, Fault> {
         let mut bytes = Vec::with_capacity(payload.len());
         for index in 0..payload.page_count() {
             bytes.extend_from_slice(payload.page(index).ok_or_else(|| Fault::from("puzzle5d-planner-tick-page"))?);
         }
-        while !payload.terminal_is_empty() {
-            payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
-        }
-        let tick = ToolRunTick::decode(&bytes).map_err(|error| Fault::from(format!("puzzle5d-planner-tick: {error}")))?;
-        self.pending.extend(puzzle5d_planner_tick_pages(self.board.translate(tick)?)?);
+        Ok(bytes)
+    }
+
+    fn translate(&mut self, bytes: &[u8]) -> Result<(), Fault> {
+        let tick = ToolRunTick::decode(bytes).map_err(|error| Fault::from(format!("puzzle5d-planner-tick: {error}")))?;
+        let board = self.board.as_mut().ok_or_else(|| Fault::from("puzzle5d-planner-board-retired"))?;
+        self.pending.extend(puzzle5d_planner_tick_pages(board.translate(tick)?)?);
         Ok(())
+    }
+
+    fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
+        if self.closing || context.is_cancelled() {
+            return JobTurn::Cancelled;
+        }
+        if let Some(bytes) = self.pending.pop_front() {
+            return JobTurn::Preview(bytes);
+        }
+        let fuel = context.fuel_remaining();
+        let mut progress = semio_framework_value::retained_clone::RetainedCloneProgress::default();
+        let mut planner = StepContext::new(context.operation(), context.generation(), StepBudget::new(fuel, context.deadline_us(), context.retained_grant()), context.cancel_token(), self.clock, &mut self.preview_sequence, &mut progress);
+        enum Planned {
+            Idle,
+            Yield,
+            Cancelled,
+            Complete,
+            Preview(Vec<u8>),
+            Checkpoint(u64, Vec<u8>),
+            Fault(Vec<u8>),
+        }
+        let planned = match self.inner.step(&mut planner) {
+            Err(error) => Planned::Fault(error.message.into_owned().into_bytes()),
+            Ok(None) => Planned::Idle,
+            Ok(Some(JobOutcomeBorrow::Yield { .. })) => Planned::Yield,
+            Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => Planned::Cancelled,
+            Ok(Some(JobOutcomeBorrow::Complete { .. })) => Planned::Complete,
+            Ok(Some(JobOutcomeBorrow::PreviewReady { payload, .. })) => match Self::payload_bytes(payload) {
+                Ok(bytes) => Planned::Preview(bytes),
+                Err(fault) => Planned::Fault(fault.message.into_bytes()),
+            },
+            Ok(Some(JobOutcomeBorrow::CheckpointReady { state, applied_progress, .. })) => match Self::payload_bytes(state) {
+                Ok(bytes) => Planned::Checkpoint(applied_progress, bytes),
+                Err(fault) => Planned::Fault(fault.message.into_bytes()),
+            },
+            Ok(Some(JobOutcomeBorrow::Fault { detail, .. })) => Planned::Fault(Self::payload_bytes(detail).unwrap_or_default()),
+        };
+        let spent = fuel.saturating_sub(planner.fuel_remaining());
+        drop(planner);
+        context.consume_fuel(spent);
+        if let Err(error) = context.consume_retained(progress) {
+            return JobTurn::Fault(error.message.into_owned().into_bytes());
+        }
+        match planned {
+            Planned::Idle | Planned::Yield => JobTurn::Yield,
+            Planned::Cancelled => JobTurn::Cancelled,
+            Planned::Complete => JobTurn::Complete,
+            Planned::Checkpoint(applied_progress, state) => JobTurn::Checkpoint { applied_progress, state },
+            Planned::Fault(bytes) => JobTurn::Fault(bytes),
+            Planned::Preview(bytes) => match self.translate(&bytes) {
+                Ok(()) => self.pending.pop_front().map_or(JobTurn::Yield, JobTurn::Preview),
+                Err(fault) => JobTurn::Fault(fault.message.into_bytes()),
+            },
+        }
     }
 }
 
@@ -523,41 +572,82 @@ pub fn puzzle5d_planner_tick_pages(tick: ToolRunTick) -> Result<Vec<Vec<u8>>, Fa
 }
 
 impl InteractiveJob for Puzzle5dPlannerToolRunJob {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        match self.outbox.phase(cx)? {
+            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
+            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+                self.outbox.retire_step(cx)?;
+                return Ok(None);
+            }
+            crate::puzzle_job::OutboxPhase::Idle => {}
         }
-        if let Some(bytes) = self.pending.pop_front() {
-            return Self::admit(context, &bytes);
-        }
-        let fuel = context.fuel_remaining();
-        let mut planner = StepContext::new(context.operation(), context.generation(), StepBudget::new(fuel, context.deadline_us()), context.cancel_token(), self.clock, &mut self.preview_sequence);
-        let outcome = self.inner.step(&mut planner);
-        context.consume_fuel(fuel.saturating_sub(planner.fuel_remaining()));
-        match outcome {
-            StepOutcome::PreviewReady(payload) => match self.translate(payload) {
-                Ok(()) => match self.pending.pop_front() {
-                    Some(bytes) => Self::admit(context, &bytes),
-                    None => StepOutcome::Yield,
-                },
-                Err(fault) => Self::fault(context, fault),
-            },
-            outcome => outcome,
-        }
+        let turn = self.turn(cx);
+        self.outbox.settle(turn, cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        self.outbox.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
-        self.pending.clear();
+        self.closing = true;
         self.inner.begin_close();
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        self.pending.clear();
-        self.inner.close_step(maximum_items, maximum_bytes)
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+        self.begin_close();
+        if !self.outbox.terminal_is_empty() {
+            return match self.outbox.close_step(grant) {
+                Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            };
+        }
+        if !self.inner.terminal_is_empty() {
+            let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+            return match self.inner.close_step(child) {
+                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                step => step,
+            };
+        }
+        if self.board.is_some() || !self.pending.is_empty() {
+            self.close_owners.stage(Puzzle5dPlannerOwners { board: self.board.take(), pending: std::mem::take(&mut self.pending) });
+        }
+        self.close_owners.close_step(grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.pending.is_empty() && self.inner.terminal_is_empty()
+        self.closing && self.outbox.terminal_is_empty() && self.inner.terminal_is_empty() && self.board.is_none() && self.pending.is_empty() && self.close_owners.is_empty()
+    }
+}
+
+impl Puzzle5dPlannerToolRunJob {
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.outbox.terminal_is_empty() {
+            return self.outbox.retirement_demands();
+        }
+        if !self.inner.terminal_is_empty() {
+            return Ok(semio_framework_value::RetirementDemand { copy_bytes: self.inner.next_close_copy_byte_demand()?, capacity_bytes: self.inner.next_close_capacity_byte_demand(0)?, release_bytes: self.inner.next_close_release_byte_demand()?, depth: self.inner.next_close_depth_demand()?.saturating_add(1) });
+        }
+        if self.board.is_some() || !self.pending.is_empty() {
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        self.close_owners.demands(0)
     }
 }
 //#endregion 🔖️Job

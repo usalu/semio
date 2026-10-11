@@ -238,17 +238,21 @@ fn the_page_verb_round_trips_text_and_binary() {
 fn a_displaced_root_retires_in_page_grants() {
     let root = directory_pages(10_000).iter().fold(Arc::new(HomeTransient::default()), |root, page_json| publish(&root, item(page_json)).0);
     let estimate = root.directory().retained_bytes();
-    let mut retirement = store::SnapshotRetirementFactory::retire(&HomeTransientRetirementFactory, root);
+    let birth = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: 0, maximum_depth: 2 };
+    let Ok((mut retirement, _)) = store::SnapshotRetirementFactory::retire(&HomeTransientRetirementFactory, root, birth) else { panic!("a transient root retirement is born under its own grant") };
     let grant = semio_framework_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES;
+    let turn = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: grant, maximum_depth: 1 };
     let mut released = 0;
     loop {
-        match retirement.close_step(1, grant).expect("retirement step") {
-            store::SnapshotRetirementStep::Pending { released_bytes, .. } => {
-                assert!(released_bytes <= grant);
-                released += released_bytes;
+        match retirement.close_step(turn).expect("retirement step") {
+            semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => {
+                assert!(progress.released_bytes <= grant);
+                released += progress.released_bytes;
             }
-            store::SnapshotRetirementStep::Complete => break,
-            store::SnapshotRetirementStep::Blocked => panic!("a transient root never blocks its own retirement"),
+            semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => {
+                released += progress.released_bytes;
+                break;
+            }
         }
     }
     assert!(retirement.terminal_is_empty());

@@ -1,7 +1,7 @@
 use super::*;
 
 fn budget() -> Budget {
-    Budget { fuel: 500_000_000, deadline_ms: 60_000, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
+    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 500_000_000, deadline_ms: 60_000, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
 }
 
 async fn cancel_to_completion(runtime: &OwnedRuntime, instance: &mut GuestInstance, job: u64) {
@@ -36,7 +36,7 @@ async fn configured_component_executes_owned_describe_reactor_jobs_cancel_and_ch
     assert_eq!(deadline_progress.last().map(|(fuel, _)| *fuel), Some(0), "owned describe deadline emitted no exact terminal fuel observation");
 
     let mut resumed = runtime.instantiate(&compiled, RuntimeActorId(40), &[], &budget()).await.expect("instantiate resumable owned fixture");
-    let one_instruction = Budget { fuel: 1, ..budget() };
+    let one_instruction = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1, ..budget() };
     assert!(matches!(runtime.execute_turn(&mut resumed, &[], one_instruction, &mut identity).await, Err(TurnFault::FuelExhausted)));
     let mid_call = runtime.checkpoint(&mut resumed, &mut identity).await.expect("checkpoint fuel-yielded owned turn");
     runtime.restore(&mut resumed, &mid_call, &mut identity).await.expect("restore fuel-yielded owned turn");

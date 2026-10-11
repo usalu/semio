@@ -463,6 +463,11 @@ impl Operator for BrepDeconstruct {
     fn next_retire_depth_demand(&self)->Result<usize,ValueError> {self.0.next_close_depth_demand()}
     fn retire_step(&mut self,grant:RetainedCloneGrant,_:&mut neural_engine::ValueRetirement)->Result<RetainedCloneStep,ValueError> {self.0.close_step(grant)}
     fn retire_cold(mut self:Box<Self>) { self.0.retire_cold(); }
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)> {neural_engine::OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError> {Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,ValueError> {Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError> {Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError> {Ok(1)}
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let (shape, source_index) = scoped_brep_source(input)?;
@@ -938,6 +943,12 @@ struct SessionState {
 }
 struct SessionRetirement {family:Option<FamilyRetirement>,active:usize,paused:bool}
 impl Default for SessionRetirement {fn default()->Self {Self {family:None,active:1,paused:false}}}
+/// 📏️ The retained extent of one mesh's payload vectors — the dominant allocation a tessellation turn hands out.
+pub fn mesh_payload_bytes(mesh:&semio_framework::MeshData)->usize {
+    let floats=mesh.positions.capacity()+mesh.normals.capacity()+mesh.colors.capacity()+mesh.uvs.capacity()+mesh.edge_positions.capacity()+mesh.edge_uvs.capacity();
+    let words=mesh.indices.capacity()+mesh.face_ids.capacity()+mesh.vertex_ids.capacity()+mesh.edge_ids.capacity();
+    (floats+words).saturating_mul(size_of::<u32>()).saturating_add(mesh.edge_is_seam.capacity())
+}
 fn ownership_busy()->ValueError {ValueError::literal(ValueRefusalKind::WorkLimit,"geometry owner is busy")}
 fn ownership_progress()->RetainedCloneStep {RetainedCloneStep::Progress(RetainedCloneProgress::default())}
 fn ownership_advance()->RetainedCloneStep {RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}
@@ -1182,11 +1193,11 @@ pub fn tessellation_progress(&self,handle:&str,tolerance:f64)->Option<(usize,usi
     let progress=retained.job.progress();
     Some((progress.units_done.saturating_add(if retained.validated {retained.validation_units}else {0}),progress.units_total.saturating_add(retained.validation_units),if retained.validated {progress.phase.tag()}else {"validating"}))
 }
-pub fn cached_mesh_at_or_finer(&self, handle: &str, tolerance: f64) -> Option<semio_framework::MeshData> {
+fn with_cached_mesh_at_or_finer<R>(&self, handle: &str, tolerance: f64, read: impl FnOnce(&semio_framework::MeshData) -> R) -> Option<R> {
     if self.is_closed() { return None; }
     let cache = self.mesh_cache().try_lock().ok()?;
     if let Some(exact) = cache.get(&(handle.to_string(), tolerance.to_bits())) {
-        if exact.valid {return Some(exact.mesh.clone());}
+        if exact.valid {return Some(read(&exact.mesh));}
     }
     let mut best: Option<(f64, &semio_framework::MeshData)> = None;
     for ((cached_handle,bits),cached) in cache.iter() {
@@ -1203,7 +1214,14 @@ pub fn cached_mesh_at_or_finer(&self, handle: &str, tolerance: f64) -> Option<se
             best = Some((cached_tolerance, mesh));
         }
     }
-    best.map(|(_, mesh)| mesh.clone())
+    best.map(|(_, mesh)| read(mesh))
+}
+pub fn cached_mesh_at_or_finer(&self, handle: &str, tolerance: f64) -> Option<semio_framework::MeshData> {
+    self.with_cached_mesh_at_or_finer(handle, tolerance, semio_framework::MeshData::clone)
+}
+/// 📏️ Exact retained payload extent of the cached mesh the next tessellation turn would clone out; `0` when none is cached.
+pub fn cached_mesh_payload_bytes(&self, handle: &str, tolerance: f64) -> usize {
+    self.with_cached_mesh_at_or_finer(handle, tolerance, mesh_payload_bytes).unwrap_or(0)
 }
 pub fn tessellate_step(&self, handle: &str, tolerance: f64, budget: usize) -> TessellationStepOutcome {
     if self.is_closed() { return TessellationStepOutcome::Failed { message: "geometry.session-closed".into() }; }
@@ -1629,15 +1647,29 @@ impl semio_framework_os_flow::geometry::GeometryPort for SessionPort {
     fn next_retain_depth_demand(&self)->Result<usize,ValueError>{self.retained_demand(0).map(|demand|demand.depth)}
     fn retain_step_progress(&self)->RetainedCloneProgress{self.retain_receipt}
     fn retain_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.retain_receipt=Default::default();let Some(owner)=self.retaining.get_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};let result=owner.step(self.authority.session.as_ref().ok_or_else(ownership_busy)?,grant);self.retain_receipt=owner.normal_step_progress();let step=result?;if owner.terminal_is_empty(){*self.retaining.get_mut()=None;Ok(RetainedCloneStep::Complete(step.progress()))}else{Ok(RetainedCloneStep::Progress(step.progress()))}}
-    fn tessellate_step(&self,handle:&str,tolerance:f64,units:usize)->semio_framework_os_flow::geometry::GeometryStep {
+    fn next_tessellate_copy_byte_demand(&self,handle:&str,tolerance:f64)->Result<usize,ValueError>{Ok(self.authority.session.as_ref().map_or(0,|session|session.cached_mesh_payload_bytes(handle,tolerance)))}
+    fn next_tessellate_capacity_byte_demand(&self,handle:&str,tolerance:f64,_copy:usize)->Result<usize,ValueError>{Ok(self.authority.session.as_ref().map_or(0,|session|session.cached_mesh_payload_bytes(handle,tolerance)))}
+    fn next_tessellate_release_byte_demand(&self,_handle:&str,_tolerance:f64)->Result<usize,ValueError>{Ok(0)}
+    fn next_tessellate_depth_demand(&self,_handle:&str,_tolerance:f64)->Result<usize,ValueError>{Ok(1)}
+    fn tessellate_step(&self,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant)->Result<(semio_framework_os_flow::geometry::GeometryStep,RetainedCloneProgress),ValueError> {
         use semio_framework_os_flow::geometry::GeometryStep;
-        let Some(authority)=self.authority.session.as_ref() else {return GeometryStep::Failed("geometry session is closed".into())};
-        match authority.tessellate_step(handle,tolerance,units) {
+        let awaiting=||(GeometryStep::Working {units_done:0,units_total:0,phase:"awaiting-grant".into()},RetainedCloneProgress::default());
+        let Some(authority)=self.authority.session.as_ref() else {return Ok((GeometryStep::Failed("geometry session is closed".into()),RetainedCloneProgress::default()))};
+        if grant.maximum_items==0||grant.maximum_depth==0 {return Ok(awaiting());}
+        let fits=|bytes:usize|bytes<=grant.maximum_copy_bytes&&bytes<=grant.maximum_capacity_bytes;
+        if !fits(authority.cached_mesh_payload_bytes(handle,tolerance)) {return Ok(awaiting());}
+        let step=match authority.tessellate_step(handle,tolerance,units) {
             TessellationStepOutcome::Working {units_done,units_total,phase,..}=>GeometryStep::Working {units_done,units_total,phase:phase.into()},
-            TessellationStepOutcome::Ready {mesh,..}=>GeometryStep::Ready(mesh),TessellationStepOutcome::Cancelled=>GeometryStep::Cancelled,
+            TessellationStepOutcome::Ready {mesh,..}=>{
+                let bytes=mesh_payload_bytes(&mesh);
+                if !fits(bytes) {return Ok(awaiting());}
+                return Ok((GeometryStep::Ready(mesh),RetainedCloneProgress {copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,released_bytes:0}));
+            }
+            TessellationStepOutcome::Cancelled=>GeometryStep::Cancelled,
             TessellationStepOutcome::Failed {message}=>GeometryStep::Failed(message),
             TessellationStepOutcome::Invalid {issues}=>GeometryStep::Failed(issues.into_iter().map(|issue|issue.message).collect::<Vec<_>>().join("; ")),
-        }
+        };
+        Ok((step,RetainedCloneProgress {copied_items:1,..Default::default()}))
     }
     fn dispose(&self,handle:&str)->Result<(),String> {self.authority.session.as_ref().ok_or("geometry session is closed")?.dispose_geometry(handle)}
     fn begin_cancel(&mut self)->Result<(),ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.begin_cancel()?;if let Some(owner)=self.retaining.get_mut(){owner.cancel();}Ok(())}

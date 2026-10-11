@@ -31,7 +31,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// exactly one inert variant — real per-command payload modules the way the sibling editor surface's
 /// `🎮️commands/*` carries them would be pure ceremony for a surface that never dispatches anything
 /// through `handle`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, semio_framework_value::RetireOwned)]
 pub enum ArchitectViewCommand {
     #[default]
     Noop,

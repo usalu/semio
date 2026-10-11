@@ -39,6 +39,6 @@ pub(in super::super)fn bind(root:&RecordValue,output:&mut Option<CsvSnapshot>,na
   native.begin_stage(total)?;let snapshot=output.as_mut().unwrap();wallet.copy_text_into(native,schema,&mut snapshot.schema,2)?;native.step()?;wallet.allocate_vec_into(native,rows.len(),&mut snapshot.records,2)?;
   for row in rows{let cells=list(field(record(row)?,0)?)?;let header=semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<CsvRecord>(),..Default::default()};wallet.record_progress(header)?;snapshot.records.push(CsvRecord{fields:Vec::new()});let destination=&mut snapshot.records.last_mut().unwrap().fields;wallet.allocate_vec_into(native,cells.len(),destination,4)?;native.step()?;
    for cell in cells{let cell=record(cell)?;let quoted=boolean(field(cell,1)?)?;let value=text(field(cell,0)?)?;wallet.record_progress(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<CsvField>(),..Default::default()})?;destination.push(CsvField{value:String::new(),quoted});wallet.copy_text_into(native,value,&mut destination.last_mut().unwrap().value,6)?;native.step()?;}
-  }Ok(())
+  }Ok::<(),ValueError>(())
  });result.map_err(|error|error.with_retained_progress(wallet.progress()))
 }

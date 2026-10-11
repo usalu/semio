@@ -48,7 +48,7 @@ pub(crate) const PARENT_PREVIEW_TIME_INTERVAL_MS: u64 = 16;
 
 /// 🏁 What `s.wfc.wfc2d.solve` commits: the assignment, the satisfiability verdict, and the
 /// pre-propagation entropy map. None of it is ever written back into the document.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Wfc2dInferenceCommit {
     pub assignments: BTreeMap<String, String>,
@@ -97,7 +97,7 @@ pub(crate) fn slot_entropy(snapshot: &Wfc2dSnapshot, slot: &crate::schema::snaps
 
 //#region 🔖️Solve
 /// 🏁 The solved assignment (slot id → tile id), or `Unsolved` for every non-solved outcome.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum Wfc2dSolveResult {
     #[default]
     Unsolved,

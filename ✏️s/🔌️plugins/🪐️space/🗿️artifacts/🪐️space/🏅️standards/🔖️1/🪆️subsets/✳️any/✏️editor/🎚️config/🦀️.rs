@@ -13,7 +13,8 @@ use semio_framework_os_kernel::os_directory::DirectoryIndexedDocumentViewV1;
 /// 🧑️ One space member, projected from `semio_framework_os::os_directory::MemberView` into the
 /// space app's own local view-state vocabulary (`role` kept as the wire string `"author"`/
 /// `"spectator"` rather than re-importing the directory crate's enum into render code).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceIndexMember {
     pub user_id: String,
@@ -27,7 +28,7 @@ pub struct SpaceIndexMember {
 /// 👥️ Live peers on one artifact's documents (all surfaces/documents of that artifact, folded to a
 /// flat actor-id list) — `actors_csv` avoids nesting `Vec<String>` inside a `#[dsl(table)]` row
 /// (unproven by any existing facet in this tree); split on `,` for display.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceIndexArtifactPresence {
     pub artifact_id: String,
@@ -49,7 +50,7 @@ impl SpaceIndexArtifactPresence {
 //#region 🔖️Config
 /// 🎚️ `SpaceIndexEditor`'s real `ArtifactApp::Config` — whole-record, DSL/pack codec handcrafted
 /// (mirrors `SSpaceSnapshot`'s own handcrafted pair, `🧬️schema/📸️snapshot/🦀️.rs`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "sspacecfg")]
 #[dsl(layout = "lines")]
@@ -136,7 +137,8 @@ impl store::ArtifactPack for SpaceIndexConfig {
 impl store::ConfigRecord for SpaceIndexConfig {}
 
 /// 📇️ The directory-owned slice of the config (visibility, members, indexed documents): what a directory fold replaces as one entity.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceIndexDirectoryProjection {
     pub visibility: String,
@@ -147,7 +149,7 @@ pub struct SpaceIndexDirectoryProjection {
 }
 
 /// 🩹 Patch of one presence row.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceIndexPresencePatch {
     pub actors_csv: Option<String>,
@@ -186,7 +188,7 @@ impl protocol::list_delta::RowPatch<SpaceIndexArtifactPresence> for SpaceIndexPr
         let earlier = self.clone();
         let first = &earlier;
         let later = &later;
-        *self = SpaceIndexPresencePatch { artifact_id: first.artifact_id.clone(), actors_csv: later.actors_csv.clone().or_else(|| first.actors_csv.clone()) };
+        *self = SpaceIndexPresencePatch { actors_csv: later.actors_csv.clone().or_else(|| first.actors_csv.clone()) };
     }
     fn inverse(&self, row: &SpaceIndexArtifactPresence) -> Self {
         let patch = self;
@@ -254,17 +256,41 @@ impl protocol::DiffAlgebra<SpaceIndexConfig> for SpaceIndexConfigDiff {
 //#region 🔖️ConfigMutation
 /// 🧮️ The config's mutation vocabulary: the host-folded directory slice replaces as one entity, and each presence heartbeat sets
 /// (or clears) the live actors of one artifact.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SpaceIndexConfigMutation {
     #[dsl(key = "directory-projection")]
-    ReplaceDirectoryProjection {
-        #[dsl(block)]
-        projection: SpaceIndexDirectoryProjection,
-    },
+    ReplaceDirectoryProjection(DirectoryProjectionReplacement),
     #[dsl(key = "artifact-presence")]
-    SetArtifactPresence { artifact_id: String, actors_csv: String },
+    SetArtifactPresence(ArtifactPresenceSetting),
     #[dsl(key = "clear-artifact-presence")]
-    ClearArtifactPresence { artifact_id: String },
+    ClearArtifactPresence(ArtifactPresenceClearing),
+}
+
+/// 📇️ The folded directory slice a replacement installs; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "directory-projection")]
+pub struct DirectoryProjectionReplacement {
+    #[dsl(block)]
+    pub projection: SpaceIndexDirectoryProjection,
+}
+
+/// 👥️ The live actors one artifact heartbeat sets; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "artifact-presence")]
+pub struct ArtifactPresenceSetting {
+    pub artifact_id: String,
+    pub actors_csv: String,
+}
+
+/// 👥️ The artifact whose live actors a clear removes; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "clear-artifact-presence")]
+pub struct ArtifactPresenceClearing {
+    pub artifact_id: String,
 }
 
 impl Mutation<SpaceIndexConfig> for SpaceIndexConfigMutation {
@@ -325,21 +351,21 @@ impl Mutation<SpaceIndexConfig> for SpaceIndexConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::ReplaceDirectoryProjection { .. } => &Self::DESCRIPTORS[0],
-            Self::SetArtifactPresence { .. } => &Self::DESCRIPTORS[1],
-            Self::ClearArtifactPresence { .. } => &Self::DESCRIPTORS[2],
+            Self::ReplaceDirectoryProjection(_) => &Self::DESCRIPTORS[0],
+            Self::SetArtifactPresence(_) => &Self::DESCRIPTORS[1],
+            Self::ClearArtifactPresence(_) => &Self::DESCRIPTORS[2],
         }
     }
 
     fn diff(&self, base: &SpaceIndexConfig) -> protocol::MutationOutcome<SpaceIndexConfigDiff> {
         protocol::MutationOutcome::new(match self {
-            Self::ReplaceDirectoryProjection { projection } => SpaceIndexConfigDiff {
+            Self::ReplaceDirectoryProjection(DirectoryProjectionReplacement { projection }) => SpaceIndexConfigDiff {
                 visibility: (base.visibility != projection.visibility).then(|| projection.visibility.clone()),
                 members: (base.members != projection.members).then(|| projection.members.clone()),
                 indexed_artifacts: (base.indexed_artifacts != projection.indexed_artifacts).then(|| projection.indexed_artifacts.clone()),
                 presence: None,
             },
-            Self::SetArtifactPresence { artifact_id, actors_csv } => {
+            Self::SetArtifactPresence(ArtifactPresenceSetting { artifact_id, actors_csv }) => {
                 let delta = match base.presence.iter().find(|row| row.artifact_id == *artifact_id) {
                     Some(row) if row.actors_csv == *actors_csv => None,
                     Some(_) => Some(SpaceIndexPresenceDelta::modification(artifact_id.clone(), SpaceIndexPresencePatch { actors_csv: Some(actors_csv.clone()) })),
@@ -347,16 +373,16 @@ impl Mutation<SpaceIndexConfig> for SpaceIndexConfigMutation {
                 };
                 SpaceIndexConfigDiff { presence: delta, ..Default::default() }
             }
-            Self::ClearArtifactPresence { artifact_id } => SpaceIndexConfigDiff { presence: base.presence.iter().position(|row| row.artifact_id == *artifact_id).map(|index| SpaceIndexPresenceDelta::removal(&base.presence, index)), ..Default::default() },
+            Self::ClearArtifactPresence(ArtifactPresenceClearing { artifact_id }) => SpaceIndexConfigDiff { presence: base.presence.iter().position(|row| row.artifact_id == *artifact_id).map(|index| SpaceIndexPresenceDelta::removal(&base.presence, index)), ..Default::default() },
         })
     }
 
     fn inverse(&self, base: &SpaceIndexConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(match self {
-            Self::ReplaceDirectoryProjection { .. } => vec![Self::ReplaceDirectoryProjection { projection: SpaceIndexDirectoryProjection { visibility: base.visibility.clone(), members: base.members.clone(), indexed_artifacts: base.indexed_artifacts.clone() } }],
-            Self::SetArtifactPresence { artifact_id, .. } | Self::ClearArtifactPresence { artifact_id } => match base.presence.iter().find(|row| row.artifact_id == *artifact_id) {
-                Some(row) => vec![Self::SetArtifactPresence { artifact_id: artifact_id.clone(), actors_csv: row.actors_csv.clone() }],
-                None if matches!(self, Self::SetArtifactPresence { .. }) => vec![Self::ClearArtifactPresence { artifact_id: artifact_id.clone() }],
+            Self::ReplaceDirectoryProjection(_) => vec![Self::ReplaceDirectoryProjection(DirectoryProjectionReplacement { projection: SpaceIndexDirectoryProjection { visibility: base.visibility.clone(), members: base.members.clone(), indexed_artifacts: base.indexed_artifacts.clone() } })],
+            Self::SetArtifactPresence(ArtifactPresenceSetting { artifact_id, .. }) | Self::ClearArtifactPresence(ArtifactPresenceClearing { artifact_id }) => match base.presence.iter().find(|row| row.artifact_id == *artifact_id) {
+                Some(row) => vec![Self::SetArtifactPresence(ArtifactPresenceSetting { artifact_id: artifact_id.clone(), actors_csv: row.actors_csv.clone() })],
+                None if matches!(self, Self::SetArtifactPresence(_)) => vec![Self::ClearArtifactPresence(ArtifactPresenceClearing { artifact_id: artifact_id.clone() })],
                 None => Vec::new(),
             },
         })

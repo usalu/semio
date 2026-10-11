@@ -113,6 +113,8 @@ semio-s-artifact-stdio-tiff = { workspace = true, features = ["component-app-ass
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 
 [package.metadata.semio.sources]

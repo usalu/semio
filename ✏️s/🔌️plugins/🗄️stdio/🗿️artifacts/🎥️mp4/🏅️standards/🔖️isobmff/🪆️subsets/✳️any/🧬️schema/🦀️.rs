@@ -4,7 +4,7 @@
 use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Ftyp, Mp4Movie, Mp4Snapshot, Mp4Track};
 use framework_schema::ArtifactSchema;
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp4")]
 pub struct Mp4Artifact {

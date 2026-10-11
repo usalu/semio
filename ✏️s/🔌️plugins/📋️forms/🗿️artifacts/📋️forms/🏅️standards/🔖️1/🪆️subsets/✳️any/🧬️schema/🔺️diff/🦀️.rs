@@ -78,14 +78,14 @@ impl FormsDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🧱️ Carries an optional text as a present slot, so clearing it stays distinct from leaving it untouched on every wire.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct FormsOptionalText {
     pub value: Option<String>,
 }
 
 /// 🩹 Field patch of one question: the kind when it changes plus the typed field settings, at most one per field.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct FormsQuestionPatch {
     pub kind: Option<String>,
@@ -93,7 +93,7 @@ pub struct FormsQuestionPatch {
 }
 
 /// 🩹 Field patch of one step: title, description and the nested positional question delta.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct FormsStepPatch {
     pub title: Option<String>,
@@ -102,19 +102,35 @@ pub struct FormsStepPatch {
 }
 
 
+/// 🔑️ Keys the foreign playbook question rows by their id.
+pub(crate) struct FormsQuestionKeys;
+
+impl protocol::list_delta::KeyOf<FormQuestion> for FormsQuestionKeys {
+    type Key = String;
+    fn key_of(row: &FormQuestion) -> String { row.id.clone() }
+}
+
+/// 🔑️ Keys the foreign playbook step rows by their id.
+pub(crate) struct FormsStepKeys;
+
+impl protocol::list_delta::KeyOf<FormStep> for FormsStepKeys {
+    type Key = String;
+    fn key_of(row: &FormStep) -> String { row.id.clone() }
+}
+
 protocol::list_delta! {
     /// 🧩 Positional row delta of the questions of one step.
-    pub FormsQuestionsDelta { removal: FormsQuestionRemoval, insertion: FormsQuestionInsertion, relocation: FormsQuestionRelocation, modification: FormsQuestionsModification, row: FormQuestion, patch: FormsQuestionPatch, key: id, values_only }
+    pub FormsQuestionsDelta { removal: FormsQuestionRemoval, insertion: FormsQuestionInsertion, relocation: FormsQuestionRelocation, modification: FormsQuestionsModification, row: FormQuestion, patch: FormsQuestionPatch, list: Vec<FormQuestion>, key: String = by FormsQuestionKeys, values_only }
 }
 
 protocol::list_delta! {
     /// 🧩 Positional row delta of the steps.
-    pub FormsStepsDelta { removal: FormsStepRemoval, insertion: FormsStepInsertion, relocation: FormsStepRelocation, modification: FormsStepsModification, row: FormStep, patch: FormsStepPatch, key: id, values_only }
+    pub FormsStepsDelta { removal: FormsStepRemoval, insertion: FormsStepInsertion, relocation: FormsStepRelocation, modification: FormsStepsModification, row: FormStep, patch: FormsStepPatch, list: Vec<FormStep>, key: String = by FormsStepKeys, values_only }
 }
 
 protocol::plain_list_delta! {
     /// 🧩 Positional row delta of the immutable responses: a response is inserted or removed, never patched.
-    pub FormsResponsesDelta { removal: FormsResponseRemoval, insertion: FormsResponseInsertion, relocation: FormsResponseRelocation, row: FormsResponse, key: id }
+    pub FormsResponsesDelta { removal: FormsResponseRemoval, insertion: FormsResponseInsertion, relocation: FormsResponseRelocation, row: FormsResponse, key: id, values_only }
 }
 
 //#endregion 🔖️DeltaHelpers

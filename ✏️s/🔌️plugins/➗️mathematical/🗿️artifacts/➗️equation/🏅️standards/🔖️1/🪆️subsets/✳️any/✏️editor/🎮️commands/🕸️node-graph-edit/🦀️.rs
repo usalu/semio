@@ -19,7 +19,7 @@ pub const EQUATION_EDITOR_APP_ID: &str = "s.mathematical.equation@1/*#editor";
 
 /// 🎨️ `nodeGraphActions.edit` (`"nodeGraphEdit"`) is the shared renderer-wide action id the generic node-graph canvas
 /// dispatches interactive edit gestures under; `operations_json` is the JSON array of its rows.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "node-graph-edit")]
 pub struct NodeGraphEdit {
     pub operations_json: String,

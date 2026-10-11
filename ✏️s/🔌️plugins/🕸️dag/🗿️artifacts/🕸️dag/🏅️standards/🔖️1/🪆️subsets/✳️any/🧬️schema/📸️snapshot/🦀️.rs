@@ -4,7 +4,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted DAG document snapshot — schema tag plus the composed `graph` content child.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[dsl(id = "dag.dag", layout = "lines")]
 #[artifact_schema(id = "s.dag.dag")]
@@ -46,17 +46,10 @@ impl semio_framework_value::FromValue for DagSnapshot {
     }
     fn retire_decoded(self) {
         let factory = semio_framework_value::retirement::OwnedValueRetirementFactory::<DagContentChild>::default();
-        let mut cursor = store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, self.content);
-        loop {
-            match cursor.close_step(256, 65536).expect("DAG child closes with its exact owner") {
-                store::SnapshotRetirementStep::Complete => {
-                    assert!(cursor.terminal_is_empty());
-                    break;
-                }
-                store::SnapshotRetirementStep::Pending { .. } => {}
-                store::SnapshotRetirementStep::Blocked => panic!("DAG child retirement blocked"),
-            }
-        }
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::ArtifactOwnedValueRetirementFactory::retirement_birth_bytes(&factory, &self.content), maximum_depth: 2, ..Default::default() };
+        let (mut cursor, _) = store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, self.content, grant).unwrap_or_else(|(error, _)| panic!("DAG child retirement admission refused: {error}"));
+        store::test_support::drive_retirement(cursor.as_mut()).expect("DAG child closes with its exact owner");
+        assert!(cursor.terminal_is_empty());
     }
 }
 

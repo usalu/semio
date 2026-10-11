@@ -221,20 +221,19 @@ impl Generation3dInstanceOperationOwner {
     /// 🩹️ Owes the attached previews exactly what this gesture's own emit says it owes them — a
     /// landed artifact mutation moved the document the evaluation reads, nothing else did — and puts
     /// the run start the debt needs on that same emit when no run is live to be woken instead.
-    fn owe_attached_previews_for_mutations(&mut self, windows: &[(&str, &'static str)], servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>) -> Result<bool, Fault> {
+    fn owe_attached_previews_for_mutations(&mut self, windows: &[(&str, &'static str)], servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
         let Self { eval_session, run_link, closing, .. } = self;
         let session = eval_session.as_mut().filter(|_| !*closing).ok_or_else(|| Fault::from("generation3d-eval-session-closing"))?;
-        Ok(crate::preview_eval::owe_attached_previews_for_mutations(session, run_link, windows, servable, emit))
+        crate::preview_eval::owe_attached_previews_for_mutations(session, run_link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
     }
 
     /// 🚦️ Owes the attached previews an evaluation and puts the run start that debt needs on the
     /// gesture's own emit — what a route that owes unconditionally (a generation command, an example
     /// switch, a contributions install, a closing import chunk) hands back.
-    fn owe_attached_previews_carrying(&mut self, windows: &[(&str, &'static str)], servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>) -> Result<(), Fault> {
+    fn owe_attached_previews_carrying(&mut self, windows: &[(&str, &'static str)], servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
         let Self { eval_session, run_link, closing, .. } = self;
         let session = eval_session.as_mut().filter(|_| !*closing).ok_or_else(|| Fault::from("generation3d-eval-session-closing"))?;
-        crate::preview_eval::owe_attached_previews_carrying(session, run_link, windows, servable, emit);
-        Ok(())
+        crate::preview_eval::owe_attached_previews_carrying(session, run_link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
     }
 }
 
@@ -250,38 +249,64 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dInst
         self
     }
 
+    fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.closing {
+            return Ok(Default::default());
+        }
+        let Some(session) = self.eval_session.as_ref() else { return Ok(semio_framework_value::RetirementDemand { depth: usize::from(!self.geometry.terminal_is_empty()), ..Default::default() }) };
+        if session.terminal_is_empty() {
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: session.next_close_copy_byte_demand()?, capacity_bytes: session.next_close_capacity_byte_demand(body)?, release_bytes: session.next_close_release_byte_demand()?, depth: session.next_close_depth_demand()? })
+    }
+
     /// 🧹️ A LIVE session owns nothing retirable — `FlowEvalSession::close_step` answers `Blocked`
     /// until `begin_close`, and reporting that from the live maintenance ladder spent the runtime's
     /// zero-progress credit every idle turn (26/09/09/PROCEDURAL-3D-END-TO-END, close-ladder lane).
-    fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+    fn maintenance_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+        use semio_framework_plugin::PluginLifecycleStep;
+        use semio_framework_value::retained_clone::RetainedCloneProgress;
         if !self.closing {
-            return Ok(semio_framework_plugin::PluginCloseStep::Complete);
+            return Ok(PluginLifecycleStep::Complete(Default::default()));
         }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(PluginLifecycleStep::Progress(Default::default()));
         }
-        let Some(session) = self.eval_session.as_mut() else { return Ok(semio_framework_plugin::PluginCloseStep::Complete) };
-        let step = session.close_step(maximum_items, maximum_bytes);
-        if session.terminal_is_empty() {
+        let Some(session) = self.eval_session.as_mut() else {
+            if self.geometry.terminal_is_empty() {
+                return Ok(PluginLifecycleStep::Complete(Default::default()));
+            }
+            return Ok(match self.geometry.retire_cold() {
+                Ok(()) => PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }),
+                Err(_) => PluginLifecycleStep::Progress(Default::default()),
+            });
+        };
+        let (progress, finished) = if session.terminal_is_empty() {
+            (RetainedCloneProgress { copied_items: 1, ..Default::default() }, true)
+        } else {
+            match session.close_step(grant) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => (progress, false),
+                semio_framework_job::InteractiveJobCloseStep::Complete { progress } => (progress, true),
+                semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(PluginLifecycleStep::Blocked { reason: "Generation3d evaluation session awaits its exact close grant" }),
+                semio_framework_job::InteractiveJobCloseStep::Refused { .. } => return Err(Fault::from("generation3d-eval-session-close-refused")),
+            }
+        };
+        if finished && session.terminal_is_empty() {
             self.eval_session = None;
         }
-        Ok(match step {
-            semio_framework_job::InteractiveJobCloseStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "Generation3d evaluation session awaits its exact close grant" },
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
-            semio_framework_job::InteractiveJobCloseStep::Complete => semio_framework_plugin::PluginCloseStep::Complete,
-        })
+        Ok(if self.terminal_is_empty() { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
         self.closing = true;
         if let Some(session) = self.eval_session.as_mut() {
             session.begin_close();
         }
-        self.maintenance_step(maximum_items, maximum_bytes)
+        self.maintenance_step(grant)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.eval_session.is_none()
+        self.closing && self.eval_session.is_none() && self.geometry.terminal_is_empty()
     }
 }
 
@@ -293,10 +318,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dInst
 fn with_scratch_session<R>(body: impl FnOnce(&mut FlowEvalSession) -> R) -> R {
     let mut session = FlowEvalSession::new();
     let result = body(&mut session);
-    session.begin_close();
-    while !session.terminal_is_empty() {
-        let _ = session.close_step(usize::MAX, usize::MAX);
-    }
+    session.retire_cold();
     result
 }
 //#endregion 🔖️InstanceOperationOwner
@@ -490,9 +512,6 @@ const GENERATION3D_RETAINED_WORK_ITEMS: usize = GENERATION3D_RETAINED_CAPACITY.w
 /// single largest Artifact mutation any of the 27 tools ever emits — 64 KiB stays a real ceiling, not a
 /// rubber stamp, for every example plus ordinary interactive graph edits.
 pub(crate) const GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
-/// 🎒️ Real bound for one Config-lane edit: a full snapshot containing the flow/preview cameras,
-/// selected generation, and sun JSON remains bounded independently of computed preview output.
-const GENERATION3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 262_144;
 
 /// 🧾️ The ONE execution contract all 29 routes publish — the factory's `execution_contract()` and
 /// every row of `bounded_first_step_tool_proofs!` alike, so the proof catalogue can never drift from
@@ -547,6 +566,7 @@ struct Generation3dPreviewCommandWork {
     /// `OrderedMap<WidgetLayout>` root, so the host is drained under the caller's grant instead.
     host_retirement: Option<semio_framework_os_flow::FlowHostRetirement>,
     session: Option<FlowEvalSession>,
+    emit_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>>>,
     started: bool,
     complete: bool,
     closing: bool,
@@ -554,14 +574,32 @@ struct Generation3dPreviewCommandWork {
 
 impl Generation3dPreviewCommandWork {
     fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { tool_id, instance_owner, emit: None, host: None, host_retirement: None, session: None, started: false, complete: false, closing: false }
+        Self { tool_id, instance_owner, emit: None, host: None, host_retirement: None, session: None, emit_retirement: None, started: false, complete: false, closing: false }
     }
 
     /// 🔒️ Owes every attached preview window an evaluation on the RETAINED session's latch, so two
     /// gestures in a row still leave exactly one debt per window for the run to pay.
-    fn owe_attached_previews(&self, view: Option<&semio_framework_plugin::ViewModel>, servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>) -> Result<(), Fault> {
+    fn owe_attached_previews(&self, view: Option<&semio_framework_plugin::ViewModel>, servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
         let windows = generation3d_preview_windows(view);
-        self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, emit))
+        self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, emit, grant))
+    }
+
+    fn close_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        use semio_framework_value::RetirementDemand;
+        let leaf = RetirementDemand { depth: 1, ..Default::default() };
+        if let Some(session) = self.session.as_ref() {
+            return if session.terminal_is_empty() { Ok(leaf) } else { Ok(RetirementDemand { copy_bytes: session.next_close_copy_byte_demand()?, capacity_bytes: session.next_close_capacity_byte_demand(copy)?, release_bytes: session.next_close_release_byte_demand()?, depth: session.next_close_depth_demand()? }) };
+        }
+        if self.host.is_some() || self.emit.is_some() {
+            return Ok(leaf);
+        }
+        if let Some(retirement) = self.host_retirement.as_ref() {
+            return if retirement.terminal_is_empty() { Ok(leaf) } else { Ok(RetirementDemand { copy_bytes: retirement.next_close_copy_byte_demand()?, capacity_bytes: retirement.next_close_capacity_byte_demand(copy)?, release_bytes: retirement.next_close_release_byte_demand()?, depth: retirement.next_close_depth_demand()? }) };
+        }
+        if let Some(retirement) = self.emit_retirement.as_ref() {
+            return Ok(RetirementDemand { copy_bytes: retirement.next_copy_byte_demand()?, capacity_bytes: retirement.next_capacity_byte_demand(copy)?, release_bytes: retirement.next_release_byte_demand()?, depth: retirement.next_depth_demand()? });
+        }
+        Ok(Default::default())
     }
 
     fn complete(&mut self) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
@@ -569,6 +607,11 @@ impl Generation3dPreviewCommandWork {
         let emit = self.emit.take().ok_or_else(|| Fault::from("generation3d-preview-emit-owner-absent"))?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
     }
+}
+
+/// 🧮️ The transient bytes one work step may materialize: the work's own frame plus the one emit it can stage.
+fn command_work_step_demands<A: semio_framework_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(std::mem::size_of::<semio_framework_plugin::Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
 }
 
 impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreviewCommandWork {
@@ -592,6 +635,14 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
         GENERATION3D_RETAINED_CAPACITY.rows_for_items(snapshot.host_snapshot.widgets.len().checked_add(2)?)
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<EditorApp<Generation3dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
         if self.closing || self.complete {
             return Err(Fault::from("generation3d-preview-work-is-terminal"));
@@ -607,14 +658,14 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
                 // the dialect never published, and a re-pick of the example already open, both emit
                 // zero artifact mutations (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
                 if !emit.artifact_mutations.is_empty() {
-                    self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_ref()), servable, &mut emit)?;
+                    self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_ref()), servable, &mut emit, input.operation.retained)?;
                 }
                 self.emit = Some(emit);
                 return self.complete();
             }
             let result = crate::editor::generation3d::commands::generation::generation_command_result_for(input.command, input.snapshot, input.config).ok_or_else(|| Fault::from("generation3d-preview-command-unowned"))?;
             let mut emit = result.emit;
-            self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_ref()), servable, &mut emit)?;
+            self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_ref()), servable, &mut emit, input.operation.retained)?;
             if let Some(fixture) = result.preview_fixture {
                 fixture.retire_cold();
             }
@@ -631,48 +682,82 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         use semio_framework_job::InteractiveJobCloseStep;
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
+        let idle = RetainedCloneProgress::default();
+        let one = RetainedCloneProgress { copied_items: 1, ..idle };
         if !self.closing {
             return InteractiveJobCloseStep::Blocked;
         }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return InteractiveJobCloseStep::Blocked;
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return InteractiveJobCloseStep::Pending { progress: idle };
         }
         if let Some(session) = self.session.as_mut() {
-            match session.close_step(maximum_items, maximum_bytes) {
-                InteractiveJobCloseStep::Complete => {
-                    if !session.terminal_is_empty() {
-                        return InteractiveJobCloseStep::Blocked;
-                    }
-                    self.session.take();
-                    return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                }
-                step => return step,
+            if session.terminal_is_empty() {
+                self.session.take();
+                return InteractiveJobCloseStep::Pending { progress: one };
             }
+            return session.close_step(grant);
         }
         if let Some(host) = self.host.take() {
             self.host_retirement = Some(semio_framework_os_flow::FlowHostRetirement::new(host));
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return InteractiveJobCloseStep::Pending { progress: one };
         }
         if let Some(retirement) = self.host_retirement.as_mut() {
-            return match retirement.close_page(maximum_items, maximum_bytes) {
-                Ok(false) => InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-                Ok(true) => {
-                    self.host_retirement = None;
-                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-                Err(_) => InteractiveJobCloseStep::Blocked,
+            if retirement.terminal_is_empty() {
+                self.host_retirement = None;
+                return InteractiveJobCloseStep::Pending { progress: one };
+            }
+            return match retirement.close_step(grant) {
+                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Err(error) => refused(error),
             };
         }
-        if self.emit.take().is_some() {
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        if let Some(emit) = self.emit.take() {
+            return match semio_framework_value::retirement::controlled::ControlledRetirement::new(emit) {
+                Ok(owner) => {
+                    self.emit_retirement = Some(owner);
+                    InteractiveJobCloseStep::Pending { progress: one }
+                }
+                Err((error, emit)) => {
+                    self.emit = Some(emit);
+                    refused(error)
+                }
+            };
         }
-        InteractiveJobCloseStep::Complete
+        if let Some(retirement) = self.emit_retirement.as_mut() {
+            let step = retirement.step(grant);
+            if retirement.terminal_is_empty() {
+                self.emit_retirement = None;
+            }
+            return match step {
+                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Err(error) => refused(error),
+            };
+        }
+        InteractiveJobCloseStep::Complete { progress: idle }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.emit.is_none() && self.host.is_none() && self.host_retirement.is_none() && self.session.is_none()
+        self.closing && self.emit.is_none() && self.emit_retirement.is_none() && self.host.is_none() && self.host_retirement.is_none() && self.session.is_none()
     }
 }
 
@@ -738,6 +823,14 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         .flatten()
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<EditorApp<Generation3dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
         if self.complete || self.closing { return Err(Fault::from("generation3d-flow-eval-window-work-terminal")); }
         let turn_started_us = semio_framework_job::default_now_us();
@@ -782,8 +875,8 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
 
     fn begin_close(&mut self) { self.closing = true; }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if self.closing { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Blocked }
+    fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        if self.closing { semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() } } else { semio_framework_job::InteractiveJobCloseStep::Blocked }
     }
 
     fn terminal_is_empty(&self) -> bool { self.closing }
@@ -871,7 +964,7 @@ fn generation3d_retained_reduce(
             return Ok(Emit::default());
         }
         if ids.iter().any(|id| selection::ComponentTarget::parse(id).is_some()) {
-            selection::validate_cached_components(&snapshot.host_snapshot, session, &ids, Some(&operation.canonical_base_revision)).map_err(Fault::from)?;
+            selection::validate_cached_components(&snapshot.host_snapshot, session, &ids, Some(&operation.canonical_base_revision), operation.retained).map_err(Fault::from)?;
         }
         return gumball.dispatch(
             transform_commands::GumballDispatch { verb: gesture.verb, window, ids, motion: gesture.motion, phase, authoring_seed: &operation.authoring_seed, base_revision: operation.canonical_base_revision },
@@ -884,7 +977,7 @@ fn generation3d_retained_reduce(
     let component_ids: &[String] = interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice());
     let graph_ids: &[String] = interaction.selection.get("graph").map_or(&[], |selection| selection.ids.as_slice());
     if let Some(ids) = generation3d_component_targets(command, context.and_then(|context| context.view_state.as_ref()), interaction.active_granularity.get(selection::DOMAIN).map(String::as_str), component_ids, graph_ids).filter(|ids| !ids.is_empty()) {
-        selection::validate_cached_components(&snapshot.host_snapshot, session, ids, Some(&operation.canonical_base_revision)).map_err(Fault::from)?;
+        selection::validate_cached_components(&snapshot.host_snapshot, session, ids, Some(&operation.canonical_base_revision), operation.retained).map_err(Fault::from)?;
     }
     match command {
         Generation3dCommand::EditMeshSelection(payload) => edit_mesh_selection::apply_selected("editMeshSelection", payload, &doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
@@ -975,6 +1068,14 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
         generation3d_bounded_extent(command, snapshot, interaction)
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<EditorApp<Generation3dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation3d-session-command-work-repeated"));
@@ -996,9 +1097,9 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
                 owner.with_session_and_gumball(|session, gumball| generation3d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session, gumball))??
             };
             if owner.gumball.revision() != gestures {
-                owner.owe_attached_previews_carrying(&windows, servable, &mut emit)?;
+                owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
             } else {
-                owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit)?;
+                owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit, input.operation.retained)?;
             }
             Ok(emit)
         })?;
@@ -1245,7 +1346,7 @@ struct Generation3dDocumentIoWork {
     text: Option<store::semio_format::RetainedTextEnvelope>,
     envelope: Option<crate::standards::v1::subsets::any::io::document_io::Generation3dDocumentEnvelope>,
     candidate: Option<crate::standards::v1::subsets::any::io::Generation3dDocumentExport>,
-    retirement: Option<semio_framework_value::retirement::ControlledRetirement<Generation3dDocumentRetirement>>,
+    retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<Generation3dDocumentRetirement>>,
     encoding: Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,
     phase: u8,
 }
@@ -1256,7 +1357,7 @@ impl Generation3dDocumentIoWork {
     }
 
     fn park_retirement(&mut self,value:Generation3dDocumentRetirement)->Result<(),semio_framework_value::ValueError>{
-        match semio_framework_value::retirement::ControlledRetirement::new(value){
+        match semio_framework_value::retirement::controlled::ControlledRetirement::new(value){
             Ok(owner)=>{self.retirement=Some(owner);Ok(())},
             Err((error,value))=>{match value{Generation3dDocumentRetirement::Projection(value)=>self.projection=Some(value),Generation3dDocumentRetirement::Projected(value)=>self.projected=Some(value),Generation3dDocumentRetirement::Writer(value)=>self.writer=Some(value),Generation3dDocumentRetirement::Text(value)=>self.text=Some(value),Generation3dDocumentRetirement::Envelope(value)=>self.envelope=Some(value),Generation3dDocumentRetirement::Export(value)=>self.candidate=Some(value)}Err(error)},
         }
@@ -1316,7 +1417,7 @@ impl Generation3dDocumentIoWork {
                         let retired=self.projection.take().unwrap();self.park_retirement(Generation3dDocumentRetirement::Projection(retired))?;self.phase=2;
                     },
                     2=>if let Some(body)=self.writer.as_mut().unwrap().step(1,&mut control)?{
-                        self.text=Some(store::semio_format::RetainedTextEnvelope::new("procedural.generation3d".into(),store::semio_format::Component::Dsl,1,body));
+                        self.text=Some(store::semio_format::RetainedTextEnvelope::new("procedural.generation3d".into(),store::semio_format::Component::Dsl,1,body,cx.retained_grant()));
                         let retired=self.writer.take().unwrap();self.park_retirement(Generation3dDocumentRetirement::Writer(retired))?;self.phase=3;
                     },
                     3=>if let Some(text)=self.text.as_mut().unwrap().step(1,8,&mut control)?{
@@ -1366,6 +1467,14 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
         generation3d_bounded_extent(command, snapshot, interaction)
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<EditorApp<Generation3dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
         if self.consumed || self.closing { return Err(Fault::from("generation3d-document-io-work-repeated")); }
         if matches!(input.command,Generation3dCommand::ExportDocument(payload) if payload.format=="txt"){return self.text_step(input,cx)}
@@ -1387,7 +1496,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
                     let mut emit = import_document::emit(payload, &doc, &cfg)?;
                     // 🔁️ An import that changed nothing owes the previews nothing.
                     if !emit.artifact_mutations.is_empty() {
-                        owner.owe_attached_previews_carrying(&windows, servable, &mut emit)?;
+                        owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
                     }
                     Ok(emit)
                 })?
@@ -1411,13 +1520,13 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
             else if let Some(value)=self.text.take(){Some(Generation3dDocumentRetirement::Text(value))}
             else if let Some(value)=self.envelope.take(){Some(Generation3dDocumentRetirement::Envelope(value))}
             else{self.candidate.take().map(Generation3dDocumentRetirement::Export)};
-            if let Some(value)=source{if let Err(error)=self.park_retirement(value){return InteractiveJobCloseStep::Refused(error.kind)}}
+            if let Some(value)=source{if let Err(error)=self.park_retirement(value){return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
             else{self.encoding.take();return InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}}
         }
         match self.retirement.as_mut().unwrap().step(grant){
             Ok(RetainedCloneStep::Complete(progress))=>{self.retirement.take();InteractiveJobCloseStep::Pending{progress}},
             Ok(RetainedCloneStep::Progress(progress))=>InteractiveJobCloseStep::Pending{progress},
-            Err(error)=>InteractiveJobCloseStep::Refused(error.kind),
+            Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()},
         }
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.retirement_demands(0).map(|grant|grant.maximum_copy_bytes)}
@@ -1613,6 +1722,14 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
         generation3d_bounded_extent(command, snapshot, interaction)
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<EditorApp<Generation3dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation3d-contributions-work-repeated"));
@@ -1630,9 +1747,9 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
         let _ = (&doc, &cfg);
         let mut emit = Emit::default();
         self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
-            if owner.with_session(|session| set_contributions::install(payload, session))?? {
+            if owner.with_session(|session| set_contributions::install(payload, session, input.operation.retained))?? {
                 let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
-                owner.owe_attached_previews_carrying(&windows, servable, &mut emit)?;
+                owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
             }
             Ok(())
         })?;
@@ -1731,32 +1848,43 @@ fn admit_generation3d_artifact_mutation(mutation: &Generation3dMutation) -> Resu
 /// projections it displaces (a `FlowHostSnapshot` whose `layout` is an `OrderedMap` root that rejects a bare
 /// drop), so the intermediate delta is retired rather than dropped: leaving it to drop glue aborted the
 /// whole store-publication turn the moment a layout entry existed
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Mirrors the `🌀️generation2d` twin exactly.
-fn prepare_generation3d_artifact(base: &Generation3dSnapshot, mutation: Generation3dMutation) -> Result<(Generation3dSnapshot, Vec<Generation3dMutation>, Generation3dMutation), String> {
-    admit_generation3d_artifact_mutation(&mutation)?;
-    let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
-    let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The mutation stays with its caller, so a refusal never
+/// loses an original owner.
+fn prepare_generation3d_artifact(base: &Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<(Generation3dSnapshot, Vec<Generation3dMutation>), semio_framework_value::ValueError> {
+    use semio_framework_value::{ValueError, ValueRefusalKind};
+    admit_generation3d_artifact_mutation(mutation).map_err(|_| ValueError::literal(ValueRefusalKind::OwnershipLimit, "generation3d-artifact-mutation-envelope"))?;
+    let inverse = protocol::Mutation::inverse(mutation, base)?;
+    let diff = protocol::Mutation::diff(mutation, base).into_parts().0;
     let applied = protocol::apply_diff(&diff, base);
     diff.retire_cold();
-    let post = applied.map_err(|_| "generation3d-artifact-diff-apply-failed".to_string())?;
-    Ok((post, inverse, mutation))
+    match applied {
+        Ok(post) => Ok((post, inverse)),
+        Err(_) => {
+            inverse.into_iter().for_each(|row| protocol::Mutation::<Generation3dSnapshot>::retire_cold(row));
+            Err(ValueError::literal(ValueRefusalKind::InvalidValue, "generation3d-artifact-diff-apply-failed"))
+        }
+    }
+}
+
+fn generation3d_preparation_refusal(message: &'static str) -> semio_framework_value::ValueError {
+    semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message)
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Generation3dArtifactStorePreparationFactory;
 
 struct Generation3dArtifactStorePreparation {
-    base: Option<store::SnapshotRead<Generation3dSnapshot>>,
-    mutation: Option<Generation3dMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<Generation3dSnapshot, Generation3dMutation>>,
+    owners: store::OneItemOwners<Generation3dSnapshot, Generation3dMutation>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
-    closing: bool,
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Generation3dSnapshot, Generation3dMutation> for Generation3dArtifactStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<Generation3dMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Generation3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &Generation3dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("generation3d-artifact-lane".into());
@@ -1764,50 +1892,69 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation3dSnapshot, Generat
         admit_generation3d_artifact_mutation(mutation)
     }
 
+    fn begin_demand(&self, _mutation: &Generation3dMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        if lane != store::HistoryLane::Document {
+            return Err(generation3d_preparation_refusal("generation3d-artifact-lane"));
+        }
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Generation3dArtifactStorePreparation>(), depth: 1 })
+    }
+
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Generation3dSnapshot, Generation3dMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Generation3dSnapshot, Generation3dMutation>> {
+        request: store::ArtifactStoreOneItemPreparationRequest<Generation3dSnapshot, Generation3dMutation, Generation3dMutation>,
+        grant: store::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Generation3dSnapshot, Generation3dMutation, Generation3dMutation>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) {
+            Ok(demand) => demand,
+            Err(error) => return Err((error, request)),
+        };
+        let progress = match demand.admit(grant.retained_grant()) {
+            Ok(progress) => progress,
+            Err(error) => return Err((error, request)),
+        };
         let retained_bytes = generation3d_artifact_mutation_retained_bytes(&request.mutation).unwrap_or(GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES.saturating_add(1));
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
+        if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || retained_bytes > GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES
         {
-            return Err(request);
+            return Err((generation3d_preparation_refusal("generation3d-artifact-request-refused"), request));
         }
-        Ok(Box::new(Generation3dArtifactStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            retained_bytes,
-            cancelled: false,
-            closing: false,
-        }))
+        Ok((Box::new(Generation3dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false }), progress))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMutation> for Generation3dArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.refused.is_some() {
+            return Err(generation3d_preparation_refusal("generation3d-artifact-original-refusal-retained"));
         }
-        let base = self.base.as_ref().ok_or_else(|| "generation3d-artifact-base-owner-missing".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "generation3d-artifact-mutation-owner-missing".to_string())?;
-        let (post, inverse, forward) = prepare_generation3d_artifact(base.get(), mutation)?;
-        let authority = self.authority.as_ref().ok_or_else(|| "generation3d-artifact-authority-missing".to_string())?;
+        if self.owners.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+        }
+        if grant.maximum_copy_bytes < self.retained_bytes {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        let base = self.owners.base.as_ref().ok_or_else(|| generation3d_preparation_refusal("generation3d-artifact-base-owner-missing"))?;
+        let mutation = self.owners.mutation.as_ref().ok_or_else(|| generation3d_preparation_refusal("generation3d-artifact-mutation-owner-missing"))?;
+        let (post, inverse) = prepare_generation3d_artifact(base.get(), mutation)?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| generation3d_preparation_refusal("generation3d-artifact-authority-missing"))?;
+        let forward = self.owners.mutation.take().ok_or_else(|| generation3d_preparation_refusal("generation3d-artifact-mutation-owner-missing"))?;
         let edit = authority.next_edit(forward, inverse);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => {
+                *self.owners.refused = Some((edit, post));
+                return Err(error);
+            }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.owners.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
     }
 
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
@@ -1815,11 +1962,11 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMu
     }
 
     fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Generation3dSnapshot, Generation3dMutation>> {
-        self.prepared.as_ref()
+        self.owners.prepared.as_ref()
     }
 
     fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Generation3dSnapshot, Generation3dMutation>> {
-        self.prepared.take()
+        self.owners.prepared.take()
     }
 
     fn cancel(&mut self) {
@@ -1827,167 +1974,35 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMu
     }
 
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d-artifact-base-retirement-rejected"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.authority.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        self.owners.close_step(grant.retained_grant())
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.owners.terminal_is_empty()
     }
 }
 //#endregion 📬️ArtifactStorePreparation
 
-//#region 📬️ConfigStorePreparation
-fn generation3d_config_mutation_retained_bytes(mutation: &Generation3dConfigMutation) -> Result<usize, String> {
-    ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "generation3d-config-mutation-encode-failed".to_string())
-}
-
-fn admit_generation3d_config_mutation(mutation: &Generation3dConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    let retained_bytes = generation3d_config_mutation_retained_bytes(mutation)?;
-    if retained_bytes > GENERATION3D_CONFIG_STORE_MAXIMUM_BYTES {
-        return Err("generation3d-config-mutation-envelope".into());
-    }
-    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
-}
-
-fn prepare_generation3d_config(base: &Generation3dConfig, mutation: Generation3dConfigMutation) -> Result<(Generation3dConfig, Vec<Generation3dConfigMutation>, Generation3dConfigMutation), String> {
-    admit_generation3d_config_mutation(&mutation)?;
-    let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
-    let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
-    let post = protocol::apply_diff(&diff, base).map_err(|_| "generation3d-config-diff-apply-failed".to_string())?;
-    Ok((post, inverse, mutation))
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct Generation3dConfigPreparationFactory;
-
-struct Generation3dConfigPreparation {
-    base: Option<store::SnapshotRead<Generation3dConfig>>,
-    mutation: Option<Generation3dConfigMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<Generation3dConfig, Generation3dConfigMutation>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    retained_bytes: usize,
-    cancelled: bool,
-    closing: bool,
-}
-
-impl store::ArtifactStoreOneItemPreparationFactory<Generation3dConfig, Generation3dConfigMutation> for Generation3dConfigPreparationFactory {
-    fn preflight(&self, mutation: &Generation3dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
-            return Err("generation3d-config-lane".into());
-        }
-        admit_generation3d_config_mutation(mutation)
-    }
-
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Generation3dConfig, Generation3dConfigMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Generation3dConfig, Generation3dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Generation3dConfig, Generation3dConfigMutation>> {
-        let retained_bytes = generation3d_config_mutation_retained_bytes(&request.mutation).unwrap_or(GENERATION3D_CONFIG_STORE_MAXIMUM_BYTES.saturating_add(1));
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-            || retained_bytes > GENERATION3D_CONFIG_STORE_MAXIMUM_BYTES
-        {
-            return Err(request);
-        }
-        Ok(Box::new(Generation3dConfigPreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            retained_bytes,
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-
-impl store::ArtifactStoreOneItemPreparation<Generation3dConfig, Generation3dConfigMutation> for Generation3dConfigPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        let base = self.base.as_ref().ok_or_else(|| "generation3d-config-base-owner-missing".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "generation3d-config-mutation-owner-missing".to_string())?;
-        let (post, inverse, forward) = prepare_generation3d_config(base.get(), mutation)?;
-        let authority = self.authority.as_ref().ok_or_else(|| "generation3d-config-authority-missing".to_string())?;
-        let edit = authority.next_edit(forward, inverse);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-    }
-
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Generation3dConfig, Generation3dConfigMutation>> {
-        self.prepared.as_ref()
-    }
-
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Generation3dConfig, Generation3dConfigMutation>> {
-        self.prepared.take()
-    }
-
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d-config-base-retirement-rejected"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.authority.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
-    }
-}
-//#endregion 📬️ConfigStorePreparation
 
 impl ArtifactEditor for Generation3dPlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
@@ -2034,18 +2049,6 @@ impl ArtifactEditor for Generation3dPlayApp {
         Box::new(Generation3dInstanceOperationOwner::new())
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::generation3d_document_store_owners())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
-
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
         Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
     }
@@ -2070,32 +2073,8 @@ impl ArtifactEditor for Generation3dPlayApp {
         Ok(())
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
-    }
-
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
-    }
-
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(semio_framework_plugin::no_draft_store_disposer())
-    }
-
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
-    }
-
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
-    }
-
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default()).expect("default Generation3d presence is the exact empty terminal")))
-    }
-
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
     fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
@@ -2150,7 +2129,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(std::sync::Arc::new(Generation3dConfigPreparationFactory))
+        Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Generation3dConfig, Generation3dConfigMutation>())
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -2187,6 +2166,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                 Box::new(Generation3dSessionCommandWork::new(tool_id, request.instance_operation_owner))
             };
         let operation_context = AppOperationContext {
+            retained: request.retained,
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,
@@ -2562,7 +2542,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         with_scratch_session(|session| {
             let component_ids = &interaction.selection(selection::DOMAIN).ids;
             if let Some(ids) = generation3d_component_targets(command, view_state, interaction.active_granularity(selection::DOMAIN), component_ids, &interaction.selection("graph").ids).filter(|ids| !ids.is_empty()) {
-                selection::validate_cached_components(&doc.snapshot.host_snapshot, session, ids, doc.operation().ok().map(|operation| &operation.canonical_base_revision)).map_err(Fault::from)?;
+                selection::validate_cached_components(&doc.snapshot.host_snapshot, session, ids, doc.operation().ok().map(|operation| &operation.canonical_base_revision), doc.retained_grant()?).map_err(Fault::from)?;
             }
             match command {
             Generation3dCommand::EditMeshSelection(payload) => edit_mesh_selection::apply_selected("editMeshSelection", payload, doc, &interaction.selection(selection::DOMAIN).ids),
@@ -3277,13 +3257,6 @@ pub use crate::preview_eval::{
     apply_show_mode_mesh, decode_preview_mesh_pack, geometry_extension_address, is_brep_geometry_handle, mesh_data_for_preview_handle, mesh_data_for_session_preview_channel, mesh_has_preview_geometry, pending_preview_tessellate_handles, point_marker_mesh, preview_channel_items_for_widget,
     preview_mesh_role, preview_tolerance, vector_marker_mesh, PreviewChannelItem, PreviewInlineGeometry, GENERATION_3D_GEOMETRY_EXTENSION_ID, PREVIEW_MESH_ROLES, PREVIEW_TESSELLATE_STEP_BUDGET,
 };
-
-/// 📨 Extension invocations that tessellate this surface's pending preview handles — the editor's
-/// binding of [`crate::preview_eval::preview_tessellate_invocations`], which reads the deflection
-/// off this surface's own config LOD.
-pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, cfg: &Generation3dConfig) -> Vec<semio_framework_plugin::ExtensionInvocation> {
-    crate::preview_eval::preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, preview_tolerance(&cfg.lod_mode))
-}
 
 pub fn preview_camera_json(cfg: &Generation3dConfig) -> String {
     semio_framework_ui::wgpu::world3d_camera_json(cfg.preview_camera.position, cfg.preview_camera.target, cfg.preview_camera.fov)

@@ -17,7 +17,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutatio
 /// geographic bounding box across every `positions`/`routes`/`regions` feature (see
 /// `📦bounds/🦀️.rs`). A simple whole-snapshot scalar — no `InferredField` caching, the
 /// feature collections here are small.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap.inference")]
 pub struct GisMapInference {

@@ -267,7 +267,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
         self.completed = true;
         Ok(ArtifactCommandWorkStep::Complete(emit))
     }
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> { *target.first_mut().ok_or_else(|| Fault::from("s.home.create-studio.effect-checkpoint-capacity"))? = u8::from(self.validated); Ok(1) }
+    fn checkpoint_byte(&self, index: usize) -> Option<u8> { (index == 0).then_some(u8::from(self.validated)) }
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(std::mem::size_of::<Self>()) }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> { self.validated = match checkpoint { [] | [0] => false, [1] => true, _ => return Err(Fault::from("s.home.create-studio.effect-checkpoint-invalid")) }; Ok(()) }
     fn begin_close(&mut self) { self.closing = true; }
     fn terminal_frame_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(std::mem::size_of::<Self>()) }
@@ -282,11 +283,11 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
         self.closing = true;
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return InteractiveJobCloseStep::Blocked; }
         if let Some(completion) = self.completion.take() {
-            match semio_framework_value::retirement::controlled::ControlledRetirement::new(completion) { Ok(owner) => self.retirement = Some(owner), Err((error, original)) => { self.completion = Some(original); return InteractiveJobCloseStep::Refused(error.kind); } }
+            match semio_framework_value::retirement::controlled::ControlledRetirement::new(completion) { Ok(owner) => self.retirement = Some(owner), Err((error, original)) => { self.completion = Some(original); return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() }; } }
             return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } };
         }
         let Some(owner) = self.retirement.as_mut() else { return InteractiveJobCloseStep::Complete { progress: Default::default() } };
-        match owner.close_step(grant) { Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress }, Ok(RetainedCloneStep::Complete(progress)) => { self.retirement = None; InteractiveJobCloseStep::Complete { progress } }, Err(error) => InteractiveJobCloseStep::Refused(error.kind) }
+        match owner.step(grant) { Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress }, Ok(RetainedCloneStep::Complete(progress)) => { self.retirement = None; InteractiveJobCloseStep::Complete { progress } }, Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() } }
     }
 }
 
@@ -383,10 +384,16 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
         self.advance(input.command, &ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone()))
     }
 
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        let slot = target.first_mut().ok_or_else(|| Fault::from("space-home-catalog-work-checkpoint-capacity"))?;
-        *slot = u8::from(self.validated);
-        Ok(1)
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
+    fn checkpoint_byte(&self, index: usize) -> Option<u8> {
+        (index == 0).then_some(u8::from(self.validated))
     }
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
@@ -442,29 +449,6 @@ impl ArtifactEditor for HomeApp {
         tools: ["applyDirectoryEventPage", "applyLocalCatalogDocument", "createStudio", "bindSpaceFile", "importSpace", "openSpace", "navigateVirtualFileSystemNode", "deleteVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "renameSpace", "shareSpace", "manageSpace", "copyInviteLink", "promoteToHubSpace", "persistLocally", "presenceHeartbeat"]
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-    }
-
-    /// ♻️ Home OWNS a config store — the shared `HomeConfigPreparationFactory` (config module), and every directory
-    /// projection lands in it — so closing an instance needs that lane's owners AND its disposer, one
-    /// declaration in two halves. Unlike the viewer wrapper, `EditorApp` installs no default
-    /// (`🔌️plugin/🦀️.rs:32854` forwards `E`'s answer unchanged), so an editor that omits either half
-    /// answers `interactive-job.close-owned-disposer-missing` and then `artifact store has no
-    /// owner-supplied bounded disposer` on every close. Found by ticket 26/09/18 S4 the moment a
-    /// `createStudio` dispatch got far enough to reach the close ladder.
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
-    }
-
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(semio_framework_plugin::no_draft_store_disposer())
     }
@@ -482,20 +466,6 @@ impl ArtifactEditor for HomeApp {
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         Some(std::sync::Arc::new(HomeTransientRetirementFactory))
-    }
-
-    /// 👤️ Home reads its OWN presence root on the `createStudio` path (the studio it mints names the
-    /// signed-in human as its owner), and `PresenceStore::local_read` fails closed with
-    /// `presence local read requires a live exact local retirement owner` unless this factory is
-    /// installed. Home declared none, so `createStudio` was refused the moment the store fold
-    /// contract above stopped refusing it first — the same class S4 cured for Home's config, draft
-    /// and transient disposers, on the one lane it missed (ticket 26/09/18 S10 §1.5).
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(crate::editor::home::presence::HomePresenceRetirementFactory))
-    }
-
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(crate::editor::home::presence::HomePresenceRetirementFactory))
     }
 
 
@@ -526,6 +496,7 @@ impl ArtifactEditor for HomeApp {
             _ => Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, home_retained_reduce, home_retained_extent)),
         };
         let operation_context = AppOperationContext {
+            retained: request.retained,
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,

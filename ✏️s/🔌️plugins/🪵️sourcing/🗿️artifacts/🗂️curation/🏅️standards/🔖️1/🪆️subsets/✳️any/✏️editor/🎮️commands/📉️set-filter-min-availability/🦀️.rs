@@ -2,11 +2,12 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::CurationSnapshot;
-use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
+use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation, SetFilterMinAvailabilityEdit};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "filter-min-availability")]
 pub struct SetFilterMinAvailability {
     pub delta: Option<f64>,
@@ -16,7 +17,7 @@ pub struct SetFilterMinAvailability {
 pub fn handle(payload: &SetFilterMinAvailability, _doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation>, Fault> {
     let current = cfg.snapshot.filters.min_availability as f64;
     let next = payload.delta.map(|d| current + d).or(payload.value).unwrap_or(current);
-    Ok(Emit::config(vec![SourcingCurationConfigMutation::SetFilterMinAvailability { value: next.max(0.0) as u32 }]))
+    Ok(Emit::config(vec![SourcingCurationConfigMutation::SetFilterMinAvailability(SetFilterMinAvailabilityEdit { value: next.max(0.0) as u32 })]))
 }
 
 //#region 🧪️Tests

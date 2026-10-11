@@ -1,6 +1,4 @@
 //! 📝️ Explicit line layout in local drawing coordinates, shared by canvas and export.
-#[path="🔤️font/🤝️kerning/🦀️.rs"]
-pub mod font_pair;
 pub const DRAWING_TEXT_LINE_HEIGHT: f64 = 1.2;
 
 pub struct DrawingTextLines<'a> { remaining: Option<&'a str> }

@@ -35,7 +35,8 @@ use framework_schema::ArtifactSchema;
 /// `DiffCodec` and `StlMutation`'s `OpText`/`OpBinary` are hand-rolled instead (see those files),
 /// using an explicit `[…]`-bracketed grammar for `normal`/`vertices` that DOES mark nesting depth
 /// (`enc_vec3`/`enc_vertices` in `🔺️diff::component`), sidestepping the bug entirely.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct StlTriangle {
     pub normal: [f64; 3],
@@ -56,7 +57,7 @@ impl Default for StlTriangle {
 /// 🧪️ F6: no `dsl` derive here either — `StlSnapshot` embeds `StlTriangle` (see its doc comment
 /// for the real, reproduced nested-`[T;N]` grammar bug this artifact's whole `dsl`-derive attempt
 /// hit) — the mutation payloads hand-encode their triangles instead.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.stl")]
 pub struct StlSnapshot {

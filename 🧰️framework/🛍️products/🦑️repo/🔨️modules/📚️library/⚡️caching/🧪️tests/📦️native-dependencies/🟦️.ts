@@ -60,7 +60,10 @@ export async function testNativeDependencies(workspace: string, output: string):
     }
     writeFileSync(join(root, "Cargo.lock"), "version = 4\n");
     await assert.rejects(prepareDependencies("trunk", root, controller.signal,storage, async () => { assert.fail("Invalid lock must fail before acquisition"); }), /exactly one wasm-bindgen/);
-    for (const args of fixture.rejected) await assert.rejects(new NativeDependenciesScript(root, root).run(args));
+    const { createScriptProcessEnvelope, withScriptProcessEnvelope } = await import("../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts");
+    await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "native-dependencies-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async (invocation) => {
+      for (const args of fixture.rejected) await assert.rejects(new NativeDependenciesScript(root, root, invocation).run(args));
+    });
     authorCargoFixture();
     writeFileSync(join(root, "package.json"), JSON.stringify({ name: "workspace", private: true }));
     writeFileSync(join(root, "nx.json"), JSON.stringify({ useDaemonProcess: false }));

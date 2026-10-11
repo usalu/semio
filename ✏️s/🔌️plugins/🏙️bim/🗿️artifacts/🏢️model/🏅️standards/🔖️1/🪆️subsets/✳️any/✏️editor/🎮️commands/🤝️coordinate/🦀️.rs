@@ -9,7 +9,7 @@ use crate::editor::bim::modes::edit::windows::world;
 use crate::editor::bim::panels::coordination::name_of;
 use crate::editor::bim::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{Clash, ClashKind};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::{Assigned, ClashRef, Issue, IssuePatch, IssuePriority, IssueStatus, IssueViewpoint, ModelMutation, ModelSnapshot, Point2, Point3, SectionBox, ViewCamera};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
@@ -54,8 +54,8 @@ pub struct RestoreViewpoint {
 
 //#region 🔖️Framing
 /// 🔎️ The clash between `first` and `second` (in either order) among the results of the clash sets, the one of `set` when it names one that exists.
-pub fn find_clash(instance: registry::Instance<'_>, doc: &ArtifactView<'_, ModelSnapshot>, set: &str, first: &str, second: &str) -> Result<Clash, Fault> {
-    let found = registry::try_with_inference(instance, doc.snapshot, |inferred| {
+pub fn find_clash(instance: inference::Instance<'_>, doc: &ArtifactView<'_, ModelSnapshot>, set: &str, first: &str, second: &str) -> Result<Clash, Fault> {
+    let found = inference::try_with_inference(instance, doc.snapshot, |inferred| {
         let matches = |clash: &&Clash| (clash.first == first && clash.second == second) || (clash.first == second && clash.second == first);
         inferred
             .clash_sets
@@ -147,7 +147,7 @@ impl Coordinate for ViewClash {
 
 /// 🚩️ `raiseIssue`: writes the issue of a clash.
 impl Coordinate for RaiseIssue {
-    fn run(&self, doc: &ArtifactView<'_, ModelSnapshot>, _ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
+    fn run(&self, doc: &ArtifactView<'_, ModelSnapshot>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
         let payload = self;
         let snapshot = doc.snapshot;
         let clash = find_clash(ctx.gestures.as_ref(), doc, &payload.set, &payload.first, &payload.second)?;

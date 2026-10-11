@@ -8,7 +8,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 //#region 🗑️DeleteStep
 /// 🗑️ Removes a step by id, cascading to every block it carried. Inverse recreates it (with its
 /// captured base position and blocks) via `create-step`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct DeleteStep {

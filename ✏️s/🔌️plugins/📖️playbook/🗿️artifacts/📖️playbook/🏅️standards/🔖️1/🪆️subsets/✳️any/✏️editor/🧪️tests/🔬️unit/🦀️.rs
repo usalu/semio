@@ -383,9 +383,9 @@ fn every_retained_tool_id_is_migrated_contracted_and_backed_by_store_owners() {
         }
     }
     assert!(PlaybookPlayApp::build_artifact_store_one_item_preparation_factory().is_some(), "an Artifact-lane retained tool needs an artifact-lane preparation authority");
-    std::mem::forget(PlaybookPlayApp::build_document_store_owners().expect("a published artifact edit needs its exact owned-snapshot retirement factory"));
+    assert!(PlaybookPlayApp::document_store_owners_source_demands().is_ok(), "a published artifact edit needs its exact owned-snapshot retirement factory");
     std::mem::forget(PlaybookPlayApp::build_document_store_disposer().expect("the document store needs its exact owned disposer"));
-    std::mem::forget(PlaybookPlayApp::build_config_store_owners().expect("the config lane needs its exact owners"));
+    assert!(PlaybookPlayApp::config_store_owners_source_demands().is_ok(), "the config lane needs its exact owners");
     std::mem::forget(PlaybookPlayApp::build_config_store_disposer().expect("the config store needs its exact owned disposer"));
 }
 

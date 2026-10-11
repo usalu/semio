@@ -3,7 +3,7 @@ use super::*;
 use crate::editor::bim::terminology::BimLabels;
 use crate::editor::bim::unit_tests::support::demo;
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSurface;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference;
 
 fn with(snapshot: ModelSnapshot, kind: &str, id: &str, parent: &str) -> ModelSnapshot {
     let create = kind_of(kind).and_then(|row| row.create).expect("a creatable kind");

@@ -18,7 +18,7 @@ fn fixture_bytes() -> Vec<u8> {
 }
 
 fn budget() -> Budget {
-    Budget { fuel: 50_000_000, deadline_ms: 10_000, max_effects: 8, max_patch_bytes: 2_097_152, max_frames: 1 }
+    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 50_000_000, deadline_ms: 10_000, max_effects: 8, max_patch_bytes: 2_097_152, max_frames: 1 }
 }
 
 async fn open_live(config: serde_json::Value, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (WasmtimeRuntime, GuestInstance, ActorInstanceLifetime) {

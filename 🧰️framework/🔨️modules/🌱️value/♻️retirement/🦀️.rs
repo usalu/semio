@@ -156,6 +156,11 @@ impl RetireOwned for String {
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<Bytes>()) }
     fn controlled_retirement_supported() -> bool { true }
 }
+impl RetireOwned for std::path::PathBuf {
+    fn retirement(self) -> Box<dyn RetirementCursor> { bytes(self.into_os_string().into_encoded_bytes()) }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<Bytes>()) }
+    fn controlled_retirement_supported() -> bool { true }
+}
 /// 📦️ Quotes the actual byte-buffer cursor birth independently of any UTF8 completeness.
 pub const fn bytes_birth_bytes()->usize{size_of::<Bytes>()}
 /// 🧳️ Retains the original byte allocation after its receiving parent admits this natural cursor birth.
@@ -254,6 +259,7 @@ impl<T: RetireOwned> UnorderedSet<T> {
     fn new(mut rest:std::collections::hash_set::IntoIter<T>)->Self {Self{head:ManuallyDrop::new(rest.next()),rest:ManuallyDrop::new(rest)}}
 }
 impl<T: RetireOwned> RetirementCursor for UnorderedSet<T> {
+    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let head=self.head.take();*self.head=self.rest.next();head.map_or(RetirementStep::Complete,|value|RetirementStep::Child(value.retirement()))}
     fn terminal_is_empty(&self)->bool {self.head.is_none()}
     fn next_birth_bytes(&self,_:usize)->Option<usize> {self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes)}
@@ -274,6 +280,7 @@ impl<K: RetireOwned,V: RetireOwned> UnorderedMap<K,V> {
     fn new(mut rest:std::collections::hash_map::IntoIter<K,V>)->Self {Self{head:ManuallyDrop::new(rest.next()),rest:ManuallyDrop::new(rest)}}
 }
 impl<K: RetireOwned,V: RetireOwned> RetirementCursor for UnorderedMap<K,V> {
+    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let head=self.head.take();*self.head=self.rest.next();head.map_or(RetirementStep::Complete,|entry|RetirementStep::Child(entry.retirement()))}
     fn terminal_is_empty(&self)->bool {self.head.is_none()}
     fn next_birth_bytes(&self,_:usize)->Option<usize> {self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes)}
@@ -291,6 +298,7 @@ impl<K: RetireOwned + std::hash::Hash + Eq,V: RetireOwned> RetireOwned for std::
 /// 🧺️ Drains one ordered element per turn; the standard node backing is not priced, only the element scaffolds and this cursor shell.
 struct OrderedSet<T: RetireOwned + Ord>(ManuallyDrop<std::collections::BTreeSet<T>>);
 impl<T: RetireOwned + Ord> RetirementCursor for OrderedSet<T> {
+    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}self.0.pop_first().map_or(RetirementStep::Complete,|value|RetirementStep::Child(value.retirement()))}
     fn terminal_is_empty(&self)->bool {self.0.is_empty()}
     fn next_birth_bytes(&self,_:usize)->Option<usize> {self.0.first().map_or(Some(0),RetireOwned::retirement_birth_bytes)}
@@ -319,6 +327,7 @@ impl<T: RetireOwned> RetireOwned for std::cmp::Reverse<T> {
 /// 🧺️ Drains one ordered entry per turn; the standard node backing is not priced, only the entry scaffolds and this cursor shell.
 struct OrderedMap<K: RetireOwned + Ord, V: RetireOwned>(ManuallyDrop<std::collections::BTreeMap<K, V>>);
 impl<K: RetireOwned + Ord, V: RetireOwned> RetirementCursor for OrderedMap<K, V> {
+    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         self.0.pop_first().map_or(RetirementStep::Complete, |entry| RetirementStep::Child(entry.retirement()))
@@ -417,9 +426,15 @@ retire_tuple!(A:0,B:1,C:2);
 retire_tuple!(A:0,B:1,C:2,D:3);
 retire_tuple!(A:0,B:1,C:2,D:3,E:4);
 
-impl<T: Copy + Send + 'static, const N: usize> RetireOwned for [T; N] {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        leaf(self)
+/// 🧱️ Drains a fixed array of owning elements one child cursor per turn, last element first.
+struct FixedArray<T: RetireOwned, const N: usize> {
+    items: ManuallyDrop<[Option<T>; N]>,
+}
+impl<T: RetireOwned, const N: usize> RetirementCursor for FixedArray<T, N> {
+    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
+        if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
+        self.items.iter_mut().rev().find_map(Option::take).map_or(RetirementStep::Complete, |value| RetirementStep::Child(value.retirement()))
     }
     fn terminal_is_empty(&self) -> bool { self.items.iter().all(Option::is_none) }
     fn next_birth_bytes(&self, _: usize) -> Option<usize> { self.items.iter().rev().flatten().next().map_or(Some(0), RetireOwned::retirement_birth_bytes) }
@@ -439,6 +454,7 @@ struct PlainArray<T: RetireOwned, const N: usize> {
     remaining: usize,
 }
 impl<T: RetireOwned, const N: usize> RetirementCursor for PlainArray<T, N> {
+    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         if self.remaining == 0 { return RetirementStep::Complete; }

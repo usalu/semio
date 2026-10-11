@@ -28,11 +28,14 @@ pub fn resolve(
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
 ) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
-    preview_eval::resolve_eval(payload, session);
+    let extension_invocations = preview_eval::resolve_eval(payload, session, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
+    if !extension_invocations.is_empty() {
+        return Ok((Emit { extension_invocations, ui_scope: flow_eval_tick::chain_ui_scope(&payload.window_kind_id, true), ..Default::default() }, FlowEvalPublication::Retained));
+    }
     flow_eval_tick::continue_inline(&payload.window_id, &payload.window_kind_id, doc, cfg, session, retained_eval, turn_started_us)
 }
 
-pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    preview_eval::resolve_eval(payload, session);
-    Ok(Emit { ui_scope: flow_eval_tick::chain_ui_scope(&payload.window_kind_id, true), ..Default::default() })
+pub fn handle(payload: &FlowEvalResolve, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+    let extension_invocations = preview_eval::resolve_eval(payload, session, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
+    Ok(Emit { extension_invocations, ui_scope: flow_eval_tick::chain_ui_scope(&payload.window_kind_id, true), ..Default::default() })
 }

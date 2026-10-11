@@ -44,7 +44,7 @@ pub mod compiler {
     pub type Result<T> = std::result::Result<T, PresentationCompileError>;
 
     /// 📦️ Rendered scene clip paths for presentation sites and plugin export.
-    #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[value(rename_all = "camelCase")]
     pub struct SceneAssetBundle {
         pub scene_hash: String,
@@ -256,7 +256,7 @@ pub mod slide {
     pub const PRESENTATION_SCENE_SCHEMA: &str = "animate.presentation.scene";
 
     /// 🖼️ One slide within a presentation section — may reference a compiled animate scene hash.
-    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[value(rename_all = "camelCase")]
     pub struct PresentationSlide {
         pub id: String,
@@ -268,7 +268,7 @@ pub mod slide {
     }
 
     /// 📚️ Vertical column of slides (reveal.js sequence analogue).
-    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[value(rename_all = "camelCase")]
     pub struct PresentationSection {
         pub id: String,
@@ -277,7 +277,7 @@ pub mod slide {
     }
 
     /// 🎬️ Full scene-based presentation document — sections of slides plus optional tile deck overlay.
-    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[value(rename_all = "camelCase")]
     pub struct PresentationScene {
         pub schema: String,

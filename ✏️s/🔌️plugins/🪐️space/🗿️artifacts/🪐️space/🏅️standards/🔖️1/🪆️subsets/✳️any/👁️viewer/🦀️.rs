@@ -16,7 +16,7 @@ use semio_framework_2d::compute::EngineHandles;
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions this wave (no utilities, no mutations), so its typed command
 /// channel has exactly one inert variant — mirrors `Din4108ViewCommand`'s own precedent.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum SpaceIndexViewCommand {
     #[default]
     Noop,

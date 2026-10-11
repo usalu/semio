@@ -11,7 +11,7 @@ use crate::editor::generation2d::commands::{
     add_generation, add_widget, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, connect_media_ports, enter_generate, flow_eval_resolve, flow_eval_tick, generation, move_media_node, node_graph_edit, node_graph_viewport, remove_generation,
     remove_widget, rename_generation, reorganize, select_generation, set_active_example, set_contributions, set_eval_outputs, set_show_mode, update_generation_values,
 };
-use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
+use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation, SetSelectedGenerationSetting, SetShowModeSetting};
 use crate::editor::generation2d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
 use crate::editor::generation2d::modes::generate::windows::{form, generations, preview as generate_preview};
 use crate::editor::generation2d::modes::{edit, generate};
@@ -21,7 +21,7 @@ use crate::editor::generation2d::transient::{Generation2dTransient, Generation2d
 use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::{artifact_kind, Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity};
 use semio_framework_plugin::app::InteractionView;
@@ -103,7 +103,17 @@ pub const GENERATION2D_GRAPH_HANDLE_TARGET_PREFIX: &str = "generation2d-play-doc
 fn close_flow_session(session: &mut FlowEvalSession) {
     session.begin_close();
     while !session.terminal_is_empty() {
-        let _ = session.close_step(usize::MAX, usize::MAX);
+        let copy = session.next_close_copy_byte_demand().expect("cold session copy demand");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: copy,
+            maximum_capacity_bytes: session.next_close_capacity_byte_demand(copy).expect("cold session capacity demand"),
+            maximum_release_bytes: session.next_close_release_byte_demand().expect("cold session release demand"),
+            maximum_depth: session.next_close_depth_demand().expect("cold session depth demand").max(1),
+        };
+        if let semio_framework_job::InteractiveJobCloseStep::Refused { kind, .. } = session.close_step(grant) {
+            panic!("cold session close refused: {kind:?}");
+        }
     }
 }
 
@@ -152,16 +162,15 @@ impl Generation2dInstanceOperationOwner {
 
     /// 🩹️ Owes the attached previews exactly what this gesture's own emit says it owes them, and puts
     /// the run start that debt needs on that same emit when no run is live to be woken instead.
-    fn owe_attached_previews_for_mutations(&mut self, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>) -> Result<bool, Fault> {
+    fn owe_attached_previews_for_mutations(&mut self, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
         let (sessions, link) = self.parts()?;
-        Ok(crate::preview_eval::owe_attached_previews_for_mutations(sessions, link, windows, servable, emit))
+        crate::preview_eval::owe_attached_previews_for_mutations(sessions, link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
     }
 
     /// 🚦️ Owes the attached previews an evaluation unconditionally and carries the run start the debt needs.
-    fn owe_attached_previews_carrying(&mut self, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>) -> Result<(), Fault> {
+    fn owe_attached_previews_carrying(&mut self, windows: &[PreviewEvalWindow<'_>], servable: bool, emit: &mut Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
         let (sessions, link) = self.parts()?;
-        crate::preview_eval::owe_attached_previews_carrying(sessions, link, windows, servable, emit);
-        Ok(())
+        crate::preview_eval::owe_attached_previews_carrying(sessions, link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
     }
 }
 
@@ -176,39 +185,54 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation2dInst
         self
     }
 
+    fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.closing {
+            return Ok(Default::default());
+        }
+        let Some(session) = [self.eval_session.as_ref(), self.generation_session.as_ref()].into_iter().flatten().next() else { return Ok(Default::default()) };
+        if session.terminal_is_empty() {
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: session.next_close_copy_byte_demand()?, capacity_bytes: session.next_close_capacity_byte_demand(body)?, release_bytes: session.next_close_release_byte_demand()?, depth: session.next_close_depth_demand()? })
+    }
+
     /// 🧹️ A LIVE session owns nothing retirable — `FlowEvalSession::close_step` answers `Blocked`
     /// until `begin_close`, and reporting that from the live maintenance ladder spent the runtime's
     /// zero-progress credit every idle turn (26/09/09/PROCEDURAL-3D-END-TO-END, close-ladder lane).
-    fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+    fn maintenance_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+        use semio_framework_plugin::PluginLifecycleStep;
+        use semio_framework_value::retained_clone::RetainedCloneProgress;
         if !self.closing {
-            return Ok(semio_framework_plugin::PluginCloseStep::Complete);
+            return Ok(PluginLifecycleStep::Complete(Default::default()));
         }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(PluginLifecycleStep::Progress(Default::default()));
         }
-        let Some(slot) = [&mut self.eval_session, &mut self.generation_session].into_iter().find(|slot| slot.is_some()) else { return Ok(semio_framework_plugin::PluginCloseStep::Complete) };
-        let Some(session) = slot.as_mut() else { return Ok(semio_framework_plugin::PluginCloseStep::Complete) };
-        let step = session.close_step(maximum_items, maximum_bytes);
-        if session.terminal_is_empty() {
-            *slot = None;
-            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete) {
-                return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        let Some(slot) = [&mut self.eval_session, &mut self.generation_session].into_iter().find(|slot| slot.is_some()) else { return Ok(PluginLifecycleStep::Complete(Default::default())) };
+        let Some(session) = slot.as_mut() else { return Ok(PluginLifecycleStep::Complete(Default::default())) };
+        let (progress, finished) = if session.terminal_is_empty() {
+            (RetainedCloneProgress { copied_items: 1, ..Default::default() }, true)
+        } else {
+            match session.close_step(grant) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => (progress, false),
+                semio_framework_job::InteractiveJobCloseStep::Complete { progress } => (progress, true),
+                semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(PluginLifecycleStep::Blocked { reason: "Generation2d evaluation session awaits its exact close grant" }),
+                semio_framework_job::InteractiveJobCloseStep::Refused { .. } => return Err(Fault::from("generation2d-eval-session-close-refused")),
             }
+        };
+        if finished && session.terminal_is_empty() {
+            *slot = None;
         }
-        Ok(match step {
-            semio_framework_job::InteractiveJobCloseStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "Generation2d evaluation session awaits its exact close grant" },
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
-            semio_framework_job::InteractiveJobCloseStep::Complete => semio_framework_plugin::PluginCloseStep::Complete,
-        })
+        Ok(if self.terminal_is_empty() { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
         self.closing = true;
         self.run_link.wake();
         for session in [self.eval_session.as_mut(), self.generation_session.as_mut()].into_iter().flatten() {
             session.begin_close();
         }
-        self.maintenance_step(maximum_items, maximum_bytes)
+        self.maintenance_step(grant)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -398,6 +422,11 @@ impl Generation2dSessionCommandWork {
     }
 }
 
+/// 🧮️ The transient bytes one work step may materialize: the work's own frame plus the one emit it can stage.
+fn command_work_step_demands<A: semio_framework_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(std::mem::size_of::<semio_framework_plugin::Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
+}
+
 impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSessionCommandWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
@@ -413,6 +442,14 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
         generation2d_bounded_extent(command, snapshot, interaction)
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation2d-session-command-work-repeated"));
@@ -422,7 +459,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
         let servable = crate::preview_eval::may_rearm(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
             let mut emit = owner.with_session(|session| generation2d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session))??;
-            owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit)?;
+            owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit, input.operation.retained)?;
             Ok(emit)
         })?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
@@ -457,6 +494,14 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
             _ => return None,
         };
         generation2d_preview_target(kind).and_then(|_| generation2d_bounded_extent(command, snapshot, interaction))
+    }
+
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
@@ -537,8 +582,8 @@ pub(crate) fn generation2d_flow_eval_hop(
         }
         Generation2dCommand::FlowEvalResolve(payload) => {
             let target = generation2d_preview_target(&payload.window_kind_id).ok_or_else(|| Fault::from("generation2d-flow-eval-window-kind-unknown"))?;
-            crate::preview_eval::resolve_eval(payload, sessions.get_mut(target));
-            Ok((Emit::default(), Vec::new()))
+            let extension_invocations = crate::preview_eval::resolve_eval(payload, sessions.get_mut(target), doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
+            Ok((Emit { extension_invocations, ..Default::default() }, Vec::new()))
         }
         _ => Err(Fault::from("generation2d-flow-eval-route-rejected")),
     };
@@ -570,6 +615,14 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
         GENERATION2D_RETAINED_CAPACITY.rows_for_items(snapshot.host_snapshot.widgets.len().checked_add(2)?)
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation2d-generation-command-work-repeated"));
@@ -582,7 +635,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
         if result.publishes_preview {
             let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
             let servable = crate::preview_eval::may_rearm(&input.snapshot.host_snapshot);
-            self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, &mut emit))?;
+            self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained))?;
         }
         Ok(ArtifactCommandWorkStep::Complete(emit))
     }
@@ -717,6 +770,14 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
         generation2d_bounded_extent(command, snapshot, interaction)
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(std::mem::size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation2d-contributions-work-repeated"));
@@ -731,10 +792,10 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
             let mut emit = Emit::default();
             let invalidated = {
                 let (sessions, _) = owner.parts()?;
-                set_contributions::install(payload, &mut [sessions.document, sessions.generation])?
+                set_contributions::install(payload, &mut [sessions.document, sessions.generation], input.operation.retained)?
             };
             if invalidated {
-                owner.owe_attached_previews_carrying(&windows, servable, &mut emit)?;
+                owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
             }
             Ok(emit)
         })?;
@@ -868,32 +929,43 @@ fn admit_generation2d_artifact_mutation(mutation: &Generation2dMutation) -> Resu
 }
 
 /// 🧬️ Raises the mutation's delta, applies it and CLOSES the delta — a `Generation2dDiff` owns the
-/// projections it displaces, so the intermediate delta is retired rather than dropped.
-fn prepare_generation2d_artifact(base: &Generation2dSnapshot, mutation: Generation2dMutation) -> Result<(Generation2dSnapshot, Vec<Generation2dMutation>, Generation2dMutation), String> {
-    admit_generation2d_artifact_mutation(&mutation)?;
-    let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
-    let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
+/// projections it displaces, so the intermediate delta is retired rather than dropped. The mutation stays
+/// with its caller, so a refusal never loses an original owner.
+fn prepare_generation2d_artifact(base: &Generation2dSnapshot, mutation: &Generation2dMutation) -> Result<(Generation2dSnapshot, Vec<Generation2dMutation>), semio_framework_value::ValueError> {
+    use semio_framework_value::{ValueError, ValueRefusalKind};
+    admit_generation2d_artifact_mutation(mutation).map_err(|_| ValueError::literal(ValueRefusalKind::OwnershipLimit, "generation2d-artifact-mutation-envelope"))?;
+    let inverse = protocol::Mutation::inverse(mutation, base)?;
+    let diff = protocol::Mutation::diff(mutation, base).into_parts().0;
     let applied = protocol::apply_diff(&diff, base);
     diff.retire_cold();
-    let post = applied.map_err(|_| "generation2d-artifact-diff-apply-failed".to_string())?;
-    Ok((post, inverse, mutation))
+    match applied {
+        Ok(post) => Ok((post, inverse)),
+        Err(_) => {
+            inverse.into_iter().for_each(crate::central_apply::generation2d_retire_mutation_cold);
+            Err(ValueError::literal(ValueRefusalKind::InvalidValue, "generation2d-artifact-diff-apply-failed"))
+        }
+    }
+}
+
+fn generation2d_preparation_refusal(message: &'static str) -> semio_framework_value::ValueError {
+    semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message)
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Generation2dArtifactStorePreparationFactory;
 
 struct Generation2dArtifactStorePreparation {
-    base: Option<store::SnapshotRead<Generation2dSnapshot>>,
-    mutation: Option<Generation2dMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<Generation2dSnapshot, Generation2dMutation>>,
+    owners: store::OneItemOwners<Generation2dSnapshot, Generation2dMutation>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
-    closing: bool,
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<Generation2dMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Generation2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &Generation2dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("generation2d-artifact-lane".into());
@@ -901,50 +973,69 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dSnapshot, Generat
         admit_generation2d_artifact_mutation(mutation)
     }
 
+    fn begin_demand(&self, _mutation: &Generation2dMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        if lane != store::HistoryLane::Document {
+            return Err(generation2d_preparation_refusal("generation2d-artifact-lane"));
+        }
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Generation2dArtifactStorePreparation>(), depth: 1 })
+    }
+
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation>> {
+        request: store::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation, Generation2dMutation>,
+        grant: store::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation, Generation2dMutation>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) {
+            Ok(demand) => demand,
+            Err(error) => return Err((error, request)),
+        };
+        let progress = match demand.admit(grant.retained_grant()) {
+            Ok(progress) => progress,
+            Err(error) => return Err((error, request)),
+        };
         let retained_bytes = generation2d_artifact_mutation_retained_bytes(&request.mutation).unwrap_or(GENERATION2D_ARTIFACT_STORE_MAXIMUM_BYTES.saturating_add(1));
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
+        if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || retained_bytes > GENERATION2D_ARTIFACT_STORE_MAXIMUM_BYTES
         {
-            return Err(request);
+            return Err((generation2d_preparation_refusal("generation2d-artifact-request-refused"), request));
         }
-        Ok(Box::new(Generation2dArtifactStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            retained_bytes,
-            cancelled: false,
-            closing: false,
-        }))
+        Ok((Box::new(Generation2dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false }), progress))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.refused.is_some() {
+            return Err(generation2d_preparation_refusal("generation2d-artifact-original-refusal-retained"));
         }
-        let base = self.base.as_ref().ok_or_else(|| "generation2d-artifact-base-owner-missing".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "generation2d-artifact-mutation-owner-missing".to_string())?;
-        let (post, inverse, forward) = prepare_generation2d_artifact(base.get(), mutation)?;
-        let authority = self.authority.as_ref().ok_or_else(|| "generation2d-artifact-authority-missing".to_string())?;
+        if self.owners.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+        }
+        if grant.maximum_copy_bytes < self.retained_bytes {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        let base = self.owners.base.as_ref().ok_or_else(|| generation2d_preparation_refusal("generation2d-artifact-base-owner-missing"))?;
+        let mutation = self.owners.mutation.as_ref().ok_or_else(|| generation2d_preparation_refusal("generation2d-artifact-mutation-owner-missing"))?;
+        let (post, inverse) = prepare_generation2d_artifact(base.get(), mutation)?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| generation2d_preparation_refusal("generation2d-artifact-authority-missing"))?;
+        let forward = self.owners.mutation.take().ok_or_else(|| generation2d_preparation_refusal("generation2d-artifact-mutation-owner-missing"))?;
         let edit = authority.next_edit(forward, inverse);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => {
+                *self.owners.refused = Some((edit, post));
+                return Err(error);
+            }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.owners.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
     }
 
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
@@ -952,11 +1043,11 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMu
     }
 
     fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Generation2dSnapshot, Generation2dMutation>> {
-        self.prepared.as_ref()
+        self.owners.prepared.as_ref()
     }
 
     fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Generation2dSnapshot, Generation2dMutation>> {
-        self.prepared.take()
+        self.owners.prepared.take()
     }
 
     fn cancel(&mut self) {
@@ -964,34 +1055,31 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMu
     }
 
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
-        }
-        if let Some(mutation) = self.mutation.take() {
-            crate::central_apply::generation2d_retire_mutation_cold(mutation);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation2d-artifact-base-retirement-rejected"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.authority.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        self.owners.close_step(grant.retained_grant())
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.owners.terminal_is_empty()
     }
 }
 //#endregion 📬️ArtifactStorePreparation
@@ -1007,9 +1095,8 @@ fn generation2d_config_text_bytes(config: &Generation2dConfig) -> usize {
 
 fn generation2d_config_publication_bytes(mutation: &Generation2dConfigMutation) -> Result<usize, String> {
     let bytes = match mutation {
-        Generation2dConfigMutation::SetShowMode { value } => value.len(),
-        Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id } => selected_generation_id.as_ref().map_or(0, String::len),
-        _ => return Err("generation2d-config-unsupported-mutation".into()),
+        Generation2dConfigMutation::SetShowMode(SetShowModeSetting { value }) => value.len(),
+        Generation2dConfigMutation::SetSelectedGeneration(SetSelectedGenerationSetting { selected_generation_id }) => selected_generation_id.as_ref().map_or(0, String::len),
     };
     if bytes > GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES {
         return Err("generation2d-config-text-envelope".into());
@@ -1021,6 +1108,10 @@ fn generation2d_config_publication_bytes(mutation: &Generation2dConfigMutation) 
 struct Generation2dConfigPreparationFactory;
 
 impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generation2dConfigMutation> for Generation2dConfigPreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<Generation2dConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Generation2dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &Generation2dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("generation2d-config-lane".into());
@@ -1028,10 +1119,26 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, generation2d_config_publication_bytes(mutation)?))
     }
 
+    fn begin_demand(&self, _mutation: &Generation2dConfigMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        if lane != store::HistoryLane::Document {
+            return Err(generation2d_preparation_refusal("generation2d-config-lane"));
+        }
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Generation2dConfigPreparation>(), depth: 1 })
+    }
+
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation>> {
+        request: store::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation, Generation2dConfigMutation>,
+        grant: store::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation, Generation2dConfigMutation>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) {
+            Ok(demand) => demand,
+            Err(error) => return Err((error, request)),
+        };
+        let progress = match demand.admit(grant.retained_grant()) {
+            Ok(progress) => progress,
+            Err(error) => return Err((error, request)),
+        };
         if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
@@ -1039,102 +1146,99 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
             || self.preflight(&request.mutation, request.lane).is_err()
             || generation2d_config_text_bytes(request.base.get()) > GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES
         {
-            return Err(request);
+            return Err((generation2d_preparation_refusal("generation2d-config-request-refused"), request));
         }
-        Ok(Box::new(Generation2dConfigPreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            cancelled: false,
-            closing: false,
-        }))
+        Ok((Box::new(Generation2dConfigPreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false }), progress))
     }
 }
 //#endregion 🎟️Admission
 
 //#region 🧵️Preparation
 struct Generation2dConfigPreparation {
-    base: Option<store::SnapshotRead<Generation2dConfig>>,
-    mutation: Option<Generation2dConfigMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>>,
+    owners: store::OneItemOwners<Generation2dConfig, Generation2dConfigMutation>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
-    closing: bool,
 }
 
 impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation> for Generation2dConfigPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || grant.maximum_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.closing {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || grant.maximum_copy_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.checkpoint.cursor != 0 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.refused.is_some() {
+            return Err(generation2d_preparation_refusal("generation2d-config-original-refusal-retained"));
         }
-        let base = self.base.as_ref().ok_or_else(|| "generation2d-config-base-owner-missing".to_string())?;
-        let mutation = self.mutation.as_ref().ok_or_else(|| "generation2d-config-mutation-owner-missing".to_string())?;
+        if self.checkpoint.cursor != 0 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+        }
+        let base = self.owners.base.as_ref().ok_or_else(|| generation2d_preparation_refusal("generation2d-config-base-owner-missing"))?;
+        let mutation = self.owners.mutation.as_ref().ok_or_else(|| generation2d_preparation_refusal("generation2d-config-mutation-owner-missing"))?;
         let mut next = base.get().clone();
         let inverse = match mutation {
-            Generation2dConfigMutation::SetShowMode { value } => {
-                next.show_mode = value.clone();
-                Generation2dConfigMutation::SetShowMode { value: base.get().show_mode.clone() }
+            Generation2dConfigMutation::SetShowMode(setting) => {
+                next.show_mode = setting.value.clone();
+                Generation2dConfigMutation::SetShowMode(SetShowModeSetting { value: base.get().show_mode.clone() })
             }
-            Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id } => {
-                next.selected_generation_id.clone_from(selected_generation_id);
-                Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id: base.get().selected_generation_id.clone() }
+            Generation2dConfigMutation::SetSelectedGeneration(setting) => {
+                next.selected_generation_id.clone_from(&setting.selected_generation_id);
+                Generation2dConfigMutation::SetSelectedGeneration(SetSelectedGenerationSetting { selected_generation_id: base.get().selected_generation_id.clone() })
             }
-            _ => return Err("generation2d-config-unsupported-mutation".into()),
         };
         if generation2d_config_text_bytes(&next) > GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES {
-            return Err("generation2d-config-post-text-envelope".into());
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "generation2d-config-post-text-envelope"));
         }
-        let authority = self.authority.as_ref().ok_or_else(|| "generation2d-config-authority-missing".to_string())?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| generation2d_preparation_refusal("generation2d-config-authority-missing"))?;
         let edit = authority.next_edit(mutation.clone(), vec![inverse]);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(next))?;
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(next)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => {
+                *self.owners.refused = Some((edit, post));
+                return Err(error);
+            }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES as u64, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.owners.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES, ..Default::default() }))
     }
 
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
     fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>> {
-        self.prepared.as_ref()
+        self.owners.prepared.as_ref()
     }
     fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>> {
-        self.prepared.take()
+        self.owners.prepared.take()
     }
     fn cancel(&mut self) {
         self.cancelled = true;
     }
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation2d-config-base-retirement-rejected"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.authority.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        self.owners.close_step(grant.retained_grant())
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.owners.terminal_is_empty()
     }
 }
 //#endregion 🧵️Preparation
@@ -1156,34 +1260,22 @@ const GENERATION2D_IMPORT_PORT: &str = "params:in";
 /// decode the `params:in` object into `replace-widget` rows, then publish them through the
 /// completion authority (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 struct Generation2dImportJob {
-    port: String,
+    port: Option<String>,
     media_json: Option<String>,
     media_intrinsic: Option<semio_framework_value::DslValue>,
-    media_retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     media_position: usize,
     snapshot: Option<std::sync::Arc<Generation2dSnapshot>>,
-    mutations: Vec<Generation2dMutation>,
+    mutations: Option<Vec<Generation2dMutation>>,
     decoded: bool,
     completed: bool,
     closing: bool,
     completion: Option<ArtifactToolCompletion<EditorApp<Generation2dPlayApp>>>,
     pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Generation2dPlayApp>>>,
-}
-
-fn generation2d_job_payload(cx: &mut StepContext<'_>, stream: JobPayloadStream, bytes: &[u8]) -> RetainedJobPayload {
-    match cx.payload_from_bytes(stream, bytes) {
-        Ok(payload) => payload,
-        Err(rejected) => {
-            drop(rejected.into_source());
-            RetainedJobPayload::empty(stream)
-        }
-    }
-}
-
-fn generation2d_job_fault(cx: &mut StepContext<'_>, detail: &str) -> StepOutcome {
-    let bytes = detail.as_bytes();
-    let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
-    StepOutcome::Fault(JobFault { detail: generation2d_job_payload(cx, JobPayloadStream::Fault, bounded) })
+    publication: semio_framework_job::RetainedJobPublication,
+    publishing: Option<semio_framework_job::JobPublicationKind>,
+    source: Vec<u8>,
+    delivered: bool,
+    active: Option<Box<dyn store::ErasedSnapshotRetirement>>,
 }
 
 impl Generation2dImportJob {
@@ -1193,7 +1285,24 @@ impl Generation2dImportJob {
             semio_framework_plugin::MediaPayload::Binary { .. } => (None, None),
             semio_framework_plugin::MediaPayload::Intrinsic { value, .. } => (None, Some(value)),
         };
-        Self { port, media_json, media_intrinsic, media_retirement: None, media_position: 0, snapshot: Some(request.snapshot), mutations: Vec::new(), decoded: false, completed: false, closing: false, completion: Some(request.completion), pending_completion_rejection: None }
+        Self {
+            port: Some(port),
+            media_json,
+            media_intrinsic,
+            media_position: 0,
+            snapshot: Some(request.snapshot),
+            mutations: Some(Vec::new()),
+            decoded: false,
+            completed: false,
+            closing: false,
+            completion: Some(request.completion),
+            pending_completion_rejection: None,
+            publication: semio_framework_job::RetainedJobPublication::new(),
+            publishing: None,
+            source: Vec::new(),
+            delivered: false,
+            active: None,
+        }
     }
 
     fn numeric_row(snapshot: &Generation2dSnapshot, key: &str, number: f64) -> Option<Generation2dMutation> {
@@ -1201,174 +1310,255 @@ impl Generation2dImportJob {
         Some(crate::standards::v1::subsets::any::schema::mutations::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step }))
     }
 
-    fn decode(&mut self, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
-        if self.port != GENERATION2D_IMPORT_PORT {
-            return Some(generation2d_job_fault(cx, "generation2d import only implements params:in"));
+    fn stage_fault(&mut self, detail: &str) {
+        let bytes = detail.as_bytes();
+        self.source = bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec();
+        self.publishing = Some(semio_framework_job::JobPublicationKind::Fault);
+    }
+
+    fn stage_checkpoint(&mut self, applied_progress: u64) {
+        self.source = vec![1];
+        self.publishing = Some(semio_framework_job::JobPublicationKind::Checkpoint { applied_progress });
+    }
+
+    fn decode(&mut self) -> Option<&'static str> {
+        if self.port.as_deref() != Some(GENERATION2D_IMPORT_PORT) {
+            return Some("generation2d import only implements params:in");
         }
+        let Some(snapshot) = self.snapshot.as_ref() else { return Some("generation2d import lost its snapshot authority") };
         if let Some(source) = self.media_intrinsic.as_ref() {
-            let Some(object) = source.as_object() else { return Some(generation2d_job_fault(cx, "generation2d params:in intrinsic payload must be an object")) };
-            let Some(snapshot) = self.snapshot.as_ref() else { return Some(generation2d_job_fault(cx, "generation2d import lost its snapshot authority")) };
+            let Some(object) = source.as_object() else { return Some("generation2d params:in intrinsic payload must be an object") };
             if let Some((key, value)) = object.get(self.media_position) {
-                if let Some(mutation) = value.as_f64().and_then(|number| Self::numeric_row(snapshot, key, number)) { self.mutations.push(mutation); }
+                if let Some(mutation) = value.as_f64().and_then(|number| Self::numeric_row(snapshot, key, number)) {
+                    self.mutations.get_or_insert_with(Vec::new).push(mutation);
+                }
                 self.media_position += 1;
-                cx.consume_fuel(1);
             }
-            if self.media_position < object.len() {
-                return Some(StepOutcome::CheckpointReady(Checkpoint { state: generation2d_job_payload(cx, JobPayloadStream::CheckpointState, &[1]), applied_progress: self.media_position as u64 }));
+            if self.media_position >= object.len() {
+                self.decoded = true;
             }
-            self.decoded = true;
             return None;
         }
         let Some(media_json) = self.media_json.as_ref() else {
-            return Some(generation2d_job_fault(cx, "generation2d params:in requires a structured payload"));
+            return Some("generation2d params:in requires a structured payload");
         };
         let Ok(parsed) = semio_framework_pack_json::parse(media_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-            return Some(generation2d_job_fault(cx, "generation2d params:in payload is not valid json"));
+            return Some("generation2d params:in payload is not valid json");
         };
         let Some(object) = parsed.as_object() else {
-            return Some(generation2d_job_fault(cx, "generation2d params:in payload must be a JSON object"));
-        };
-        let Some(snapshot) = self.snapshot.as_ref() else {
-            return Some(generation2d_job_fault(cx, "generation2d import lost its snapshot authority"));
+            return Some("generation2d params:in payload must be a JSON object");
         };
         let mut rows = Vec::new();
         for (widget_id_key, value) in object.iter() {
             let Some(number) = value.as_f64() else { continue };
-            if let Some(mutation) = Self::numeric_row(snapshot, widget_id_key, number) { rows.push(mutation); }
+            if let Some(mutation) = Self::numeric_row(snapshot, widget_id_key, number) {
+                rows.push(mutation);
+            }
         }
-        self.mutations = rows;
+        self.mutations = Some(rows);
         self.decoded = true;
         None
+    }
+
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.publication.terminal_is_empty() {
+            return self.publication.retirement_demands();
+        }
+        if self.delivered {
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if let Some(owner) = self.active.as_ref() {
+            return store::artifact_retirement_box_demands(owner, body);
+        }
+        if self.pending_completion_rejection.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&self.pending_completion_rejection);
+        }
+        if self.mutations.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&self.mutations);
+        }
+        if self.media_intrinsic.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&self.media_intrinsic);
+        }
+        if self.media_json.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&self.media_json);
+        }
+        if self.port.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&self.port);
+        }
+        if self.snapshot.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&self.snapshot);
+        }
+        if self.completion.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&self.completion);
+        }
+        Ok(Default::default())
+    }
+
+    fn close_turn(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::ValueError> {
+        use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress}, ValueError, ValueRefusalKind};
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if demand == Default::default() {
+            return Ok(Default::default());
+        }
+        if grant.maximum_depth < demand.depth {
+            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "generation2d import close exceeds its admitted depth"));
+        }
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(Default::default());
+        }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if !self.publication.terminal_is_empty() {
+            return self.publication.close_step(child).map(|step| step.progress());
+        }
+        if self.delivered {
+            self.delivered = false;
+            return Ok(RetainedCloneProgress { copied_items: 1, ..Default::default() });
+        }
+        if self.active.is_some() {
+            return store::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| step.progress());
+        }
+        if self.pending_completion_rejection.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.pending_completion_rejection, &mut self.active, grant).map(|step| step.progress());
+        }
+        if self.mutations.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, grant).map(|step| step.progress());
+        }
+        if self.media_intrinsic.is_some() {
+            self.media_position = 0;
+            return store::artifact_retirement_admit_owned(&mut self.media_intrinsic, &mut self.active, grant).map(|step| step.progress());
+        }
+        if self.media_json.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.media_json, &mut self.active, grant).map(|step| step.progress());
+        }
+        if self.port.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.port, &mut self.active, grant).map(|step| step.progress());
+        }
+        if self.snapshot.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant).map(|step| step.progress());
+        }
+        store::artifact_retirement_admit_owned(&mut self.completion, &mut self.active, grant).map(|step| step.progress())
     }
 }
 
 impl InteractiveJob for Generation2dImportJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if self.delivered {
+            let step = self.publication.close_step(cx.retained_grant())?;
+            cx.consume_retained(step.progress())?;
+            if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+                self.delivered = false;
+            }
+            return Ok(None);
         }
-        if cx.should_yield() { return StepOutcome::Yield; }
+        if self.closing || cx.is_cancelled() {
+            return JobOutcomeBorrow::admit_cancelled(cx);
+        }
+        if cx.should_yield() {
+            return Ok(None);
+        }
+        if let Some(kind) = self.publishing {
+            let result = self.publication.advance_from_source(kind, &self.source, cx)?;
+            if result.is_some() {
+                self.delivered = true;
+                if matches!(kind, semio_framework_job::JobPublicationKind::Checkpoint { .. }) {
+                    self.publishing = None;
+                }
+            }
+            return Ok(result);
+        }
         if self.pending_completion_rejection.is_some() {
-            return generation2d_job_fault(cx, "generation2d import completion remains rejected");
+            self.stage_fault("generation2d import completion remains rejected");
+            return Ok(None);
+        }
+        if self.completed {
+            return JobOutcomeBorrow::admit_complete(cx, None, None);
         }
         if !self.decoded {
             cx.set_stage("generation2d-import-decode");
-            if let Some(outcome) = self.decode(cx) {
-                return outcome;
-            }
             cx.consume_fuel(1);
-            return StepOutcome::CheckpointReady(Checkpoint { state: generation2d_job_payload(cx, JobPayloadStream::CheckpointState, &[1]), applied_progress: self.media_position.max(1) as u64 });
+            if let Some(detail) = self.decode() {
+                self.stage_fault(detail);
+                return Ok(None);
+            }
+            self.stage_checkpoint(self.media_position.max(1) as u64);
+            return Ok(None);
         }
         cx.set_stage("generation2d-import-publish");
-        if !self.completed {
-            let mutations = std::mem::take(&mut self.mutations);
-            let Some(completion) = self.completion.as_ref() else {
-                return generation2d_job_fault(cx, "generation2d import lost its completion authority");
-            };
-            if !completion.has_mounted_consumer() {
-                return generation2d_job_fault(cx, "generation2d import completion consumer is absent");
-            }
-            if let Err(rejected) = completion.complete(Ok(Emit { artifact_mutations: mutations, ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }), EphemeralEmit::default()) {
-                let message = rejected.fault.message.clone();
-                self.pending_completion_rejection = Some(rejected);
-                return generation2d_job_fault(cx, &message);
-            }
-            self.completed = true;
+        let Some(completion) = self.completion.as_ref() else {
+            self.stage_fault("generation2d import lost its completion authority");
+            return Ok(None);
+        };
+        if !completion.has_mounted_consumer() {
+            self.stage_fault("generation2d import completion consumer is absent");
+            return Ok(None);
         }
-        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
+        let mutations = self.mutations.take().unwrap_or_default();
+        if let Err(rejected) = completion.complete(Ok(Emit { artifact_mutations: mutations, ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }), EphemeralEmit::default()) {
+            let message = rejected.fault.message.clone();
+            self.pending_completion_rejection = Some(rejected);
+            self.stage_fault(&message);
+            return Ok(None);
+        }
+        self.completed = true;
+        JobOutcomeBorrow::admit_complete(cx, None, None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Complete if self.completed => descriptor.complete(None, None),
+            _ => self.publication.borrow_outcome(descriptor),
+        }
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
-            Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-            Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            Ok(semio_framework_plugin::PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
-            Ok(semio_framework_plugin::PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-        }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.copy_bytes)
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        ArtifactReservedJob::terminal_is_empty(self)
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(body)?.capacity_bytes)
     }
-}
 
-impl ArtifactReservedJob for Generation2dImportJob {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.depth)
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep;
         self.closing = true;
-        if maximum_items == 0 {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        match self.close_turn(grant) {
+            Ok(progress) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress },
+            Ok(progress) => InteractiveJobCloseStep::Pending { progress },
+            Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
         }
-        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
-            if let Ok(emit) = rejected.emit.as_mut() {
-                if let Some(step) = emit.close_child_one(maximum_items, _maximum_bytes) {
-                    return Ok(step);
-                }
-            }
-            self.pending_completion_rejection = None;
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(mutation) = self.mutations.pop() {
-            crate::central_apply::generation2d_retire_mutation_cold(mutation);
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.mutations.capacity() > 0 {
-            self.mutations = Vec::new();
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(value) = self.media_intrinsic.take() {
-            self.media_position = 0;
-            self.media_retirement = Some(semio_framework_value::retirement::owned_retirement(value));
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(retirement) = self.media_retirement.as_mut() {
-            return Ok(match retirement.close_step(maximum_items, _maximum_bytes).map_err(|error| Fault::from(error.to_string()))? {
-                semio_framework_value::SnapshotRetirementStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
-                semio_framework_value::SnapshotRetirementStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "generation2d intrinsic import source retirement is paused" },
-                semio_framework_value::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => { self.media_retirement = None; semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } },
-                semio_framework_value::SnapshotRetirementStep::Complete => semio_framework_plugin::PluginCloseStep::Blocked { reason: "generation2d intrinsic import source is not terminal-empty" },
-            });
-        }
-        if self.media_json.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if !self.port.is_empty() || self.port.capacity() > 0 {
-            self.port = String::new();
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
-            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "generation2d import snapshot has no mounted retained authority" });
-        }
-        if self.snapshot.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
-            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "generation2d import completion has no mounted consumer authority" });
-        }
-        if self.completion.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(semio_framework_plugin::PluginCloseStep::Complete)
     }
 
     fn terminal_is_empty(&self) -> bool {
         self.closing
-            && self.port.is_empty()
-            && self.port.capacity() == 0
+            && self.port.is_none()
             && self.media_json.is_none()
             && self.media_intrinsic.is_none()
-            && self.media_retirement.is_none()
             && self.media_position == 0
             && self.snapshot.is_none()
-            && self.mutations.is_empty()
-            && self.mutations.capacity() == 0
+            && self.mutations.is_none()
             && self.completion.is_none()
             && self.pending_completion_rejection.is_none()
+            && self.publication.terminal_is_empty()
+            && !self.delivered
+            && self.active.is_none()
     }
 }
+
+impl ArtifactReservedJob for Generation2dImportJob {}
 //#endregion 🎞️ReservedImport
 
 //#region 🔖️Generation2dPlayApp
@@ -1441,18 +1631,6 @@ impl ArtifactEditor for Generation2dPlayApp {
         Box::new(Generation2dInstanceOperationOwner::new())
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::owned::generation2d_document_store_owners())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
-
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
@@ -1469,28 +1647,8 @@ impl ArtifactEditor for Generation2dPlayApp {
         Ok(())
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
-    }
-
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
-    }
-
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(semio_framework_plugin::no_draft_store_disposer())
-    }
-
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
-    }
-
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
-    }
-
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default()).expect("default Generation2d presence is the exact empty terminal")))
     }
 
     const DIALECT: Dialect = GENERATION2D_DIALECT;
@@ -1510,10 +1668,6 @@ impl ArtifactEditor for Generation2dPlayApp {
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
-    }
-
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
@@ -1574,6 +1728,7 @@ impl ArtifactEditor for Generation2dPlayApp {
             Box::new(Generation2dSessionCommandWork::new(tool_id, request.instance_operation_owner))
         };
         let operation_context = AppOperationContext {
+            retained: request.retained,
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,

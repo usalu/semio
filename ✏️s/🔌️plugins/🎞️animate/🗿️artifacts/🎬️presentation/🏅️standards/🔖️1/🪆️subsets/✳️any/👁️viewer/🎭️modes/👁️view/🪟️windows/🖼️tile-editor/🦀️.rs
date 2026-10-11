@@ -52,7 +52,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️CanvasLayers
 /// 👁️ Read-only twin of the editor's own `TileCanvasLayer` — duplicated on purpose rather than
 /// imported through the sibling editor module, which `policyViewerPurityBreaches` forbids outright.
-#[derive(value_derive::ToValue)]
+#[derive(value_derive::ToValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 struct AnimateViewTileLayer {
     id: String,

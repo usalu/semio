@@ -1,6 +1,6 @@
 //! 👁️ Lowpoly play app command — the show-edges chrome toggle. Config-only.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
+use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetShowEdgesEdit};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::LowpolySnapshot;
@@ -12,13 +12,13 @@ use serde::{Deserialize, Serialize};
 pub mod toggle_show_edges {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "toggle-show-edges")]
     pub struct ToggleShowEdges {}
 
     pub fn handle(_payload: &ToggleShowEdges, _doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(Emit::config(vec![LowpolyConfigMutation::SetShowEdges { value: !cfg.snapshot.show_edges }]))
+        Ok(Emit::config(vec![LowpolyConfigMutation::SetShowEdges(SetShowEdgesEdit { value: !cfg.snapshot.show_edges })]))
     }
 }
 //#endregion 🔖️ToggleShowEdges

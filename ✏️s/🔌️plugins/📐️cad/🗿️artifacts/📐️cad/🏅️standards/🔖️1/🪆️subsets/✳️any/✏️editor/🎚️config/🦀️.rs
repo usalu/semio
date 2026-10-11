@@ -6,7 +6,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
 /// 🎛️ Handle preferences persisted by one exact CAD world-window configuration owner.
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CadDislocateOptions {
     pub move_enabled: bool,
@@ -22,7 +23,8 @@ impl Default for CadDislocateOptions {
 /// 🌞️ Local `dsl::DslRecord`-able mirror of `semio_framework_plugin::WorldSunConfig` (foreign,
 /// out-of-scope crate — cannot gain a `dsl` derive there). `cad_sun_config_from_world`/
 /// `cad_sun_config_to_world` convert at the boundary; field-for-field identical otherwise.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CadSunConfig {
     pub enabled: bool,
@@ -50,7 +52,8 @@ pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::Wo
 /// comment above for the full absorption story.
 /// The per-frame engagement state (action line, REPL step, live session, repeat-last) is NOT config: it lives in the
 /// addressed world window's transient (`🪟️windows/🫧️transient`, design §17.4 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "cadcfg")]
 #[artifact(id = "cad.config")]
@@ -216,17 +219,30 @@ impl protocol::DiffAlgebra<CadConfig> for CadConfigDiff {
 /// 🧮️ `CadConfig`'s operation enum: `Set` assigns the selection, hover, example and reference-selection fields of its payload
 /// (application state mutates in tight clusters, e.g. `worldSelect` touches 5+ fields together); its diff carries only the fields that
 /// differ from the base and its inverse is the absolute `Set` of the base values; `SetContributions` assigns the pushed contributions.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum CadConfigMutation {
+
     #[dsl(key = "set")]
-    Set {
-        #[dsl(block)]
-        config: Box<CadConfig>,
-    },
+    Set(SetEdit),
     #[dsl(key = "contributions")]
-    SetContributions { json: String },
+    SetContributions(SetContributionsEdit),
 }
 
+/// 📦️ `Set` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetEdit {
+    #[dsl(block)]
+    pub config: Box<CadConfig>,
+}
+
+/// 📦️ `SetContributions` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetContributionsEdit {
+    pub json: String,
+}
 //#region 🔖️OpCodec
 impl protocol::OpText for CadConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -322,14 +338,14 @@ impl Mutation<CadConfig> for CadConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            CadConfigMutation::Set { .. } => &Self::DESCRIPTORS[0],
-            CadConfigMutation::SetContributions { .. } => &Self::DESCRIPTORS[1],
+            CadConfigMutation::Set(_) => &Self::DESCRIPTORS[0],
+            CadConfigMutation::SetContributions(_) => &Self::DESCRIPTORS[1],
         }
     }
 
     fn diff(&self, base: &CadConfig) -> protocol::MutationOutcome<CadConfigDiff> {
         match self {
-            CadConfigMutation::Set { config } => {
+            CadConfigMutation::Set(SetEdit { config }) => {
                 let next = config.as_ref();
                 let diff = CadConfigDiff {
                     selected_node_ids: (base.selected_node_ids != next.selected_node_ids).then(|| next.selected_node_ids.clone()),
@@ -344,7 +360,7 @@ impl Mutation<CadConfig> for CadConfigMutation {
                 }
                 protocol::MutationOutcome::new(diff)
             }
-            CadConfigMutation::SetContributions { json } => {
+            CadConfigMutation::SetContributions(SetContributionsEdit { json }) => {
                 if &base.contributions_json == json {
                     return protocol::MutationOutcome::new(CadConfigDiff::default()).warning("mutation.no-op", "Contributions are already up to date.");
                 }
@@ -356,8 +372,8 @@ impl Mutation<CadConfig> for CadConfigMutation {
 
     fn inverse(&self, base: &CadConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            CadConfigMutation::Set { .. } => CadConfigMutation::Set { config: Box::new(base.clone()) },
-            CadConfigMutation::SetContributions { .. } => CadConfigMutation::SetContributions { json: base.contributions_json.clone() },
+            CadConfigMutation::Set(_) => CadConfigMutation::Set(SetEdit { config: Box::new(base.clone()) }),
+            CadConfigMutation::SetContributions(_) => CadConfigMutation::SetContributions(SetContributionsEdit { json: base.contributions_json.clone() }),
         }])
     }
 }

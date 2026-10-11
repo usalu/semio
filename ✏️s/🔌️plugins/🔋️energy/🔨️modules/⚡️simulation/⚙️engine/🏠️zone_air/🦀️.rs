@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️ZoneAirState
 /// 🌡️ Zone air state with its last three committed temperatures and humidity ratios.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ZoneAirState {
     pub temp_c: f64,
     pub humidity_ratio: f64,

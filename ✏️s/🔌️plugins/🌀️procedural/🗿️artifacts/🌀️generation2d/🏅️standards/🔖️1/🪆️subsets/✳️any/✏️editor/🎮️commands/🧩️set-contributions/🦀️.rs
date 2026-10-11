@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// pushes the scoped pack whole as page 0 of 1 over the pack-encoded command ingress (bounded by
 /// `COMMAND_MAXIMUM_BYTES`, see `GENERATION2D_CONTRIBUTIONS_RAW_BYTES`); `page`/`page_count` keep
 /// the registry's page-run addressing so a multi-page run assembles the same closure.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "set-contributions")]
 pub struct SetContributions {
     pub json: String,
@@ -25,18 +25,22 @@ pub struct SetContributions {
 /// faulted. Answers whether any session was invalidated, which is what owes the attached previews a
 /// fresh evaluation. The key is [`semio_framework_os_flow::flow_extension_registry_generation`], so a
 /// re-push of an unchanged closure owes nothing while any later contribution change re-evaluates.
-pub fn install(payload: &SetContributions, sessions: &mut [&mut FlowEvalSession]) -> Result<bool, Fault> {
+pub fn install(payload: &SetContributions, sessions: &mut [&mut FlowEvalSession], grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
     let page = u32::try_from(payload.page).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     let page_count = u32::try_from(payload.page_count).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     semio_framework_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)?;
     let generation = semio_framework_os_flow::flow_extension_registry_generation();
-    Ok(sessions.iter_mut().fold(false, |invalidated, session| session.invalidate_for_flow_extension_registry(generation) | invalidated))
+    let mut invalidated = false;
+    for session in sessions.iter_mut() {
+        invalidated |= session.invalidate_for_flow_extension_registry(generation, grant).map_err(|error| Fault::from(error.to_string()))?.0;
+    }
+    Ok(invalidated)
 }
 
 /// 🧩️ The `app_commands!` row. Its framework-fixed signature carries no attached-window roster, so it
 /// installs the page and invalidates the session it is handed; the SERVED route
 /// (`Generation2dContributionsWork::step`) is the one that owes the attached previews an evaluation.
-pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    install(payload, &mut [session])?;
+pub fn handle(payload: &SetContributions, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
+    install(payload, &mut [session], doc.retained_grant()?)?;
     Ok(Emit::default())
 }

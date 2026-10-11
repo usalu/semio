@@ -3,7 +3,8 @@
 use super::*;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetPadBytes {
@@ -31,7 +32,7 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetPadBytes {
         }
     }
     fn inverse(&self, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
-        Ok((!self.wanted(base).is_empty()).then(|| WavMutation::SetPadBytes(set_pad_bytes::SetPadBytes { fmt_pad_byte: base.fmt_pad_byte, data_pad_byte: base.data_pad_byte })).into_iter().collect())
+        Ok((!protocol::DiffAlgebra::is_empty(&self.wanted(base))).then(|| WavMutation::SetPadBytes(set_pad_bytes::SetPadBytes { fmt_pad_byte: base.fmt_pad_byte, data_pad_byte: base.data_pad_byte })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set pad bytes", "Füllbytes setzen")

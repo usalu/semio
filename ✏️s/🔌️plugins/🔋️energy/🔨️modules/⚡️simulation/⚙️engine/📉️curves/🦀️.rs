@@ -6,7 +6,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 
 // #region 🔖️CurveKind
 /// 📈️ Polynomial curve degree for performance functions.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum CurveDegree {
     Constant,
     Linear,
@@ -19,7 +19,7 @@ pub enum CurveDegree {
 
 // #region 🔖️PerformanceCurve
 /// 📈️ Part-load performance curve for fans, coils, and plant equipment.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum PerformanceCurve {
     Constant(f64),
     Linear { x1: f64, y1: f64, x2: f64, y2: f64 },
@@ -91,7 +91,7 @@ pub fn triquadratic(c: [f64; 10], x: f64, y: f64) -> f64 {
 
 // #region 🔖️LookupWrapper
 /// 📊️ Validated 2-D lookup table wrapper with named axes.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct CurveLookupTable2D {
     pub name: String,
     pub inner: LookupTable2D,

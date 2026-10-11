@@ -108,8 +108,8 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     assert!(matches!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
     assert!(matches!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
     assert!(matches!(close_owner(&supplied, 1), crate::app::PluginLifecycleStep::Complete(_)));
-    let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
-    let mut viewer = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let mut viewer = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     editor
         .instance_operation_owner
         .with_mut::<MediaOwner, _>(|owner| {
@@ -132,6 +132,6 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     assert!(viewer.export_media(default_port).await.is_ok());
     assert!(matches!(editor.export_media("unknown:out").await, Err(MediaError::NotImplemented)));
     assert!(matches!(viewer.export_media("unknown:out").await, Err(MediaError::NotImplemented)));
-    close_registered_fixture_app(&mut editor);
-    close_registered_fixture_app(&mut viewer);
+    close_registered_fixture_app(&mut editor, crate::app::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut viewer, crate::app::artifact_app_laws::fixture_mounted_policy());
 }

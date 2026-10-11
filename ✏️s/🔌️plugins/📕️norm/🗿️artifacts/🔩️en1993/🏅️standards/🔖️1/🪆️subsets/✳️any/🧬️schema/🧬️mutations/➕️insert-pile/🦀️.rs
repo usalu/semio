@@ -1,6 +1,7 @@
 //! ➕️ insert-pile
 use crate::{SteelPile, En1993Mutation, En1993Snapshot};
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -13,6 +14,6 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for InsertPile {
     Ok({ super::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert pile at position #{}", self.index), &format!("Pfahl an Position #{} einfügen", self.index)) }
-    fn target(&self) -> Vec<String> { vec![self.index.to_string()] }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert pile at position #{}", self.index.map_or_else(|| "end".to_string(), |index| index.to_string())), &format!("Pfahl an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }

@@ -1,5 +1,6 @@
 import {captureOwnedProcess} from "../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
-import { writeCompletedCargoInvocationProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {scriptInvocationEnvironment} from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { cargoProvenancePhysicalControlV1, writeCompletedCargoInvocationProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { createHash } from "node:crypto";
 import { tmpdir,homedir } from "node:os";
 import {CurrentPhysicalOwnerV1} from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
@@ -61,13 +62,13 @@ export async function freshRun(command: string, args: string[], cwd: string, env
       mkdirSync(preparationTrace);
       preparing = true;
       const result = await captureOwnedProcess(preparation.command, [...preparation.args], {
+        invocation: control.invocation,
         cwd: preparation.cwd,
-        env: preparation.environment,
+        env: scriptInvocationEnvironment(control.invocation, preparation.environment),
         budgetMs: Math.min(budgetMs, remaining()),
         maxOutputBytes: 64 * 1024 * 1024,
         stdoutPath: join(preparationTrace, "stdout.jsonl"),
         stderrPath: join(preparationTrace, "stderr.txt"),
-        cancelled: () => control.cancelled(),
       });
       preparing = false;
       const reason = result.reason ?? "exit";
@@ -79,13 +80,13 @@ export async function freshRun(command: string, args: string[], cwd: string, env
     if (command === "cargo") freshCheckpoint(control, stage, completed, total);
     const builtAtMs = Date.now();
     const result = await captureOwnedProcess(command, argv, {
+      invocation: control.invocation,
       cwd,
       env: observedEnv,
       budgetMs: Math.min(budgetMs, remaining()),
       maxOutputBytes: 64 * 1024 * 1024,
       stdoutPath: join(trace, "stdout.jsonl"),
       stderrPath: join(trace, "stderr.txt"),
-      cancelled: () => control.cancelled(),
     });
     const reason = result.reason ?? "exit";
     let provenance: string | undefined;
@@ -94,7 +95,7 @@ export async function freshRun(command: string, args: string[], cwd: string, env
       const manifestIndex = selectedArgs.indexOf("--manifest-path");
       const manifest = resolve(cwd, manifestIndex >= 0 ? selectedArgs[manifestIndex + 1]! : selectedArgs.find(arg => arg.startsWith("--manifest-path="))?.slice("--manifest-path=".length) ?? "Cargo.toml");
       provenance = join(directories.build, "semio-cargo-provenance", trace.split(/[\\/]/u).at(-1) + ".json");
-      const physicalStarted=performance.now(),physical=new CurrentPhysicalOwnerV1(cwd,{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>control.cancelled(),remainingMs:()=>Math.min(remaining(),60_000-(performance.now()-physicalStarted)),onProgress:()=>freshCheckpoint(control,"compiler-provenance",completed,total)});
+      const physical=new CurrentPhysicalOwnerV1(cwd,cargoProvenancePhysicalControlV1({cancelled:()=>control.cancelled(),remainingMs:()=>remaining(),onProgress:()=>freshCheckpoint(control,"compiler-provenance",completed,total)}));
       await writeCompletedCargoInvocationProvenanceV1(provenance, { manifest, cwd, command, args: argv, buildDirectory: directories.build, builtAtMs, status: result.status ?? -1, cancelled: reason !== "exit", units: messages.filter(message => message.reason === "compiler-artifact").map(message => ({message,evidence:{version:1,kind:"discovery",paths:[],producer:null}})), buildScripts: messages.filter(message => message.reason === "build-script-executed") },new Map(),resolve(env.CARGO_HOME??join(homedir(),".cargo")),physical);
     }
     writeFileSync(join(trace, "outcome.json"), JSON.stringify({ schema: "semio.plugin.fresh-process/v1", stage, command, args: argv, cargoTargetDir: env.CARGO_TARGET_DIR ?? null, status: result.status, signal: result.signal, reason }) + "\n", {

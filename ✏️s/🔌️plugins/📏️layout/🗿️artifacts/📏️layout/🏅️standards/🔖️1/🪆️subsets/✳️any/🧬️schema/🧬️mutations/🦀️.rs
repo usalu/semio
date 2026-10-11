@@ -24,7 +24,8 @@ use super::{
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<LayoutSnapshot, LayoutMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = LayoutSnapshot, diff = LayoutDiff, schema = "s.layout.layout")]
 pub enum LayoutMutation {

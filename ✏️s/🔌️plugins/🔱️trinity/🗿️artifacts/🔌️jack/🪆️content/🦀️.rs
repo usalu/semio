@@ -1,7 +1,7 @@
 //! 🪆️ Jack retains its actual rich Semio child; query projections carry checked six-family values.
 use super::{Node,Edge,Port,PortDirection,PropertyBag,PropertyValue,JackSnapshot};
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_value::retirement::{RetireOwned,owned_retirement};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2,binary64_lexeme,read_binary64_lexeme};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId,GraphNodeId,SemioGraphEdge,SemioGraphNode,SemioGraphPort,SemioGraphPortKind,SemioGraphSnapshot,STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue,SemioValueEntry};
@@ -13,14 +13,52 @@ pub struct JackContentOwner { snapshot:Option<SemioGraphSnapshot> }
 impl JackContentOwner {
  pub fn new(snapshot:SemioGraphSnapshot)->Self{Self{snapshot:Some(snapshot)}}
  pub fn snapshot(&self)->&SemioGraphSnapshot{self.snapshot.as_ref().expect("live Jack Semio child")}
- /// ♻️ Hands the owned graph to a bounded retirement cursor; the emptied owner then drops without retiring.
- pub fn take_snapshot(&mut self)->Option<SemioGraphSnapshot>{self.snapshot.take()}
 }
-impl Drop for JackContentOwner {
- fn drop(&mut self){if let Some(snapshot)=self.snapshot.take(){let mut cursor=owned_retirement(snapshot);while !cursor.terminal_is_empty(){cursor.close_step(256,65536).expect("valid Jack child retirement");}}}
+/// 🪆️ The shared content owner retires its graph through the graph's own deferred fields.
+impl RetireOwned for JackContentOwner {
+ fn retirement(self)->Box<dyn RetirementCursor>{semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.snapshot)])}
+ fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.snapshot)])}
+ fn controlled_retirement_supported()->bool{true}
 }
 
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+
+/// 🧮️ The copy-byte body every self-funded Jack retirement turn quotes against.
+pub const JACK_SELF_FUNDED_BODY_BYTES: usize = 65_536;
+
+/// 🏇️ The mounted-owner policy every Trinity component declares for its preparation, maintenance and close lanes.
+pub fn trinity_mounted_owner_policy() -> semio_framework_plugin::MountedOwnerPolicyV1 {
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+    semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
+}
+
+/// 🎟️ Funds exactly one turn from the owner's own published quote, for callers no scheduler grants (standalone stores, fixtures and local scratch owners).
+pub fn jack_self_funded_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(JACK_SELF_FUNDED_BODY_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+}
+
+/// ♻️ Drives an admitted retirement cursor through demand-quoted retained turns until its terminal-empty witness.
+pub fn drive_retirement_to_terminal(mut owner: Box<dyn semio_framework_value::ErasedSnapshotRetirement>) -> Result<(), ValueError> {
+    use semio_framework_value::retained_clone::RetainedCloneProgress;
+    const IDLE_TURNS: usize = 4;
+    let mut idle = 0;
+    while !owner.terminal_is_empty() {
+        let demand = owner.next_demand(JACK_SELF_FUNDED_BODY_BYTES)?;
+        let progress = owner.close_step(jack_self_funded_grant(demand))?.progress();
+        idle = if progress == RetainedCloneProgress::default() { idle + 1 } else { 0 };
+        if idle > IDLE_TURNS {
+            return Err(invalid("Jack retirement stalled under its own demand quote"));
+        }
+    }
+    Ok(())
+}
+
+/// ♻️ Admits an owned value's retirement frame under its own quote, then drives it to the terminal-empty witness.
+pub fn retire_owned_to_terminal<T: RetireOwned>(value: T) -> Result<(), ValueError> {
+    let birth = jack_self_funded_grant(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), ..Default::default() });
+    let (owner, _) = semio_framework_value::retirement::admit_owned_retirement(value, birth).map_err(|(error, _)| error)?;
+    drive_retirement_to_terminal(owner)
+}
 fn property_to_semio(value:&PropertyValue)->SemioValue{match value{
  PropertyValue::Null=>SemioValue::Null,
  PropertyValue::Bool(value)=>SemioValue::Bool{value:*value},
@@ -204,10 +242,7 @@ pub fn graph_leaves(base: &SemioGraphSnapshot, effects: &[crate::GraphEffect]) -
             GraphEffect::RemoveProperty { entity: crate::EntityRef::Edge(id), key } => push(&mut work, SemioGraphMutation::RemoveEdgeProperty(RemoveEdgeProperty { edge_id: GraphEdgeId::new(id.clone()), key: key.clone() }), &mut leaves),
         }
     }
-    let mut retired = owned_retirement(work);
-    while !retired.terminal_is_empty() {
-        retired.close_step(256, 65536).expect("valid Jack working child retirement");
-    }
+    retire_owned_to_terminal(work).expect("valid Jack working child retirement");
     leaves
 }
 //#endregion 🔖️ChildLane

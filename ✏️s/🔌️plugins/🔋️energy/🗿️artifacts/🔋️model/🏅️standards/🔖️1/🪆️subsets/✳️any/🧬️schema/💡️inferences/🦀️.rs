@@ -22,7 +22,7 @@ pub use super::entries::EnergyModelEntries;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an energy-model snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `entries`, backed by the `🗃️entries/` slug dir).
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.energy.model.inference")]
 pub struct EnergyModelInference {

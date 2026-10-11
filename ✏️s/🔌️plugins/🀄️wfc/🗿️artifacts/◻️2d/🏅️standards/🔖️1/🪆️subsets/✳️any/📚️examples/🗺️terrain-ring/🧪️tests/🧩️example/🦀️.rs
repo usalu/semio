@@ -24,7 +24,7 @@ fn every_tile_is_an_indexed_bitmap() {
     let document = crate::examples::terrain_ring::document();
     assert_eq!(document.tiles.len(), 4);
     for tile in &document.tiles {
-        let Wfc2dTileMedia::Bitmap { width, height, palette, pixels } = &tile.media else { panic!("{} is not a bitmap tile", tile.id) };
+        let Wfc2dTileMedia::Bitmap(Wfc2dBitmapMedia { width, height, palette, pixels }) = &tile.media else { panic!("{} is not a bitmap tile", tile.id) };
         assert_eq!((*width, *height), (crate::examples::terrain_ring::TILE_PIXELS, crate::examples::terrain_ring::TILE_PIXELS));
         assert_eq!(palette.len(), 2);
         assert!(!pixels.is_empty());
@@ -44,9 +44,9 @@ fn every_tile_encodes_to_a_png_data_url() {
 /// 🚫️ A malformed bitmap draws its outline rather than failing the whole surface refresh.
 #[test]
 fn a_malformed_bitmap_refuses_rather_than_panicking() {
-    let short = Wfc2dTileMedia::Bitmap { width: 8, height: 8, palette: vec![Default::default()], pixels: "AAAA".into() };
+    let short = Wfc2dTileMedia::Bitmap(Wfc2dBitmapMedia { width: 8, height: 8, palette: vec![Default::default()], pixels: "AAAA".into() });
     assert_eq!(tile_media_png_data_url(&short), None);
-    let empty = Wfc2dTileMedia::Bitmap { width: 0, height: 0, palette: Vec::new(), pixels: String::new() };
+    let empty = Wfc2dTileMedia::Bitmap(Wfc2dBitmapMedia { width: 0, height: 0, palette: Vec::new(), pixels: String::new() });
     assert_eq!(tile_media_png_data_url(&empty), None);
     assert_eq!(tile_media_png_data_url(&Wfc2dTileMedia::Empty), None);
 }
@@ -66,7 +66,7 @@ fn raster_preserves_clamped_palette_and_unknown_index_transparency() {
     let number = |value: &serde_json::Value| u32::try_from(value.as_u64().unwrap()).unwrap();
     let indices: Vec<u8> = fixture["indices"].as_array().unwrap().iter().map(|v| u8::try_from(v.as_u64().unwrap()).unwrap()).collect();
     let palette = fixture["palette"].as_array().unwrap().iter().map(|color| crate::schema::snapshot::Wfc2dColor { r: number(&color["r"]), g: number(&color["g"]), b: number(&color["b"]), a: number(&color["a"]) }).collect();
-    let media = Wfc2dTileMedia::Bitmap { width: number(&fixture["width"]), height: number(&fixture["height"]), palette, pixels: base64_codec::base64_standard_encode(indices) };
+    let media = Wfc2dTileMedia::Bitmap(Wfc2dBitmapMedia { width: number(&fixture["width"]), height: number(&fixture["height"]), palette, pixels: base64_codec::base64_standard_encode(indices) });
     let url = tile_media_png_data_url(&media).expect("authored raster encodes through stdio PNG");
     let bytes = base64_codec::base64_standard_decode(url.strip_prefix("data:image/png;base64,").unwrap()).unwrap();
     let raster = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&bytes).unwrap();

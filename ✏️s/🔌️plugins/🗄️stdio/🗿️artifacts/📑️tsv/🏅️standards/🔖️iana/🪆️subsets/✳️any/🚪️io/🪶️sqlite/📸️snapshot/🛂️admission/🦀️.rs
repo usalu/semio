@@ -29,7 +29,7 @@ pub(in super::super)fn bind(root:&RecordValue,output:&mut Option<TsvSnapshot>,na
   snapshot.records=native.allocate_vec(rows.len())?;progress.copied_items+=1;progress.copied_bytes+=std::mem::size_of::<Vec<Vec<String>>>();progress.retained_capacity_bytes+=snapshot.records.capacity()*std::mem::size_of::<Vec<String>>();
   for row in rows{let cells=list(row)?;snapshot.records.push(Vec::new());progress.copied_items+=1;progress.copied_bytes+=std::mem::size_of::<Vec<String>>();let destination=snapshot.records.last_mut().unwrap();*destination=native.allocate_vec(cells.len())?;progress.copied_bytes+=std::mem::size_of::<Vec<String>>();progress.retained_capacity_bytes+=destination.capacity()*std::mem::size_of::<String>();native.step()?;
    for cell in cells{destination.push(String::new());progress.copied_items+=1;progress.copied_bytes+=std::mem::size_of::<String>();let target=destination.last_mut().unwrap();let result=native.copy_text_into(text(cell)?,target);progress.copied_bytes+=target.len();progress.retained_capacity_bytes+=target.capacity();result?;native.step()?;}
-  }Ok(())
+  }Ok::<(),ValueError>(())
  });
  wallet.record_progress(progress).map_err(|error|error.with_retained_progress(progress))?;result.map_err(|error|error.with_retained_progress(progress))
 }

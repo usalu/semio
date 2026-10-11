@@ -84,7 +84,7 @@ fn gumball_once(verb: &str, motion: Fem2dGumballMotion, ids: &[String], phase: O
 pub mod translate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "translate-selection")]
     pub struct TranslateSelection {
         pub ids: Vec<String>,
@@ -105,7 +105,7 @@ pub mod translate_selection {
 pub mod rotate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "rotate-selection")]
     pub struct RotateSelection {
         pub ids: Vec<String>,
@@ -127,7 +127,7 @@ pub mod rotate_selection {
 pub mod scale_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "scale-selection")]
     pub struct ScaleSelection {
         pub ids: Vec<String>,
@@ -148,7 +148,7 @@ pub mod scale_selection {
 pub mod set_transform_gumball_flag {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "set-transform-gumball-flag")]
     pub struct SetTransformGumballFlag {
         pub flag: String,

@@ -8,7 +8,7 @@
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::modes::edit::windows::schedule;
 use crate::editor::bim::{BimCommand, BimDispatchCtx, BimModelApp};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry as inference;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::io::export::csv::{codec, schedule_records};
 use crate::{ModelMutation, ModelSnapshot};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};

@@ -12,7 +12,7 @@ impl InteractiveJob for ScalarJob{
  fn terminal_is_empty(&self)->bool{self.0}
 }
 fn source()->WorkerJobSession<ScalarJob>{
- let params=BatchJobParams{operation:OperationId(98201),generation:Generation(1),cancel:root_cancel_token(),config:BatchDriveConfig{ work_grant: crate::retained_work::NO_RETAINED_WORK,site:"test.original-session-return",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1000},now_us:default_now_us};
+ let params=BatchJobParams{operation:OperationId(98201),generation:Generation(1),cancel:root_cancel_token(),config:BatchDriveConfig{retained:crate::retained_work::NO_RETAINED_WORK,site:"test.original-session-return",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1000},now_us:default_now_us};
  WorkerJobSession::try_new(ScalarJob(false),params).unwrap_or_else(|_|panic!("original session admission"))
 }
 fn close_body(session:&WorkerJobSession<ScalarJob>){

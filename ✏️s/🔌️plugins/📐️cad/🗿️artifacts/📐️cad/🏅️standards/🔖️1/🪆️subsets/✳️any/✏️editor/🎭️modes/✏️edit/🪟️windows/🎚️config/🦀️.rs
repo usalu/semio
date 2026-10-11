@@ -6,7 +6,8 @@ use crate::CadCamera;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(extension = "cadworldwindowcfg")]
 #[artifact(id = "cad.worldwindowconfig")]
@@ -98,13 +99,28 @@ impl protocol::DiffAlgebra<CadWorldWindowConfig> for CadWorldWindowConfigDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+/// 🎚️ The whole-record payload of [`CadWorldWindowConfigMutation::Set`]; its wire is `{"config": …}`.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "set")]
+pub struct CadWorldWindowConfigSet {
+    #[dsl(block)]
+    pub config: Box<CadWorldWindowConfig>,
+}
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum CadWorldWindowConfigMutation {
     #[dsl(key = "set")]
-    Set {
-        #[dsl(block)]
-        config: Box<CadWorldWindowConfig>,
-    },
+    Set(CadWorldWindowConfigSet),
+}
+
+impl store::snapshot_clone_preparation::ConfigApplyMutation<CadWorldWindowConfig> for CadWorldWindowConfigMutation {
+    fn exchange(self, post: &mut CadWorldWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        let Self::Set(CadWorldWindowConfigSet { mut config }) = self;
+        std::mem::swap(config.as_mut(), post);
+        Ok(Self::Set(CadWorldWindowConfigSet { config }))
+    }
 }
 
 impl protocol::OpText for CadWorldWindowConfigMutation {
@@ -150,7 +166,7 @@ impl Mutation<CadWorldWindowConfig> for CadWorldWindowConfigMutation {
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
     fn diff(&self, base: &CadWorldWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        let Self::Set { config } = self;
+        let Self::Set(CadWorldWindowConfigSet { config }) = self;
         let diff = CadWorldWindowConfigDiff {
             camera: (base.camera != config.camera).then(|| config.camera.clone()),
             sun: (base.sun != config.sun).then(|| config.sun.clone()),
@@ -162,7 +178,7 @@ impl Mutation<CadWorldWindowConfig> for CadWorldWindowConfigMutation {
         protocol::MutationOutcome::new(diff)
     }
     fn inverse(&self, base: &CadWorldWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        Ok(vec![Self::Set { config: Box::new(base.clone()) }])
+        Ok(vec![Self::Set(CadWorldWindowConfigSet { config: Box::new(base.clone()) })])
     }
 }
 
@@ -175,6 +191,11 @@ macro_rules! cad_world_window_config_owner {
             const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
             type State = crate::editor::cad::modes::edit::windows::config::CadWorldWindowConfig;
             type Mutation = crate::editor::cad::modes::edit::windows::config::CadWorldWindowConfigMutation;
+            type Edit = store::snapshot_clone_preparation::ConfigApplyEdit<crate::editor::cad::modes::edit::windows::config::CadWorldWindowConfig, crate::editor::cad::modes::edit::windows::config::CadWorldWindowConfigMutation>;
+            const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+            fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+                std::sync::Arc::new(store::snapshot_clone_preparation::ConfigApplyEdit::new())
+            }
             fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
             fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
@@ -199,7 +220,7 @@ pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> CadWorldW
 pub fn addressed(view: &semio_framework_plugin::ViewModel, config: CadWorldWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("cad.window.required: command has no addressed window instance"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("cad.window.stale: addressed window instance is not open"))?;
-    let mutation = CadWorldWindowConfigMutation::Set { config: Box::new(config) };
+    let mutation = CadWorldWindowConfigMutation::Set(CadWorldWindowConfigSet { config: Box::new(config) });
     match kind {
         shape::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<shape::config::CadShapeWindowConfigOwner>(id, mutation)),
         building::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<building::config::CadBuildingWindowConfigOwner>(id, mutation)),

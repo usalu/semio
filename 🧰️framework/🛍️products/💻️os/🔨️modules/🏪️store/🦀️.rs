@@ -90,6 +90,14 @@ pub mod durable_group;
 #[path = "🧩️composition/📬️publication/🤝️group/🦀️.rs"]
 mod member_group;
 
+#[path = "📬️one-item-owners/🦀️.rs"]
+mod one_item_owners;
+pub use one_item_owners::OneItemOwners;
+
+#[path = "📬️paged-one-item/🦀️.rs"]
+mod paged_one_item;
+pub use paged_one_item::{mutation_apply_preparation_factory, paged_one_item_factory_birth_bytes, MutationApplyEdit, PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPreparationFactory};
+
 // The `crate::os_dsl::DslArtifact`/`crate::os_dsl::DslOps` derive macros emit `::crate::os_store::ArtifactDsl`/`::crate::os_store::OpText`
 // paths (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `store` as an
 // external crate — every real consumer, INCLUDING this crate's own `.ops` header grammar
@@ -293,7 +301,7 @@ where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
         if grant.maximum_items==0||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_depth<demand.depth{return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
         if self.registry_retirement.is_some(){return snapshot_registry_alias_close_step(&mut self.registry_retirement,grant).map(Some)}
         if self.derived_alias.is_some(){let child=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let Some((owner,receipt))=ReturnedSnapshotReadRetirement::admit_original(&mut self.derived_alias,self.snapshots.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"derived original lost its snapshot issuer"))?,child)?else{unreachable!("preflight retains derived original alias")};*self.active=Some(owner);return Ok(Some(RetainedCloneStep::Progress(receipt)))}
-        let ArtifactDerivedSnapshot{owner,registry,..}=self.derived.take().unwrap();*self.derived_alias=Some(owner);*self.registry_retirement=Some(registry);Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})))
+        let ArtifactDerivedSnapshot{owner,registry,..}=self.derived.take().unwrap();*self.derived_alias=Some(owner);*self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(registry));Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})))
     }
     fn plan_demands(&self,body:usize)->Option<Result<semio_framework_value::RetirementDemand,ValueError>> {
         if self.plan_retirement.is_some() {return Some(artifact_retirement_owner_demands(&self.plan_retirement,body));}
@@ -945,11 +953,6 @@ impl ErasedSnapshotRead {
     /// 👁️ Borrows one exact concrete owner without exposing or cloning its retained `Arc`.
     pub fn get<T: Send + Sync + 'static>(&self) -> Option<&T> {
         self.owner.as_deref()?.downcast_ref::<T>()
-    }
-
-    /// 🧳️ Returns original erased registry custody only after a validated alias handback.
-    pub fn try_return_to_registry_witness(mut self) -> Result<SnapshotReadReturn, Self> {
-        match try_return_original_snapshot_read(&mut self.owner, &mut self.lease) { Ok(witness) => Ok(witness), Err(()) => Err(self) }
     }
 
     fn admit_retirement<T: Send + Sync + 'static>(&mut self, registry: &SnapshotReadRegistryHandle, factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<T>>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), ValueError> {
@@ -2830,7 +2833,10 @@ where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue
 {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
-        if self.envelope.is_some() { return artifact_retirement_owner_close(&mut self.envelope, grant); }
+        if self.envelope.is_some() {
+            let step = artifact_retirement_owner_close(&mut self.envelope, grant)?;
+            return Ok(if self.owners.is_some() { RetainedCloneStep::Progress(step.progress()) } else { step });
+        }
         if self.owners.is_some() {
             if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
             if grant.maximum_depth < self.demands(grant.maximum_copy_bytes)?.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "uninstalled envelope catalog requires original child depth")); }
@@ -3823,6 +3829,9 @@ impl<S> Clone for ArtifactChild<S> {
     }
 }
 
+#[path = "🪆️child/🧬️retained-clone/🦀️.rs"]
+mod artifact_child_retained_clone;
+
 impl<S> semio_framework_schema_composition::ChildFieldRefs for ArtifactChild<S> {
     const MANY: bool = false;
     fn visit_child_field<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {
@@ -3880,6 +3889,17 @@ impl<S> ToValue for ArtifactChild<S> {
                 Ok(semio_framework_value::DslValue::Object(fields.take()))
             })
         })
+    }
+}
+
+/// 🌲️ Canonical wire of the persisted child identity: `childId` then `target`; the local owner is not part of the wire.
+impl<S: Sync + 'static> semio_framework_pack_json::ArtifactCanonicalJsonTree for ArtifactChild<S> {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> { Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(2)) }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, ValueError> {
+        match ordinal { 0 => Ok(&self.child_id), 1 => Ok(&self.target), _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical artifact child ordinal is absent")) }
+    }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, ValueError> {
+        match ordinal { 0 => Ok("childId".into()), 1 => Ok("target".into()), _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical artifact child key is absent")) }
     }
 }
 
@@ -13667,9 +13687,19 @@ macro_rules! field_set_mutations {
         fields: { $($field:ident : $ty:ty => $variant:ident $kind:literal),+ $(,)? } $(,)?
     ) => {
         #[doc = concat!("🎚️ The set mutations of [`", stringify!($record), "`].")]
-        #[derive(Clone, Debug, PartialEq)]
+        #[derive(Clone, Debug, PartialEq, $crate::__value::RetainedClone, $crate::__value::CanonicalJsonTree)]
+        #[canonical_json(owner = $crate::__pack_json)]
+        #[value(tag = "kind", content = "value")]
         pub enum $set {
-            $($variant($ty)),+
+            $(#[value(rename = $kind)] $variant($ty)),+
+        }
+
+        impl $crate::snapshot_clone_preparation::ConfigApplyMutation<$record> for $set {
+            fn exchange(self, post: &mut $record) -> Result<Self, ($crate::__value::ValueError, Self)> {
+                Ok(match self {
+                    $(Self::$variant(value) => Self::$variant(std::mem::replace(&mut post.$field, value))),+
+                })
+            }
         }
 
         impl $crate::__value::retirement::RetireOwned for $set {
@@ -17241,6 +17271,14 @@ impl CursorRevisionAccumulator {
 
 #[path = "🏗️initialization/📚️catalog/🦀️.rs"]
 mod initialization_catalog_close;
+
+#[path = "🏗️initialization/🤝️authority/🦀️.rs"]
+mod initialization_authority;
+pub use initialization_authority::ArtifactStoreInitializationAuthority;
+
+#[path = "🏗️initialization/🔁️replay/🦀️.rs"]
+mod initialization_replay;
+pub use initialization_replay::{ArtifactStoreInitializationNext, ArtifactStoreReplayInitializer, ARTIFACT_STORE_REPLAY_FIELD_BYTES};
 
 /// 🏗️ Exact runtime owners assembled by a domain's retained store initializer.
 /// Every mutating method advances one already-admitted history or reference owner; final store
@@ -31306,13 +31344,13 @@ pub mod test_support {
     struct PlainOperationImage<M>(M);
 
     impl<M: OpBinary + Sync> ArtifactOperationText for PlainOperationImage<M> {
-        fn operation_text_node(&self, path: &[usize]) -> Result<ArtifactOperationTextNode<'_>, String> {
-            if path.is_empty() { Ok(ArtifactOperationTextNode::Scalar) } else { Err("plain operation image has no children".into()) }
+        fn operation_text_node(&self, path: &[usize]) -> Result<ArtifactOperationTextNode<'_>, ValueError> {
+            if path.is_empty() { Ok(ArtifactOperationTextNode::Scalar) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "plain operation image has no children")) }
         }
 
-        fn operation_text_scalar(&self, path: &[usize], offset: usize, output: &mut [u8]) -> Result<(usize, bool), String> {
-            if !path.is_empty() { return Err("plain operation image has no children".into()); }
-            let image = self.0.encode_op().map_err(|error| error.to_string())?;
+        fn operation_text_scalar(&self, path: &[usize], offset: usize, output: &mut [u8]) -> Result<(usize, bool), ArtifactPreparedOperationError> {
+            if !path.is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "plain operation image has no children").into()); }
+            let image = self.0.encode_op().map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))?;
             let count = output.len().min(image.len().saturating_sub(offset));
             output[..count].copy_from_slice(&image[offset..offset + count]);
             Ok((count, offset + count >= image.len()))
@@ -31325,6 +31363,10 @@ pub mod test_support {
     struct PlainAuthoringFactory<P: 'static, M: 'static>(std::marker::PhantomData<fn() -> (P, M)>);
 
     impl<P: Send + Sync + 'static, M: OpBinary + Sync + 'static> ArtifactStoreOneItemPreparationFactory<P, M> for PlainAuthoringFactory<P, M> {
+        fn begin_batch_digest(&self, _edit: &mut Option<Box<Edit<M>>>, _grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ArtifactStoreBatchDigest<M>>, RetainedCloneProgress)>, ValueError> {
+            Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "plain test catalog prepares no retained gesture"))
+        }
+
         fn operation_wire_source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> {
             let body: &'a PlainOperationImage<M> = unsafe { &*(mutation as *const M).cast::<PlainOperationImage<M>>() };
             Some(ArtifactPreparedOperationSource::Text { header: b"plain", body })
@@ -31338,7 +31380,7 @@ pub mod test_support {
             Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "plain test catalog prepares no retained gesture"))
         }
 
-        fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, M>, _grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, M>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, M>)> {
+        fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, M, M>, _grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, M>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
             Err((ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "plain test catalog prepares no retained gesture"), request))
         }
     }

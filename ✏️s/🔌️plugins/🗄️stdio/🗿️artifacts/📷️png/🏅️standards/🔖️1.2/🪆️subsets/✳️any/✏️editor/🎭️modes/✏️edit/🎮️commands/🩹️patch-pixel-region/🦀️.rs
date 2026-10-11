@@ -24,7 +24,7 @@ pub const MAXIMUM_RASTER_BYTES: usize = 4_096 * 2_160 * 4;
 pub const PATCH_PAYLOAD_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES / 4;
 pub const CAPACITY: ArtifactRetainedWorkCapacity = ArtifactRetainedWorkCapacity::for_invertible_items(128);
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PatchPixelRegion {
     pub x: u32,
@@ -149,6 +149,10 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PatchPixelRegionWork {
         CAPACITY.rows_for_items(command.validate(snapshot).ok()?.patch_count())
     }
 
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<PngEditor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<PngMutation>(), depth: 1, ..Default::default() })
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<PngEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<PngEditor>>, Fault> {
         if self.closing || self.complete {
             return Err(fault("stdio.png.pixel-region.work-closed", "Pixel region work is already closed"));
@@ -185,13 +189,17 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PatchPixelRegionWork {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 { return InteractiveJobCloseStep::Blocked; }
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if !self.closing { return InteractiveJobCloseStep::Blocked; }
         self.plan = None;
-        self.revision = None;
         self.cursor = 0;
-        InteractiveJobCloseStep::Complete
+        semio_s_artifact_stdio_contract::editing::close_revision_turn(&mut self.revision, grant)
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(semio_s_artifact_stdio_contract::editing::revision_close_demand(&self.revision).release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(semio_s_artifact_stdio_contract::editing::revision_close_demand(&self.revision).depth) }
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.plan.is_none() && self.revision.is_none() && self.cursor == 0

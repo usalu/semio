@@ -9,7 +9,8 @@ use store::ArtifactPack;
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: peer selection/hover no longer live here —
 /// they broadcast automatically via the framework's typed `PresenceInteraction` (assembled from the
 /// "blocks" domain's `InteractionState`, zero app code).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "note.presence")]
@@ -19,6 +20,8 @@ pub struct NotePresence {
     pub camera_y: f64,
     pub camera_zoom: f64,
 }
+
+impl store::ArtifactPresenceSnapshot for NotePresence {}
 
 impl Default for NotePresence {
     fn default() -> Self {
@@ -86,44 +89,7 @@ fn note_presence_is_terminal_empty(presence: &NotePresence) -> bool {
     presence == &NotePresence::default()
 }
 
-/// 👥️ Returns the exact local or peer Note presence root in one bounded item.
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct NotePresenceRetirementFactory;
-
-impl store::SnapshotRetirementFactory<NotePresence> for NotePresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<NotePresence>) -> usize { std::mem::size_of::<NotePresenceRetirement>() }
-
-    fn retire(&self, root: std::sync::Arc<NotePresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(NotePresenceRetirement(std::mem::ManuallyDrop::new(Some(root))))
-    }
-}
-
-struct NotePresenceRetirement(std::mem::ManuallyDrop<Option<std::sync::Arc<NotePresence>>>);
-
-impl store::ErasedSnapshotRetirement for NotePresenceRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.0.is_none() {
-            return Ok(store::SnapshotRetirementStep::Complete);
-        }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        drop(self.0.take());
-        Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
-    }
-}
-
-impl Drop for NotePresenceRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            assert!(self.0.is_none(), "Note presence must return its exact root before drop");
-        }
-    }
-}
+semio_framework_value::artifact_retire_struct!(NotePresence { camera_x, camera_y, camera_zoom });
 
 /// 🧹️ Replaces the live local root with Note's exact empty presence and retires its peer roster.
 pub fn note_presence_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<NotePresence, NotePresenceMutation>>> {

@@ -61,7 +61,8 @@ pub mod set_file_schema;
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "StepMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum StepMutation {
@@ -120,7 +121,7 @@ pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation)
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
-    use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepValue as SV};
+    use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepTypedValue, StepValue as SV};
     let demo_entity = |id: u64, name: &str, args: Vec<StepValue>| StepEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription { description: vec!["demo".into()], implementation_level: "2;1".into() } }),
@@ -150,14 +151,14 @@ pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
                     SV::Enum("T".into()),
                     SV::Reference(9),
                     SV::Aggregate(vec![SV::Integer(1), SV::Real(2.0)]),
-                    SV::TypedValue { type_name: "LENGTH_MEASURE".into(), value: Box::new(SV::Real(3000.0)) },
+                    SV::TypedValue(StepTypedValue { type_name: "LENGTH_MEASURE".into(), value: Box::new(SV::Real(3000.0)) }),
                 ],
             ),
         }),
         StepMutation::RemoveEntity(remove_entity::RemoveEntity { id: 2 }),
         StepMutation::SetEntityName(set_entity_name::SetEntityName { id: 1, name: "RENAMED".into() }),
         StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: 1, arg_index: 1, value: SV::Aggregate(vec![SV::Real(1.0), SV::Real(2.0), SV::Real(3.0)]) }),
-        StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: 1, arg_index: 2, value: SV::TypedValue { type_name: "X".into(), value: Box::new(SV::Aggregate(vec![SV::Integer(1), SV::Integer(2)])) } }),
+        StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: 1, arg_index: 2, value: SV::TypedValue(StepTypedValue { type_name: "X".into(), value: Box::new(SV::Aggregate(vec![SV::Integer(1), SV::Integer(2)])) }) }),
         StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: 1, arg_index: 0 }),
     ]
 }

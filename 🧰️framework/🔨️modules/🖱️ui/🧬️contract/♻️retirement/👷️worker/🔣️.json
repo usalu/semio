@@ -18,7 +18,7 @@
     },
     "maximum_copy_bytes": {
       "type": "integer",
-      "const": 4096
+      "const": 65536
     },
     "maximum_capacity_bytes": {
       "type": "integer",

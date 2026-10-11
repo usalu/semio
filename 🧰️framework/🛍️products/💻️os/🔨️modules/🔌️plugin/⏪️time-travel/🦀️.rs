@@ -204,7 +204,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
     session_retired: bool,
     editor: Option<TimeTravelEditor>,
     document: TimeTravelStoreState<A::Snapshot, A::Mutation>,
-    member: Option<TimeTravelMemberSubject>,
+    pub(crate) member: Option<TimeTravelMemberSubject>,
     retiring: Vec<Box<dyn TimeTravelOwners>>,
     closing: bool,
     ui_dirty: bool,

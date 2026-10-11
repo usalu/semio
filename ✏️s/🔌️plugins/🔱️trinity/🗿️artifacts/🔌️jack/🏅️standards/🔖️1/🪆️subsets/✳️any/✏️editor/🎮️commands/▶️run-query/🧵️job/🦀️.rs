@@ -7,7 +7,10 @@ use crate::{JackSnapshot, TRINITY_GRAPH_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::ArtifactOwnedToolJobContext;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::{AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, FaultCode, FaultOrigin};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::RetirementDemand;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 
 type Owner = EditorApp<TrinityJackPlayApp>;
@@ -114,6 +117,7 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        retained: request.retained,
         authoring_seed: request.authoring_seed.clone(),
     };
     let adopts_query = matches!(request.command.as_ref(), TrinityJackCommand::LoadExampleQuery { .. }) && source != request.snapshot.query && source.len() <= crate::JACK_QUERY_MAXIMUM_BYTES;
@@ -157,11 +161,12 @@ struct JackQueryWork {
     replay_target: Option<u64>,
     finished: bool,
     closing: bool,
+    retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
 }
 
 impl JackQueryWork {
     fn new(tool: &'static str, source: String, adopts_query: bool, editor_window_id: String, results_window_id: String, operation_id: u64, generation: u64) -> Self {
-        Self { tool, source: Some(source), adopts_query, editor_window_id: Some(editor_window_id), results_window_id: Some(results_window_id), preparation: None, execution: None, operation_id, generation, progress: 0, replay_target: None, finished: false, closing: false }
+        Self { tool, source: Some(source), adopts_query, editor_window_id: Some(editor_window_id), results_window_id: Some(results_window_id), preparation: None, execution: None, operation_id, generation, progress: 0, replay_target: None, finished: false, closing: false, retirement: None }
     }
 
     fn identity(&self) -> u64 {
@@ -261,16 +266,15 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
             Err(error) => Ok(self.complete(input, None, Some(error.into_message()), Vec::new())),
         }
     }
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < QUERY_CHECKPOINT_BYTES {
-            return Err(Fault::from("query checkpoint capacity"));
+    fn checkpoint_byte(&self, index: usize) -> Option<u8> {
+        match index {
+            0..=3 => Some(b"JQR2"[index]),
+            4..=7 => Some(0),
+            8..=15 => Some(self.progress.to_le_bytes()[index - 8]),
+            16..=23 => Some(self.operation_id.to_le_bytes()[index - 16]),
+            24..=31 => Some(self.generation.to_le_bytes()[index - 24]),
+            _ => None,
         }
-        target[..QUERY_CHECKPOINT_BYTES].fill(0);
-        target[..4].copy_from_slice(b"JQR2");
-        target[8..16].copy_from_slice(&self.progress.to_le_bytes());
-        target[16..24].copy_from_slice(&self.operation_id.to_le_bytes());
-        target[24..32].copy_from_slice(&self.generation.to_le_bytes());
-        Ok(QUERY_CHECKPOINT_BYTES)
     }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.len() != QUERY_CHECKPOINT_BYTES || &checkpoint[..4] != b"JQR2" || checkpoint[4..8] != [0, 0, 0, 0] || self.source.is_none() || self.editor_window_id.is_none() || self.results_window_id.is_none() || self.preparation.is_some() || self.execution.is_some() || self.progress != 0 {
@@ -294,60 +298,95 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
             execution.begin_close();
         }
     }
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
+        if !self.closing {
+            return InteractiveJobCloseStep::Blocked;
+        }
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: empty };
+        }
+        if grant.maximum_items == 0 {
+            return InteractiveJobCloseStep::Pending { progress: empty };
+        }
+        let demand = match self.close_demands(grant.maximum_copy_bytes) {
+            Ok(demand) => demand,
+            Err(error) => return refused(error),
+        };
+        match crate::host::admit_demand(grant, demand, "query work close exceeds admitted depth") {
+            Ok(true) => {}
+            Ok(false) => return InteractiveJobCloseStep::Pending { progress: empty },
+            Err(error) => return refused(error),
+        }
+        let progress = |step: Result<RetainedCloneStep, semio_framework_value::ValueError>| match step {
+            Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+            Err(error) => refused(error),
+        };
+        if self.retirement.is_some() {
+            return progress(store::artifact_retirement_box_close_step(&mut self.retirement, grant));
         }
         if let Some(execution) = self.execution.as_mut() {
-            let step = execution.close_step(1, maximum_bytes).unwrap_or(store::SnapshotRetirementStep::Blocked);
             if execution.terminal_is_empty() {
-                self.execution = None;
+                drop(self.execution.take());
+                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty } };
             }
-            return match step {
-                store::SnapshotRetirementStep::Blocked => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                store::SnapshotRetirementStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-            };
+            return progress(execution.close_step(grant));
         }
         if let Some(preparation) = self.preparation.as_mut() {
-            let step = preparation.close_step(1, maximum_bytes).unwrap_or(store::SnapshotRetirementStep::Blocked);
             if preparation.terminal_is_empty() {
-                self.preparation = None;
+                drop(self.preparation.take());
+                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty } };
             }
-            return match step {
-                store::SnapshotRetirementStep::Blocked => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                store::SnapshotRetirementStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-            };
+            return progress(preparation.close_step(grant));
         }
-        if let Some(source) = self.source.as_ref() {
-            if source.len() > maximum_bytes {
-                return semio_framework_job::InteractiveJobCloseStep::Blocked;
-            }
-            let released_bytes = source.len();
-            drop(self.source.take());
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+        if self.source.is_some() {
+            return progress(store::artifact_retirement_admit_owned(&mut self.source, &mut self.retirement, grant));
         }
-        if let Some(window_id) = self.editor_window_id.as_ref() {
-            if window_id.len() > maximum_bytes {
-                return semio_framework_job::InteractiveJobCloseStep::Blocked;
-            }
-            let released_bytes = window_id.len();
-            drop(self.editor_window_id.take());
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+        if self.editor_window_id.is_some() {
+            return progress(store::artifact_retirement_admit_owned(&mut self.editor_window_id, &mut self.retirement, grant));
         }
-        if let Some(window_id) = self.results_window_id.as_ref() {
-            if window_id.len() > maximum_bytes {
-                return semio_framework_job::InteractiveJobCloseStep::Blocked;
-            }
-            let released_bytes = window_id.len();
-            drop(self.results_window_id.take());
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        progress(store::artifact_retirement_admit_owned(&mut self.results_window_id, &mut self.retirement, grant))
+    }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.copy_bytes)
+    }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.release_bytes)
+    }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.depth)
     }
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.execution.is_none() && self.preparation.is_none() && self.source.is_none() && self.editor_window_id.is_none() && self.results_window_id.is_none()
+        self.closing && self.execution.is_none() && self.preparation.is_none() && self.source.is_none() && self.editor_window_id.is_none() && self.results_window_id.is_none() && self.retirement.is_none()
+    }
+}
+
+impl JackQueryWork {
+    /// 📏️ Quotes the next close turn in the fixed order: child cursor, execution, preparation, then each owned string.
+    fn close_demands(&self, body: usize) -> Result<RetirementDemand, semio_framework_value::ValueError> {
+        if let Some(owner) = self.retirement.as_ref() {
+            return store::artifact_retirement_box_demands(owner, body);
+        }
+        if let Some(execution) = self.execution.as_ref() {
+            return if execution.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of::<crate::executor::QueryExecution>(), depth: 1, ..Default::default() }) } else { execution.close_demands(body) };
+        }
+        if let Some(preparation) = self.preparation.as_ref() {
+            return if preparation.terminal_is_empty() { Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Option<crate::executor::QueryExecutionPreparation>>(), depth: 1, ..Default::default() }) } else { preparation.close_demands(body) };
+        }
+        if self.source.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&self.source);
+        }
+        if self.editor_window_id.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&self.editor_window_id);
+        }
+        store::artifact_retirement_owned_birth_demands(&self.results_window_id)
     }
 }
 

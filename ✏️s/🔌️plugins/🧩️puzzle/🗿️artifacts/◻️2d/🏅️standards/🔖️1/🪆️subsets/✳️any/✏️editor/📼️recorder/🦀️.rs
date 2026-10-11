@@ -4,7 +4,7 @@
 //! (applied through the central applier), so a later row of the same gesture — a second clone's label, a second
 //! wire's id — reads what the earlier rows made.
 
-use super::{board_snapshot_edges, board_snapshot_nodes, new_edge_id, new_node_id, patched_field_value, puzzle2d_next_node_label, puzzle2d_placed_handles, unique_edge_id, unique_node_id};
+use super::{board_snapshot_edges, board_snapshot_nodes, new_edge_id, new_node_id, patched_field_value, puzzle2d_next_node_label, puzzle2d_placed_handles, set_member, unique_edge_id, unique_node_id};
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations as kinds;
@@ -18,6 +18,16 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 type Text = PagedUtf8<{ usize::MAX }>;
+
+/// 🪪️ Whether the identifier `id` is one of `selected`, read in place from its single page and copied only when paged.
+fn named(selected: &HashSet<&str>, id: &Text) -> bool {
+    let mut chunks = id.chunks();
+    match (chunks.next(), chunks.next()) {
+        (Some(only), None) => selected.contains(only),
+        (None, _) => selected.contains(""),
+        _ => selected.contains(id.to_string_owner().as_str()),
+    }
+}
 
 /// 🧬️ Decodes one entity record from its host `Value`; `None` when the typed model refuses it.
 fn decode<T: semio_framework_value::FromValue>(value: &Value) -> Option<T> {
@@ -133,13 +143,13 @@ impl Puzzle2dRecorder {
         let shape = args.and_then(|value| value.get("shape")).and_then(Value::as_str).unwrap_or("circle");
         let mut node = json!({ "id": id, "nodeKind": node_kind, "shape": shape, "x": number("x", 0.0), "y": number("y", 0.0), "text": label, "anchor": "fixed", "handles": [] });
         if shape == "rectangle" {
-            node["width"] = json!(number("width", 48.0));
-            node["height"] = json!(number("height", 48.0));
+            set_member(&mut node, "width", json!(number("width", 48.0)));
+            set_member(&mut node, "height", json!(number("height", 48.0)));
         } else {
-            node["radius"] = json!(number("radius", 24.0));
+            set_member(&mut node, "radius", json!(number("radius", 24.0)));
         }
         if let Some(icon_kind) = args.and_then(|value| value.get("iconKind")) {
-            node["iconKind"] = icon_kind.clone();
+            set_member(&mut node, "iconKind", icon_kind.clone());
         }
         self.create(&node)
     }
@@ -154,13 +164,13 @@ impl Puzzle2dRecorder {
         let label = puzzle2d_next_node_label(board_snapshot_nodes(self.value()), self.value(), node_kind);
         let mut node = json!({ "id": node_id, "nodeKind": node_kind, "shape": shape, "x": number("x", 0.0), "y": number("y", 0.0), "text": label, "handles": puzzle2d_placed_handles(&node_id, payload.get("handles")) });
         if shape == "rectangle" {
-            node["width"] = json!(number("width", 48.0));
-            node["height"] = json!(number("height", 48.0));
+            set_member(&mut node, "width", json!(number("width", 48.0)));
+            set_member(&mut node, "height", json!(number("height", 48.0)));
         } else {
-            node["radius"] = json!(number("radius", 24.0));
+            set_member(&mut node, "radius", json!(number("radius", 24.0)));
         }
         if let Some(icon) = payload.get("iconKind") {
-            node["iconKind"] = icon.clone();
+            set_member(&mut node, "iconKind", icon.clone());
         }
         let placed = self.create(&node)?;
         let source = payload.get("sourceHandleId").and_then(Value::as_str).unwrap_or("");
@@ -200,15 +210,15 @@ impl Puzzle2dRecorder {
     pub fn delete_entities(&mut self, ids: &[String]) {
         let selected: HashSet<&str> = ids.iter().map(String::as_str).collect();
         let base = self.shared();
-        for node in base.nodes.iter().filter(|node| selected.contains(node.id.as_str())) {
+        for node in base.nodes.iter().filter(|node| named(&selected, &node.id)) {
             self.record(kinds::delete_node(node.id.clone()));
         }
-        for node in base.nodes.iter().filter(|node| !selected.contains(node.id.as_str())) {
-            for handle in node.handles.iter().filter(|handle| selected.contains(handle.id.as_str())) {
+        for node in base.nodes.iter().filter(|node| !named(&selected, &node.id)) {
+            for handle in node.handles.iter().filter(|handle| named(&selected, &handle.id)) {
                 self.record(kinds::remove_node_handle(node.id.clone(), handle.id.clone()));
             }
         }
-        let hanging: Vec<Text> = self.typed().edges.iter().filter(|edge| selected.contains(edge.id.as_str()) || selected.contains(edge.source.as_str()) || selected.contains(edge.target.as_str())).map(|edge| edge.id.clone()).collect();
+        let hanging: Vec<Text> = self.typed().edges.iter().filter(|edge| named(&selected, &edge.id) || named(&selected, &edge.source) || named(&selected, &edge.target)).map(|edge| edge.id.clone()).collect();
         for id in hanging {
             self.record(kinds::disconnect_handles(id));
         }
@@ -221,10 +231,10 @@ impl Puzzle2dRecorder {
         let (key, value) = flag_entry(flag, value);
         let base = self.shared();
         for node in base.nodes.iter() {
-            if selected.contains(node.id.as_str()) {
+            if named(&selected, &node.id) {
                 self.record(if key == "locked" { kinds::change_node_locked(node.id.clone(), Some(value)) } else { kinds::change_node_visible(node.id.clone(), Some(value)) });
             }
-            for handle in node.handles.iter().filter(|handle| selected.contains(handle.id.as_str())) {
+            for handle in node.handles.iter().filter(|handle| named(&selected, &handle.id)) {
                 let mut next = handle.clone();
                 if key == "locked" {
                     next.locked = Some(value);
@@ -234,7 +244,7 @@ impl Puzzle2dRecorder {
                 self.record(kinds::replace_node_handle(node.id.clone(), handle.id.clone(), next));
             }
         }
-        for edge in base.edges.iter().filter(|edge| selected.contains(edge.id.as_str())) {
+        for edge in base.edges.iter().filter(|edge| named(&selected, &edge.id)) {
             self.record(if key == "locked" { kinds::change_edge_locked(edge.id.clone(), Some(value)) } else { kinds::change_edge_visible(edge.id.clone(), Some(value)) });
         }
     }
@@ -247,14 +257,14 @@ impl Puzzle2dRecorder {
         let base = self.shared();
         for node in base.nodes.iter() {
             for handle in node.handles.iter().filter(|handle| ids.iter().any(|id| handle.id.eq_str(id))) {
-                if let Some(next) = Self::modified::<Puzzle2dHandle>(handle, field, value, delta) {
+                if let Some(next) = Self::patched::<Puzzle2dHandle>(handle, field, value, delta) {
                     self.record(kinds::replace_node_handle(node.id.clone(), handle.id.clone(), next));
                 }
             }
             if !ids.is_empty() && !ids.iter().any(|id| node.id.eq_str(id)) {
                 continue;
             }
-            if let Some(next) = Self::modified::<Puzzle2dNode>(node, field, value, delta) {
+            if let Some(next) = Self::patched::<Puzzle2dNode>(node, field, value, delta) {
                 self.record_node_field(&next, field);
             }
         }
@@ -299,9 +309,9 @@ impl Puzzle2dRecorder {
             remap.insert(old_id, new_id.clone());
             let label = source.get("nodeKind").and_then(Value::as_str).map(|kind| puzzle2d_next_node_label(board_snapshot_nodes(self.value()), self.value(), kind));
             if let Some(object) = clone.as_object_mut() {
-                object.insert("id".into(), json!(new_id));
-                object.insert("x".into(), json!(source.get("x").and_then(Value::as_f64).unwrap_or(0.0) + offset.0));
-                object.insert("y".into(), json!(source.get("y").and_then(Value::as_f64).unwrap_or(0.0) + offset.1));
+                object.insert("id", json!(new_id));
+                object.insert("x", json!(source.get("x").and_then(Value::as_f64).unwrap_or(0.0) + offset.0));
+                object.insert("y", json!(source.get("y").and_then(Value::as_f64).unwrap_or(0.0) + offset.1));
                 if let Some(handles) = object.get_mut("handles").and_then(Value::as_array_mut) {
                     for handle in handles.iter_mut() {
                         let old_handle_id = handle.get("id").and_then(Value::as_str).unwrap_or_default().to_string();
@@ -309,13 +319,13 @@ impl Puzzle2dRecorder {
                         let new_handle_id = format!("{new_id}:{suffix}");
                         remap.insert(old_handle_id, new_handle_id.clone());
                         if let Some(handle) = handle.as_object_mut() {
-                            handle.insert("id".into(), json!(new_handle_id));
+                            handle.insert("id", json!(new_handle_id));
                         }
                     }
                 }
                 if let Some(label) = label {
                     object.remove("label");
-                    object.insert("text".into(), json!(label));
+                    object.insert("text", json!(label));
                 }
             }
             if let Some(id) = self.create(&clone) {
@@ -329,9 +339,9 @@ impl Puzzle2dRecorder {
             let mut clone = edge.clone();
             let id = new_edge_id(self.value());
             if let Some(object) = clone.as_object_mut() {
-                object.insert("id".into(), json!(id));
-                object.insert("source".into(), json!(source));
-                object.insert("target".into(), json!(target));
+                object.insert("id", json!(id));
+                object.insert("source", json!(source));
+                object.insert("target", json!(target));
             }
             if let Some(edge) = decode::<Puzzle2dEdge>(&clone) {
                 self.connect_edge(edge);
@@ -404,7 +414,7 @@ impl Puzzle2dRecorder {
     }
 
     /// 🌀️ Records the poses `nodes` (host records with `id`, `x`, `y`) put their nodes at.
-    pub fn place_nodes(&mut self,nodes:&[semio_framework_os_infinite::board::ports::directed::schema::snapshot::BoardNodeSnapshot]){for node in nodes{if let(Some(x),Some(y))=(node.x,node.y){if x.is_finite()&&y.is_finite(){self.record(kinds::move_node(node.id.clone(),x,y));}}}}
+    pub fn place_nodes(&mut self,nodes:&[semio_framework_os_infinite::board::ports::directed::schema::snapshot::BoardNodeSnapshot]){for node in nodes{if let(Some(x),Some(y))=(node.x,node.y){if x.is_finite()&&y.is_finite(){self.record(kinds::move_node(node.id.clone().into(),x,y));}}}}
 
     /// 🧱️ Records ONE board-tool row (`regionCreate`, `regionResize`, `brushPlace`, `edgeCreate`, `edgeDelete`,
     /// `nodeDelete`) as the kinds it consists of. Answers whether `name` is a board-tool kind.

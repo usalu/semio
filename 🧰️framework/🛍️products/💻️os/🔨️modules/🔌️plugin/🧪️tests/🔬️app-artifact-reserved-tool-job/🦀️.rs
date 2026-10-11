@@ -13,8 +13,12 @@ mod artifact_reserved_tool_job_tests {
     }
 
     impl semio_framework_job::InteractiveJob for TerminalJob {
-        fn step(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-            semio_framework_job::StepOutcome::Yield
+        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+            semio_framework_job::JobOutcomeBorrow::admit_yield(cx)
+        }
+
+        fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+            crate::app::artifact_app_laws::fixture_job_outcome(descriptor)
         }
 
         fn begin_close(&mut self) {}

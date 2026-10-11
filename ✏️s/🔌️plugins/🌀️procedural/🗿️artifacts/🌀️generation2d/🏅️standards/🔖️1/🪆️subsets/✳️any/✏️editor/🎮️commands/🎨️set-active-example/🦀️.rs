@@ -9,7 +9,7 @@ use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "active-example")]
 pub struct SetActiveExample {
     pub example_id: String,
@@ -34,7 +34,7 @@ pub fn emit(payload: &SetActiveExample, _doc: &ArtifactView<'_, Generation2dSnap
     let effect = crate::editor::generation2d::reset_generation2d_document_effect(&target);
     let selected = target.generation.selected_generation_id.clone();
     target.retire_cold();
-    let config_mutations = if cfg.snapshot.selected_generation_id == selected { Vec::new() } else { vec![Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id: selected }] };
+    let config_mutations = if cfg.snapshot.selected_generation_id == selected { Vec::new() } else { vec![Generation2dConfigMutation::SetSelectedGeneration(crate::editor::generation2d::config::SetSelectedGenerationSetting { selected_generation_id: selected })] };
     Ok(Emit { effects: vec![effect], config_mutations, ..Default::default() })
 }
 

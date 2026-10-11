@@ -44,7 +44,7 @@ use semio_framework_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum JpgBaselineEditCommand {
     SetPixelRegion {
         pixels: Vec<u8>,
@@ -218,7 +218,7 @@ impl ArtifactEditor for JpgBaselineEditor {
         if !bytes.ends_with(&[0xff, 0xd9]) {
             return Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), "JPEG input must end at its EOI marker".into()));
         }
-        let admitted = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg_with_observations(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))?;
+        let admitted = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg_with_observations(&bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))?;
         let hard = crate::standards::v_jfif_1_01::subsets::baseline::schema::conformance::check_baseline_facts(&admitted.observations.baseline_facts())
             .into_iter()
             .filter(|diagnostic| matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal))
@@ -262,6 +262,7 @@ impl ArtifactEditor for JpgBaselineEditor {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
+            retained: request.retained,
         };
         let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
@@ -283,7 +284,7 @@ impl ArtifactEditor for JpgBaselineEditor {
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
@@ -317,7 +318,7 @@ impl ArtifactEditor for JpgBaselineEditor {
             JpgBaselineEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
             JpgBaselineEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpgBaselineEditor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
             JpgBaselineEditCommand::SetPixelRegion { pixels } => {
-                Ok(Emit::mutations(vec![JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels:pixels.clone() })]))
+                Ok(Emit::mutations(vec![JpgMutation::ReplacePixels(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::ReplacePixelsMutation { pixels:pixels.clone() })]))
             }
         }
     }

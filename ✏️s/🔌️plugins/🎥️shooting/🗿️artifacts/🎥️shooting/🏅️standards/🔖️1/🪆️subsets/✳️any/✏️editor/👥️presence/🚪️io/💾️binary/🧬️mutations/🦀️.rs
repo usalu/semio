@@ -5,7 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::shooting::presence::component::mutations::*;
 use crate::editor::shooting::presence::component::*;
-use replace_presence::ReplacePresence;
 
 impl protocol::OpBinary for ShootingPresenceMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

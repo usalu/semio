@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted rewrite-rule document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "rewriting", layout = "lines")]
 #[artifact_schema(id = "s.trinity.rewriting")]

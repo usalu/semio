@@ -33,7 +33,7 @@ pub use semio_framework_os_infinite::{self as graph, *};
 #[derive(Clone, Debug, Default)]
 pub struct Puzzle2dExtension;
 
-impl CanvasExtension for Puzzle2dExtension {
+impl semio_framework_canvas::CanvasExtension for Puzzle2dExtension {
     fn extension_id(&self) -> &str {
         "puzzle.2d"
     }

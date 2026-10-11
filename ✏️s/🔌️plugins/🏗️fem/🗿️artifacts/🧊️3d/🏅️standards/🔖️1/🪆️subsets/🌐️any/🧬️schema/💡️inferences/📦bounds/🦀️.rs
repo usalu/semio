@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned 3d bounding box in meters (empty snapshot: both corners at the origin).
-#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem3dBoundingBox {
     pub min: [f64; 3],
@@ -16,7 +16,7 @@ pub struct Fem3dBoundingBox {
 }
 
 /// 📦️ `bounds` — 3d extent plus node/element counts.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem3dBounds {
     pub bounding_box: Fem3dBoundingBox,

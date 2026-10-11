@@ -13,7 +13,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, Faul
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::VcsError;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "create-studio")]
 pub struct CreateStudio {
     pub name: String,

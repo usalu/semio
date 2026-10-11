@@ -53,18 +53,8 @@ class BoundariesScript extends BundleScript {
     const { artifactDirectory } = readCargoTestPolicyV1(process.env);
     mkdirSync(artifactDirectory, { recursive: true });
     const evidence = mkdtempSync(resolve(artifactDirectory, "ui-render-boundaries-"));
-    let cancelled = false;
-    const cancel = (): void => { cancelled = true; };
-    process.once("SIGINT", cancel);
-    process.once("SIGTERM", cancel);
-    let result;
-    try {
-      console.log("Inspecting ui-render normal dependencies (0/1).");
-      result = await captureOwnedProcess("cargo", ["tree", "--manifest-path", resolve(packageRoot, "Cargo.toml"), "-p", "semio-framework-ui-render", "--edges", "normal", "--prefix", "none", "--format", "{p}"], { cwd: packageRoot, env: process.env, budgetMs: buildBudgetMs(), maxOutputBytes: 4 * 1024 * 1024, stdoutPath: resolve(evidence, "stdout.log"), stderrPath: resolve(evidence, "stderr.log"), cancelled: () => cancelled });
-    } finally {
-      process.removeListener("SIGINT", cancel);
-      process.removeListener("SIGTERM", cancel);
-    }
+    console.log("Inspecting ui-render normal dependencies (0/1).");
+    const result = await captureOwnedProcess("cargo", ["tree", "--manifest-path", resolve(packageRoot, "Cargo.toml"), "-p", "semio-framework-ui-render", "--edges", "normal", "--prefix", "none", "--format", "{p}"], { invocation: this.invocation, cwd: packageRoot, env: process.env, budgetMs: buildBudgetMs(), maxOutputBytes: 4 * 1024 * 1024, stdoutPath: resolve(evidence, "stdout.log"), stderrPath: resolve(evidence, "stderr.log") });
     if (result.reason !== "exit" || result.status !== 0) throw Error(`Cannot inspect ui-render dependencies: ${result.reason} (${result.status}). ${result.stderr}`);
     const dependencies = new Set(result.stdout.trim().split(/\r?\n/u).filter(Boolean).map(line => line.trim().split(/\s+/u)[0]));
     if (!dependencies.has("semio-framework-ui-render")) throw Error("Cargo dependency inventory does not contain its requested ui-render root");

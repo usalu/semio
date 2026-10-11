@@ -31,13 +31,13 @@ class ServeScript extends BundleScript {
     // activate only PUBLISHES (never builds). Warm `served` skips activate when a matching receipt
     // already names the host — content-hash freshness is reported read-only below without re-publishing.
     if (!existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE))) {
-      await new ActivationScript(this.root).run([variant, "react", profile]);
+      await new ActivationScript(this.root, this.repoRoot, this.invocation).run([variant, "react", profile]);
     }
     let receipt = readActivationReceipt(receiptRoot);
     if (receipt.variant !== variant || receipt.profile !== profile) throw new Error("Server activation identity mismatch");
     const hostId = playgroundCatalog.find((row) => row.variant === variant)?.pluginId ?? variant;
     if (!receipt.plugins.some((row) => row.pluginId === hostId)) {
-      await new ActivationScript(this.root).run([variant, "react", profile]);
+      await new ActivationScript(this.root, this.repoRoot, this.invocation).run([variant, "react", profile]);
       receipt = readActivationReceipt(receiptRoot);
     }
     void reportServeStagedModuleFreshness(variant, "react", profile, runtime, receipt);

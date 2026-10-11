@@ -177,7 +177,7 @@ pub const ENERGY_MODEL_DOCUMENT_TOOL_IDS: &[&str] = &[
 /// ✏️ The editor's typed command channel. `SetStructureField`/`SetZoneCell` are the two generic
 /// window-kit edit targets; the ten authored document verbs address `crate::model::Model` entities
 /// by their own `EntityId`; `SetSimulationSettings` edits the config store's run settings.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum EnergyModelEditorCommand {
     #[dsl(key = "set-node")]
     SetStructureField { field: String, value: String },
@@ -1388,9 +1388,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for EnergyModelCommandJ
 }
 //#endregion 🧵️RetainedCommands
 
-/// 📬️ Upper bound of one encoded run-settings config record.
-const ENERGY_MODEL_CONFIG_STORE_MAXIMUM_BYTES: usize = 4_096;
-
 //#region 📬️StorePreparation
 /// 📬️ The document lane's one-item retained preparation. Without it every verb declaring
 /// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract and
@@ -1399,16 +1396,16 @@ const ENERGY_MODEL_CONFIG_STORE_MAXIMUM_BYTES: usize = 4_096;
 struct EnergyModelStorePreparationFactory;
 
 struct EnergyModelStorePreparation {
-    base: Option<store::SnapshotRead<EnergyModelSnapshot>>,
-    mutation: Option<EnergyModelMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<EnergyModelSnapshot, EnergyModelMutation>>,
+    owners: store::OneItemOwners<EnergyModelSnapshot, EnergyModelMutation>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
-    closing: bool,
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<EnergyModelSnapshot, EnergyModelMutation> for EnergyModelStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<EnergyModelMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<EnergyModelMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &EnergyModelMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("the energy model store preparation rejected its lane".into());
@@ -1416,99 +1413,108 @@ impl store::ArtifactStoreOneItemPreparationFactory<EnergyModelSnapshot, EnergyMo
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
+    fn begin_demand(&self, _mutation: &EnergyModelMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        if lane != store::HistoryLane::Document {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "energy-model-artifact-lane"));
+        }
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<EnergyModelStorePreparation>(), depth: 1 })
+    }
+
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<EnergyModelSnapshot, EnergyModelMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMutation>>, store::ArtifactStoreOneItemPreparationRequest<EnergyModelSnapshot, EnergyModelMutation>> {
+        request: store::ArtifactStoreOneItemPreparationRequest<EnergyModelSnapshot, EnergyModelMutation, EnergyModelMutation>,
+        grant: store::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<EnergyModelSnapshot, EnergyModelMutation, EnergyModelMutation>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         let model = &request.base.get().model;
         let items = model.zones.len().saturating_add(model.spaces.len()).saturating_add(model.surfaces.len()).saturating_add(model.fenestrations.len()).saturating_add(model.materials.len()).saturating_add(model.constructions.len());
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
+        if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || items > ENERGY_MODEL_RETAINED_WORK_ITEMS
         {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "energy-model-artifact-request-refused"), request));
         }
-        Ok(Box::new(EnergyModelStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
+        Ok((Box::new(EnergyModelStorePreparation {
+            owners: store::OneItemOwners::from_request(request),
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
-            closing: false,
-        }))
+        }), progress))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMutation> for EnergyModelStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::Mutation as _;
-        if !grant.permits_one() || self.cancelled {
+        let fault = |message: &'static str| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.refused.is_some() || self.owners.failure.is_some() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
-        let base = self.base.as_ref().ok_or_else(|| "the energy model preparation lost its exact base root".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "the energy model preparation lost its mutation owner".to_string())?;
-        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-        let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
-        let authority = self.authority.as_ref().ok_or_else(|| "the energy model preparation lost its store authority".to_string())?;
+        if self.owners.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress::default()));
+        }
+        let authority = self.owners.authority.as_ref().ok_or_else(|| fault("energy-model-artifact-authority-missing"))?;
+        let base = self.owners.base.as_ref().ok_or_else(|| fault("energy-model-artifact-base-owner-missing"))?;
+        let mutation = self.owners.mutation.take().ok_or_else(|| fault("energy-model-artifact-mutation-owner-missing"))?;
+        let inverse = match mutation.inverse(base.get()) {
+            Ok(inverse) => inverse,
+            Err(error) => {
+                *self.owners.mutation = Some(mutation);
+                return Err(error);
+            }
+        };
+        let post = match protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()) {
+            Ok(post) => post,
+            Err(_) => {
+                *self.owners.mutation = Some(mutation);
+                *self.owners.inverse = Some(inverse);
+                *self.owners.failure = Some(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retained the original mutation application refusal"));
+                return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retained the original mutation application refusal"));
+            }
+        };
         let edit = authority.next_edit(mutation, inverse);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => {
+                *self.owners.refused = Some((edit, post));
+                return Err(error);
+            }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.owners.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
-
     fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<EnergyModelSnapshot, EnergyModelMutation>> {
-        self.prepared.as_ref()
+        self.owners.prepared.as_ref()
     }
-
     fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<EnergyModelSnapshot, EnergyModelMutation>> {
-        self.prepared.take()
+        self.owners.prepared.take()
     }
-
     fn cancel(&mut self) {
         self.cancelled = true;
     }
-
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "the energy model preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        self.owners.close_step(grant.retained_grant())
     }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.owners.terminal_is_empty()
     }
 }
 //#endregion 📬️StorePreparation
@@ -1616,6 +1622,7 @@ impl ArtifactEditor for EnergyModelEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(
@@ -1638,25 +1645,16 @@ impl ArtifactEditor for EnergyModelEditor {
         Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
 
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(semio_framework_plugin::no_draft_store_disposer())
@@ -1687,7 +1685,7 @@ impl ArtifactEditor for EnergyModelEditor {
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("energy-model-config-retained", ENERGY_MODEL_CONFIG_STORE_MAXIMUM_BYTES))
+        Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
     }
 
     /// ⏯️ The `energySimulation` run job over the run's base snapshot and the config store's settings.

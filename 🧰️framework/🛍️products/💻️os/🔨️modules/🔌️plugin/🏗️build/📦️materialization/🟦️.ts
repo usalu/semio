@@ -17,7 +17,7 @@ import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRo
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
-import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import type { PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
 import {
   ensureGuestSlimTypstFontsAt,
@@ -109,7 +109,7 @@ async function readPackageName(cratePath: string): Promise<string> {
  * for byte the key `@semio-tech/framework-plugin-web`'s `materialize <profile> --manifest <Cargo.toml>`
  * writes, so the catalog builder and the per-crate Nx target own the SAME directory in the one staging
  * root instead of each claiming a tree of its own. */
-function componentArtifactOwner(target: DeployedRegistryEntryV1, profile: "dev" | "release"): string {
+function componentArtifactOwner(target: PluginBuildTargetV1, profile: "dev" | "release"): string {
   return `${target.cratePath.split(/[\\/]/).join("/")}/Cargo.toml:browser:${profile}`;
 }
 
@@ -117,7 +117,7 @@ function componentArtifactOwner(target: DeployedRegistryEntryV1, profile: "dev" 
 /** 🎯️ Serial component compilation against the ONE shared `cargoTargetDirectory` — descriptor extraction
  * runs after materialization. Fine-grain locking (`.cargo/config.toml`) makes concurrent invocations of
  * this function across agents/devs share every already-built unit, so no caller owns a private target dir. */
-async function buildPluginCargo(target: DeployedRegistryEntryV1): Promise<{ readonly target: DeployedRegistryEntryV1; readonly artifact: string }> {
+async function buildPluginCargo(target: PluginBuildTargetV1): Promise<{ readonly target: PluginBuildTargetV1; readonly artifact: string }> {
   const packageName = await readPackageName(target.cratePath);
   const profile = pluginWasmProfile();
   const cargoTargetRoot = cargoTargetDirectory(repoRoot);
@@ -135,7 +135,7 @@ async function buildPluginCargo(target: DeployedRegistryEntryV1): Promise<{ read
  * NOT call `publishShardWorker()` — that write is identical content for every target in a catalog run,
  * so callers publish it once rather than redundantly per plugin (still "idempotent: rewritten on every
  * plugin build" per its own doc, just once per BUILD rather than once per PLUGIN). */
-async function materializePlugin(target: DeployedRegistryEntryV1, artifact: string): Promise<void> {
+async function materializePlugin(target: PluginBuildTargetV1, artifact: string): Promise<void> {
   const outDir = join(pluginOutRoot, moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]})));
   mkdirSync(pluginOutRoot, { recursive: true });
   const jsBase = target.wasmOut.replace(/\.wasm$/, "");

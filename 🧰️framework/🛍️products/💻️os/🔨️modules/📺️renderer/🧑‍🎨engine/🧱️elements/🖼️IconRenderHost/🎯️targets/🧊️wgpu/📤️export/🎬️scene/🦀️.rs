@@ -369,7 +369,9 @@ impl IconExportScenePreparation {
 
     fn close_job_step(&mut self) -> Result<(), String> {
         if let Some(outcome) = self.job_outcome.as_mut() {
-            if outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) != semio_framework_job::JobPayloadCloseStep::Complete {
+            let demand = outcome.retirement_demands().map_err(|error| error.to_string())?;
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            if !matches!(outcome.close_step(grant).map_err(|error| error.to_string())?, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
                 return Ok(());
             }
             self.job_outcome = None;
@@ -407,7 +409,10 @@ impl IconExportScenePreparation {
 
     fn close_step(&mut self) -> Result<bool,infinite_world::world::WorldDynamicFault> {
         if let Some(outcome) = self.job_outcome.as_mut() {
-            if outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) != semio_framework_job::JobPayloadCloseStep::Complete {
+            let ownership = |error: semio_framework_value::ValueError| infinite_world::world::WorldDynamicFault::Ownership(error.kind);
+            let demand = outcome.retirement_demands().map_err(ownership)?;
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            if !matches!(outcome.close_step(grant).map_err(ownership)?, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
                 return Ok(false);
             }
             self.job_outcome = None;

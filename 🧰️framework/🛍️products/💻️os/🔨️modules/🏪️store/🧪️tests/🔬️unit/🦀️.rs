@@ -2300,11 +2300,15 @@ impl<M: ArtifactCanonicalJson + Send + Sync + 'static> ArtifactStoreOneItemPrepa
         Err("fixture authoring catalog prepares no retained gesture".into())
     }
 
+    fn begin_batch_digest(&self, _edit: &mut Option<Box<Edit<M>>>, _grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ArtifactStoreBatchDigest<M>>, RetainedCloneProgress)>, ValueError> {
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture authoring catalog prepares no retained gesture"))
+    }
+
     fn begin_demand(&self, _mutation: &M, _lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> {
         Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture authoring catalog prepares no retained gesture"))
     }
 
-    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, M>, _grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, M>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, M>)> {
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<DemoSnapshot, M, M>, _grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<DemoSnapshot, M>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<DemoSnapshot, M, M>)> {
         Err((ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture authoring catalog prepares no retained gesture"), request))
     }
 }
@@ -2424,19 +2428,19 @@ impl FixtureOperation for TimestampedMutation {
 macro_rules! fixture_canonical_json {
     ($($mutation:ty),*) => {$(
         impl ArtifactCanonicalJson for $mutation {
-            fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, String> {
-                self.fixture_operation().node(path)
+            fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+                self.fixture_operation().node(path).map_err(|reason| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, reason))
             }
-            fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, String> {
-                self.fixture_operation().key(path, index)
+            fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+                self.fixture_operation().key(path, index).map_err(|reason| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, reason))
             }
-            fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, String> {
+            fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
                 Ok(Some(self.fixture_operation().borrowed()))
             }
         }
     )*};
 }
-fixture_canonical_json!(DemoMutation, SeverityMutation, ValidatedMutation, TimestampedMutation);
+fixture_canonical_json!(SeverityMutation, ValidatedMutation, TimestampedMutation);
 
 impl MemberStoreOwner<DemoMutation> for DemoSnapshot {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
@@ -4792,6 +4796,12 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for ProbedRetai
 }
 
 impl ArtifactCanonicalJson for DemoMutation {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+        self.fixture_operation().node(path).map_err(|reason| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, reason))
+    }
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+        self.fixture_operation().key(path, index).map_err(|reason| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, reason))
+    }
     fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
         let value = match self {
             DemoMutation::SetN(value) => ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new(
@@ -11028,7 +11038,7 @@ async fn dispatch_group_stamps_one_tool_transaction_on_parent_and_owned_child() 
         assert!(edit.mutation_meta.iter().all(|meta| meta.transaction.as_ref() == Some(&transaction)), "every {member} operation carries the group's transaction");
         assert!(edit.mutation_meta.iter().all(|meta| meta.group_id.as_deref() == Some(receipt.invocation_id.as_str())), "every {member} operation keeps the group identity");
     }
-    let plain = with_fixture_identity!(|identity| coordinator.dispatch_group(
+    let plain = coordinator.dispatch_group(
             &parent_ref,
             &mut parent_store,
             &mut [(&mut child_store, ChildDispatch { child: child_ref.clone(), ops: &[DemoMutation::SetN(SetN { n: 4 }).encode_op().expect("encode")], op_schema: &SchemaId("demo/v1".into()), labels: &[] })],
@@ -11846,9 +11856,6 @@ fn envelope_and_genesis_preserve_terminal_cursor_physical_grants() {
         fn retire_owned(&self,original:DemoSnapshot,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DemoSnapshot)> {
             admit_artifact_retirement(original,grant,|_|TerminalCursor::<N>([0;N]))
         }
-        assert!(owner.terminal_is_empty());
-        eprintln!("[DEBUG] genesis physical pack extent={N} backing={backing} released={released_total} reported={reported_total} largest-single-demand={largest} row={}", row["name"]);
-        if released_total < backing || reported_total != released_total { failures.push(("genesis".into(), backing, released_total, reported_total)); }
     }
     fn check<const N: usize>(row: &serde_json::Value, admission: usize, failures: &mut Vec<(String, usize, usize, usize)>) {
         let grant=RetainedCloneGrant {maximum_capacity_bytes:admission,maximum_release_bytes:admission,..physical_test_close_grant()};

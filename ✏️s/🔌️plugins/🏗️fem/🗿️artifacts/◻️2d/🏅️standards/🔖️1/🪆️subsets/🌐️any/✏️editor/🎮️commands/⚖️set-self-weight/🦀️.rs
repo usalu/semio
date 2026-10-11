@@ -26,7 +26,7 @@ type Fem2dSnapshot = crate::Fem2dSnapshot;
 //#region 🔖️SetSelfWeight
 //#endregion 🔖️SetSelfWeight
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "set-self-weight")]
 pub struct SetSelfWeight {
     pub case_id: String,

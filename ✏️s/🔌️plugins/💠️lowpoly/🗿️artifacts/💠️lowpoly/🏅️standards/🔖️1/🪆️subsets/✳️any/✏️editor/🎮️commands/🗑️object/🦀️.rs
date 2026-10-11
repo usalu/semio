@@ -4,7 +4,7 @@
 //! edges / the faces around the selected vertices of the active object (a mesh rebuild, the faces variant
 //! every polygon modeller ships). `duplicateObject` (⌘D) copies the active object beside itself.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
+use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit};
 use crate::editor::lowpoly::session::{mesh_edit, LowpolyScratch};
 use crate::editor::lowpoly::view::resolve_active_object_id;
 use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 pub mod delete_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
@@ -65,7 +65,7 @@ pub mod delete_selection {
 pub mod duplicate_object {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "duplicate-object")]
     pub struct DuplicateObject {
@@ -107,7 +107,7 @@ pub mod duplicate_object {
         };
         Ok(Emit {
             artifact_mutations: vec![LowpolyMutation::CreateObject(crate::mutations::create_object::CreateObject { index, object: copy })],
-            config_mutations: vec![LowpolyConfigMutation::SetActiveObject { object_id: id }],
+            config_mutations: vec![LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id: id })],
             effects: vec![select],
             ..Default::default()
         })

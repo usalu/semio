@@ -36,7 +36,7 @@ pub const XLSX_TRANSITIONAL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions, so its typed command channel has exactly one inert variant —
 /// mirrors `🔋️energy`'s own `EnergyModelViewCommand::Noop`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum XlsxTransitionalViewCommand {
     #[default]
     Noop,

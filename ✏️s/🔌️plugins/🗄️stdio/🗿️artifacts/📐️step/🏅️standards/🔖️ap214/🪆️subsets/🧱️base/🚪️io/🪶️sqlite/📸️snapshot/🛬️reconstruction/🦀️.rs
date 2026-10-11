@@ -1,6 +1,6 @@
 //! 🛬️ Paid STEP relational ownership follows domain rows and ordered edges.
 use crate::standards::v_ap214::subsets::base::io::sqlite::snapshot::{identity,null,unsigned,sort_paid,REAL};
-use crate::standards::v_ap214::subsets::base::io::sqlite::snapshot::{StepSnapshot,StepHeader,StepFileDescription,StepFileName,StepFileSchema,StepEntity,StepComplexType,StepValue};
+use crate::standards::v_ap214::subsets::base::io::sqlite::snapshot::{StepSnapshot,StepHeader,StepFileDescription,StepFileName,StepFileSchema,StepEntity,StepComplexType,StepTypedValue, StepValue};
 use crate::standards::v_ap214::subsets::base::io::sqlite::snapshot::native;
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,artifact::{validate_ieee754_row,ieee754_is_null,read_binary64}};
 use semio_framework_value::NativeDecodeControl;
@@ -102,7 +102,7 @@ impl Forest{
                 "string"=>StepValue::String(control.copy_text(row.text(4)?)?),"enum"=>StepValue::Enum(control.copy_text(row.text(5)?)?),
                 "reference"=>{let word=unsigned(row.text(6)?)?;let entity=row.integer(7)?;let actual=entities.binary_search_by_key(&entity,|item|item.0).ok().map(|index|entities[index].1);if actual!=Some(word){return Err(invalid("STEP reference word differs from related entity identity"));}StepValue::Reference(word)},
                 "aggregate"=>{let range=catalog.tables[10].range((0,id));let mut output=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<StepValue>>);for edge in range{let row=catalog.tables[10].row(catalog.edge(10,edge).id)?;output.as_mut().push(self.pop(catalog,row.integer(3)?)?);control.step()?;}StepValue::Aggregate(output.take())},
-                "typedValue"=>{let edge=catalog.tables[11].range((0,id)).start;let row=catalog.tables[11].row(catalog.edge(11,edge).id)?;let name=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.copy_text(row.text(2)?)?,native::close::<String>);let mut slot=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(1)?,native::close::<Vec<StepValue>>);slot.as_mut().push(self.pop(catalog,row.integer(3)?)?);StepValue::TypedValue{type_name:name.take(),value:native::box_slot(slot.take())?}},
+                "typedValue"=>{let edge=catalog.tables[11].range((0,id)).start;let row=catalog.tables[11].row(catalog.edge(11,edge).id)?;let name=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.copy_text(row.text(2)?)?,native::close::<String>);let mut slot=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(1)?,native::close::<Vec<StepValue>>);slot.as_mut().push(self.pop(catalog,row.integer(3)?)?);StepValue::TypedValue(StepTypedValue {type_name:name.take(),value:native::box_slot(slot.take())?})},
                 _=>unreachable!(),
             };
             self.state[index]=2;self.values.as_mut()[index]=Some(value);

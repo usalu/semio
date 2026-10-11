@@ -13,7 +13,6 @@ use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, A
 pub const NOTE_RETAINED_PAYLOAD_SCHEMA: &str = "semio.note.retained-command.v1";
 pub const NOTE_RETAINED_RAW_BYTES: usize = 65_536;
 pub const NOTE_RETAINED_MAXIMUM_UNITS: usize = 4_096;
-pub const NOTE_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 16_384;
 
 /// 🧵️ Every note verb is a retained tool (ticket 26/09/17/NOTE-PLUGIN-END-TO-END): the framework refuses UI
 /// dispatch of any command not classified `Migrated`, which left every document verb dead in the shell.
@@ -95,7 +94,7 @@ fn note_contract() -> ToolExecutionContract {
 //#endregion 🔖️Contract
 
 //#region 🧭️Units
-#[derive(Clone)]
+#[derive(Clone, semio_framework_value::RetireOwned)]
 struct NoteCommandUnit {
     command: NoteCommand,
     selected_block_ids: Vec<String>,
@@ -141,7 +140,17 @@ fn note_command_units(command: &NoteCommand, selected: &[String]) -> Vec<NoteCom
 //#endregion 🧭️Units
 
 //#region 🧵️Work
+#[derive(semio_framework_value::RetireOwned)]
+struct NoteCommandRemnant {
+    units: Vec<NoteCommandUnit>,
+    projection: Option<NoteSnapshot>,
+    accumulated: Emit<crate::op::NoteMutation, semio_framework_plugin::NoConfigMutation>,
+    ephemeral: EphemeralEmit<EditorApp<NotePlayApp>>,
+    id_owner: Option<NoteIdOwner>,
+}
+
 struct NoteCommandWork {
+    remnant: Option<semio_framework_value::retirement::controlled::ControlledRetirement<NoteCommandRemnant>>,
     tool_id: &'static str,
     units: Vec<NoteCommandUnit>,
     cursor: usize,
@@ -163,7 +172,7 @@ impl NoteCommandWork {
         }
         let scope = format!("{}:{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation, operation.authoring_seed);
         let workspace_identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
-        Ok(Self { tool_id, units, cursor: 0, replay_target: None, projection: None, accumulated: Emit::default(), ephemeral: EphemeralEmit::default(), id_owner: Some(NoteIdOwner::new(scope, 0)), workspace_identity, complete: false, closing: false })
+        Ok(Self { remnant: None, tool_id, units, cursor: 0, replay_target: None, projection: None, accumulated: Emit::default(), ephemeral: EphemeralEmit::default(), id_owner: Some(NoteIdOwner::new(scope, 0)), workspace_identity, complete: false, closing: false })
     }
 
     fn append(&mut self, mut emit: Emit<crate::op::NoteMutation, semio_framework_plugin::NoConfigMutation>) -> Result<(), Fault> {
@@ -184,29 +193,22 @@ impl NoteCommandWork {
         Ok(())
     }
 
-    fn release_one(&mut self) -> bool {
-        if self.units.pop().is_some() {
-            return true;
-        }
-        if self.accumulated.artifact_mutations.pop().is_some()
-            || self.accumulated.config_mutations.pop().is_some()
-            || self.accumulated.window_config_mutations.pop().is_some()
-            || self.accumulated.draft_mutations.pop().is_some()
-            || self.accumulated.effects.pop().is_some()
-            || self.accumulated.events.pop().is_some()
-            || self.accumulated.child_emits.pop().is_some()
-            || self.accumulated.interaction_writes.pop().is_some()
-            || self.ephemeral.presence.pop().is_some()
-            || self.ephemeral.transient.pop().is_some()
-            || self.ephemeral.window_transient.pop().is_some()
-            || self.accumulated.transaction.take().is_some()
-        {
-            return true;
-        }
-        if self.projection.take().is_some() || self.id_owner.take().is_some() {
-            return true;
-        }
-        false
+    fn workspace_is_empty(&self) -> bool {
+        self.units.is_empty()
+            && self.accumulated.artifact_mutations.is_empty()
+            && self.accumulated.config_mutations.is_empty()
+            && self.accumulated.window_config_mutations.is_empty()
+            && self.accumulated.draft_mutations.is_empty()
+            && self.accumulated.effects.is_empty()
+            && self.accumulated.events.is_empty()
+            && self.accumulated.child_emits.is_empty()
+            && self.accumulated.interaction_writes.is_empty()
+            && self.ephemeral.presence.is_empty()
+            && self.ephemeral.transient.is_empty()
+            && self.ephemeral.window_transient.is_empty()
+            && self.accumulated.transaction.is_none()
+            && self.projection.is_none()
+            && self.id_owner.is_none()
     }
 }
 
@@ -231,7 +233,10 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         let unit = &self.units[self.cursor];
         let projection = self.projection.as_ref().unwrap_or(snapshot);
         let id_owner = self.id_owner.as_mut().ok_or_else(|| Fault::from("note-retained-id-owner-missing"))?;
-        let window_owner = context.and_then(|context| context.window_transient.clone());
+        let window_owner = match context.and_then(|context| context.window_transient.as_ref()) {
+            Some(snapshot) => Some(snapshot.try_duplicate().map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("note.retained.window-transient"), error.to_string()))?),
+            None => None,
+        };
         let window_before = crate::editor::note::window::transient_from_snapshot(window_owner.as_ref());
         let mut ctx = NoteDispatchCtx {
             selected_block_ids: unit.selected_block_ids.clone(),
@@ -278,17 +283,14 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         }
     }
 
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < 32 {
-            return Err(Fault::from("note-retained-checkpoint-capacity"));
-        }
-        target[..32].fill(0);
-        target[..4].copy_from_slice(b"NRC1");
-        target[4] = u8::from(self.complete);
-        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
-        target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
-        target[24..32].copy_from_slice(&(self.units.len() as u64).to_le_bytes());
-        Ok(32)
+    fn checkpoint_byte(&self, index: usize) -> Option<u8> {
+        let mut checkpoint = [0_u8; 32];
+        checkpoint[..4].copy_from_slice(b"NRC1");
+        checkpoint[4] = u8::from(self.complete);
+        checkpoint[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
+        checkpoint[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
+        checkpoint[24..32].copy_from_slice(&(self.units.len() as u64).to_le_bytes());
+        checkpoint.get(index).copied()
     }
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
@@ -313,36 +315,70 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+        use semio_framework_value::retained_clone::RetainedCloneStep;
         if !self.closing {
             return InteractiveJobCloseStep::Blocked;
         }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        if let Some(owner) = self.remnant.as_mut() {
+            let step = owner.step(grant);
+            if owner.terminal_is_empty() {
+                self.remnant = None;
+            }
+            return match step {
+                Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Complete { progress },
+                Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            };
         }
-        if self.release_one() {
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 1 };
+        if self.workspace_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: Default::default() };
         }
-        InteractiveJobCloseStep::Complete
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return InteractiveJobCloseStep::Pending { progress: Default::default() };
+        }
+        let remnant = NoteCommandRemnant {
+            units: std::mem::take(&mut self.units),
+            projection: self.projection.take(),
+            accumulated: std::mem::take(&mut self.accumulated),
+            ephemeral: std::mem::take(&mut self.ephemeral),
+            id_owner: self.id_owner.take(),
+        };
+        match semio_framework_value::retirement::controlled::ControlledRetirement::new(remnant) {
+            Ok(owner) => {
+                self.remnant = Some(owner);
+                InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } }
+            }
+            Err((error, remnant)) => {
+                self.units = remnant.units;
+                self.projection = remnant.projection;
+                self.accumulated = remnant.accumulated;
+                self.ephemeral = remnant.ephemeral;
+                self.id_owner = remnant.id_owner;
+                InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() }
+            }
+        }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.remnant.as_ref().map_or(Ok(0), |owner| owner.next_copy_byte_demand())
+    }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        self.remnant.as_ref().map_or(Ok(0), |owner| owner.next_capacity_byte_demand(maximum_copy_bytes))
+    }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.remnant.as_ref().map_or(Ok(0), |owner| owner.next_release_byte_demand())
+    }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        self.remnant.as_ref().map_or(Ok(usize::from(!self.workspace_is_empty())), |owner| owner.next_depth_demand())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing
-            && self.units.is_empty()
-            && self.accumulated.artifact_mutations.is_empty()
-            && self.accumulated.config_mutations.is_empty()
-            && self.accumulated.window_config_mutations.is_empty()
-            && self.accumulated.draft_mutations.is_empty()
-            && self.accumulated.effects.is_empty()
-            && self.accumulated.events.is_empty()
-            && self.accumulated.child_emits.is_empty()
-            && self.accumulated.interaction_writes.is_empty()
-            && self.ephemeral.presence.is_empty()
-            && self.ephemeral.transient.is_empty()
-            && self.ephemeral.window_transient.is_empty()
-            && self.accumulated.transaction.is_none()
-            && self.projection.is_none()
-            && self.id_owner.is_none()
+        self.closing && self.remnant.is_none() && self.workspace_is_empty()
     }
 }
 //#endregion 🧵️Work
@@ -424,6 +460,7 @@ pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Re
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        retained: request.retained,
         authoring_seed: request.authoring_seed.clone(),
     };
     let tool_id = request.command.command_id();
@@ -454,7 +491,7 @@ pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Re
 /// the bespoke root-scalar factory admitted only grid mutations, so `addBlock`/`inkApplyEvents`/`patchBlocks`
 /// failed `admits only exact retained root-scalar mutations` in the running app.
 pub fn artifact_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<NoteSnapshot, crate::op::NoteMutation>> {
-    semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<NoteSnapshot, crate::op::NoteMutation>("note-artifact-retained", NOTE_ARTIFACT_MUTATION_MAXIMUM_BYTES)
+    store::mutation_apply_preparation_factory::<NoteSnapshot, crate::op::NoteMutation>()
 }
 
 //#endregion 📬️StorePreparation

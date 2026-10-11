@@ -389,6 +389,22 @@ fn equation_leaf_retained_bytes(leaf: &EquationMutation) -> usize {
         }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EquationCloseUnit {
+    Operation,
+    OperationsBacking,
+    Leaf,
+    LeavesBacking,
+    Gesture,
+    Point,
+    PointsBacking,
+    Edge,
+    EdgesBacking,
+    Node,
+    NodesBacking,
+    Graph,
+}
+
 struct EquationRetainedCommandWork {
     tool_id: &'static str,
     operation_identity: u64,
@@ -511,21 +527,73 @@ impl EquationRetainedCommandWork {
         })
     }
 
-    fn close_vec_capacity<T>(values: &mut Vec<T>, maximum_items: usize, maximum_bytes: usize) -> Option<InteractiveJobCloseStep> {
-        if !values.is_empty() {
-            return None;
-        }
-        let bytes = values.capacity().saturating_mul(size_of::<T>());
-        if bytes == 0 {
-            return None;
-        }
-        if maximum_items == 0 || maximum_bytes < bytes {
-            return Some(InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        *values = Vec::new();
-        Some(InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes })
+    fn backing_bytes<T>(values: &Vec<T>) -> usize {
+        if values.is_empty() { values.capacity().saturating_mul(size_of::<T>()) } else { 0 }
     }
 
+    fn next_close_unit(&self) -> Option<(EquationCloseUnit, usize)> {
+        if let Some(operation) = self.operations.last() {
+            return Some((EquationCloseUnit::Operation, operation.retained_bytes()));
+        }
+        let bytes = Self::backing_bytes(&self.operations);
+        if bytes != 0 {
+            return Some((EquationCloseUnit::OperationsBacking, bytes));
+        }
+        if let Some(leaf) = self.leaves.last() {
+            return Some((EquationCloseUnit::Leaf, equation_leaf_retained_bytes(leaf)));
+        }
+        let bytes = Self::backing_bytes(&self.leaves);
+        if bytes != 0 {
+            return Some((EquationCloseUnit::LeavesBacking, bytes));
+        }
+        if let Some(gesture) = self.gesture.as_ref() {
+            return Some((EquationCloseUnit::Gesture, gesture.capacity()));
+        }
+        if let Some(point) = self.points.last() {
+            return Some((EquationCloseUnit::Point, size_of_val(point)));
+        }
+        let bytes = Self::backing_bytes(&self.points);
+        if bytes != 0 {
+            return Some((EquationCloseUnit::PointsBacking, bytes));
+        }
+        let graph = self.graph.as_ref()?;
+        if let Some(edge) = graph.edges.last() {
+            return Some((EquationCloseUnit::Edge, size_of_val(edge) + edge.id.capacity() + edge.source.capacity() + edge.target.capacity()));
+        }
+        let bytes = Self::backing_bytes(&graph.edges);
+        if bytes != 0 {
+            return Some((EquationCloseUnit::EdgesBacking, bytes));
+        }
+        if let Some(node) = graph.nodes.last() {
+            return Some((EquationCloseUnit::Node, size_of_val(node) + node.id.capacity() + node.label.capacity()));
+        }
+        let bytes = Self::backing_bytes(&graph.nodes);
+        if bytes != 0 {
+            return Some((EquationCloseUnit::NodesBacking, bytes));
+        }
+        Some((EquationCloseUnit::Graph, size_of::<EquationGraph>() + graph.algorithm.capacity() + graph.algorithm_seed.as_ref().map_or(0, String::capacity)))
+    }
+
+    fn close_unit(&mut self, unit: EquationCloseUnit) {
+        match unit {
+            EquationCloseUnit::Operation => drop(self.operations.pop()),
+            EquationCloseUnit::OperationsBacking => self.operations = Vec::new(),
+            EquationCloseUnit::Leaf => drop(self.leaves.pop()),
+            EquationCloseUnit::LeavesBacking => self.leaves = Vec::new(),
+            EquationCloseUnit::Gesture => self.gesture = None,
+            EquationCloseUnit::Point => drop(self.points.pop()),
+            EquationCloseUnit::PointsBacking => self.points = Vec::new(),
+            EquationCloseUnit::Edge => drop(self.graph.as_mut().and_then(|graph| graph.edges.pop())),
+            EquationCloseUnit::EdgesBacking => drop(self.graph.as_mut().map(|graph| std::mem::take(&mut graph.edges))),
+            EquationCloseUnit::Node => drop(self.graph.as_mut().and_then(|graph| graph.nodes.pop())),
+            EquationCloseUnit::NodesBacking => drop(self.graph.as_mut().map(|graph| std::mem::take(&mut graph.nodes))),
+            EquationCloseUnit::Graph => self.graph = None,
+        }
+    }
+
+    fn close_demand(&self) -> semio_framework_value::RetirementDemand {
+        self.next_close_unit().map_or_else(Default::default, |(_, bytes)| semio_framework_value::RetirementDemand { release_bytes: bytes, depth: 1, ..Default::default() })
+    }
 }
 
 impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommandWork {
@@ -699,82 +767,39 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         if !self.closing {
             return InteractiveJobCloseStep::Blocked;
         }
-        if let Some(operation) = self.operations.last() {
-            let bytes = operation.retained_bytes();
-            if maximum_items == 0 || maximum_bytes < bytes {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.operations.pop();
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+        let Some((unit, bytes)) = self.next_close_unit() else { return InteractiveJobCloseStep::Complete { progress: Default::default() } };
+        if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes {
+            return InteractiveJobCloseStep::Pending { progress: Default::default() };
         }
-        if let Some(step) = Self::close_vec_capacity(&mut self.operations, maximum_items, maximum_bytes) {
-            return step;
+        if grant.maximum_depth == 0 {
+            return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: Default::default() };
         }
-        if let Some(leaf) = self.leaves.last() {
-            let bytes = equation_leaf_retained_bytes(leaf);
-            if maximum_items == 0 || maximum_bytes < bytes {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.leaves.pop();
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
-        }
-        if let Some(step) = Self::close_vec_capacity(&mut self.leaves, maximum_items, maximum_bytes) {
-            return step;
-        }
-        if let Some(gesture) = self.gesture.as_ref() {
-            let bytes = gesture.capacity();
-            if maximum_items == 0 || maximum_bytes < bytes {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.gesture = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
-        }
-        if let Some(point) = self.points.last() {
-            let bytes = size_of_val(point);
-            if maximum_items == 0 || maximum_bytes < bytes {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.points.pop();
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
-        }
-        if let Some(step) = Self::close_vec_capacity(&mut self.points, maximum_items, maximum_bytes) {
-            return step;
-        }
-        if let Some(graph) = self.graph.as_mut() {
-            if let Some(edge) = graph.edges.last() {
-                let bytes = size_of_val(edge) + edge.id.capacity() + edge.source.capacity() + edge.target.capacity();
-                if maximum_items == 0 || maximum_bytes < bytes {
-                    return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                graph.edges.pop();
-                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
-            }
-            if let Some(step) = Self::close_vec_capacity(&mut graph.edges, maximum_items, maximum_bytes) {
-                return step;
-            }
-            if let Some(node) = graph.nodes.last() {
-                let bytes = size_of_val(node) + node.id.capacity() + node.label.capacity();
-                if maximum_items == 0 || maximum_bytes < bytes {
-                    return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                graph.nodes.pop();
-                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
-            }
-            if let Some(step) = Self::close_vec_capacity(&mut graph.nodes, maximum_items, maximum_bytes) {
-                return step;
-            }
-            let bytes = size_of::<EquationGraph>() + graph.algorithm.capacity() + graph.algorithm_seed.as_ref().map_or(0, String::capacity);
-            if maximum_items == 0 || maximum_bytes < bytes {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.graph = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
-        }
-        InteractiveJobCloseStep::Complete
+        self.close_unit(unit);
+        InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() } }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demand().copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demand().capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demand().release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demand().depth)
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -903,9 +928,13 @@ where P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for EquationStorePreparationFactory<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<M>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("Equation Store preparation rejected its lane".into());
@@ -961,7 +990,7 @@ where
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
         if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         let authority = self.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Equation preparation lost its Store authority"))?;
                 let base = self.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Equation preparation lost its exact base root"))?;
@@ -986,7 +1015,7 @@ where
                 };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         *self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
@@ -1082,10 +1111,6 @@ impl ArtifactEditor for EquationPlayApp {
     }
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners())
-    }
-
     fn build_artifact_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(Arc::new(EquationStorePreparationFactory::<Self::Snapshot, Self::Mutation>::default()))
     }
@@ -1094,16 +1119,8 @@ impl ArtifactEditor for EquationPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
-
     fn build_config_store_disposer() -> ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::no_config_store_disposer())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
     }
 
     fn build_draft_store_disposer() -> ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
@@ -1173,6 +1190,7 @@ impl ArtifactEditor for EquationPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(EquationRetainedCommandWork::new(tool_id, equation_operation_identity(tool_id, &operation_context), extent));

@@ -13,7 +13,7 @@ use super::bounds::compute_dxf_bounds;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a dxf snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dxf.inference")]
 pub struct DxfInference {

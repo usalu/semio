@@ -16,7 +16,7 @@ use super::extent::compute_binary_extent;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a binary snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `extent`, backed by the `📏extent/` slug dir).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.binary.inference")]
 pub struct BinaryInference {

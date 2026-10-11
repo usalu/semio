@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::schema::snapshot::BitmapSnapshot;
-use store::{ErasedSnapshotRetirement, PackError, SnapshotRetirementStep};
+use store::{ErasedSnapshotRetirement, PackError};
 
 /// 📦️ Encodes a `BitmapSnapshot` to its binary pack form.
 pub fn encode(document: &BitmapSnapshot) -> Vec<u8> {
@@ -20,75 +20,20 @@ pub fn decode(bytes: &[u8]) -> Result<BitmapSnapshot, PackError> {
 }
 
 //#region ♻️Retirement
-/// 🧮️ One retirement step's budget unit — the bytes one displaced member is charged, so a caller
-/// with a small `maximum_bytes` makes progress across several turns instead of stalling.
-const BITMAP_RETIREMENT_STEP_BYTES: usize = 4_096;
-
-/// ♻️ The three heap-owning members a displaced `BitmapSnapshot` releases, in release order. The
-/// base64 index buffer is the largest by orders of magnitude, so it goes first.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum BitmapRetirementStage {
-    Pixels,
-    Palette,
-    Pinned,
-}
-
-impl BitmapRetirementStage {
-    const ORDER: [Self; 3] = [Self::Pixels, Self::Palette, Self::Pinned];
-}
-
-/// ♻️ A snapshot displaced by a decode-in-place, released in bounded steps rather than dropped in
-/// one unbounded `Drop` — the discipline `store::ArtifactStore` asks of every artifact whose decode
-/// can overwrite a live projection. `Drop` asserts the terminal state was actually reached, so a
-/// caller that abandons a retirement mid-way fails loudly instead of leaking silently.
-pub struct BitmapSnapshotRetirement {
-    displaced: std::mem::ManuallyDrop<BitmapSnapshot>,
-    stage: usize,
-}
-
-impl BitmapSnapshotRetirement {
-    fn new(displaced: BitmapSnapshot) -> Self {
-        Self { displaced: std::mem::ManuallyDrop::new(displaced), stage: 0 }
-    }
-}
-
-impl ErasedSnapshotRetirement for BitmapSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.stage >= BitmapRetirementStage::ORDER.len() {
-            return Ok(SnapshotRetirementStep::Complete);
-        }
-        if maximum_items == 0 || maximum_bytes < BITMAP_RETIREMENT_STEP_BYTES {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        let released = match BitmapRetirementStage::ORDER[self.stage] {
-            BitmapRetirementStage::Pixels => std::mem::take(&mut self.displaced.input.pixels).len(),
-            BitmapRetirementStage::Palette => std::mem::take(&mut self.displaced.input.palette).len(),
-            BitmapRetirementStage::Pinned => std::mem::take(&mut self.displaced.pinned).len(),
-        };
-        self.stage += 1;
-        Ok(SnapshotRetirementStep::Pending { released_items: released.max(1).min(maximum_items), released_bytes: BITMAP_RETIREMENT_STEP_BYTES })
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.stage >= BitmapRetirementStage::ORDER.len()
-    }
-}
-
-impl Drop for BitmapSnapshotRetirement {
-    /// ⚠️ `ManuallyDrop` exists so the members above are released by `close_step`, never by an
-    /// unbounded `Drop`; what is left here is the emptied husk, and dropping it is O(1).
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.terminal_is_empty(), "Bitmap snapshot displacement reached Drop before terminal-empty close");
-        unsafe { std::mem::ManuallyDrop::drop(&mut self.displaced) };
-    }
-}
-
 /// 📖️ Decodes into a LIVE projection and hands back the displaced document as a bounded retirement
-/// — the only decode entry point a mounted store may call, because it never drops the old snapshot
-/// inline.
-pub fn decode_into(target: &mut BitmapSnapshot, bytes: &[u8]) -> Result<Box<dyn ErasedSnapshotRetirement>, PackError> {
+/// admitted under the caller's own five-currency grant — the only decode entry point a mounted store
+/// may call, because it never drops the old snapshot inline. A refused admission restores the exact
+/// displaced document into `target` and drops only the freshly decoded, never-published one.
+pub fn decode_into(target: &mut BitmapSnapshot, bytes: &[u8], grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), PackError> {
     let next = decode(bytes)?;
-    Ok(Box::new(BitmapSnapshotRetirement::new(std::mem::replace(target, next))))
+    let displaced = std::mem::replace(target, next);
+    match semio_framework_value::retirement::admit_owned_retirement(displaced, grant) {
+        Ok(admitted) => Ok(admitted),
+        Err((error, displaced)) => {
+            drop(std::mem::replace(target, displaced));
+            Err(PackError::from(error))
+        }
+    }
 }
 //#endregion ♻️Retirement
 

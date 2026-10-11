@@ -12,7 +12,8 @@ use serde::{Deserialize, Serialize};
 pub mod set_camera {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "camera")]
     pub struct SetCamera {

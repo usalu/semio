@@ -106,7 +106,7 @@ impl Area {
                 }
                 let mut probe = ctx.snapshot.clone();
                 probe.spaces.insert("probe".into(), Space { storey: storey.clone(), number: String::new(), name: String::new(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: at[0], y: at[1] } }, usage: String::new(), phase: crate::Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
-                let mut rooms = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::probe_rooms(ctx.instance, &probe);
+                let mut rooms = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::probe_rooms(ctx.instance, &probe);
                 rooms.remove("probe").filter(|room| room.status == SpaceStatus::Inferred)
             }
         };
@@ -134,7 +134,7 @@ impl Area {
         }
         let mut probe = ctx.snapshot.clone();
         probe.spaces.insert("probe".into(), Space { storey: storey.clone(), number: String::new(), name: String::new(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: at[0], y: at[1] } }, usage: String::new(), phase: crate::Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
-        let rooms = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::probe_rooms(ctx.instance, &probe);
+        let rooms = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::probe_rooms(ctx.instance, &probe);
         let ring: Vec<P> = rooms.get("probe").filter(|room| room.status == SpaceStatus::Inferred && room.outline.len() >= 3).map(|room| room.outline.iter().map(|vertex| from_point2(vertex.point)).collect()).unwrap_or_default();
         if ring.is_empty() { Step::refuse(super::session::REJECTED) } else { self.ring_step(ctx, &ring) }
     }

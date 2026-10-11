@@ -12,7 +12,7 @@ use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRe
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 use semio_framework_os::OS_SPACE_SCHEMA;
-pub use semio_s_artifact_space_space::space_core::*;
+pub use semio_s_space_core::*;
 
 #[cfg(test)]
 #[path = "🧪️testing/🦀️.rs"]

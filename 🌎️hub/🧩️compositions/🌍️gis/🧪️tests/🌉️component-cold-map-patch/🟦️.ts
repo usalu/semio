@@ -127,7 +127,7 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
     mkdirSync(target, { mode: 0o700 });
     mkdirSync(stage, { mode: 0o700 });
     const build = freshGisComponentBuildControl();
-    const control={...build.control,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(this.repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})};
+    const control={...build.control,invocation:this.invocation,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(this.repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})};
     try {
       const produced = await produceFreshComponentV1(
         this.repoRoot,

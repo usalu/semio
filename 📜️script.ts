@@ -175,8 +175,8 @@ export class SetupScript extends Script {
       {
         postinstall: () => this.runPostinstall(),
         git: () => this.runGit(),
-        native: (rest) => new NativeOsScript(this.root, this.repoRoot).run(rest),
-        deps: (rest) => new NativeDependenciesScript(this.root, this.repoRoot).run(rest),
+        native: (rest) => new NativeOsScript(this.root, this.repoRoot, this.invocation).run(rest),
+        deps: (rest) => new NativeDependenciesScript(this.root, this.repoRoot, this.invocation).run(rest),
         prepare: () => console.log("[prepare] Nx prerequisites completed"),
         devcontainer: (rest) => this.runDevcontainer(rest),
       },
@@ -3396,7 +3396,7 @@ function toolJobSegmentedTerminalDrainExact(source: string): boolean {
   return !!block && block.body.includes("let chunk = output.chunks.take_chunk()?") && block.body.includes("if chunk.is_none()") && block.body.includes("self.segmented_downloads.remove(operation_id)") && !block.body.includes("chunks_remaining() == 0") && source.includes("segmented_download_remains_addressable_until_terminal_none_is_observed") && source.includes("take-segmented-download-chunk: async func(instance-id: u32, operation-id: u64) -> result<option<list<u8>>, plugin-error>") && source.includes("async fn take_segmented_download_chunk(instance_id: u32, operation_id: u64) -> Result<Option<Vec<u8>>") && source.includes("plugin_take_segmented_download_chunk(runtime, instance_id, operation_id)") && source.includes(".map_err($crate::component::component::plugin_error)") && !source.includes("plugin_take_segmented_download_chunk(runtime, instance_id, operation_id))).ok().flatten()");
 }
 
-function toolJobPuzzleReservedRoutesExact(source: string, host: string): boolean {
+function toolJobPuzzleReservedRoutesExact(source: string, host: string, jobs: string): boolean {
   const implStart = source.indexOf("impl ArtifactEditor for Puzzle5dPlayApp");
   const implOpen = implStart < 0 ? -1 : source.indexOf("{", implStart);
   const implementation = implOpen < 0 ? undefined : toolJobRustBlock(source, implOpen);
@@ -3404,25 +3404,30 @@ function toolJobPuzzleReservedRoutesExact(source: string, host: string): boolean
   // 🧳️ The framework registers every reserved route's factory for every app and builds the job through
   // `build_reserved_tool_job`; an app-owned factory under the same key refuses app construction.
   const exactFactories = !/puzzle5d_reserved_factory!|Puzzle5d(?:Copy|Cut|Paste|Import)JobFactory/.test(source) && TOOL_JOB_PLUGIN_RESERVED_IDS.every((id) => implementation.body.includes(`"${id}" =>`));
-  const routeJobs = ["Puzzle5dCopyJob", "Puzzle5dCutJob", "Puzzle5dPasteJob", "Puzzle5dImportJob"];
-  const routeBlocks = routeJobs.map((job) => {
-    const start = source.indexOf(`impl InteractiveJob for ${job}`);
-    const open = start < 0 ? -1 : source.indexOf("{", start);
-    return open < 0 ? undefined : toolJobRustBlock(source, open);
+  // 🧵️ Copy and cut share one clipboard job; each route job lends outcomes through the puzzle outbox (`step -> Result<Option<JobOutcomeBorrow>>` + `borrow_outcome`),
+  // prepares its retained commit output BEFORE it completes, and closes through the shared outbox-then-owners ladder.
+  const routeJobs = ["Puzzle5dClipboardJob", "Puzzle5dPasteJob", "Puzzle5dImportJob"];
+  const resumableJobs = routeJobs.every((job) => {
+    const start = source.indexOf(`struct ${job} {`);
+    const end = source.indexOf(`impl ArtifactReservedJob for ${job} {}`);
+    if (start < 0 || end < start) return false;
+    const region = source.slice(start, end);
+    return (
+      region.includes("cx.is_cancelled()") &&
+      region.includes("JobTurn::Cancelled") &&
+      region.includes("JobTurn::Prepare(std::mem::take(&mut self.") &&
+      region.indexOf("JobTurn::Prepare(") < region.indexOf("completion.complete(") &&
+      region.includes("fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError>") &&
+      region.includes("self.outbox.phase(cx)?") &&
+      region.includes("self.outbox.settle(") &&
+      region.includes("self.outbox.borrow_outcome(descriptor)") &&
+      region.includes("fn begin_close(&mut self)") &&
+      region.includes("fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> ") &&
+      region.includes("InteractiveJobCloseStep") &&
+      region.includes("crate::puzzle_job::job_close_step(") &&
+      region.includes("fn terminal_is_empty(&self) -> bool")
+    );
   });
-  const resumableJobs = routeBlocks.every(
-    (block) =>
-      !!block &&
-      block.body.includes("cx.is_cancelled()") &&
-      block.body.includes("StepOutcome::Cancelled") &&
-      block.body.includes("commit.prepare(&self.") &&
-      block.body.indexOf("commit.prepare(&self.") < block.body.indexOf("completion.complete(") &&
-      block.body.includes("commit.take_output()") &&
-      block.body.includes("CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }") &&
-      block.body.includes("fn begin_close(&mut self)") &&
-      block.body.includes(".begin_close()") &&
-      block.body.includes("fn terminal_is_empty(&self) -> bool"),
-  );
   const fixedIngress =
     source.includes("const PUZZLE5D_RESERVED_PAGE_BYTES: usize = 4_096") &&
     (source.match(/raw_page: \[u8; PUZZLE5D_RESERVED_PAGE_BYTES\]/g) ?? []).length === 3 &&
@@ -3435,32 +3440,30 @@ function toolJobPuzzleReservedRoutesExact(source: string, host: string): boolean
     implementation.body.includes("Err((fault, rejected))") &&
     implementation.body.includes("drop(rejected)");
   const retainedProtocol =
-    source.includes("struct Puzzle5dCommitEnvelope") &&
-    source.includes("RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput)") &&
-    source.includes("writer.write_slice_page(cx, raw, &mut self.cursor)") &&
-    source.includes("Err(writer) =>") &&
-    source.includes("*self.writer = Some(writer)") &&
-    source.includes("fn take_output(&mut self) -> Option<RetainedJobPayload>") &&
-    source.includes("self.commit.close_step(maximum_items, maximum_bytes)") &&
-    source.includes("self.commit.terminal_is_empty()") &&
     source.includes("state[1..9].copy_from_slice(&(cursor as u64).to_le_bytes())") &&
     source.includes("state[9..17].copy_from_slice(&progress.to_le_bytes())") &&
-    source.includes("Err(rejected) =>") &&
-    source.includes("drop(rejected.into_source())") &&
-    source.includes("reserved_wire_exact_max_and_plus_one_preflight_return_the_original_owner");
+    source.includes("reserved_wire_exact_max_and_plus_one_preflight_return_the_original_owner") &&
+    jobs.includes("RetainedPayloadBuilder::new(JobPayloadStream::CommitOutput)") &&
+    jobs.includes("Prepare(Vec<u8>)") &&
+    jobs.includes("self.commit.append_original(cx, &self.source, &mut self.commit_cursor)") &&
+    jobs.includes("self.commit.seal(cx)") &&
+    jobs.includes("admit_complete(cx, None, self.commit.published())") &&
+    jobs.includes("descriptor.complete(None, self.commit.published())") &&
+    jobs.includes("self.commit.close_step_granted(grant)") &&
+    jobs.includes("a_prepared_commit_output_rides_on_the_completion_and_closes_exactly");
   const hostProtocol =
     host.includes("async fn run_framework_reserved_job") &&
     host.includes("proof.admits::<A>(&admission)") &&
-    host.includes("operation.base_revision != base_revision || operation.generation != generation") &&
-    host.includes("checkpoint.applied_progress < checkpoint_progress") &&
-    host.includes("!retained_payload_eq_slice(&candidate.output, raw)") &&
+    host.includes("*applied_progress < checkpoint_progress") &&
+    host.includes("retained_payload_eq_slice(output, raw)") &&
+    host.includes("interactive-job.output-envelope") &&
     host.includes("session.resume()") &&
     host.includes("session.begin_close()") &&
-    host.includes("WorkerJobCloseStep::Complete if session.terminal_is_empty()") &&
+    host.includes("Ok(semio_framework_job::WorkerJobCloseStep::Complete { .. }) if session.terminal_is_empty() => break") &&
     host.includes("self.validate_framework_reserved_commit(action, permit).await?") &&
-    host.includes("permit.is_cancelled().await") &&
-    host.includes("completion.take_emit()?") &&
-    host.includes("Self::ensure_reserved_emit_bounded(") &&
+    host.includes("semio_framework_job::validate_commit(&permit.operation, live_revision, live_generation)") &&
+    host.includes("lease.is_cancelled().await") &&
+    host.includes("async fn ensure_reserved_emit_bounded(") &&
     host.includes("permit.finish()");
   return exactFactories && resumableJobs && fixedIngress && retainedProtocol && hostProtocol && implementation.body.includes("ArtifactReservedToolInput::Media") && implementation.body.includes("ArtifactReservedToolJob::new(Puzzle5dImportJob::new(");
 }
@@ -3471,8 +3474,8 @@ function toolJobPuzzleReservedRoutesExact(source: string, host: string): boolean
  * at all (`copy`/`cut`/`paste` built here, never left as the framework's empty stub), that it owns a
  * fragment vocabulary (`clipboard_media_type`/`copy_fragment`/`cut_operations`/`paste_operations` over
  * `puzzle.2d.clipboard.v1`), that `import-media` keeps its own branch, and that the one step is
- * cancellable, completes BEFORE it prepares its retained output, and closes to terminal-empty. */
-function toolJobPuzzle2dReservedRoutesExact(source: string, host: string): boolean {
+ * cancellable, prepares its retained commit output BEFORE it completes, and closes to terminal-empty. */
+function toolJobPuzzle2dReservedRoutesExact(source: string, host: string, jobs: string): boolean {
   const implStart = source.indexOf("impl ArtifactEditor for Puzzle2dPlayApp");
   const implOpen = implStart < 0 ? -1 : source.indexOf("{", implStart);
   const implementation = implOpen < 0 ? undefined : toolJobRustBlock(source, implOpen);
@@ -3495,17 +3498,27 @@ function toolJobPuzzle2dReservedRoutesExact(source: string, host: string): boole
     && implementation.body.includes("ArtifactReservedToolJob::new(Puzzle2dClipboardJob::new(request))")
     && implementation.body.includes("ArtifactReservedToolInput::Media")
     && implementation.body.includes("ArtifactReservedToolJob::new(Puzzle2dImportJob::new(");
-  const resumableJob = job.body.includes("cx.is_cancelled()")
-    && job.body.includes("StepOutcome::Cancelled")
-    && job.body.includes("completion.complete(")
-    && job.body.indexOf("completion.complete(") < job.body.indexOf("puzzle2d_job_payload(cx, JobPayloadStream::CommitOutput")
-    && job.body.includes("CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output }")
-    && job.body.includes("fn begin_close(&mut self)")
-    && job.body.includes("fn terminal_is_empty(&self) -> bool")
-    && source.includes("impl ArtifactReservedJob for Puzzle2dClipboardJob");
+  const clipboardStart = source.indexOf("struct Puzzle2dClipboardJob {");
+  const clipboardEnd = source.indexOf("impl ArtifactReservedJob for Puzzle2dClipboardJob");
+  const region = clipboardStart < 0 || clipboardEnd < clipboardStart ? "" : source.slice(clipboardStart, clipboardEnd);
+  const resumableJob = region.includes("cx.is_cancelled()")
+    && region.includes("JobTurn::Cancelled")
+    && region.includes("JobTurn::Prepare(std::mem::take(&mut self.raw_wire))")
+    && region.includes("completion.complete(")
+    && region.indexOf("JobTurn::Prepare(") < region.indexOf("completion.complete(")
+    && region.includes("JobTurn::Complete")
+    && region.includes("self.outbox.phase(cx)?")
+    && region.includes("self.outbox.settle(")
+    && region.includes("self.outbox.borrow_outcome(descriptor)")
+    && region.includes("fn begin_close(&mut self)")
+    && region.includes("crate::puzzle_job::job_close_step(")
+    && region.includes("fn terminal_is_empty(&self) -> bool")
+    && source.includes("impl ArtifactReservedJob for Puzzle2dClipboardJob")
+    && jobs.includes("JobTurn::Prepare(bytes)")
+    && jobs.includes("admit_complete(cx, None, self.commit.published())");
   const hostProtocol = host.includes("async fn run_framework_reserved_job")
     && host.includes("self.validate_framework_reserved_commit(action, permit).await?")
-    && host.includes("Self::ensure_reserved_emit_bounded(")
+    && host.includes("async fn ensure_reserved_emit_bounded(")
     && host.includes("permit.is_cancelled().await");
   return exactFactories && ownedFragment && routedHere && resumableJob && hostProtocol;
 }
@@ -6486,8 +6499,10 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
   if (!toolJobDecodeAfterAdmission(plugin)) failures.push("a typed action, command, or intent decoder runs before exact wire admission");
   if (!toolJobQualifiedProofBeforeDecode(plugin)) failures.push("a typed JSON or intent route decodes before selecting its exact qualified proof identity");
   const frameworkReservedExact = toolJobFrameworkReservedRoutesExact(plugin);
-  const puzzleReservedExact = toolJobPuzzleReservedRoutesExact(puzzle5d, plugin);
-  const puzzle2dReservedExact = toolJobPuzzle2dReservedRoutesExact(puzzle2d, plugin);
+  const puzzleJobs = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🎮️commands/📤️jobs/🦀️.rs");
+  const puzzle5dEvidence = policyReadRustPolicySource(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+  const puzzleReservedExact = toolJobPuzzleReservedRoutesExact(puzzle5dEvidence, plugin, puzzleJobs);
+  const puzzle2dReservedExact = toolJobPuzzle2dReservedRoutesExact(puzzle2d, plugin, puzzleJobs);
   const importPreparationBounded = toolJobImportPreparationBounded(plugin);
   const fullToolOperationJobBounded = toolJobFullOperationBounded(plugin);
   const storeOneItemPublicationBounded = toolJobStoreBatchPublicationBounded(store, plugin);
@@ -9474,7 +9489,7 @@ export function interactivityPuzzleFillRunJobFailures(sources: InteractivityPuzz
   if (policy.length > 0) failures.push(`Puzzle fill run definition is not a mutating instance3d run with revalidate rebase, resume reconfigure, run and revalidate jobs (missing ${policy.join(", ")})`);
   const vocabulary = missing(definition, ["ToolRunStageDefinition {", "ToolRunCounterDefinition {", "ToolRunReasonDefinition {", "verdict: ToolRunVerdict::Danger", "verdict: ToolRunVerdict::Warning", "verdict: ToolRunVerdict::Success", "LocalizedLabel::native("]);
   if (vocabulary.length > 0) failures.push(`Puzzle fill run definition lacks localized stages, counters or verdict-typed reasons (missing ${vocabulary.join(", ")})`);
-  const stepping = missing(code.fill, ["ToolRunTickWriter", "consume_fuel(1)", "StepOutcome::PreviewReady(", "StepOutcome::CheckpointReady(", "StepOutcome::Complete("]);
+  const stepping = missing(code.fill, ["ToolRunTickWriter", "consume_fuel(1)", "JobTurn::Preview(", "JobTurn::Checkpoint {", "JobTurn::Complete"]);
   if (!/\bimpl\s+(?:[\w:]+::)?InteractiveJob\s+for\s+Fill\w*/.test(code.fill) || stepping.length > 0) failures.push(`Puzzle fill run job is not an InteractiveJob spending one fuel unit per candidate and publishing ticks, checkpoints and completion (missing ${stepping.join(", ") || "impl InteractiveJob for Fill…"})`);
   const verdicts = missing(code.fill, [".upsert(", "ToolRunVerdict::Testing", "ToolRunVerdict::Danger", "ToolRunVerdict::Warning", "ToolRunVerdict::Success", "ToolRunTraceSubject::Instance3d"]);
   if (verdicts.length > 0) failures.push(`Puzzle fill run job does not stream every tested candidate as a testing, danger, warning or success trace upsert (missing ${verdicts.join(", ")})`);
@@ -9532,7 +9547,7 @@ export function interactivityPuzzleFillTraceFailures(sources: InteractivityPuzzl
 export function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource: string, geometrySource: string): string[] {
   const [precompute, fill, geometry] = [precomputeSource, fillSource, geometrySource].map((text) => interactivityToolRunCode({ path: "🦀️.rs", text: text.split(POLICY_RUST_TEST_EVIDENCE_BOUNDARY, 1)[0]! }).join("\n")) as [string, string, string];
   const failures: string[] = [];
-  const preparationStages = ["PrepareFixture", "PrepareCatalogs", "PrepareMeshes", "PrepareEntries", "PrepareSpatial", "PrepareLookup", "PrepareConfiguration"];
+  const preparationStages = ["PrepareScene", "PrepareCatalogs", "PrepareMeshes", "PrepareEntries", "PrepareSpatial", "PrepareLookup", "PrepareConfiguration"];
   if (
     precompute.includes("FillBuilder::new(") ||
     fill.includes("FillBuilder::new(") ||
@@ -9599,7 +9614,7 @@ export function interactivityPuzzleFillP4eFailures(precomputeSource: string, fil
   ) failures.push("P4e preparation preflight/storage omits a fixture, mesh, catalog, or compatibility fixed owner or lacks exact cap/+1 handback evidence");
   const refusalStart = fill.indexOf("if let Some(refusal) = self.preparation_capacity_refusal.as_mut()");
   const refusal = fill.slice(refusalStart, fill.indexOf("if self.collection_over_capacity", refusalStart));
-  if (refusalStart < 0 || !refusal.includes("ToolRunStepKind::Danger") || !refusal.includes("StepOutcome::Fault") || refusal.indexOf("ToolRunStepKind::Danger") > refusal.indexOf("StepOutcome::Fault") || refusal.includes("candidate_ghost")) failures.push("P4e capacity refusal does not publish a danger step before the terminal fault");
+  if (refusalStart < 0 || !refusal.includes("ToolRunStepKind::Danger") || !refusal.includes("JobTurn::Fault") || refusal.indexOf("ToolRunStepKind::Danger") > refusal.indexOf("JobTurn::Fault") || refusal.includes("candidate_ghost")) failures.push("P4e capacity refusal does not publish a danger step before the terminal fault");
   if (
     !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>") ||
     !geometry.includes("struct CollisionCellSpan") ||

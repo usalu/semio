@@ -14,7 +14,7 @@ use semio_framework_plugin::WorldSunConfig;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -177,34 +177,103 @@ pub fn lowpoly_sun_config(config: &LowpolyConfig) -> WorldSunConfig {
 //#region 🔖️ConfigMutations
 /// 🧮️ B1: `LowpolyConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1 `LowpolyPlayRuntime` field
 /// writes); each variant's inverse is the same variant carrying the base value of exactly the fields it owns.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum LowpolyConfigMutation {
+
     #[dsl(key = "active-object")]
-    SetActiveObject { object_id: String },
+    SetActiveObject(SetActiveObjectEdit),
     #[dsl(key = "paint-utility")]
-    SetPaintUtility { value: String },
+    SetPaintUtility(SetPaintUtilityEdit),
     #[dsl(key = "active-paint-layer")]
-    SetActivePaintLayer { value: u32 },
+    SetActivePaintLayer(SetActivePaintLayerEdit),
     #[dsl(key = "utility-params")]
-    SetUtilityParams { json: String },
+    SetUtilityParams(SetUtilityParamsEdit),
     #[dsl(key = "paint-color")]
-    SetPaintColor { r: u8, g: u8, b: u8, a: u8 },
+    SetPaintColor(SetPaintColorEdit),
     #[dsl(key = "world-camera")]
-    SetWorldCamera {
-        #[dsl(coord)]
-        position: [f64; 3],
-        #[dsl(coord)]
-        target: [f64; 3],
-        fov: f64,
-    },
+    SetWorldCamera(SetWorldCameraEdit),
     #[dsl(key = "engagement-input")]
-    SetEngagementInput { value: String },
+    SetEngagementInput(SetEngagementInputEdit),
     #[dsl(key = "show-edges")]
-    SetShowEdges { value: bool },
+    SetShowEdges(SetShowEdgesEdit),
     #[dsl(key = "sun")]
-    SetSun { enabled: bool, azimuth: f64, elevation: f64, intensity: f64, color: String },
+    SetSun(SetSunEdit),
 }
 
+/// 📦️ `SetActiveObject` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetActiveObjectEdit {
+    pub object_id: String,
+}
+
+/// 📦️ `SetPaintUtility` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetPaintUtilityEdit {
+    pub value: String,
+}
+
+/// 📦️ `SetActivePaintLayer` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetActivePaintLayerEdit {
+    pub value: u32,
+}
+
+/// 📦️ `SetUtilityParams` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetUtilityParamsEdit {
+    pub json: String,
+}
+
+/// 📦️ `SetPaintColor` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetPaintColorEdit {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
+}
+
+/// 📦️ `SetWorldCamera` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetWorldCameraEdit {
+    #[dsl(coord)]
+    pub position: [f64; 3],
+    #[dsl(coord)]
+    pub target: [f64; 3],
+    pub fov: f64,
+}
+
+/// 📦️ `SetEngagementInput` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetEngagementInputEdit {
+    pub value: String,
+}
+
+/// 📦️ `SetShowEdges` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetShowEdgesEdit {
+    pub value: bool,
+}
+
+/// 📦️ `SetSun` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetSunEdit {
+    pub enabled: bool,
+    pub azimuth: f64,
+    pub elevation: f64,
+    pub intensity: f64,
+    pub color: String,
+}
 //#region 🔖️OpCodec
 impl protocol::OpText for LowpolyConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -416,30 +485,30 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            LowpolyConfigMutation::SetActiveObject { .. } => &Self::DESCRIPTORS[0],
-            LowpolyConfigMutation::SetPaintUtility { .. } => &Self::DESCRIPTORS[1],
-            LowpolyConfigMutation::SetActivePaintLayer { .. } => &Self::DESCRIPTORS[2],
-            LowpolyConfigMutation::SetUtilityParams { .. } => &Self::DESCRIPTORS[3],
-            LowpolyConfigMutation::SetPaintColor { .. } => &Self::DESCRIPTORS[4],
-            LowpolyConfigMutation::SetWorldCamera { .. } => &Self::DESCRIPTORS[5],
-            LowpolyConfigMutation::SetEngagementInput { .. } => &Self::DESCRIPTORS[6],
-            LowpolyConfigMutation::SetShowEdges { .. } => &Self::DESCRIPTORS[7],
-            LowpolyConfigMutation::SetSun { .. } => &Self::DESCRIPTORS[8],
+            LowpolyConfigMutation::SetActiveObject(_) => &Self::DESCRIPTORS[0],
+            LowpolyConfigMutation::SetPaintUtility(_) => &Self::DESCRIPTORS[1],
+            LowpolyConfigMutation::SetActivePaintLayer(_) => &Self::DESCRIPTORS[2],
+            LowpolyConfigMutation::SetUtilityParams(_) => &Self::DESCRIPTORS[3],
+            LowpolyConfigMutation::SetPaintColor(_) => &Self::DESCRIPTORS[4],
+            LowpolyConfigMutation::SetWorldCamera(_) => &Self::DESCRIPTORS[5],
+            LowpolyConfigMutation::SetEngagementInput(_) => &Self::DESCRIPTORS[6],
+            LowpolyConfigMutation::SetShowEdges(_) => &Self::DESCRIPTORS[7],
+            LowpolyConfigMutation::SetSun(_) => &Self::DESCRIPTORS[8],
         }
     }
 
     /// 📦️ Each variant sets only the slots of the fields it owns.
     fn diff(&self, base: &LowpolyConfig) -> protocol::MutationOutcome<LowpolyConfigDiff> {
         protocol::MutationOutcome::new(match self {
-            LowpolyConfigMutation::SetActiveObject { object_id } => LowpolyConfigDiff { active_object_id: Some(object_id.clone()), ..Default::default() },
-            LowpolyConfigMutation::SetPaintUtility { value } => LowpolyConfigDiff { paint_utility: Some(value.clone()), ..Default::default() },
-            LowpolyConfigMutation::SetActivePaintLayer { value } => LowpolyConfigDiff { active_paint_layer: Some(*value), ..Default::default() },
-            LowpolyConfigMutation::SetUtilityParams { json } => LowpolyConfigDiff { utility_params_json: Some(json.clone()), ..Default::default() },
-            LowpolyConfigMutation::SetPaintColor { r, g, b, a } => LowpolyConfigDiff { paint_color_r: Some(*r), paint_color_g: Some(*g), paint_color_b: Some(*b), paint_color_a: Some(*a), ..Default::default() },
-            LowpolyConfigMutation::SetWorldCamera { position, target, fov } => LowpolyConfigDiff { world_camera_position: Some(*position), world_camera_target: Some(*target), world_camera_fov: Some(*fov), ..Default::default() },
-            LowpolyConfigMutation::SetEngagementInput { value } => LowpolyConfigDiff { engagement_input: Some(value.clone()), ..Default::default() },
-            LowpolyConfigMutation::SetShowEdges { value } => LowpolyConfigDiff { show_edges: Some(*value), ..Default::default() },
-            LowpolyConfigMutation::SetSun { enabled, azimuth, elevation, intensity, color } => LowpolyConfigDiff {
+            LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id }) => LowpolyConfigDiff { active_object_id: Some(object_id.clone()), ..Default::default() },
+            LowpolyConfigMutation::SetPaintUtility(SetPaintUtilityEdit { value }) => LowpolyConfigDiff { paint_utility: Some(value.clone()), ..Default::default() },
+            LowpolyConfigMutation::SetActivePaintLayer(SetActivePaintLayerEdit { value }) => LowpolyConfigDiff { active_paint_layer: Some(*value), ..Default::default() },
+            LowpolyConfigMutation::SetUtilityParams(SetUtilityParamsEdit { json }) => LowpolyConfigDiff { utility_params_json: Some(json.clone()), ..Default::default() },
+            LowpolyConfigMutation::SetPaintColor(SetPaintColorEdit { r, g, b, a }) => LowpolyConfigDiff { paint_color_r: Some(*r), paint_color_g: Some(*g), paint_color_b: Some(*b), paint_color_a: Some(*a), ..Default::default() },
+            LowpolyConfigMutation::SetWorldCamera(SetWorldCameraEdit { position, target, fov }) => LowpolyConfigDiff { world_camera_position: Some(*position), world_camera_target: Some(*target), world_camera_fov: Some(*fov), ..Default::default() },
+            LowpolyConfigMutation::SetEngagementInput(SetEngagementInputEdit { value }) => LowpolyConfigDiff { engagement_input: Some(value.clone()), ..Default::default() },
+            LowpolyConfigMutation::SetShowEdges(SetShowEdgesEdit { value }) => LowpolyConfigDiff { show_edges: Some(*value), ..Default::default() },
+            LowpolyConfigMutation::SetSun(SetSunEdit { enabled, azimuth, elevation, intensity, color }) => LowpolyConfigDiff {
                 sun_enabled: Some(*enabled),
                 sun_azimuth: Some(*azimuth),
                 sun_elevation: Some(*elevation),
@@ -452,21 +521,19 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
 
     fn inverse(&self, base: &LowpolyConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            LowpolyConfigMutation::SetActiveObject { .. } => LowpolyConfigMutation::SetActiveObject { object_id: base.active_object_id.clone() },
-            LowpolyConfigMutation::SetPaintUtility { .. } => LowpolyConfigMutation::SetPaintUtility { value: base.paint_utility.clone() },
-            LowpolyConfigMutation::SetActivePaintLayer { .. } => LowpolyConfigMutation::SetActivePaintLayer { value: base.active_paint_layer },
-            LowpolyConfigMutation::SetUtilityParams { .. } => LowpolyConfigMutation::SetUtilityParams { json: base.utility_params_json.clone() },
-            LowpolyConfigMutation::SetPaintColor { .. } => LowpolyConfigMutation::SetPaintColor { r: base.paint_color_r, g: base.paint_color_g, b: base.paint_color_b, a: base.paint_color_a },
-            LowpolyConfigMutation::SetWorldCamera { .. } => LowpolyConfigMutation::SetWorldCamera { position: base.world_camera_position, target: base.world_camera_target, fov: base.world_camera_fov },
-            LowpolyConfigMutation::SetEngagementInput { .. } => LowpolyConfigMutation::SetEngagementInput { value: base.engagement_input.clone() },
-            LowpolyConfigMutation::SetShowEdges { .. } => LowpolyConfigMutation::SetShowEdges { value: base.show_edges },
-            LowpolyConfigMutation::SetSun { .. } => LowpolyConfigMutation::SetSun {
-                enabled: base.sun_enabled,
+            LowpolyConfigMutation::SetActiveObject(_) => LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id: base.active_object_id.clone() }),
+            LowpolyConfigMutation::SetPaintUtility(_) => LowpolyConfigMutation::SetPaintUtility(SetPaintUtilityEdit { value: base.paint_utility.clone() }),
+            LowpolyConfigMutation::SetActivePaintLayer(_) => LowpolyConfigMutation::SetActivePaintLayer(SetActivePaintLayerEdit { value: base.active_paint_layer }),
+            LowpolyConfigMutation::SetUtilityParams(_) => LowpolyConfigMutation::SetUtilityParams(SetUtilityParamsEdit { json: base.utility_params_json.clone() }),
+            LowpolyConfigMutation::SetPaintColor(_) => LowpolyConfigMutation::SetPaintColor(SetPaintColorEdit { r: base.paint_color_r, g: base.paint_color_g, b: base.paint_color_b, a: base.paint_color_a }),
+            LowpolyConfigMutation::SetWorldCamera(_) => LowpolyConfigMutation::SetWorldCamera(SetWorldCameraEdit { position: base.world_camera_position, target: base.world_camera_target, fov: base.world_camera_fov }),
+            LowpolyConfigMutation::SetEngagementInput(_) => LowpolyConfigMutation::SetEngagementInput(SetEngagementInputEdit { value: base.engagement_input.clone() }),
+            LowpolyConfigMutation::SetShowEdges(_) => LowpolyConfigMutation::SetShowEdges(SetShowEdgesEdit { value: base.show_edges }),
+            LowpolyConfigMutation::SetSun(_) => LowpolyConfigMutation::SetSun(SetSunEdit { enabled: base.sun_enabled,
                 azimuth: base.sun_azimuth,
                 elevation: base.sun_elevation,
                 intensity: base.sun_intensity,
-                color: base.sun_color.clone(),
-            },
+                color: base.sun_color.clone(), }),
         }])
     }
 }

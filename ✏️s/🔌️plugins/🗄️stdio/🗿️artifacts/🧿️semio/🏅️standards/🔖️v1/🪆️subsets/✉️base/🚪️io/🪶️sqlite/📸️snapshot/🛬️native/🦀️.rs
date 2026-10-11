@@ -8,7 +8,7 @@ pub(crate) fn decode<T:semio_framework_value::retirement::RetireOwned>(payload:&
  let size=match payload{store::io::IoPayload::Binary(v)=>v.len(),store::io::IoPayload::Text(v)=>v.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio native input exceeds file limit"))}
  control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
  let native_before=native_control.owned_bytes();
-    let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
+    let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native| {native.scoped_observer(&mut |event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
 
  let result=(||->Result<T,ValueError>{let result=match payload{
  store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,id,store::semio_format::Component::Pack,1,native)?;binary(body,native,limits)?},
@@ -60,7 +60,7 @@ impl<T:semio_framework_value::retirement::RetireOwned> Owned<T>{
  pub(crate) fn take(mut self)->T{self.value.take().expect("live Semio native owner")}
 }
 impl<T:semio_framework_value::retirement::RetireOwned> Drop for Owned<T>{
- fn drop(&mut self){if let Some(value)=self.value.take(){let mut cursor=semio_framework_value::retirement::owned_retirement(value);while !cursor.terminal_is_empty(){cursor.close_step(256,65536).expect("valid Semio native retirement cursor");}}}
+ fn drop(&mut self){if let Some(value)=self.value.take(){let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:usize::MAX,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX};let (mut cursor,_)=semio_framework_value::retirement::admit_owned_retirement(value,grant).unwrap_or_else(|(error,_)|panic!("cold Semio native retirement refused: {error:?}"));while !cursor.terminal_is_empty(){cursor.close_step(grant).expect("valid Semio native retirement cursor");}}}
 }
 
 pub(crate) fn binary_list<T:semio_framework_value::retirement::RetireOwned>(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,entities:&mut usize,mut read:impl FnMut(&mut store::ByteReader<'_>,&mut NativeDecodeControl<'_>,&mut usize)->Result<T,ValueError>)->Result<Vec<T>,ValueError>{
@@ -71,7 +71,7 @@ pub(crate) fn text_list<T:semio_framework_value::retirement::RetireOwned>(value:
 }
 pub(crate) fn float32(value:&str,control:&mut NativeDecodeControl<'_>)->Result<f32,ValueError>{control.scoped_stage(|control|{control.begin_stage(value.len())?;for _ in value.bytes(){control.step()?;}if let Some(word)=value.strip_prefix("nan32_"){if word.len()!=8||!word.bytes().all(|byte|byte.is_ascii_hexdigit()){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 NaN word"))}let bits=u32::from_str_radix(word,16).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 NaN word"))?;if bits&0x7f800000!=0x7f800000||bits&0x7fffff==0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio native binary32 word has non-NaN class"))}return Ok(f32::from_bits(bits))}value.parse::<f32>().map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 number"))})}
 
-pub(crate) fn decode_snapshot(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot,ValueError>{super::semantic::layout(control.limits())?;decode(payload,crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,control,binary_snapshot,text_snapshot)}
+pub(crate) fn decode_snapshot(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot,ValueError>{super::semantic::layout(control.limits())?;decode(payload,crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,control,binary_snapshot,text_snapshot,native_control)}
 fn binary_snapshot(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot,ValueError>{
  use crate::standards::v1::subsets::base::schema::snapshot::SemioSubsetSnapshot as S;use crate::standards::v1::subsets as owners;
  let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio envelope native format"))}let ordinal=reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;let schema=control.borrow_text(bytes(&mut reader)?)?;let limits=super::semantic::subset_limits(limits,schema.len(),super::semantic::tag(ordinal)?)?;let schema=Owned::new(control.copy_text(schema)?);let payload=reader.read_bytes(reader.remaining()).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;
@@ -139,3 +139,7 @@ pub(crate)fn hex_text_extent(value:&str,control:&mut NativeDecodeControl<'_>)->R
   if used!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio native hexadecimal text is invalid"))}Ok(value.len()/2)
  })
 }
+pub(crate) fn text_into(output:&mut String,text:&str,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{control.copy_text_into(text,output)}
+
+#[path="🫙️workspace/🦀️.rs"]
+pub(crate) mod workspace;

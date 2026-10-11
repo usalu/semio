@@ -1782,8 +1782,12 @@
         "depInfo": [
           {
             "path": "/build/lib.d",
-            "text": "lib.rlib: /workspace/lib.rs",
-            "baseDirectory": "/workspace"
+            "sha256": "ea2941a0f38e7c5e1ee4d88f146618a3fe930ebec82762c09b0f2ae923c66b24",
+            "baseDirectory": "/workspace",
+            "sources": [
+              "/workspace/lib.rs"
+            ],
+            "checksums": []
           }
         ],
         "inputs": [
@@ -1809,8 +1813,12 @@
         "depInfo": [
           {
             "path": "/build/lib.d",
-            "text": "lib.rlib: /workspace/lib.rs",
-            "baseDirectory": "/workspace"
+            "sha256": "ea2941a0f38e7c5e1ee4d88f146618a3fe930ebec82762c09b0f2ae923c66b24",
+            "baseDirectory": "/workspace",
+            "sources": [
+              "/workspace/lib.rs"
+            ],
+            "checksums": []
           }
         ],
         "inputs": [
@@ -1870,8 +1878,12 @@
             "depInfo": [
               {
                 "path": "/build/lib.d",
-                "text": "lib.rlib: /workspace/lib.rs",
-                "baseDirectory": "/workspace"
+                "sha256": "ea2941a0f38e7c5e1ee4d88f146618a3fe930ebec82762c09b0f2ae923c66b24",
+                "baseDirectory": "/workspace",
+                "sources": [
+                  "/workspace/lib.rs"
+                ],
+                "checksums": []
               }
             ],
             "inputs": [
@@ -1935,8 +1947,12 @@
             "depInfo": [
               {
                 "path": "/build/lib.d",
-                "text": "lib.rlib: /workspace/lib.rs",
-                "baseDirectory": "/workspace"
+                "sha256": "ea2941a0f38e7c5e1ee4d88f146618a3fe930ebec82762c09b0f2ae923c66b24",
+                "baseDirectory": "/workspace",
+                "sources": [
+                  "/workspace/lib.rs"
+                ],
+                "checksums": []
               }
             ],
             "inputs": [
@@ -2001,7 +2017,6 @@
       "name": "RuntimeCargoCompilerResourcesV1",
       "value": {
         "path": "/build/observation.json",
-        "text": "{}",
         "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "observedAtMs": 2,
         "producerUnit": {
@@ -2084,7 +2099,6 @@
     {
       "name": "RuntimeCargoCompilerResourcesV1",
       "value": {
-        "text": "{}",
         "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "observedAtMs": 2,
         "producerUnit": {
@@ -2192,8 +2206,12 @@
         "depInfo": [
           {
             "path": "/build/lib.d",
-            "text": "lib.rlib: /workspace/lib.rs",
-            "baseDirectory": null
+            "sha256": "ea2941a0f38e7c5e1ee4d88f146618a3fe930ebec82762c09b0f2ae923c66b24",
+            "baseDirectory": null,
+            "sources": [
+              "/workspace/lib.rs"
+            ],
+            "checksums": []
           }
         ],
         "inputs": [
@@ -2240,8 +2258,12 @@
         "depInfo": [
           {
             "path": "/build/lib.d",
-            "text": "lib.rlib: /workspace/lib.rs",
-            "baseDirectory": "/workspace"
+            "sha256": "ea2941a0f38e7c5e1ee4d88f146618a3fe930ebec82762c09b0f2ae923c66b24",
+            "baseDirectory": "/workspace",
+            "sources": [
+              "/workspace/lib.rs"
+            ],
+            "checksums": []
           }
         ],
         "inputs": [
@@ -2288,8 +2310,12 @@
         "depInfo": [
           {
             "path": "/build/lib.d",
-            "text": "lib.rlib: /workspace/lib.rs",
-            "baseDirectory": "/workspace"
+            "sha256": "ea2941a0f38e7c5e1ee4d88f146618a3fe930ebec82762c09b0f2ae923c66b24",
+            "baseDirectory": "/workspace",
+            "sources": [
+              "/workspace/lib.rs"
+            ],
+            "checksums": []
           }
         ],
         "inputs": [
@@ -2349,8 +2375,12 @@
             "depInfo": [
               {
                 "path": "/build/lib.d",
-                "text": "lib.rlib: /workspace/lib.rs",
-                "baseDirectory": "/workspace"
+                "sha256": "ea2941a0f38e7c5e1ee4d88f146618a3fe930ebec82762c09b0f2ae923c66b24",
+                "baseDirectory": "/workspace",
+                "sources": [
+                  "/workspace/lib.rs"
+                ],
+                "checksums": []
               }
             ],
             "inputs": [

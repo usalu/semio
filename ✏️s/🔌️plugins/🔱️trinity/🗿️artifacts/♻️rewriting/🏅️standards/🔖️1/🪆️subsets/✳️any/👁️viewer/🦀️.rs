@@ -29,7 +29,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant — real per-command payload modules the way `✏️editor/🎮️commands/*`
 /// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum TrinityRewritingViewCommand {
     #[default]
     Noop,
@@ -76,12 +76,6 @@ impl ArtifactViewer for TrinityRewritingViewer {
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
         crate::content::genesis_working_child_pack(snapshot, slot, child_id)
-    }
-
-    /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
-    /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::schema::retirement::document_store_owners())
     }
 
     fn initial_snapshot() -> RewritingSnapshot {

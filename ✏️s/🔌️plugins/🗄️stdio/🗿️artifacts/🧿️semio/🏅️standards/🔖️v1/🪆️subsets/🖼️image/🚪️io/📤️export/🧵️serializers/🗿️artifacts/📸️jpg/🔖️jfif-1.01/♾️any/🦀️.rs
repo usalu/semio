@@ -34,7 +34,7 @@ impl ArtifactSerializer for SemioImageToJpg {
             return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "semio/image→jpg: frame pixel length does not match width*height*4")));
         }
         let other_segments = from.metadata.iter().filter(|m| m.key == "comment").map(|m| JpgSegment { marker: COM_MARKER, data: m.value.clone().into_bytes() }).collect();
-        Ok(JpgSnapshot { schema: semio_s_artifact_stdio_jpg::STDIO_JPG_DOCUMENT_SCHEMA.into(), width: from.width, height: from.height, pixels: frame.rgba8.clone(), other_segments, ..JpgSnapshot::default() })
+        Ok(JpgSnapshot { schema: semio_s_artifact_stdio_jpg::STDIO_JPG_DOCUMENT_SCHEMA.into(), image: semio_s_artifact_stdio_jpg::JpgImage { width: from.width, height: from.height, pixels: frame.rgba8.clone(), other_segments, ..Default::default() } })
     }
 }
 //#endregion 🔖️Serializer

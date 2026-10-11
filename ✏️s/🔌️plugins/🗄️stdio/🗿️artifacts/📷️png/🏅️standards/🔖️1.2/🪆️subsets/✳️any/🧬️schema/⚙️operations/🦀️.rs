@@ -236,7 +236,7 @@ pub fn paint_native_region_owned_controlled(snapshot:&PngSnapshot,revision:&str,
     let mut operation=PngNativePaintWorkOperation::try_new(snapshot,revision,region,paint,maximum_owned_bytes)?;
     let mut sequence=0;let id=semio_framework_job::allocate_operation_id();let cancel=semio_framework_job::root_cancel_token();
     let result=if !progress(PngNativePaintProgress {phase:PngNativePaintPhase::Copy,completed:0,total:snapshot.image.samples.len(),owned_bytes:0}) {Err("png: native paint cancelled".into())} else {loop {
-        let mut context=semio_framework_job::StepContext::new(id,semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(512,u64::MAX),cancel.clone(),||Some(0),&mut sequence);
+        let mut retained_progress=semio_framework_value::retained_clone::RetainedCloneProgress::default();let mut context=semio_framework_job::StepContext::new(id,semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(512,u64::MAX,semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64}),cancel.clone(),||Some(0),&mut sequence,&mut retained_progress);
         match operation.advance(&mut context) {
             Ok(PngNativePaintWorkStep::Yield(checkpoint))=>{if !progress(checkpoint) {break Err("png: native paint cancelled".into());}},
             Ok(PngNativePaintWorkStep::Cancelled)=>break Err("png: native paint cancelled".into()),

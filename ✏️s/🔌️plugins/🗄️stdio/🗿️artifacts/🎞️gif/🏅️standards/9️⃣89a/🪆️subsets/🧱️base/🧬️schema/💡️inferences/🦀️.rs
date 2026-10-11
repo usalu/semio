@@ -13,7 +13,7 @@ use super::dimensions::compute_gif_dimensions;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a gif89a snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif.89a.inference")]
 pub struct GifInference {

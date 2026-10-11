@@ -65,7 +65,7 @@ pub const EQUATION_DIALECT: Dialect = Dialect { artifact_kind: "s.mathematical.e
 //#endregion 🔖️Constants
 
 //#region 🔖️Document
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct EquationNode {
     pub id: String,
@@ -75,7 +75,7 @@ pub struct EquationNode {
 }
 
 /// 🔌️ JSON-facing edge — plain `source`/`target` id strings for the JS frontend's node-graph payloads.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct EquationEdge {
     pub id: String,
@@ -84,7 +84,7 @@ pub struct EquationEdge {
 }
 
 /// 🕸️ Graph playground state: quadrant toggle, retained layout, and the active algorithm overlay.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct EquationGraph {
     pub directed: bool,
@@ -117,7 +117,7 @@ impl Default for EquationGraph {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 pub struct EquationPoint {
     pub x: f64,
     pub y: f64,
@@ -136,7 +136,7 @@ impl From<EquationPoint> for (f64, f64) {
 }
 
 /// 📐️ Geometry playground state: a point cloud for convex-hull/centroid demonstration.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct EquationGeometry {
     pub points: Vec<EquationPoint>,

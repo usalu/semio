@@ -158,7 +158,7 @@ fn process3d_step_from_face_drag(fixture: &Process3dSnapshot, normal: [f64; 3], 
 pub mod world_pointer_down {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "world-pointer-down")]
     pub struct WorldPointerDown {
         #[dsl(coord)]
@@ -193,7 +193,7 @@ pub mod world_pointer_down {
 pub mod world_face_drag_end {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "world-face-drag-end")]
     pub struct WorldFaceDragEnd {
         #[dsl(coord)]

@@ -157,7 +157,7 @@ fn durable_shape<'a>(kind:&str,bytes:&'a[u8],checkpoint:impl FnMut(usize,usize)-
 }
 fn durable_word(bytes:&[u8])->Result<u32,ValueError>{Ok(u32::from_le_bytes(bytes.try_into().map_err(|_|invalid("Remodeling durable word width differs"))?))}
 fn project_durable(p:&mut RowWriter<'_,'_>,parent:i64,ordinal:usize,kind:&str,bytes:&[u8])->Result<(),ValueError>{
- let shape=durable_shape(kind,bytes,|done,total|p.checkpoint_work(done,total))?;
+ let shape=durable_shape(kind,bytes,|done,total|p.control().checkpoint(SqliteSnapshotPhase::ProjectSnapshot,done,total))?;
  let id=p.insert("remodel_durable_chunk",&[Cell::Integer(parent),Cell::Integer(i64::try_from(ordinal).map_err(|e|invalid(e.to_string()))?),shape.field.map(Cell::Text).unwrap_or(Cell::Null),shape.tag.map(|tag|Cell::Integer(i64::from(tag))).unwrap_or(Cell::Null),Cell::Text(shape.kind),Cell::Integer(i64::try_from(shape.count).map_err(|e|invalid(e.to_string()))?),if shape.kind=="raw"{Cell::Blob(bytes)}else{Cell::Null}])?;
  match shape.kind{
   "raw"=>return Ok(()),"text"=>{p.insert("remodel_durable_text",&[Cell::Integer(id),Cell::Text(shape.text.ok_or_else(||invalid("Remodeling durable text is absent"))?)])?;},

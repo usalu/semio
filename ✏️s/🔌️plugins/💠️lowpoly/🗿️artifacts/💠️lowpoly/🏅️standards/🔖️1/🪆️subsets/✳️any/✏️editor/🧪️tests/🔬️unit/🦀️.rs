@@ -267,8 +267,8 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
             .expect("progress"),
         ArtifactCommandWorkStep::Progress { .. }
     ));
-    let mut checkpoint = [0_u8; 88];
-    uninterrupted.checkpoint(&mut checkpoint).expect("checkpoint");
+    let checkpoint: Vec<u8> = (0..).map_while(|index| uninterrupted.checkpoint_byte(index)).collect();
+    assert_eq!(checkpoint.len(), 72);
     let mut wrong_base = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, [18; 32], context_identity);
     assert!(wrong_base.restore(&checkpoint).is_err());
     let mut replayed = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
@@ -336,10 +336,14 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
             .expect("exact retry"),
         ArtifactCommandWorkStep::Progress { .. }
     ));
-    assert_eq!(replayed.close_step(0, 0), InteractiveJobCloseStep::Blocked);
+    assert_eq!(replayed.close_step(close_grant(0)), InteractiveJobCloseStep::Blocked);
     replayed.begin_close();
-    assert_eq!(replayed.close_step(1, 1), InteractiveJobCloseStep::Complete);
+    assert_eq!(replayed.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
     assert!(replayed.terminal_is_empty());
+}
+
+fn close_grant(maximum_items: usize) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 8 }
 }
 
 /// ⏱️ The interactive-step law over the UNIT BOX, not the concrete-forest default document: on 195
@@ -406,7 +410,7 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
             best = best.min(slowest);
             if !refused {
                 work.begin_close();
-                assert_eq!(work.close_step(1, LOWPOLY_ARTIFACT_STORE_MAXIMUM_BYTES), InteractiveJobCloseStep::Complete);
+                assert_eq!(work.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
             }
             if best < INTERACTIVE_TURN_CEILING {
                 break;

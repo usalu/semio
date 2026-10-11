@@ -2,9 +2,14 @@
 use super::*;
 use crate::test_app_mutation_fixture::{TestSnapshot,TestMutation};
 use semio_framework_job::InteractiveJob;
+use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
+use std::mem::size_of;
+fn funds(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
+fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"fixture child depth overflow"))?;Ok(demand)}
 struct OriginalAuthority{payload:Option<ControlledRetirement<String>>,pointer:usize,closing:bool}
 impl ArtifactStoreInitializationAuthority<TestSnapshot,TestMutation> for OriginalAuthority{
- fn step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>)->semio_framework_job::StepOutcome{semio_framework_job::StepOutcome::Yield}
+ fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,ValueError>{semio_framework_job::JobOutcomeBorrow::admit_yield(cx)}
+ fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{descriptor.yielded()}
  fn request_cancel(&mut self){self.closing=true;}
  fn begin_close(&mut self){self.closing=true;}
  fn take_candidate(&mut self)->Option<ArtifactStore<TestSnapshot,TestMutation>>{None}

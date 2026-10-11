@@ -22,7 +22,7 @@ protocol::list_delta! {
 }
 
 /// 🩹 Field patch of one artifact row; every present slot is the new value of exactly that field.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct SSpaceArtifactPatch {
     pub name: Option<String>,
@@ -72,7 +72,6 @@ impl protocol::list_delta::RowPatch<SpaceArtifactRow> for SSpaceArtifactPatch {
         let later = &later;
         *self = {
         SSpaceArtifactPatch {
-            id: first.id.clone(),
             name: later.name.clone().or_else(|| first.name.clone()),
             kind_id: later.kind_id.clone().or_else(|| first.kind_id.clone()),
             schema: later.schema.clone().or_else(|| first.schema.clone()),

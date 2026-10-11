@@ -28,7 +28,7 @@ pub const REMODELING_IMPORT_TOOL_ID: &str = "s.remodel.remodeling@1/*#editor#imp
 /// 🧾️ The ONE transaction an import building `stream_id` streams into, minted from that stream: every tick of the import,
 /// its commit and its abort name the same ref.
 pub fn import_transaction(stream_id: &str) -> protocol::TransactionRef {
-    protocol::TransactionRef::mint(&protocol::ActorId(stream_id.to_string()), &protocol::HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, REMODELING_IMPORT_TOOL_ID)
+    protocol::TransactionRef::mint(&protocol::ActorId(stream_id.into()), &protocol::HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, REMODELING_IMPORT_TOOL_ID)
 }
 //#endregion 🧾️ImportTransaction
 
@@ -86,7 +86,7 @@ fn checker_image(w: u32, h: u32, cell: u32) -> remodeling_image::ImageRgba8 {
 }
 //#endregion 🧪️UnitTests
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "import-video-frame-payload")]
 pub struct ImportVideoFramePayload {
     pub payload: String,

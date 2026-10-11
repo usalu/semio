@@ -23,7 +23,7 @@ pub use splice::Splice;
 /// not change at all — a typed three-state instead of the `Option<Option<ArtifactLink>>` double
 /// option, whose JSON form collapsed "unchanged" and "now detached" onto the same `null` and made a
 /// detach undecodable (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END).
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum EnergyLinkSlotDelta {
     Detached,
@@ -47,7 +47,7 @@ impl EnergyLinkSlotDelta {
 
 //#region 🔖️Diff
 /// 🔺️ Sparse delta for the energy-model artifact: the model patch plus the two link slots. Absent means unchanged.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[artifact_schema(id = "s.energy.model")]
 #[value(rename_all = "camelCase")]
 pub struct EnergyModelDiff {

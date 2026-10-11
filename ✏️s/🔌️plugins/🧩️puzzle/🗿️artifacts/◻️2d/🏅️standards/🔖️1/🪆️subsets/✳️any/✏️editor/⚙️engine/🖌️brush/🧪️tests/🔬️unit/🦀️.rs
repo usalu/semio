@@ -2,8 +2,11 @@ mod tests {
     use crate::editor::puzzle2d::engine::board_host::unit_tests::context::*;
     use crate::editor::puzzle2d::engine::canvas::Point;
     use crate::editor::puzzle2d::engine::{handle_position_on_circle, BoardHost, HandleDescriptor, NodeDescriptor, SceneDescriptor};
-    use crate::editor::puzzle2d::engine::{BoardFillCaptureStep, BoardFillJob};
-    use semio_framework_job::{BatchDriveConfig, BatchJobParams, InteractiveStage, Operation, StepOutcome, WorkerJobPoll};
+    use crate::editor::puzzle2d::engine::{BoardFillCaptureStep, BoardFillCheckpoint, BoardFillCommitCandidate, BoardFillJob, BoardFillPlacement};
+    use semio_framework_job::{
+        BatchDriveConfig, BatchJobParams, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobOutcomeView, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, StepBudget, WorkerJobAdmissionContext,
+        WorkerJobCloseStep, WorkerJobPoll,
+    };
     use semio_framework_pack_json::json;
 
     const FILL_TEST_PUMP_LIMIT: usize = 4_000_000;
@@ -36,29 +39,130 @@ mod tests {
         panic!("fill capture exceeded bounded cursor opportunities");
     }
 
-    fn mount_fill_session(job: BoardFillJob, params: BatchJobParams) -> semio_framework_job::MountedWorkerJobSession<BoardFillJob> {
-        match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
-            Ok(session) => session,
-            Err(mut rejected) => {
-                rejected.begin_close();
-                for _ in 0..FILL_TEST_PUMP_LIMIT {
-                    if matches!(rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && rejected.terminal_is_empty() {
-                        break;
-                    }
+    type FillSession = semio_framework_job::MountedWorkerJobSession<BoardFillJob>;
+
+    const FILL_TEST_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 4096, maximum_copy_bytes: 8 << 20, maximum_capacity_bytes: 8 << 20, maximum_release_bytes: 8 << 20, maximum_depth: 256 };
+
+    #[derive(Debug, PartialEq)]
+    enum FillSeen {
+        Yield,
+        Preview,
+        Checkpoint,
+        Complete(Option<BoardFillCommitCandidate>),
+        Cancelled,
+        Fault,
+    }
+
+    fn self_funded(demand: RetirementDemand) -> RetainedCloneGrant {
+        RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+    }
+
+    fn fill_params_with(operation: Operation, generation: semio_framework_job::Generation, cancel: semio_framework_job::CancelToken, site: &'static str, now_us: fn() -> Option<u64>) -> BatchJobParams {
+        BatchJobParams {
+            operation: operation.operation,
+            generation,
+            cancel,
+            config: BatchDriveConfig { retained: FILL_TEST_GRANT, site, stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
+            now_us,
+        }
+    }
+
+    fn fill_params(operation: Operation, site: &'static str) -> BatchJobParams {
+        fill_params_with(operation, operation.generation, semio_framework_job::root_cancel_token(), site, semio_framework_job::default_now_us)
+    }
+
+    fn fill_placement_witness(placement: &BoardFillPlacement) -> FillPlacementWitness {
+        FillPlacementWitness {
+            node_kind: placement.node_kind.as_str().to_string(),
+            edge_kind: placement.edge_kind.as_str().to_string(),
+            source: placement.source_handle_id.as_str().to_string(),
+            target: placement.target_handle_id.as_str().to_string(),
+            x: placement.x,
+            y: placement.y,
+        }
+    }
+
+    /// 🚪️ A fill job closes through its own quoted demands; every job must reach terminal-empty before it drops.
+    fn close_fill_job(mut job: BoardFillJob) {
+        InteractiveJob::begin_close(&mut job);
+        for _ in 0..FILL_TEST_PUMP_LIMIT {
+            if InteractiveJob::terminal_is_empty(&job) {
+                return;
+            }
+            let demand = RetirementDemand {
+                copy_bytes: InteractiveJob::next_close_copy_byte_demand(&job).expect("a locally owned fill job quotes its copy demand"),
+                capacity_bytes: InteractiveJob::next_close_capacity_byte_demand(&job, FILL_TEST_GRANT.maximum_copy_bytes).expect("a locally owned fill job quotes its capacity demand"),
+                release_bytes: InteractiveJob::next_close_release_byte_demand(&job).expect("a locally owned fill job quotes its release demand"),
+                depth: InteractiveJob::next_close_depth_demand(&job).expect("a locally owned fill job quotes its depth demand"),
+            };
+            let grant = self_funded(demand);
+            let step = InteractiveJob::close_step(&mut job, grant);
+            assert!(step.progress().fits(grant), "a fill job close receipt must fit its own quoted grant");
+            assert!(!matches!(step, InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. }), "a locally owned fill job close has no external owner and no refusal");
+        }
+        panic!("detached fill close exceeded bounded opportunities");
+    }
+
+    /// 🧹 A placement retires through its own quoted release demand; it asserts terminal-empty when dropped.
+    fn retire_fill_placement(mut placement: BoardFillPlacement) {
+        for _ in 0..FILL_TEST_PUMP_LIMIT {
+            if placement.terminal_is_empty() {
+                return;
+            }
+            let grant = self_funded(RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), ..Default::default() });
+            let step = placement.close_step(grant);
+            assert!(step.progress().fits(grant), "a fill placement close receipt must fit its own quoted grant");
+        }
+        panic!("fill placement close exceeded bounded opportunities");
+    }
+
+    /// 🧹 A capture retires through its own quoted release demand.
+    fn retire_fill_capture(capture: &mut crate::editor::puzzle2d::engine::BoardFillSnapshotCapture) {
+        capture.begin_close();
+        for _ in 0..FILL_TEST_PUMP_LIMIT {
+            if capture.terminal_is_empty() {
+                return;
+            }
+            let grant = self_funded(RetirementDemand { release_bytes: capture.next_close_release_byte_demand(), ..Default::default() });
+            let step = capture.close_step(grant);
+            assert!(step.progress().fits(grant), "a fill capture close receipt must fit its own quoted grant");
+        }
+        panic!("fill capture close exceeded bounded opportunities");
+    }
+
+    fn mount_fill_session(job: BoardFillJob, params: BatchJobParams) -> FillSession {
+        let (operation, generation) = (params.operation, params.generation);
+        let mut job_slot = Some(job);
+        let mut params_slot = Some(params);
+        let mut recipient = RetainedCloneProgress::default();
+        let admitted = match WorkerJobAdmissionContext::new(operation, generation, StepBudget::new(1, u64::MAX, FILL_TEST_GRANT), semio_framework_job::default_now_us, &mut recipient) {
+            Ok(mut control) => FillSession::try_admit_owned(&mut job_slot, &mut params_slot, &mut control),
+            Err(error) => Err(error),
+        };
+        match admitted {
+            Ok(Some((session, _admission))) => session,
+            Ok(None) | Err(_) => {
+                if let Some(rejected) = job_slot.take() {
+                    close_fill_job(rejected);
                 }
-                assert!(rejected.terminal_is_empty());
                 panic!("mounted fill session admission rejected");
             }
         }
     }
 
-    fn close_fill_session(session: &mut semio_framework_job::MountedWorkerJobSession<BoardFillJob>) {
+    fn close_fill_session(session: &mut FillSession) {
         session.begin_close();
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if matches!(session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::WorkerJobCloseStep::Complete) && session.terminal_is_empty() {
+            if session.terminal_is_empty() {
                 return;
             }
-            std::thread::yield_now();
+            let demand = session.retirement_demands(FILL_TEST_GRANT.maximum_copy_bytes).expect("a mounted fill session quotes its close demand");
+            let grant = self_funded(demand);
+            match session.close_step(grant) {
+                WorkerJobCloseStep::Pending { progress } | WorkerJobCloseStep::Complete { progress } => assert!(progress.fits(grant), "a mounted fill session close receipt must fit its own quoted grant"),
+                WorkerJobCloseStep::Blocked => std::thread::yield_now(),
+                WorkerJobCloseStep::Refused { kind, .. } => panic!("mounted fill close was refused: {kind:?}"),
+            }
         }
         panic!("mounted fill close exceeded bounded opportunities");
     }
@@ -67,9 +171,9 @@ mod tests {
     /// holds its own lane queue, and `Saturated` when that queue is full. Both are back-pressure the
     /// owner is expected to retry — `submit_retained_timer_job` reschedules on exactly these two —
     /// so treating the first refusal as a fault made every mounted fill law flaky-by-construction.
-    fn pump_fill_session(session: &mut semio_framework_job::MountedWorkerJobSession<BoardFillJob>, pool: &semio_framework_async::WorkerPool) -> WorkerJobPoll {
+    fn pump_fill_session(session: &mut FillSession, pool: &semio_framework_async::WorkerPool) -> WorkerJobPoll {
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match session.pump_one(pool, semio_framework_async::Lane::Background) {
+            match session.pump_one(pool, semio_framework_async::Lane::Background, FILL_TEST_GRANT) {
                 Ok(poll) => return poll,
                 Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(
                     semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated,
@@ -85,19 +189,33 @@ mod tests {
         panic!("mounted fill pump never won admission within its bounded opportunities")
     }
 
-    fn close_fill_job(mut job: BoardFillJob) {
-        semio_framework_job::InteractiveJob::begin_close(&mut job);
+    /// 🔎️ Settles the checked-out step receipt and classifies the retained outcome without taking it.
+    fn seen_fill_outcome(session: &mut FillSession) -> FillSeen {
+        if let Some((issued, progress)) = session.take_checked_out_retained_step_receipt() {
+            assert!(progress.fits(issued), "a fill step receipt must fit the grant it was issued under");
+        }
+        match session.checked_out_outcome().expect("checked-out fill outcome view") {
+            Some(JobOutcomeView::Yield { .. }) => FillSeen::Yield,
+            Some(JobOutcomeView::PreviewReady { .. }) => FillSeen::Preview,
+            Some(JobOutcomeView::CheckpointReady { .. }) => FillSeen::Checkpoint,
+            Some(JobOutcomeView::Complete { state, output, .. }) => FillSeen::Complete(BoardFillCommitCandidate::from_complete(state, output)),
+            Some(JobOutcomeView::Cancelled { .. }) => FillSeen::Cancelled,
+            Some(JobOutcomeView::Fault { .. }) => FillSeen::Fault,
+            None => panic!("a checked-out fill outcome must carry a retained outcome"),
+        }
+    }
+
+    fn acknowledge_fill_outcome(session: &mut FillSession) {
+        let acknowledgement = RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..Default::default() };
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if matches!(semio_framework_job::InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES,), semio_framework_job::InteractiveJobCloseStep::Complete)
-                && semio_framework_job::InteractiveJob::terminal_is_empty(&job)
-            {
+            if matches!(session.acknowledge_checked_out_outcome(acknowledgement), RetainedCloneStep::Complete(_)) {
                 return;
             }
         }
-        panic!("detached fill close exceeded bounded opportunities");
+        panic!("fill outcome acknowledgement exceeded bounded opportunities");
     }
 
-    fn adopt_fill_checkpoint(session: &mut semio_framework_job::MountedWorkerJobSession<BoardFillJob>, checkpoint: crate::editor::puzzle2d::engine::BoardFillCheckpoint) {
+    fn adopt_fill_checkpoint(session: &mut FillSession, checkpoint: BoardFillCheckpoint) {
         let Some(job) = session.checked_out_job_mut() else {
             close_fill_job(checkpoint.into_closing_job());
             panic!("checkpoint job owner missing");
@@ -109,11 +227,10 @@ mod tests {
     }
 
     /// 🧹 Retires the large fixed-page checkpoint in a frame disjoint from mounted session admission.
-    fn retire_checked_out_fill_checkpoint(session: &mut semio_framework_job::MountedWorkerJobSession<BoardFillJob>) {
+    fn retire_checked_out_fill_checkpoint(session: &mut FillSession) {
         let mut checkpoint = session.checked_out_job_mut().and_then(BoardFillJob::take_checkpoint).expect("field cursor checkpoint");
-        if let Some(mut placement) = checkpoint.take_pending_placement() {
-            while !placement.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {}
-            assert!(placement.terminal_is_empty());
+        if let Some(placement) = checkpoint.take_pending_placement() {
+            retire_fill_placement(placement);
         }
         close_fill_job(checkpoint.into_closing_job());
     }
@@ -125,15 +242,7 @@ mod tests {
 
     fn run_mounted_fill_job(job: BoardFillJob, worker_count: usize) -> (Vec<FillPlacementWitness>, Vec<u64>, crate::editor::puzzle2d::engine::BoardFillResult) {
         let operation = job.operation();
-        let cancel = semio_framework_job::root_cancel_token();
-        let params = BatchJobParams {
-            operation: operation.operation,
-            generation: operation.generation,
-            cancel,
-            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.test", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
-            now_us: semio_framework_job::default_now_us,
-        };
-        let mut session = mount_fill_session(job, params);
+        let mut session = mount_fill_session(job, fill_params(operation, "puzzle2d.fill.test"));
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, worker_count));
         let mut placements = Vec::new();
         let mut previews = Vec::new();
@@ -145,37 +254,24 @@ mod tests {
                 }
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
                     assert!(!session.callback_verdict().is_some_and(|verdict| verdict.is_fault()), "exact fill session callback exceeded its clock authority");
-                    let mut outcome = session.take_checked_out_outcome().expect("checked-out fill outcome");
-                    match &outcome {
-                        StepOutcome::PreviewReady(_) => {
+                    match seen_fill_outcome(&mut session) {
+                        FillSeen::Preview => {
                             let preview = session.checked_out_job_mut().and_then(BoardFillJob::take_preview).expect("typed fill preview");
                             previews.push(preview.sequence);
-                            while !outcome.terminal_is_empty() {
-                                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                            }
+                            acknowledge_fill_outcome(&mut session);
                             session.resume().expect("preview handback");
                         }
-                        StepOutcome::CheckpointReady(_) => {
+                        FillSeen::Checkpoint => {
                             let mut checkpoint = session.checked_out_job_mut().and_then(BoardFillJob::take_checkpoint).expect("typed fill checkpoint");
-                            let mut placement = checkpoint.take_pending_placement().expect("checkpoint placement");
-                            placements.push(FillPlacementWitness {
-                                node_kind: placement.node_kind.as_str().to_string(),
-                                edge_kind: placement.edge_kind.as_str().to_string(),
-                                source: placement.source_handle_id.as_str().to_string(),
-                                target: placement.target_handle_id.as_str().to_string(),
-                                x: placement.x,
-                                y: placement.y,
-                            });
-                            while !placement.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {}
-                            assert!(placement.terminal_is_empty());
+                            let placement = checkpoint.take_pending_placement().expect("checkpoint placement");
+                            placements.push(fill_placement_witness(&placement));
+                            retire_fill_placement(placement);
                             adopt_fill_checkpoint(&mut session, checkpoint);
-                            while !outcome.terminal_is_empty() {
-                                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                            }
+                            acknowledge_fill_outcome(&mut session);
                             session.resume().expect("checkpoint resume");
                         }
-                        StepOutcome::Complete(candidate) => {
-                            let candidate = crate::editor::puzzle2d::engine::BoardFillCommitCandidate::from_commit_candidate(candidate).expect("typed full fill candidate");
+                        FillSeen::Complete(candidate) => {
+                            let candidate = candidate.expect("typed full fill candidate");
                             if let Some(placement) = candidate.placement {
                                 placements.push(FillPlacementWitness {
                                     node_kind: placement.node_kind.as_str().to_string(),
@@ -187,25 +283,20 @@ mod tests {
                                 });
                             }
                             result = Some(candidate.result);
-                            while !outcome.terminal_is_empty() {
-                                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                            }
+                            acknowledge_fill_outcome(&mut session);
                             break;
                         }
-                        StepOutcome::Yield => {
+                        FillSeen::Yield => {
+                            acknowledge_fill_outcome(&mut session);
                             session.resume().expect("yield resume");
                         }
-                        StepOutcome::Cancelled => {
-                            while !outcome.terminal_is_empty() {
-                                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                            }
+                        FillSeen::Cancelled => {
+                            acknowledge_fill_outcome(&mut session);
                             panic!("fill job unexpectedly cancelled");
                         }
-                        StepOutcome::Fault(_) => {
+                        FillSeen::Fault => {
                             let code = session.checked_out_job_mut().map(|job| (job.stage(), job.take_fault()));
-                            while !outcome.terminal_is_empty() {
-                                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                            }
+                            acknowledge_fill_outcome(&mut session);
                             panic!("fill job faulted: (stage, code)={code:?} previews={} placements={}", previews.len(), placements.len());
                         }
                     }
@@ -222,50 +313,30 @@ mod tests {
 
     /// 💾️ Runs `job` to its first checkpoint and claims the placement that checkpoint published — the owner's
     /// hand-off every resume requires — answering the resumable checkpoint and the claimed placement's witness.
-    fn take_first_fill_checkpoint(job: BoardFillJob) -> (crate::editor::puzzle2d::engine::BoardFillCheckpoint, FillPlacementWitness) {
+    fn take_first_fill_checkpoint(job: BoardFillJob) -> (BoardFillCheckpoint, FillPlacementWitness) {
         let mut checkpoint = first_fill_checkpoint(job);
-        let mut placement = checkpoint.take_pending_placement().expect("a checkpoint publishes its placement");
-        let witness = FillPlacementWitness {
-            node_kind: placement.node_kind.as_str().to_string(),
-            edge_kind: placement.edge_kind.as_str().to_string(),
-            source: placement.source_handle_id.as_str().to_string(),
-            target: placement.target_handle_id.as_str().to_string(),
-            x: placement.x,
-            y: placement.y,
-        };
-        while !placement.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {}
-        assert!(placement.terminal_is_empty());
+        let placement = checkpoint.take_pending_placement().expect("a checkpoint publishes its placement");
+        let witness = fill_placement_witness(&placement);
+        retire_fill_placement(placement);
         (checkpoint, witness)
     }
 
     /// 💾️ Runs `job` to its first checkpoint, the placement it published still inside.
-    fn first_fill_checkpoint(job: BoardFillJob) -> crate::editor::puzzle2d::engine::BoardFillCheckpoint {
+    fn first_fill_checkpoint(job: BoardFillJob) -> BoardFillCheckpoint {
         let operation = job.operation();
-        let params = BatchJobParams {
-            operation: operation.operation,
-            generation: operation.generation,
-            cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.checkpoint", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
-            now_us: semio_framework_job::default_now_us,
-        };
-        let mut session = mount_fill_session(job, params);
+        let mut session = mount_fill_session(job, fill_params(operation, "puzzle2d.fill.checkpoint"));
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut checkpoint = None;
         for _ in 0..FILL_TEST_PUMP_LIMIT {
             match pump_fill_session(&mut session, &pool) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
-                    let mut outcome = session.take_checked_out_outcome().expect("checkpoint outcome");
-                    if matches!(outcome, StepOutcome::CheckpointReady(_)) {
+                    if seen_fill_outcome(&mut session) == FillSeen::Checkpoint {
                         checkpoint = session.checked_out_job_mut().and_then(BoardFillJob::take_checkpoint);
-                        while !outcome.terminal_is_empty() {
-                            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                        }
+                        acknowledge_fill_outcome(&mut session);
                         break;
                     }
-                    while !outcome.terminal_is_empty() {
-                        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                    }
+                    acknowledge_fill_outcome(&mut session);
                     session.resume().expect("checkpoint search resume");
                 }
                 WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty => panic!("fill closed before first checkpoint"),
@@ -676,9 +747,7 @@ mod tests {
             }
             Err(checkpoint) => checkpoint,
         };
-        let mut placement = checkpoint.take_pending_placement().expect("the refused checkpoint still owns its placement");
-        while !placement.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {}
-        assert!(placement.terminal_is_empty());
+        retire_fill_placement(checkpoint.take_pending_placement().expect("the refused checkpoint still owns its placement"));
         match BoardFillJob::restore(checkpoint, operation) {
             Ok(job) => close_fill_job(job),
             Err(checkpoint) => {
@@ -695,13 +764,7 @@ mod tests {
         let job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 32, operation);
         let cancel = semio_framework_job::root_cancel_token();
         cancel.cancel_now();
-        let params = BatchJobParams {
-            operation: operation.operation,
-            generation: operation.generation,
-            cancel,
-            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.cancel", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
-            now_us: semio_framework_job::default_now_us,
-        };
+        let params = fill_params_with(operation, operation.generation, cancel, "puzzle2d.fill.cancel", semio_framework_job::default_now_us);
         let mut session = mount_fill_session(job, params);
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut cancelled = false;
@@ -709,8 +772,8 @@ mod tests {
             match pump_fill_session(&mut session, &pool) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Terminal => {
-                    let outcome = session.take_checked_out_outcome().expect("cancel outcome");
-                    assert_eq!(outcome, StepOutcome::Cancelled);
+                    assert_eq!(seen_fill_outcome(&mut session), FillSeen::Cancelled);
+                    acknowledge_fill_outcome(&mut session);
                     cancelled = true;
                     break;
                 }
@@ -724,13 +787,7 @@ mod tests {
 
         let stale_operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(11), semio_framework_job::Generation(4), 9);
         let stale_job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 32, stale_operation);
-        let stale_params = BatchJobParams {
-            operation: stale_operation.operation,
-            generation: semio_framework_job::Generation(5),
-            cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.stale", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
-            now_us: semio_framework_job::default_now_us,
-        };
+        let stale_params = fill_params_with(stale_operation, semio_framework_job::Generation(5), semio_framework_job::root_cancel_token(), "puzzle2d.fill.stale", semio_framework_job::default_now_us);
         let mut stale = mount_fill_session(stale_job, stale_params);
         let stale_pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut stale_fault = false;
@@ -738,11 +795,8 @@ mod tests {
             match pump_fill_session(&mut stale, &stale_pool) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Terminal => {
-                    let mut outcome = stale.take_checked_out_outcome().expect("stale outcome");
-                    assert!(matches!(outcome, StepOutcome::Fault(_)));
-                    while !outcome.terminal_is_empty() {
-                        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                    }
+                    assert_eq!(seen_fill_outcome(&mut stale), FillSeen::Fault);
+                    acknowledge_fill_outcome(&mut stale);
                     stale_fault = true;
                     break;
                 }
@@ -761,13 +815,7 @@ mod tests {
         let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(13), semio_framework_job::Generation(6), 17);
         let job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 8, operation);
         DEADLINE_CLOCK.store(0, std::sync::atomic::Ordering::Release);
-        let params = BatchJobParams {
-            operation: operation.operation,
-            generation: operation.generation,
-            cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.deadline", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
-            now_us: deadline_now_us,
-        };
+        let params = fill_params_with(operation, operation.generation, semio_framework_job::root_cancel_token(), "puzzle2d.fill.deadline", deadline_now_us);
         let mut session = mount_fill_session(job, params);
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut yielded = false;
@@ -775,8 +823,8 @@ mod tests {
             match pump_fill_session(&mut session, &pool) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Outcome => {
-                    let outcome = session.take_checked_out_outcome().expect("deadline outcome");
-                    assert_eq!(outcome, StepOutcome::Yield);
+                    assert_eq!(seen_fill_outcome(&mut session), FillSeen::Yield);
+                    acknowledge_fill_outcome(&mut session);
                     yielded = true;
                     break;
                 }
@@ -793,28 +841,16 @@ mod tests {
     fn board_fill_worker_refusal_and_unclaimed_complete_close_exact_owners() {
         let host = frontier_fill_host();
         let refused_operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(17), semio_framework_job::Generation(7), 23);
-        let refused_params = BatchJobParams {
-            operation: refused_operation.operation,
-            generation: refused_operation.generation,
-            cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.refusal", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
-            now_us: semio_framework_job::default_now_us,
-        };
+        let refused_params = fill_params_with(refused_operation, refused_operation.generation, semio_framework_job::root_cancel_token(), "puzzle2d.fill.refusal", semio_framework_job::default_now_us);
         let refused_job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 4, refused_operation);
         let mut refused = mount_fill_session(refused_job, refused_params);
         let unavailable = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         unavailable.shutdown().expect("bounded snapshot operation succeeds");
-        assert!(matches!(refused.pump_one(&unavailable, semio_framework_async::Lane::Background), Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(_))));
+        assert!(matches!(refused.pump_one(&unavailable, semio_framework_async::Lane::Background, FILL_TEST_GRANT), Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(_))));
         close_fill_session(&mut refused);
 
         let complete_operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(19), semio_framework_job::Generation(8), 29);
-        let complete_params = BatchJobParams {
-            operation: complete_operation.operation,
-            generation: complete_operation.generation,
-            cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.unclaimed-complete", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
-            now_us: semio_framework_job::default_now_us,
-        };
+        let complete_params = fill_params_with(complete_operation, complete_operation.generation, semio_framework_job::root_cancel_token(), "puzzle2d.fill.unclaimed-complete", semio_framework_job::default_now_us);
         let complete_job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 0, complete_operation);
         let mut complete = mount_fill_session(complete_job, complete_params);
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
@@ -827,11 +863,8 @@ mod tests {
                     break;
                 }
                 WorkerJobPoll::Outcome => {
-                    let mut outcome = complete.take_checked_out_outcome().expect("zero-count fill outcome");
-                    let yielded = matches!(outcome, StepOutcome::Yield);
-                    while !outcome.terminal_is_empty() {
-                        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                    }
+                    let yielded = seen_fill_outcome(&mut complete) == FillSeen::Yield;
+                    acknowledge_fill_outcome(&mut complete);
                     assert!(yielded, "a zero-count fill may only YIELD while it streams its empty commit, never publish a preview or checkpoint");
                     complete.resume().expect("zero-count fill yield resume");
                 }
@@ -880,16 +913,10 @@ mod tests {
         }
         let host = frontier_fill_host();
         let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(23), semio_framework_job::Generation(9), 31);
-        let params = BatchJobParams {
-            operation: operation.operation,
-            generation: operation.generation,
-            cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.saturation", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
-            now_us: semio_framework_job::default_now_us,
-        };
+        let params = fill_params_with(operation, operation.generation, semio_framework_job::root_cancel_token(), "puzzle2d.fill.saturation", semio_framework_job::default_now_us);
         let mut session = mount_fill_session(BoardFillJob::with_operation(capture_fill_snapshot(&host), 4, operation), params);
         let saturated = matches!(
-            session.pump_one(&pool, semio_framework_async::Lane::Background),
+            session.pump_one(&pool, semio_framework_async::Lane::Background, FILL_TEST_GRANT),
             Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Saturated)))
         );
         gate.store(true, std::sync::atomic::Ordering::Release);
@@ -985,12 +1012,7 @@ mod tests {
             }
         }
         assert_eq!(fault, Some(crate::editor::puzzle2d::engine::BoardFillCaptureFault::NodeCapacity));
-        capture.begin_close();
-        for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if matches!(capture.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && capture.terminal_is_empty() {
-                break;
-            }
-        }
+        retire_fill_capture(&mut capture);
         assert!(capture.terminal_is_empty());
     }
 
@@ -999,13 +1021,7 @@ mod tests {
     fn board_fill_candidate_acceptance_exposes_every_retained_field_stage() {
         let host = frontier_fill_host();
         let operation = Operation::new(semio_framework_job::OperationId(271), semio_framework_job::RevisionId(37), semio_framework_job::Generation(11), 271);
-        let params = BatchJobParams {
-            operation: operation.operation,
-            generation: operation.generation,
-            cancel: semio_framework_job::root_cancel_token(),
-            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "puzzle2d.fill.field-cursors", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
-            now_us: semio_framework_job::default_now_us,
-        };
+        let params = fill_params_with(operation, operation.generation, semio_framework_job::root_cancel_token(), "puzzle2d.fill.field-cursors", semio_framework_job::default_now_us);
         let mut session = mount_fill_session(BoardFillJob::with_operation(capture_fill_snapshot(&host), 2, operation), params);
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut seen = [false; 13];
@@ -1014,9 +1030,8 @@ mod tests {
             match pump_fill_session(&mut session, &pool) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
-                    let mut outcome = session.take_checked_out_outcome().expect("field cursor outcome");
-                    match &outcome {
-                        StepOutcome::PreviewReady(_) => {
+                    match seen_fill_outcome(&mut session) {
+                        FillSeen::Preview => {
                             let job = session.checked_out_job_mut().expect("field cursor job");
                             match job.stage() {
                                 crate::editor::puzzle2d::engine::BoardFillStage::AcceptNodeId => seen[0] = true,
@@ -1035,31 +1050,23 @@ mod tests {
                                 _ => {}
                             }
                             let _ = job.take_preview().expect("field cursor preview");
-                            while !outcome.terminal_is_empty() {
-                                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                            }
+                            acknowledge_fill_outcome(&mut session);
                             session.resume().expect("field cursor resume");
                         }
-                        StepOutcome::CheckpointReady(_) => {
+                        FillSeen::Checkpoint => {
                             retire_checked_out_fill_checkpoint(&mut session);
-                            while !outcome.terminal_is_empty() {
-                                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                            }
+                            acknowledge_fill_outcome(&mut session);
                             checkpointed = true;
                             break;
                         }
-                        StepOutcome::Yield => session.resume().expect("field cursor yield resume"),
-                        StepOutcome::Complete(_) | StepOutcome::Cancelled | StepOutcome::Fault(_) => {
-                            let ended = match &outcome {
-                                StepOutcome::Complete(_) => "complete",
-                                StepOutcome::Cancelled => "cancelled",
-                                _ => "fault",
-                            };
+                        FillSeen::Yield => {
+                            acknowledge_fill_outcome(&mut session);
+                            session.resume().expect("field cursor yield resume");
+                        }
+                        ended @ (FillSeen::Complete(_) | FillSeen::Cancelled | FillSeen::Fault) => {
                             let fault = session.checked_out_job_mut().and_then(BoardFillJob::take_fault);
-                            while !outcome.terminal_is_empty() {
-                                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                            }
-                            panic!("field cursor job terminated before checkpoint: {ended} fault={fault:?} seen={seen:?}");
+                            acknowledge_fill_outcome(&mut session);
+                            panic!("field cursor job terminated before checkpoint: {ended:?} fault={fault:?} seen={seen:?}");
                         }
                     }
                 }

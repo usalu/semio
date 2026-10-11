@@ -1,0 +1,11 @@
+{
+  "tree": {
+    "neurons": [
+      {"id": "a", "kind": "literal", "params": {"value": 3, "label": "x", "ratio": 2.5, "flag": true, "none": null, "nested": {"inner": "y"}}, "tree": null},
+      {"id": "c", "kind": "cluster", "params": {}, "tree": {"neurons": [{"id": "in", "kind": "input", "params": {"channel": "n"}, "tree": null}], "synapses": []}}
+    ],
+    "synapses": [
+      {"id": "s1", "from": "a", "to": "c", "fromPort": "out", "toPort": "n"}
+    ]
+  }
+}

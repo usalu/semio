@@ -1,12 +1,12 @@
 //! 🎥️ 🎥️ Raster play app commands command — `set-composite-viewport`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation, RasterConfigViewportSize};
+use crate::editor::raster::config::{RasterConfig, RasterConfigMutation, RasterConfigViewportSize, SetCompositeViewportEdit};
 use crate::op::RasterMutation;
 use crate::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "composite-viewport")]
 pub struct SetCompositeViewport {
     pub width: f64,
@@ -14,5 +14,5 @@ pub struct SetCompositeViewport {
 }
 
 pub fn handle(payload: &SetCompositeViewport, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
-    Ok(Emit::config(vec![RasterConfigMutation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: payload.width, height: payload.height }) }]))
+    Ok(Emit::config(vec![RasterConfigMutation::SetCompositeViewport(SetCompositeViewportEdit { viewport: Some(RasterConfigViewportSize { width: payload.width, height: payload.height }) })]))
 }

@@ -82,9 +82,9 @@ fn clock_publication_and_retirement_obey_tiny_grants() {
         let after: FemResultsWindowTransient = serde_json::from_value(row["after"].clone()).unwrap();
         let mut store = store::TransientStore::<_, FemResultsWindowTransientMutation>::new(before);
         let mut publication = store.begin_publish_one_leased(semio_framework_job::OperationId(1), 0, SetPlaybackClock { clock: after.clock }.into(), owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap();
-        let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 };
+        let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
         assert!(matches!(store.advance_publish_one(&mut publication, zero).unwrap(), store::ArtifactStoreOneItemAdvance::Blocked));
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 };
+        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
         for _ in 0..8 {
             if matches!(store.advance_publish_one(&mut publication, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)) {
                 break;
@@ -93,10 +93,12 @@ fn clock_publication_and_retirement_obey_tiny_grants() {
         assert_eq!(serde_json::to_value(store.current_root().as_ref()).unwrap(), row["after"]);
         assert!(publication.acknowledge());
         for _ in 0..4096 {
-            match publication.close_step(grant).unwrap() {
-                store::SnapshotRetirementStep::Complete => break,
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 1),
-                store::SnapshotRetirementStep::Blocked => panic!("an unaliased clock publication must close"),
+            if publication.terminal_is_empty() { break; }
+            let demand = publication.retirement_demands(4096).expect("quoted clock publication close");
+            let close = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            match publication.close_step(close).expect("an unaliased clock publication must close") {
+                semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(close.retained_grant())); break; }
+                semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(close.retained_grant()) && progress.copied_items <= 1),
             }
         }
         assert!(publication.terminal_is_empty());

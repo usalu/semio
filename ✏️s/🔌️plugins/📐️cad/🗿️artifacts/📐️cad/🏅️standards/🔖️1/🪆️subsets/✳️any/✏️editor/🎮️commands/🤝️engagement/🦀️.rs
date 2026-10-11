@@ -30,7 +30,7 @@ fn engagement_emit(doc: &ArtifactView<'_, CadSnapshot>, runtime: &CadPlayRuntime
 pub mod engagement_submit {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "engagement-submit")]
     pub struct EngagementSubmit {
         pub pane: Option<String>,
@@ -52,7 +52,7 @@ pub mod engagement_submit {
 pub mod engagement_input {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "engagement-input")]
     pub struct EngagementInput {
         pub value: String,
@@ -72,7 +72,7 @@ pub mod engagement_input {
 pub mod engagement_possible_select {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "engagement-possible-select")]
     pub struct EngagementPossibleSelect {
         pub pane: Option<String>,
@@ -110,7 +110,7 @@ pub mod engagement_possible_select {
 pub mod engagement_repeat_last {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "engagement-repeat-last")]
     pub struct EngagementRepeatLast {
         pub pane: Option<String>,
@@ -135,7 +135,7 @@ pub mod engagement_repeat_last {
 pub mod engagement_abort {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "engagement-abort")]
     pub struct EngagementAbort {}
 
@@ -153,7 +153,7 @@ pub mod engagement_abort {
 pub mod world_pointer_down {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "world-pointer-down")]
     pub struct WorldPointerDown {
         pub pane: Option<String>,
@@ -189,7 +189,7 @@ pub mod world_pointer_down {
 pub mod world_pointer_move {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "world-pointer-move")]
     pub struct WorldPointerMove {
         pub x: Option<f64>,

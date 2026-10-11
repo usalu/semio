@@ -39,14 +39,14 @@ async fn real_text_round_trip_through_dxf_codec() {
     let drawing = sample_drawing();
     let dxf = ::semio_framework_async::poll::resolve_ready(SemioDrawingToDxf::serialize(&drawing)).expect("serialize");
     assert_eq!(dxf.entities.len(), 3);
-    assert!(matches!(dxf.entities[0], DxfEntity::Circle { .. }));
-    assert!(matches!(dxf.entities[1], DxfEntity::Polyline { .. }));
-    assert!(matches!(dxf.entities[2], DxfEntity::Text { .. }));
+    assert!(matches!(dxf.entities[0], DxfEntity::Circle(DxfCircle { .. })));
+    assert!(matches!(dxf.entities[1], DxfEntity::Polyline(DxfPolyline { .. })));
+    assert!(matches!(dxf.entities[2], DxfEntity::Text(DxfText { .. })));
 
     let text = semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::print_dxf_document(&dxf);
     let reparsed = semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::parse_dxf_document(&text).expect("reparse real dxf text");
     match &reparsed.entities[0] {
-        DxfEntity::Circle { center, radius, .. } => {
+        DxfEntity::Circle(DxfCircle { center, radius, .. }) => {
             assert!((center[0] - 2.0).abs() < 1e-6);
             assert!((radius - 1.0).abs() < 1e-6);
         }

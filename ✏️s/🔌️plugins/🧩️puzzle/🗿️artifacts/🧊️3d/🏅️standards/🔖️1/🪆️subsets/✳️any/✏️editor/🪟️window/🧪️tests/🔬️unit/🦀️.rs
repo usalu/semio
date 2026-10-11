@@ -1,5 +1,24 @@
 use super::*;
 
+    fn retire_to_terminal_empty<T: semio_framework_value::retirement::RetireOwned + 'static>(owner: T) {
+        let mut retirement = semio_framework_value::retirement::controlled::ControlledRetirement::new(owner).unwrap_or_else(|(error, _)| panic!("window retirement admission refused: {error:?}"));
+        for _ in 0..65_536 {
+            if retirement.terminal_is_empty() {
+                return;
+            }
+            let copy = retirement.next_copy_byte_demand().expect("window retirement copy quote");
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant {
+                maximum_items: 1,
+                maximum_copy_bytes: copy,
+                maximum_capacity_bytes: retirement.next_capacity_byte_demand(copy).expect("window retirement capacity quote"),
+                maximum_release_bytes: retirement.next_release_byte_demand().expect("window retirement release quote"),
+                maximum_depth: retirement.next_depth_demand().expect("window retirement depth quote").max(1),
+            };
+            retirement.step(grant).expect("bounded window retirement turn");
+        }
+        panic!("window retirement exceeded its bounded cursor turns");
+    }
+
     #[test]
     fn same_kind_windows_compose_independently() {
         let shared = Puzzle3dConfig::default();
@@ -42,39 +61,11 @@ use super::*;
         };
         let mutation = Puzzle3dWindowTransientMutation::Snapshot { transient };
         assert!(puzzle3d_window_transient_preflight(&mutation).expect("large Puzzle 3D transient admission").is_admissible());
-        let mut retirement = semio_framework_value::retirement::owned_retirement(mutation);
-        for _ in 0..32_768 {
-            match retirement.close_step(1, 1).expect("bounded retirement") {
-                store::SnapshotRetirementStep::Complete => {
-                    assert!(retirement.terminal_is_empty());
-                    return;
-                }
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                    assert!(released_items <= 1);
-                    assert!(released_bytes <= 1);
-                }
-                store::SnapshotRetirementStep::Blocked => panic!("owned Puzzle 3D transient retirement blocked"),
-            }
-        }
-        panic!("owned Puzzle 3D transient retirement exceeded its bounded cursor turns");
+        retire_to_terminal_empty(mutation);
     }
 
     fn retire_returned_puzzle3d_transient(transient: Puzzle3dWindowTransient) {
-        let mut retirement = semio_framework_value::retirement::owned_retirement(Puzzle3dWindowTransientMutation::Snapshot { transient });
-        for _ in 0..4_096 {
-            match retirement.close_step(1, 1).expect("returned Puzzle 3D owner retirement") {
-                store::SnapshotRetirementStep::Complete => {
-                    assert!(retirement.terminal_is_empty());
-                    return;
-                }
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= 1);
-            }
-                store::SnapshotRetirementStep::Blocked => panic!("returned Puzzle 3D owner retirement blocked"),
-            }
-        }
-        panic!("returned Puzzle 3D owner retirement exceeded its bounded cursor turns");
+        retire_to_terminal_empty(Puzzle3dWindowTransientMutation::Snapshot { transient });
     }
 
     fn rejected_puzzle3d_transient(transient: Puzzle3dWindowTransient) -> Puzzle3dWindowTransient {

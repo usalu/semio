@@ -7,14 +7,14 @@ use crate::__value_derive::{FromValue, ToValue};
 use crate::list_delta::{ItemList, KeyOf, Parts, RowPatch};
 use crate::{list_delta, row_patch, ApplyCapability};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, crate::__dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, crate::__dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 struct Part {
     id: String,
     weight: i64,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, crate::__dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, crate::__dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 struct Item {
     id: String,

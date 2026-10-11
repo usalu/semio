@@ -121,7 +121,7 @@ class CheckWgpuEngineScript extends BundleScript {
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (!segments.length) {
-      await new CheckAxesScript(this.root, this.repoRoot).run();
+      await new CheckAxesScript(this.root, this.repoRoot, this.invocation).run();
       return;
     }
     await (new ScriptRouter(this.root, this.repoRoot).register("wasm", CheckWasmScript).register("wgpu-engine", CheckWgpuEngineScript).register("commands", CheckCommandTypesScript)).run(segments, this.invocation);

@@ -18,7 +18,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Payload
 pub const PIN_SOLUTION_ACTION_ID: &str = crate::inferences::BITMAP_INFERENCE_COMMIT_ACTION;
 
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "pin-solution")]
 pub struct PinSolution {

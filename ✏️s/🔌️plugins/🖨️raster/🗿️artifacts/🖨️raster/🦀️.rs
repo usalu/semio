@@ -433,6 +433,101 @@ impl<V: semio_framework_value::FromValue> semio_framework_value::FromValue for R
         Ok(out)
     }
 }
+
+/// ♻️ Retires one fixed-capacity map entry by entry, then each exact page allocation, through the framework's admitted cursor protocol.
+struct RasterOwnedMapRetirement<V: semio_framework_value::retirement::RetireOwned> {
+    map: std::mem::ManuallyDrop<RasterOwnedMap<V>>,
+}
+
+impl<V: semio_framework_value::retirement::RetireOwned> RasterOwnedMapRetirement<V> {
+    fn last_entry(&self) -> Option<&(String, V)> {
+        let slot = self.map.ordered_slot(self.map.length.checked_sub(1)?)?;
+        self.map.entry(slot)
+    }
+
+    fn page_bytes(&self) -> usize {
+        if self.map.allocated_page_count() == 0 { 0 } else { size_of::<RasterOwnedMapPage<V>>() }
+    }
+}
+
+impl<V: semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetirementCursor for RasterOwnedMapRetirement<V> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
+        use semio_framework_value::retirement::{RetireOwned, RetirementStep};
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return RetirementStep::BudgetExhausted;
+        }
+        if self.map.length > 0 {
+            let entry = self.map.take_last_entry().expect("Raster owned map retains the entry it quoted");
+            return RetirementStep::Child(entry.retirement());
+        }
+        let bytes = self.page_bytes();
+        if bytes == 0 {
+            return RetirementStep::Complete;
+        }
+        if bytes > grant.maximum_release_bytes {
+            return RetirementStep::BudgetExhausted;
+        }
+        let page = self.map.take_empty_page_backing().expect("Raster owned map retains the page it quoted");
+        page.release();
+        RetirementStep::Bytes(bytes)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.map.length == 0 && self.map.allocated_page_count() == 0
+    }
+
+    fn next_close_byte_demand(&self) -> Option<usize> {
+        Some(if self.map.length == 0 { self.page_bytes() } else { 0 })
+    }
+
+    fn next_birth_bytes(&self, _maximum_bytes: usize) -> Option<usize> {
+        if self.map.length == 0 {
+            return Some(0);
+        }
+        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(self.last_entry()?)
+    }
+
+    fn terminal_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
+    }
+}
+
+impl<V: semio_framework_value::retirement::RetireOwned> Drop for RasterOwnedMapRetirement<V> {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || semio_framework_value::retirement::RetirementCursor::terminal_is_empty(self), "Raster owned map retirement abandoned before terminal-empty");
+        if semio_framework_value::retirement::RetirementCursor::terminal_is_empty(self) {
+            unsafe { std::mem::ManuallyDrop::drop(&mut self.map) };
+        }
+    }
+}
+
+impl<V: semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for RasterOwnedMap<V> {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        Box::new(RasterOwnedMapRetirement { map: std::mem::ManuallyDrop::new(self) })
+    }
+
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        Some(size_of::<RasterOwnedMapRetirement<V>>())
+    }
+
+    fn controlled_retirement_supported() -> bool {
+        true
+    }
+}
+
+impl<V: semio_framework_pack_json::ArtifactCanonicalJsonTree> semio_framework_pack_json::ArtifactCanonicalJsonTree for RasterOwnedMap<V> {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+        Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(self.len()))
+    }
+
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
+        self.entry_at(ordinal).map(|(_, value)| value as &dyn semio_framework_pack_json::ArtifactCanonicalJsonTree).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical Raster map ordinal is absent"))
+    }
+
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+        self.entry_at(ordinal).map(|(key, _)| key.as_str().into()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical Raster map key is absent"))
+    }
+}
 //#endregion 🗂️OwnedMap
 
 //#region 🔖️Types
@@ -448,14 +543,16 @@ pub fn default_true() -> bool {
 /// image assets. This is the authoritative projection shared by the wasm compositor bridge and the
 /// `raster-plugin` `ArtifactApp`. Ephemeral tool/brush/selection/camera state lives in the app's
 /// `RasterConfig`, never here.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RasterViewportSize {
     pub width: f64,
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RasterCamera {
     #[value(default)]
@@ -480,7 +577,8 @@ pub fn default_blend() -> String {
     "normal".into()
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RasterTransform {
     pub x: f64,
@@ -504,7 +602,8 @@ impl RasterTransform {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RasterLayerMask {
     #[value(default = "default_true")]
@@ -520,7 +619,8 @@ pub struct RasterLayerMask {
     pub transform: RasterTransform,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum RasterLayerNode {
     #[value(rename = "pixel", rename_all = "camelCase")]
@@ -720,7 +820,8 @@ pub fn adopt_raster_asset_owner(source: &RasterAssetChild, target: &mut RasterAs
 
 //#region 🔖️Operations
 /// 🖼️ Nullable pixel attachment and display extent, preserved exactly by undo.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RasterPixelContent {
     pub image_key: Option<String>,
@@ -729,7 +830,8 @@ pub struct RasterPixelContent {
 }
 
 /// 🎭️ Explicit mask replacement, including removal.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RasterMaskContent {
     #[dsl(block)]
@@ -748,6 +850,16 @@ impl RasterAdjustmentNumber {
         let mut result=[0;9];
         let (tag,bytes)=match self.0 {semio_framework_value::Number::UInt(value)=>(1,value.to_be_bytes()),semio_framework_value::Number::Int(value)=>(2,value.to_be_bytes()),semio_framework_value::Number::Float(value)=>(3,value.to_bits().to_be_bytes())};
         result[0]=tag;result[1..].copy_from_slice(&bytes);result
+    }
+}
+semio_framework_value::artifact_retire_leaf!(RasterAdjustmentNumber);
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for RasterAdjustmentNumber {
+    fn canonical_tree_node(&self)->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,semio_framework_value::ValueError> {
+        Ok(match self.0 {
+            semio_framework_value::Number::UInt(value)=>semio_framework_pack_json::ArtifactCanonicalJsonNode::U64(value),
+            semio_framework_value::Number::Int(value)=>semio_framework_pack_json::ArtifactCanonicalJsonNode::I64(value),
+            semio_framework_value::Number::Float(value)=>semio_framework_pack_json::ArtifactCanonicalJsonNode::F64(value),
+        })
     }
 }
 impl semio_framework_value::ToValue for RasterAdjustmentNumber {fn to_value(&self)->semio_framework_value::DslValue {self.literal()}}

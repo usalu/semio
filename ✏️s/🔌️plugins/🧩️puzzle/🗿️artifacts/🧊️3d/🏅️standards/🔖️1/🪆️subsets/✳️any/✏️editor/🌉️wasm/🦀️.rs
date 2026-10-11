@@ -21,6 +21,9 @@ type Puzzle3dApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
 const PUZZLE3D_ENVELOPE_MAXIMUM_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
 const PUZZLE3D_ENVELOPE_MAXIMUM_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
+/// 🪪️ Fixed identity-authoring ceiling the browser handle admits once before it authors its first command.
+const PUZZLE3D_IDENTITY_CEILING_BYTES: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+
 fn js_fault(error: impl ToString) -> JsValue {
     JsValue::from_str(&error.to_string())
 }
@@ -65,7 +68,11 @@ impl Puzzle3dArtifactVcs {
     pub fn create() -> Promise {
         semio_framework_async::future_to_promise(async {
             let registry = semio_framework_plugin::AppActionRegistry::from_definition(&crate::editor::puzzle3d::create_puzzle3d_app());
-            let app = VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+            let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+            let mounted_policy = semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant };
+            let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+            let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(PUZZLE3D_IDENTITY_CEILING_BYTES, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).map_err(js_fault)?;
+            let app = VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
             Ok(Self { app: RefCell::new(app) }.into())
         })
     }
@@ -103,7 +110,8 @@ impl Puzzle3dArtifactVcs {
     #[wasm_bindgen(js_name = pollEnvelopeLoad)]
     pub fn poll_envelope_load(&self, handle: &Puzzle3dEnvelopeLoadHandle) -> Result<u8, JsValue> {
         let mut app = self.app.borrow_mut();
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(fault_bridge::fault_to_js)?;
+        let demand = app.maintenance_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| fault_bridge::fault_to_js(semio_framework_plugin::Fault::from(error.into_message())))?;
+        app.maintenance_step(funded_turn(demand)).map_err(fault_bridge::fault_to_js)?;
         match app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(fault_bridge::fault_to_js)? {
             ArtifactEnvelopeDecodeOperationPoll::Pending => Ok(0),
             ArtifactEnvelopeDecodeOperationPoll::Progress => Ok(1),
@@ -131,9 +139,11 @@ impl Puzzle3dArtifactVcs {
 
     #[wasm_bindgen(js_name = closeStep)]
     pub fn close_step(&self) -> Result<bool, JsValue> {
-        match self.app.borrow_mut().close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(fault_bridge::fault_to_js)? {
-            semio_framework_plugin::PluginCloseStep::Complete => Ok(true),
-            semio_framework_plugin::PluginCloseStep::Pending { .. } | semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. } => Ok(false),
+        let mut app = self.app.borrow_mut();
+        let demand = app.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| fault_bridge::fault_to_js(semio_framework_plugin::Fault::from(error.into_message())))?;
+        match app.close_step(funded_turn(demand)).map_err(fault_bridge::fault_to_js)? {
+            semio_framework_plugin::PluginLifecycleStep::Complete(_) => Ok(true),
+            semio_framework_plugin::PluginLifecycleStep::Progress(_) | semio_framework_plugin::PluginLifecycleStep::AwaitingInput { .. } | semio_framework_plugin::PluginLifecycleStep::Blocked { .. } => Ok(false),
         }
     }
 }
@@ -146,4 +156,9 @@ pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
     use store::ArtifactDsl;
     let projection = Puzzle3dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
     Ok(semio_framework_pack_json::to_json_string(&projection))
+}
+
+/// 🎟️ One close or maintenance turn funded exactly by what the owner quoted for it.
+fn funded_turn(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }

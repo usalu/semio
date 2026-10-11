@@ -149,7 +149,7 @@ pub(crate) fn generation2d_operation_from_dsl(operation: Generation2dOperationDs
         Generation2dOperationDsl::ClearWidgetLayout { id } => clear_widget_layout(id),
         Generation2dOperationDsl::UpdateCamera { camera } => update_camera(camera_from_dsl(&camera)),
         Generation2dOperationDsl::ChangeSchema { schema } => change_schema(schema),
-        Generation2dOperationDsl::CreateGeneration { generation, index } => Generation2dMutation::CreateGeneration(create_generation::CreateGeneration { generation: form_generation_from_dsl(generation), index, index: None }),
+        Generation2dOperationDsl::CreateGeneration { generation, index } => Generation2dMutation::CreateGeneration(create_generation::CreateGeneration { generation: form_generation_from_dsl(generation), index }),
         Generation2dOperationDsl::DeleteGeneration { id } => delete_generation(id),
         Generation2dOperationDsl::SelectGeneration { generation_id } => select_generation(generation_id),
         Generation2dOperationDsl::RenameGeneration { id, name } => rename_generation(id, name),

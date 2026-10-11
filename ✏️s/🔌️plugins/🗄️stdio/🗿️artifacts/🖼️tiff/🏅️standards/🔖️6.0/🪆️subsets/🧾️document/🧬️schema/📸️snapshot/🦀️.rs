@@ -7,20 +7,24 @@ use framework_schema::ArtifactSchema;
 #[value(rename_all = "camelCase")]
 pub enum TiffFieldType { Byte, Ascii, Short, Long, Rational, SByte, Undefined, SShort, SLong, SRational, Float, Double }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffBinary32 { pub bits: u32 }
 
 /// 🔢️ Exact intrinsic 64-bit identity shared by samples and IEEE metadata.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
+#[retained_clone(bitwise)]
 pub struct TiffWord64 { pub lo: u32, pub hi: u32 }
 impl TiffWord64 {
     pub const fn from_word(word: u64) -> Self { Self { lo: word as u32, hi: (word >> 32) as u32 } }
     pub const fn word(self) -> u64 { self.lo as u64 | (self.hi as u64) << 32 }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", content = "value", rename_all = "camelCase", deny_unknown_fields)]
 pub enum TiffValues {
     Byte(Vec<u8>), Ascii(Vec<String>), Short(Vec<u16>), Long(Vec<u32>), Rational(Vec<(u32, u32)>),
@@ -39,19 +43,22 @@ impl TiffValues {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffTag { pub tag: u16, pub values: TiffValues }
 
 /// 🧱️ Logical image rectangle with pixel-major channel samples independent of native packing.
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffSampleBlock {
     pub x: u32, pub y: u32, pub width: u32, pub height: u32, pub channels: u16,
     pub samples: Vec<TiffWord64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffIfd {
     pub entries: Vec<TiffTag>,
@@ -101,7 +108,7 @@ impl TiffIfd {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.stdio.tiff")]
 pub struct TiffSnapshot {

@@ -2,7 +2,8 @@
 
 use super::{Generation3dViewConfigPatch, Generation3dViewConfig, Generation3dViewConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "sun")]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]

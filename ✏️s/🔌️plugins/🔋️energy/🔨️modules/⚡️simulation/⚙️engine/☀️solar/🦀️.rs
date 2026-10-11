@@ -179,7 +179,7 @@ pub fn incidence_cosine(normal: [f64; 3], sun: [f64; 3]) -> f64 {
 }
 
 /// 🌤️ Perez circumsolar (`f1`) and horizon (`f2`) brightening coefficients.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct PerezBrightening {
     pub circumsolar: f64,
     pub horizon: f64,
@@ -234,7 +234,7 @@ impl IncidentSolar {
 }
 
 /// 🧮️ Sun-and-sky inputs shared by every surface in one timestep.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SkyState {
     pub sun: [f64; 3],
     pub beam_normal_w_m2: f64,

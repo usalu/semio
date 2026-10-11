@@ -2,7 +2,8 @@
 use crate::schema::diff::{JsonArrayDiff, JsonArrayModified, JsonDiff, JsonObjectDiff, JsonObjectModified, JsonValueDiff};
 use crate::schema::snapshot::JsonValue;
 
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum JsonPathSegment {
     Key(String),

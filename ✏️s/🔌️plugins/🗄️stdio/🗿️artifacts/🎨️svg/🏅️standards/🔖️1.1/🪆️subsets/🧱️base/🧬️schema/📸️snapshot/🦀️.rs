@@ -8,7 +8,7 @@ pub mod document;
 pub use document::*;
 
 //#region 🔖️Snapshot
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.svg")]
 pub struct SvgSnapshot {
@@ -67,7 +67,8 @@ impl SvgSnapshot {
 
 //#region 🔖️Geometry
 /// 📐️ Parsed `viewBox="min-x min-y width height"`.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct ViewBox {
     pub min_x: f64,
@@ -123,7 +124,8 @@ impl Matrix2D {
 /// 📜 One entry of a `transform="..."` list. Kept as a typed op list (rather than collapsed
 /// eagerly into a single matrix) so the original function-call structure round-trips; compose via
 /// `transform_ops_to_matrix` whenever a single resolved affine matrix is needed.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "op", rename_all = "camelCase")]
 pub enum TransformOp {
     Matrix {
@@ -199,7 +201,8 @@ pub fn transform_ops_to_matrix(ops: &[TransformOp]) -> Matrix2D {
 /// (relative-to-current-point) form from the upper-case (absolute) form -- both are kept typed
 /// rather than pre-resolved to absolute coordinates, since resolving requires walking the whole
 /// path with a running current-point/start-point state that belongs to a renderer, not the parser.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "cmd", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PathCommand {
     MoveTo { x: f64, y: f64, relative: bool },

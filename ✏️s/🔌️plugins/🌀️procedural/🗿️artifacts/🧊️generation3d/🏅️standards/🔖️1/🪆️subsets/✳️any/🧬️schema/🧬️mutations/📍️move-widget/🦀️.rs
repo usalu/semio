@@ -7,7 +7,8 @@ use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::WidgetLayout;
 //#region 🔖️MoveWidget
 /// 📍 Places `id`'s position at `layout`, upserting the per-widget override entry.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct MoveWidget {
     pub id: String,

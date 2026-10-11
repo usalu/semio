@@ -166,6 +166,10 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 pub(crate) mod store_fixture;
 
 #[cfg(test)]
+#[path = "🧪️tests/🔬️retirement-driver/🦀️.rs"]
+pub(crate) mod retirement_driver;
+
+#[cfg(test)]
 #[path = "🧪️tests/🔬️publication-authority/🦀️.rs"]
 pub(crate) mod publication_authority;
 
@@ -368,7 +372,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
                             mod tests_removes_a_middle_row;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect/🧪️tests/🔓️removes-an-unselected-middle-row/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/🔓️removes-an-unselected-middle-row/🦀️.rs"]
                             mod tests_removes_an_unselected_middle_row;
                         }
                         #[path = "."]

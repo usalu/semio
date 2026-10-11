@@ -10,7 +10,8 @@ pub mod retirement;
 //#region 🔖️Presence
 /// 👥️ Shareable live CAD view state — camera and engagement step. Peer mesh
 /// selection/hover now broadcasts via the framework's typed `PresenceInteraction`, not here.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "cad.presence")]
 #[dsl(layout = "lines")]
@@ -26,6 +27,8 @@ pub struct CadPresence {
     pub engagement_step: String,
     pub engagement_pane: Option<String>,
 }
+
+impl store::ArtifactPresenceSnapshot for CadPresence {}
 
 impl Default for CadPresence {
     fn default() -> Self {
@@ -142,7 +145,7 @@ impl ArtifactPack for CadPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum CadPresenceMutation {
     #[dsl(key = "set")]

@@ -3,7 +3,7 @@ import { readPhysicalFileV1 } from "../../../../../../🔨️modules/📁️file
 import { parseDeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🧬️schema/🟦️.ts";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { renderPlaygroundSessionTypeScript } from "../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts";
 import { registryModuleDirectories, type GeneratedCatalogProjection } from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, playgroundSessionOutputPath } from "../../♻️activation/🟦️.ts";
@@ -13,8 +13,8 @@ import schema from "../🧬️schema/🔣️.json";
 export class PlaygroundSessionGenerateScript extends BundleScript {
   readonly playgroundSessionPath: string;
   readonly request: PlaygroundSessionPublicationRequestV1;
-  constructor(root: string, request: PlaygroundSessionPublicationRequestV1) {
-    super(root);
+  constructor(root: string, repoRoot: string, invocation: ScriptInvocation, request: PlaygroundSessionPublicationRequestV1) {
+    super(root, repoRoot, invocation);
     this.request = parsePlaygroundSessionPublicationRequestV1(request);
     const configured = process.env[PLAYGROUND_SESSION_OUTPUT_ROOT_ENV];
     this.playgroundSessionPath = playgroundSessionOutputPath(configured ? resolve(this.repoRoot, configured) : resolve(this.repoRoot, this.request.outputRoot));

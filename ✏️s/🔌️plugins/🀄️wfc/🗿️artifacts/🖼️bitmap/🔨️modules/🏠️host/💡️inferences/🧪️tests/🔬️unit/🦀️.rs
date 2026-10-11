@@ -264,7 +264,14 @@ fn a_within_budget_checkpoint_request_is_admitted_on_the_inference_job() {
     let mut job = admitted.expect("admitted");
     semio_framework_job::InteractiveJob::begin_close(&mut job);
     while !semio_framework_job::InteractiveJob::terminal_is_empty(&job) {
-        let _ = semio_framework_job::InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let grant = semio_framework_job::RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: semio_framework_job::InteractiveJob::next_close_copy_byte_demand(&job).expect("a locally owned job quotes its copy demand"),
+            maximum_capacity_bytes: semio_framework_job::InteractiveJob::next_close_capacity_byte_demand(&job, usize::MAX).expect("a locally owned job quotes its capacity demand"),
+            maximum_release_bytes: semio_framework_job::InteractiveJob::next_close_release_byte_demand(&job).expect("a locally owned job quotes its release demand"),
+            maximum_depth: semio_framework_job::InteractiveJob::next_close_depth_demand(&job).expect("a locally owned job quotes its depth demand").max(1),
+        };
+        let _ = semio_framework_job::InteractiveJob::close_step(&mut job, grant);
     }
 }
 

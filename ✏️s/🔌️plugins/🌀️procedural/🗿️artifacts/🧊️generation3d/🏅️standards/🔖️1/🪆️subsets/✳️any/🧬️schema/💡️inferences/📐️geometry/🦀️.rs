@@ -36,7 +36,7 @@ use value::{GeometryValue, WidgetEvaluation, WidgetFault, FAULT_PREFIX};
 pub mod prelude {
     pub use super::compute::{failed, finish, finish_with_quality, ComputeEntry, KernelSession, StartFn, WidgetJob, WidgetStep};
     pub use super::inputs::WidgetInputs;
-    pub use super::value::{kernel_fault, outputs, GeometryValue, Outputs, PlaneValue, SelectionKind, SelectionValue, WidgetEvaluation, WidgetFault};
+    pub use super::value::{body_fault, kernel_fault, outputs, GeometryValue, Outputs, PlaneValue, SelectionKind, SelectionValue, WidgetEvaluation, WidgetFault};
     pub use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Port, PortType, Quality};
 }
 

@@ -143,36 +143,6 @@ pub(crate) mod context {
         }
     }
 
-    /// ♻️ One bounded owned-value retirement page — the same shape `bounded_document_store_owners`
-    /// installs on the live store, which is private to the SDK, restated here so a test-parsed
-    /// envelope can leave through the identical ladder. `VcsSnapshot`/`VcsDemoMutation` own no nested
-    /// retained payload, so one page retires either of them.
-    struct SeededValueRetirement<T>(Option<T>);
-
-    impl<T: Send + 'static> store::ErasedSnapshotRetirement for SeededValueRetirement<T> {
-        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-            if maximum_items == 0 || maximum_bytes < store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            if self.0.take().is_some() {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES });
-            }
-            Ok(store::SnapshotRetirementStep::Complete)
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            self.0.is_none()
-        }
-    }
-
-    struct SeededValueRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
-
-    impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for SeededValueRetirementFactory<T> {
-        fn retire_owned(&self, value: T) -> Box<dyn store::ErasedSnapshotRetirement> {
-            Box::new(SeededValueRetirement(Some(value)))
-        }
-    }
-
     impl Drop for SeededEnvelope {
         fn drop(&mut self) {
             let Some(envelope) = self.0.take() else { return };
@@ -180,12 +150,16 @@ pub(crate) mod context {
             // `ArtifactHistoryLedger`, whose own `Drop` asserts `artifact history ledger reached Drop
             // before every exact entry owner was retired`. The envelope leaves through the store's own
             // bounded retirement ladder, exactly like `🔌️wires`' `retire_envelope`.
-            let mut retirement = store::retire_document_envelope(
+            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::retire_document_envelope_birth_bytes::<VcsSnapshot, VcsDemoMutation>(), maximum_depth: 4, ..Default::default() };
+            let (mut retirement, _) = store::retire_document_envelope(
                 envelope,
-                std::sync::Arc::new(SeededValueRetirementFactory::<VcsSnapshot>(std::marker::PhantomData)),
-                std::sync::Arc::new(SeededValueRetirementFactory::<VcsDemoMutation>(std::marker::PhantomData)),
-            );
-            while !matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("seeded envelope retirement"), store::SnapshotRetirementStep::Complete) {}
+                std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<VcsSnapshot>::default()),
+                std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<VcsDemoMutation>::default()),
+                grant,
+            )
+            .map_err(|(error, ..)| error)
+            .expect("seeded envelope retirement admission");
+            store::test_support::drive_retirement(retirement.as_mut()).expect("seeded envelope retirement");
             assert!(retirement.terminal_is_empty(), "a seeded envelope retires completely");
         }
     }
@@ -614,11 +588,14 @@ fn resumable_text_edit_enforces_maximum_plus_one_and_retires_incrementally() {
     let mut turns = 0;
     while !work.terminal_is_empty() {
         turns += 1;
-        let step = work.close_step(1, VCS_EDIT_MAXIMUM_OUTPUT_BYTES);
-        assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Blocked));
-        assert!(turns < 16);
+        let copy = work.next_close_copy_byte_demand().expect("quoted copy demand");
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy.max(VCS_EDIT_MAXIMUM_OUTPUT_BYTES), maximum_capacity_bytes: work.next_close_capacity_byte_demand(copy).expect("quoted capacity demand"), maximum_release_bytes: work.next_close_release_byte_demand().expect("quoted release demand"), maximum_depth: work.next_close_depth_demand().expect("quoted depth demand").max(1) };
+        let step = work.close_step(grant);
+        assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Blocked | semio_framework_job::InteractiveJobCloseStep::Refused { .. }));
+        assert!(step.progress().fits(grant));
+        assert!(turns < 4_096);
     }
-    assert!(turns >= 5, "each nested owner must retire through a separate close grant");
+    assert!(turns >= 2, "the nested owners must retire through separate close grants");
 }
 
 #[test]

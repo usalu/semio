@@ -60,7 +60,8 @@ use super::insert_crane_runway;
 use super::remove_crane_runway;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = En1993Snapshot, diff = En1993Diff, schema = "s.norm.en1993")]
 pub enum En1993Mutation {

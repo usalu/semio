@@ -13,7 +13,7 @@ use super::topicstats::compute_bcf_topic_stats;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a bcf snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topicStats`, backed by the `🗒️topicstats/` slug dir).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf.inference")]
 pub struct BcfInference {

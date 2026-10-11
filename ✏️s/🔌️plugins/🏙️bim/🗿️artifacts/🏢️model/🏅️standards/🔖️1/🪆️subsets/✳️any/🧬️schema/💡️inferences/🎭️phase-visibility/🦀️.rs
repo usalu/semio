@@ -75,7 +75,7 @@ impl ViewPhase {
 }
 
 /// 🎭️ The elements of one storey a view shows, per view phase: sorted element ids under the key of each [`ViewPhase`].
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct PhaseVisibility {
     pub visible: BTreeMap<String, Vec<String>>,
 }

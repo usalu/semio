@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️State
 /// 🌡️ Refrigeration circuit state.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct RefrigerationState {
     pub evaporating_temperature_c: f64,
     pub condensing_temperature_c: f64,
@@ -17,7 +17,7 @@ pub struct RefrigerationState {
 }
 
 /// 📤️ Refrigeration timestep output.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct RefrigerationOutput {
     pub cooling_power_w: f64,
     pub compressor_power_w: f64,
@@ -28,7 +28,7 @@ pub struct RefrigerationOutput {
 
 // #region 🔖️DisplayCase
 /// 🛒️ Supermarket display case with anti-sweat and fan power.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct DisplayCase {
     pub length_m: f64,
     pub design_cooling_w: f64,
@@ -57,7 +57,7 @@ impl DisplayCase {
 
 // #region 🔖️WalkIn
 /// 🚪️ Walk-in cooler or freezer box.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct WalkIn {
     pub floor_area_m2: f64,
     pub wall_area_m2: f64,
@@ -84,7 +84,7 @@ impl WalkIn {
 
 // #region 🔖️CompressorRack
 /// 🏭️ Shared compressor rack serving multiple cases.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct CompressorRack {
     pub rated_capacity_w: f64,
     pub compressor_count: u32,
@@ -116,7 +116,7 @@ impl CompressorRack {
 
 // #region 🔖️Condenser
 /// 🌊️ Air-cooled or evaporative condenser rejecting rack heat.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct RefrigerationCondenser {
     pub ua_w_per_k: f64,
     pub fan_power_w: f64,
@@ -141,7 +141,7 @@ impl RefrigerationCondenser {
 
 // #region 🔖️SecondaryLoop
 /// 🧊️ Glycol secondary loop for remote display cases.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SecondaryLoop {
     pub pump_power_w: f64,
     pub pipe_ua_w_per_k: f64,

@@ -9,7 +9,7 @@ use framework_schema::ArtifactSchema;
 /// composed `s.stdio.semio`/`document` CHILD slot — the writer plugin no longer defines its own
 /// text-block content model, it composes stdio's `document` subset instead. `#[child(...)]` drives
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "writer")]
 #[artifact_schema(id = "s.writer.writer")]

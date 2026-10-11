@@ -107,7 +107,7 @@ pub mod patch_inspector {
 
     /// 🩹️ Mirrors the panel's `{ target, field, value }` args — `value` is either a number (most fields)
     /// or text (the `label` field); the two are mutually exclusive at any one call site.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "patch-inspector")]
     pub struct PatchInspector {
         pub target: String,

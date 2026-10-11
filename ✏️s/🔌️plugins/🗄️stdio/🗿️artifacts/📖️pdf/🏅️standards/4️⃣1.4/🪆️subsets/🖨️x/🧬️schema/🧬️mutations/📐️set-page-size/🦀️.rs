@@ -11,7 +11,8 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 /// 📐️ A4 geometry used by the independent PDF/X conformance oracle.
 pub const CONFORMANT_WIDTH: f64 = 595.276;
 pub const CONFORMANT_HEIGHT: f64 = 841.89;
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SetPageSize {

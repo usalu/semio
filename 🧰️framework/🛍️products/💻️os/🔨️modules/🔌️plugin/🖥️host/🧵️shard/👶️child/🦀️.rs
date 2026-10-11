@@ -27,8 +27,8 @@ use std::time::Duration;
 /// ⛽️ Generous fixed budget for `GuestRuntime::instantiate`'s ONE-TIME initial fuel/deadline
 /// setting — unrelated to per-turn scheduling (terra-shard-grants: per-turn budgets now travel in
 /// `ShardFrame::Grant`, sent by whichever caller drives this process's stdin; this binary does not
-/// itself compute or need one for `instantiate`, which only runs once at startup).
-const INSTANTIATE_BUDGET: Budget = Budget { fuel: 200_000_000, deadline_ms: 500, max_effects: 32, max_patch_bytes: 1 << 16, max_frames: 8 };
+/// itself compute or need one for `instantiate`, which only runs once at startup, retains no actor turn and so carries no retained authority).
+const INSTANTIATE_BUDGET: Budget = Budget { retained: semio_framework_actor::RetainedTurnInput { operation: 0, generation: 0, epoch: 0, grant: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 } }, fuel: 200_000_000, deadline_ms: 500, max_effects: 32, max_patch_bytes: 1 << 16, max_frames: 8 };
 
 /// 🎚️ P1f: this process hosts exactly ONE `ShardLoop`, pumped directly on THIS thread (below) —
 /// never submitted to `semio_framework_plugin_host::plugin_host_worker_pool()`. That pool's only
@@ -80,7 +80,7 @@ fn main() {
 
     let transport = semio_framework_async::block_on(StdioTransport::new(200));
     let policy_text=std::fs::read_to_string(identity_policy_arg).unwrap_or_else(|error|{eprintln!("[semio-shard] identity policy read failed: {error}");std::process::exit(2)});
-    let policy=semio_framework_pack_json::from_json_str(&policy_text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error|{eprintln!("[semio-shard] identity policy rejected: {error}");std::process::exit(2)});
+    let policy=serde_json::from_str(&policy_text).unwrap_or_else(|error|{eprintln!("[semio-shard] identity policy rejected: {error}");std::process::exit(2)});
     let alive=transport.identity_liveness();
     let identity=semio_framework_plugin_host::shard::native_identity_issuer(policy,move |_|{let original=Arc::clone(&alive);Box::new(move |_|original.load(std::sync::atomic::Ordering::SeqCst))});
     let mut shard = semio_framework_async::block_on(ShardLoop::new(Arc::clone(&runtime), ShardTransports::Stdio(transport),identity));

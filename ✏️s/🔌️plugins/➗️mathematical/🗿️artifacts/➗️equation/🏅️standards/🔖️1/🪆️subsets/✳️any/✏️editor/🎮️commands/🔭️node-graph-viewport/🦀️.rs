@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 
 /// 👁️ Config-only: the node-graph viewport never touches the document — it's written into `cfg`,
 /// session-only, no VCS edit, no undo entry on the document store.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "node-graph-viewport")]
 pub struct NodeGraphViewport {
     #[dsl(block)]

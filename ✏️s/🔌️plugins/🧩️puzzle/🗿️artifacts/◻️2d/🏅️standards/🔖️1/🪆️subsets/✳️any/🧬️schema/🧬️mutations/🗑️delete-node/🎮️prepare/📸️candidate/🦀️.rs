@@ -52,8 +52,8 @@ impl Puzzle2dDeleteNodeCandidateCursor {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, DeleteNode>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 23 { return Err(refusal("delete candidate is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        source.bind(&mut self.source)?;
-        mutation.bind(&mut self.mutation)?;
+        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
         match self.phase {
             0 => {
                 if let Some(step)=self.preparation.ensure(grant)? {return Ok(step);}
@@ -71,7 +71,8 @@ impl Puzzle2dDeleteNodeCandidateCursor {
                 if search == source.get().edges.len() { return Err(refusal("delete cascade lost its original edge identifier")); }
                 let left = source.project(1, |snapshot| &snapshot.edges.get(search).expect("immutable first-ID edge").id);
                 let right = source.project(1, |snapshot| &snapshot.edges.get(event).expect("immutable cascade edge").id);
-                match self.comparison.compare(left, right, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes })? {
+                match self.comparison.compare(left, right, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)? {
+                    BoundedOrdStep::Authority(progress) => Ok(RetainedCloneStep::Progress(progress)),
                     BoundedOrdStep::Progress(progress) => Ok(comparison_progress(progress)),
                     BoundedOrdStep::Complete { ordering, progress } => { self.matched = ordering == std::cmp::Ordering::Equal;self.comparison.begin_close();self.phase = 3;Ok(comparison_progress(progress)) }
                 }

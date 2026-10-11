@@ -2,7 +2,7 @@
 
 use protocol::Mutation;
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::DslArtifact)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "s.stdio.tiff.editor.config", extension = "tiffeditorcfg")]
 #[dsl(layout = "lines")]
@@ -44,7 +44,8 @@ impl store::ArtifactPack for TiffEditorConfig {
 
 store::config_diff! { record: TiffEditorConfig, diff: TiffEditorConfigDiff, fields: { selected_ifd: usize } }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum TiffEditorConfigMutation {
     SetSelectedIfd { selected_ifd: usize },
@@ -99,4 +100,12 @@ impl protocol::OpBinary for TiffEditorConfigMutation {
 /// 🧭️ Resolves a safe image page for the current snapshot; stale local state returns to page zero.
 pub fn selected_ifd(config: &TiffEditorConfig, snapshot: &crate::TiffSnapshot) -> Option<usize> {
     (!snapshot.ifds.is_empty()).then_some(config.selected_ifd).map(|index| if index < snapshot.ifds.len() { index } else { 0 })
+}
+
+impl store::snapshot_clone_preparation::ConfigApplyMutation<TiffEditorConfig> for TiffEditorConfigMutation {
+    fn exchange(self, post: &mut TiffEditorConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        let Self::SetSelectedIfd { mut selected_ifd } = self;
+        std::mem::swap(&mut selected_ifd, &mut post.selected_ifd);
+        Ok(Self::SetSelectedIfd { selected_ifd })
+    }
 }

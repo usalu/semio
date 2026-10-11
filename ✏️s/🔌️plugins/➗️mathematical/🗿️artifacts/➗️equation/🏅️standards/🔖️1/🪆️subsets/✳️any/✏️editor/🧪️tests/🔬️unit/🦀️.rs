@@ -101,7 +101,7 @@ use crate::editor::equation::unit_tests::context::{math_app, math_app_with_regis
 
 //#region 🔖️RetainedCommands
 fn retained_operation(generation: u64) -> AppOperationContext {
-    AppOperationContext { app_instance_id: 7, parent_document_id: "equation-retained-test".into(), operation_id: 11, generation, canonical_base_revision: [17; 32], authoring_seed: "authoring-seed-test".into() }
+    AppOperationContext { app_instance_id: 7, parent_document_id: "equation-retained-test".into(), operation_id: 11, generation, canonical_base_revision: [17; 32], retained: Default::default(), authoring_seed: "authoring-seed-test".into() }
 }
 
 fn graph_with_shape(node_count: usize, edge_count: usize) -> EquationGraph {
@@ -182,6 +182,11 @@ async fn retained_semantic_maxima_accept_exact_and_reject_maximum_plus_one() {
     assert!(equation_command_extent(&EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: excessive_json }), &snapshot).is_none());
 }
 
+/// 🎟️ One-item close grant that funds every currency the retained Equation workspace quotes.
+fn close_grant(maximum_items: usize) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 8 }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() {
     let graph = graph_with_shape(8, 12);
@@ -224,10 +229,10 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     assert_eq!(uninterrupted_output, replayed_output, "the DslValue-encoded mutation output must observe exact replay output");
 
     let mut cancelled_before = EquationRetainedCommandWork::new("nodeGraphEdit", identity, extent);
-    assert_eq!(cancelled_before.close_step(1, usize::MAX), InteractiveJobCloseStep::Blocked);
+    assert_eq!(cancelled_before.close_step(close_grant(1)), InteractiveJobCloseStep::Blocked);
     cancelled_before.begin_close();
-    assert_eq!(cancelled_before.close_step(1, usize::MAX), InteractiveJobCloseStep::Complete);
-    assert_eq!(cancelled_before.close_step(1, usize::MAX), InteractiveJobCloseStep::Complete);
+    assert_eq!(cancelled_before.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert_eq!(cancelled_before.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
     let mut cancelled_after = EquationRetainedCommandWork::new("nodeGraphEdit", identity, extent);
     assert!(matches!(
         cancelled_after
@@ -236,12 +241,14 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
         ArtifactCommandWorkStep::Progress { .. }
     ));
     cancelled_after.begin_close();
-    assert!(matches!(cancelled_after.close_step(0, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }));
+    assert_eq!(cancelled_after.close_step(close_grant(0)), InteractiveJobCloseStep::Pending { progress: Default::default() });
     while !cancelled_after.terminal_is_empty() {
-        let _ = cancelled_after.close_step(1, usize::MAX);
+        let grant = close_grant(1);
+        let step = cancelled_after.close_step(grant);
+        assert!(step.progress().fits(grant) && matches!(step, InteractiveJobCloseStep::Pending { .. }));
     }
-    assert_eq!(cancelled_after.close_step(1, usize::MAX), InteractiveJobCloseStep::Complete);
-    assert_eq!(cancelled_after.close_step(1, usize::MAX), InteractiveJobCloseStep::Complete);
+    assert_eq!(cancelled_after.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert_eq!(cancelled_after.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
 }
 
 /// ⏱️ The runtime's own step law over the maximum document: `StepOverrunLedger` records any turn past
@@ -283,7 +290,7 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
     work.begin_close();
     while !work.terminal_is_empty() {
         let started = std::time::Instant::now();
-        let _ = work.close_step(1, usize::MAX);
+        assert!(matches!(work.close_step(close_grant(1)), InteractiveJobCloseStep::Pending { .. }));
         admit(started.elapsed(), "close");
     }
 }

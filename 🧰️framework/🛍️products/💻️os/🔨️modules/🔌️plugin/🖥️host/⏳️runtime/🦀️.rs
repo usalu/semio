@@ -415,15 +415,15 @@ impl AsyncActorTask {
                                         let outcome = async {
                                             if let Some((cursor, bytes)) = command_page {
                                                 if let Err(fault) = instance.semio_framework_reactor().call_stage_command_page(accessor, cursor, bytes).await? {
-                                                    return Ok(Err(fault));
+                                                    return Ok(Err(super::decode_guest_plugin_error(fault)));
                                                 }
                                             }
                                             if let Some(page) = cold_pair_page {
                                                 if let Err(fault) = instance.semio_framework_reactor().call_stage_cold_pair_page(accessor, page).await? {
-                                                    return Ok(Err(fault));
+                                                    return Ok(Err(super::decode_guest_plugin_error(fault)));
                                                 }
                                             }
-                                            instance.semio_framework_reactor().call_poll(accessor, events, budget).await
+                                            instance.semio_framework_reactor().call_poll(accessor, events, budget).await.map(|original| original.map_err(super::retained_turn_wire::failure_from_wit))
                                         }
                                         .await;
                                         let mapped = match outcome {
@@ -434,7 +434,7 @@ impl AsyncActorTask {
                                                 });
                                                 convert_poll_success(turn, emitted, patches, instance_id, max_patch_bytes,retained_input).await
                                             }
-                                            Ok(Err(fault)) => Err(super::decode_guest_plugin_error(fault)),
+                                            Ok(Err(fault)) => Err(fault),
                                             Err(trap) => Err(TurnFault::Trapped(trap.to_string())),
                                         };
                                         let _ = reply.send(mapped);

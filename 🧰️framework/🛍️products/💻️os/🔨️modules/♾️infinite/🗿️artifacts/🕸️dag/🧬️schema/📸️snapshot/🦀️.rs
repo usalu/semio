@@ -43,7 +43,8 @@ pub fn default_node_height() -> f64 {
 pub const DAG_CHANNEL_ROW_HEIGHT: f64 = ui_styling::metrics::dag::CHANNEL_ROW_HEIGHT;
 
 /// 🔌️ Visual shape of a port handle cap.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum PortShape {
     #[default]
@@ -52,7 +53,8 @@ pub enum PortShape {
 }
 
 /// 📐️ Edge routing style between port handles.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum EdgeRouteStyle {
     #[default]
@@ -61,7 +63,8 @@ pub enum EdgeRouteStyle {
 }
 
 /// 🪝️ Named horizontal port on a DAG node edge.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct IoPortSpec {
     pub id: String,
@@ -160,7 +163,8 @@ impl IoPortSpec {
 }
 
 /// 🖼️ Screen media payload for output nodes.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DagMedia {
     pub kind: DagMediaKind,
@@ -168,7 +172,8 @@ pub struct DagMedia {
 }
 
 /// 🎬️ Screen media kind discriminator.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum DagMediaKind {
     Image,
@@ -179,7 +184,8 @@ pub enum DagMediaKind {
 // #endregion 🔖️Media
 
 /// 👁️ Typed preview payload rendered inside a preview node.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", tag = "variant")]
 pub enum DagPreviewContent {
     #[default]
@@ -196,7 +202,8 @@ pub enum DagPreviewContent {
 }
 
 /// 🧩️ Tagged node kind: computation, slider, select, or screen.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum DagNodeKind {
     Computation {
@@ -294,7 +301,8 @@ pub fn dag_node_kind_tag(kind: &DagNodeKind) -> &'static str {
 /// 📦️ DAG node with shared layout fields and a tagged kind.
 // 🔀️ `ToValue`/`FromValue` are HAND-WRITTEN below, not derived: `kind` is `#[serde(flatten)]` and the
 // derive has no `flatten`, so only a hand-written impl reproduces serde's shape.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct DagNodeSpec {
     pub id: String,
     pub name: String,
@@ -627,7 +635,8 @@ pub struct DagCamera {
 }
 
 /// 🔗️ Edge between port handles.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DagHostSnapshotEdge {
     pub id: String,
@@ -731,6 +740,6 @@ pub fn advance_select_option(node: &mut DagNodeSpec) -> Option<String> {
     options.get(usize::try_from(*selected).ok()?).cloned()
 }
 
-semio_framework_value::artifact_retire_leaf!(PortShape,EdgeRouteStyle,DagMediaKind,DagDrawLod);
+semio_framework_value::artifact_retire_leaf!(DagDrawLod);
 semio_framework_value::artifact_retire_struct!(DagCamera {x,y,zoom});
 semio_framework_value::artifact_retire_struct!(DagHostSnapshot {schema,camera,nodes,edges});

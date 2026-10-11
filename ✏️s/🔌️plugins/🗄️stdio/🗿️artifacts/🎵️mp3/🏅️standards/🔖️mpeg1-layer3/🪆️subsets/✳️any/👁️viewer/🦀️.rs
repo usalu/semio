@@ -29,7 +29,7 @@ use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions, so its typed command channel has exactly one inert variant.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum Mp3ViewCommand {
     Noop,
 }
@@ -79,7 +79,7 @@ impl ArtifactViewer for Mp3Viewer {
         if request.port != playback::PORT_ID || request.tool_id != playback::TOOL_ID {
             return Ok(None);
         }
-        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(playback::Mp3PlaybackExportJob::new(request))))
+        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(playback::Mp3PlaybackExportJob::new(request)?)))
     }
 
     fn build_snapshot_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactSnapshotDisposer<Self::Snapshot>>> {

@@ -9,7 +9,7 @@ use protocol::list_delta::RowPatch;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse typed delta for the puzzle3d artifact: per-field entity patches and id-keyed collection deltas.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.puzzle.puzzle3d")]
 pub struct Puzzle3dDiff {
@@ -34,7 +34,7 @@ pub struct Puzzle3dDiff {
 
 //#region 🔖️Patches
 /// 🔑️ The identity of one kind-compatibility row: the pair of kinds it links.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dKindCompatibilityKey {
     pub source: String,
@@ -42,7 +42,7 @@ pub struct Puzzle3dKindCompatibilityKey {
 }
 
 /// 🩹 Sparse per-field patch over one `Puzzle3dVortex` — only the named fields change.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dVortexPatch {
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
@@ -62,7 +62,7 @@ pub struct Puzzle3dVortexPatch {
 }
 
 /// 🩹 Sparse per-field patch over one `Puzzle3dObject` — only the named fields change.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dObjectPatch {
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
@@ -88,7 +88,7 @@ pub struct Puzzle3dObjectPatch {
 }
 
 /// 🩹 Sparse per-field patch over one `Puzzle3dAttraction` — only the named fields change.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dAttractionPatch {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -114,7 +114,7 @@ pub struct Puzzle3dAttractionPatch {
 }
 
 /// 🩹 Sparse per-field patch over one `Puzzle3dTargetVolume` — only the named fields change.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dTargetVolumePatch {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -130,7 +130,7 @@ pub struct Puzzle3dTargetVolumePatch {
 }
 
 /// 🩹 Sparse per-field patch over one `Puzzle3dReference` — only the named fields change.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dReferencePatch {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -146,7 +146,7 @@ pub struct Puzzle3dReferencePatch {
 }
 
 /// 🩹 Sparse per-field patch over one `Puzzle3dKindCompatibility` — only the named fields change.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dKindCompatibilityPatch {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -158,7 +158,7 @@ pub struct Puzzle3dKindCompatibilityPatch {
 }
 
 /// 🩹 Sparse per-field patch over one `Puzzle3dMeta` — only the named fields change.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dMetaPatch {
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]

@@ -57,7 +57,7 @@ const MIN_PART: f64 = 1e-4;
 
 //#region 🔖️Values
 /// 🧱️ What a surface is: a wall, a curtain wall, the floor or the ceiling (a roof when its far side is exterior) of a space, or a window or door in a wall.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum SurfaceKind {
     #[default]
     Wall,
@@ -83,7 +83,7 @@ impl SurfaceKind {
 }
 
 /// 🔭️ What lies on the far side of a surface.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum Boundary {
     #[default]
     Exterior,
@@ -105,7 +105,7 @@ impl Boundary {
 }
 
 /// 🧱️ One surface of the envelope of a space. `area` is net of the openings in it; `polygon` is its outline in building coordinates, counter-clockwise seen from outside.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct EnvelopeSurface {
     pub id: String,
     pub kind: SurfaceKind,
@@ -144,7 +144,7 @@ impl EnvelopeSurface {
 }
 
 /// 🩺️ What an envelope issue is about.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum EnergyCode {
     ThermalDataMissing,
     OpenBoundary,
@@ -152,7 +152,7 @@ pub enum EnergyCode {
 }
 
 /// 🩺️ One issue of an envelope: the code, the element it is about and the detail (the material, type or length that explains it).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct EnergyIssue {
     pub code: EnergyCode,
     pub element: String,
@@ -160,7 +160,7 @@ pub struct EnergyIssue {
 }
 
 /// 🌡️ The envelope of one space. `conditioned` is a heating or cooling set point, `heated` a heating set point; `open_length` is the length of its outline that lies on no wall.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct EnvelopeSpace {
     pub space: String,
     pub storey: String,
@@ -196,7 +196,7 @@ impl EnergyScope {
 }
 
 /// 📊️ What the conditioned spaces of a scope add up to. The vectors have one entry per compass sector ([`COMPASS`]).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct EnergyTotals {
     pub spaces: Vec<String>,
     pub floor_area: f64,

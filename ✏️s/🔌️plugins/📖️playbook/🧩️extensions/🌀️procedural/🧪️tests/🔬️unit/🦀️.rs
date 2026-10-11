@@ -316,18 +316,21 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> =
         ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ModuleRenderPayload, ModulePayloadMutation>());
+    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<ModuleRenderPayload, ModulePayloadMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     let mut payload = default_payload();
     payload.interactive = false;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], transaction: None }).await.expect("apply");
     let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
-    while !store.close_owned_terminal_is_empty() {
-        store.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("module store closes through its exact bounded owners");
-    }
+    store.close_owned_unscheduled().expect("module store closes through its exact bounded owners");
 }
 //#endregion 🔖️CommandEnvelopeTests
 //#endregion 🔖️DslAndOpText
+
+fn quoted_close_grant(owner: &ModuleGeometryOwner, copy_bytes: usize) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    let demand = owner.retirement_demands(copy_bytes).expect("instance geometry quotes its next close turn");
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+}
 
 #[test]
 fn instance_geometry_admits_session_shell_before_terminal() {
@@ -336,17 +339,23 @@ fn instance_geometry_admits_session_shell_before_terminal() {
     let complete_bytes = admission["completionByteGrant"].as_u64().unwrap() as usize;
     let mut owner = ModuleGeometryOwner::new();
     for _ in 0..1_000_000 {
-        let step = owner.close_step(64, complete_bytes).unwrap();
-        if step == PluginCloseStep::Complete || (owner.registry.is_none() && owner.registry_retirement.terminal_is_empty() && Session::terminal_is_empty(&owner.session)) { break; }
+        let grant = quoted_close_grant(&owner, complete_bytes);
+        let step = owner.close_step(grant).unwrap();
+        assert!(step.progress().is_none_or(|progress| progress.fits(grant)));
+        if matches!(step, PluginLifecycleStep::Complete(_)) || (owner.registry.is_none() && owner.registry_retirement.terminal_is_empty() && Session::terminal_is_empty(&owner.session)) { break; }
     }
     assert!(Session::terminal_is_empty(&owner.session));
     assert_eq!(!owner.terminal_is_empty(), admission["retainedAfterNativeDrain"].as_bool().unwrap());
-    assert!(matches!(owner.close_step(1, admission["tinyByteGrant"].as_u64().unwrap() as usize).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
-    assert_eq!(!owner.terminal_is_empty(), admission["retainedOnTinyByteGrant"].as_bool().unwrap());
-    let PluginCloseStep::Pending { released_items, released_bytes } = owner.close_step(1, complete_bytes).unwrap() else { panic!("granted instance shell retirement reports physical release"); };
-    assert_eq!(released_items, 1);
-    assert_eq!(released_bytes > 0 && owner.terminal_is_empty(), admission["releasedByCompletionByteGrant"].as_bool().unwrap());
-    assert_eq!(owner.close_step(0, 0).unwrap(), PluginCloseStep::Complete);
+    if !owner.terminal_is_empty() {
+        let full = quoted_close_grant(&owner, complete_bytes);
+        let tiny = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_release_bytes: 0, ..full };
+        assert!(matches!(owner.close_step(tiny).unwrap(), PluginLifecycleStep::Progress(progress) if progress == Default::default()));
+        assert_eq!(!owner.terminal_is_empty(), admission["retainedOnTinyByteGrant"].as_bool().unwrap());
+        let PluginLifecycleStep::Progress(progress) = owner.close_step(full).unwrap() else { panic!("granted instance shell retirement reports physical release"); };
+        assert_eq!(progress.copied_items, 1);
+        assert_eq!(progress.released_bytes > 0 && owner.terminal_is_empty(), admission["releasedByCompletionByteGrant"].as_bool().unwrap());
+    }
+    assert!(matches!(owner.close_step(Default::default()).unwrap(), PluginLifecycleStep::Complete(_)));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -407,9 +416,10 @@ async fn instance_geometry_replays_durable_sources_and_preserves_preview_authori
     }
     snapshot.retire_cold();
     for owner in [&mut first, &mut second] {
-        assert!(matches!(owner.close_step(0, 65_536).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
+        assert!(matches!(owner.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..quoted_close_grant(owner, 65_536) }).unwrap(), PluginLifecycleStep::Progress(progress) if progress == Default::default()));
         for _ in 0..1_000_000 {
-            if matches!(owner.close_step(64, 65_536).unwrap(), PluginCloseStep::Complete) { break; }
+            let grant = quoted_close_grant(owner, 65_536);
+            if matches!(owner.close_step(grant).unwrap(), PluginLifecycleStep::Complete(_)) { break; }
         }
         assert!(owner.terminal_is_empty(), "instance geometry retirement completes");
     }

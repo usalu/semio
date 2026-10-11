@@ -45,7 +45,8 @@ use protocol::Mutation;
 //#region 🔖️PathAddressing
 /// 🧭️ One step down into a nested block container: `Quote` (own `blocks`), a `List` item's own
 /// `blocks`, or a `Table` cell's own `blocks`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum DocPathSegment {
     Quote { block_index: usize },
@@ -55,7 +56,8 @@ pub enum DocPathSegment {
 
 /// 🧭️ Addresses one block-list slot: `segments` navigate through nested containers, `index` is
 /// the slot within the innermost `Vec<DocBlock>`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocBlockPath {
     #[value(default)]
@@ -188,7 +190,8 @@ pub mod set_style_name;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioDocumentSnapshot, diff = SemioDocumentDiff, schema = "SemioDocumentMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioDocumentMutation {

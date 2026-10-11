@@ -25,7 +25,7 @@ use std::collections::BTreeMap;
 //#region 🔖️Snapshot
 
 /// 📸️ Persisted remodeling document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "remodeling")]
 #[artifact_schema(id = "s.remodel.remodeling")]

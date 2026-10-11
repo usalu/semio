@@ -129,23 +129,23 @@ pub(crate) fn shooting_ensure_semio_drawing_bridge_registered() {
 /// `rasterize_svg_to_png_base64`/embed it in an `<img>`, exactly like the old `wrap_svg` output did.
 pub(crate) fn shooting_drawing_to_svg_text(drawing: &SemioDrawingSnapshot) -> Result<String, String> {
     shooting_ensure_semio_drawing_bridge_registered();
-    let key = semio_framework_plugin::IoKey {
+    let key = semio_framework_plugin::io::IoKey {
         artifact_kind: "s.stdio.semio".into(),
         standard: "v1".into(),
         subset: "drawing".into(),
-        direction: semio_framework_plugin::IoDirection::Export,
+        direction: semio_framework_plugin::io::IoDirection::Export,
         format_kind: "s.stdio.svg".into(),
         format_standard: "1.1".into(),
         format_subset: "*".into(),
     };
-    let source = semio_framework_plugin::ErasedComposeSource {
+    let source = semio_framework_plugin::io::ErasedComposeSource {
         dialect: semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_artifact_reference::StandardId("v1"), subset: semio_framework_artifact_reference::SubsetId("drawing") },
-        payload: semio_framework_plugin::IoPayload::Binary(<SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing)),
+        payload: semio_framework_plugin::io::IoPayload::Binary(<SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing)),
     };
-    let composed = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::io_dispatch(&key, std::slice::from_ref(&source))).map_err(|error| error.message)?;
+    let composed = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::io::io_dispatch(&key, std::slice::from_ref(&source))).map_err(|error| error.message)?;
     let bytes = match composed.payload {
-        semio_framework_plugin::IoPayload::Binary(bytes) => bytes,
-        semio_framework_plugin::IoPayload::Text(_) => return Err("s.stdio.semio/v1/drawing -> s.stdio.svg dispatch returned Text, expected Binary (ArtifactPack)".into()),
+        semio_framework_plugin::io::IoPayload::Binary(bytes) => bytes,
+        semio_framework_plugin::io::IoPayload::Text(_) => return Err("s.stdio.semio/v1/drawing -> s.stdio.svg dispatch returned Text, expected Binary (ArtifactPack)".into()),
     };
     let svg_snapshot = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| error.to_string())?;
     write_svg_xml(&svg_snapshot.doc)

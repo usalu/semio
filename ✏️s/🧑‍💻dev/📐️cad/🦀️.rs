@@ -15,12 +15,14 @@ mod browser {
         pub fn cancel_close(&self) { self.session.cancel_close(); }
         pub fn resume_close(&self) { self.session.resume_close(); }
         pub fn terminal_is_empty(&self) -> bool { self.session.terminal_is_empty() }
-        pub fn close_step(&self, maximum_items: usize, maximum_bytes: usize) -> String {
-            match self.session.close_step(maximum_items,maximum_bytes) {
-                Ok(neural_engine::ValueRetirementStep::Blocked) => "{\"phase\":\"blocked\",\"items\":0,\"bytes\":0}".into(),
-                Ok(neural_engine::ValueRetirementStep::Complete) => "{\"phase\":\"complete\",\"items\":0,\"bytes\":0}".into(),
-                Ok(neural_engine::ValueRetirementStep::Pending { released_items,released_bytes }) => format!("{{\"phase\":\"pending\",\"items\":{released_items},\"bytes\":{released_bytes}}}"),
-                Err(error) => semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".into(),semio_framework_pack_json::Value::String(error))])),
+        pub fn next_close_copy_byte_demand(&self)->Result<usize,JsValue> {self.session.next_close_copy_byte_demand().map_err(|error|JsValue::from_str(&error.to_string()))}
+        pub fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,JsValue> {self.session.next_close_capacity_byte_demand(copy).map_err(|error|JsValue::from_str(&error.to_string()))}
+        pub fn next_close_release_byte_demand(&self)->Result<usize,JsValue> {self.session.next_close_release_byte_demand().map_err(|error|JsValue::from_str(&error.to_string()))}
+        pub fn next_close_depth_demand(&self)->Result<usize,JsValue> {self.session.next_close_depth_demand().map_err(|error|JsValue::from_str(&error.to_string()))}
+        pub fn close_step(&self,maximum_items:usize,maximum_copy_bytes:usize,maximum_capacity_bytes:usize,maximum_release_bytes:usize,maximum_depth:usize)->String {
+            match self.session.close_step(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items,maximum_copy_bytes,maximum_capacity_bytes,maximum_release_bytes,maximum_depth}) {
+                Ok(step)=>{let progress=step.progress();let phase=if matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {"complete"}else {"pending"};format!("{{\"phase\":\"{phase}\",\"items\":{},\"copyBytes\":{},\"capacityBytes\":{},\"releaseBytes\":{}}}",progress.copied_items,progress.copied_bytes,progress.retained_capacity_bytes,progress.released_bytes)},
+                Err(error)=>semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".into(),semio_framework_pack_json::Value::String(error.to_string()))])),
             }
         }
     }

@@ -230,7 +230,8 @@ fn svd3(m: Mat3d) -> (Mat3d, [f64; 3], Mat3d) {
 }
 
 /// 🔄️ Rotation group SO(3) element stored as an orthonormal, det `+1` column-major matrix.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct So3(pub Mat3d);
 
 impl So3 {
@@ -364,7 +365,8 @@ fn xi6_scale(xi: [f64; 6], s: f64) -> [f64; 6] {
 }
 
 /// 🦾️ Rigid transform in SE(3): rotation `r` followed by translation `t`, so `p ↦ r·p + t`.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Se3 {
     pub r: So3,
     pub t: [f64; 3],

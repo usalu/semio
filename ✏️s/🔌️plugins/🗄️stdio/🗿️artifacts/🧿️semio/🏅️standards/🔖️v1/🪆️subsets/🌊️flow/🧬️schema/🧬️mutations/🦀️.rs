@@ -68,7 +68,8 @@ pub mod drag_nodes;
 /// same JSON object the tag lives in, so `decode_semio_flow_mutation_json`'s committed
 /// specification vectors and the `🌊️mutate-semio-flow` test adapter's `{"mutation":"insertNode",...}`
 /// payloads keep decoding byte-for-byte unchanged after this migration.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioFlowSnapshot, diff = SemioFlowDiff, schema = "SemioFlowMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioFlowMutation {

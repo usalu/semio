@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanB
 
 fn demo_plan(storey: &str) -> PlanLinework {
     let model = parse_dsl(BIM_EXAMPLE_TEXT).expect("the committed demo parses");
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &model, |inference| inference.plan_linework.clone()).get(storey).cloned().expect("the storey has a plan")
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.plan_linework.clone()).get(storey).cloned().expect("the storey has a plan")
 }
 
 fn vertex(x: f64, y: f64, bulge: f64) -> PlanVertex {

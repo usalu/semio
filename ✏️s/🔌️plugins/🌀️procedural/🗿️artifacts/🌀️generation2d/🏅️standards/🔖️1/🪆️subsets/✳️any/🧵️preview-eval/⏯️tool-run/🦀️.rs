@@ -326,13 +326,17 @@ pub(crate) fn run_action_effect(action: &str, args: semio_framework_value::DslVa
     Effect::DispatchAction { req: semio_framework_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: action.into(), args: Some(args), delay_ms: 0 }
 }
 
+/// 🎟️ The grant the run's latch bookkeeping runs under outside a job turn (the poll and the run start).
+pub(crate) const PREVIEW_EVAL_BOOKKEEPING_GRANT: semio_framework_value::RetainedCloneGrant = semio_framework_value::RetainedCloneGrant { maximum_items: 8, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 };
+
 /// 🔢️ Owes every attached window whose target moved since its last evaluated digest one evaluation.
-pub fn owe_moved_targets(sessions: &mut PreviewEvalSessions<'_>, link: &PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], current: &BTreeMap<PreviewEvalTarget, u64>) {
+pub fn owe_moved_targets(sessions: &mut PreviewEvalSessions<'_>, link: &PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], current: &BTreeMap<PreviewEvalTarget, u64>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     for (window_id, _, target) in windows {
         if link.evaluated.get(target) != current.get(target) {
-            sessions.get_mut(*target).note_window_tick_outcome(window_id, true);
+            sessions.get_mut(*target).note_window_tick_outcome(window_id, true, grant)?;
         }
     }
+    Ok(())
 }
 
 /// 🚦️ What the surface's `pending_effects` owes the run for the attached `windows`: owe every window
@@ -342,9 +346,26 @@ pub fn owe_moved_targets(sessions: &mut PreviewEvalSessions<'_>, link: &PreviewE
 /// owes its windows again.
 pub fn preview_eval_run_effects(mut sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], current: &BTreeMap<PreviewEvalTarget, u64>, run: Option<&ToolRunView>, servable: bool) -> Vec<Effect> {
     for target in [PreviewEvalTarget::Document, PreviewEvalTarget::Generation] {
-        sessions.get_mut(target).retain_window_tick_latches(&windows.iter().filter(|(_, _, window_target)| *window_target == target).map(|(window_id, _, _)| *window_id).collect::<Vec<_>>());
+        let identifiers = windows.iter().filter(|(_, _, window_target)| *window_target == target).map(|(window_id, _, _)| *window_id).collect::<Vec<_>>();
+        let mut cursor = 0;
+        let mut retained = false;
+        for _ in 0..=identifiers.len().saturating_mul(4).saturating_add(8) {
+            match sessions.get_mut(target).retain_window_tick_latches(&identifiers, &mut cursor, PREVIEW_EVAL_BOOKKEEPING_GRANT) {
+                Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) => {
+                    retained = true;
+                    break;
+                }
+                Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(_)) => {}
+                Err(_) => return Vec::new(),
+            }
+        }
+        if !retained {
+            return Vec::new();
+        }
     }
-    owe_moved_targets(&mut sessions, link, windows, current);
+    if owe_moved_targets(&mut sessions, link, windows, current, PREVIEW_EVAL_BOOKKEEPING_GRANT).is_err() {
+        return Vec::new();
+    }
     link.attach_windows(windows);
     link.wake();
     if windows.is_empty() || !servable {
@@ -399,6 +420,10 @@ pub struct PreviewEvalRunJob<O: PreviewEvalRunOwner> {
     phase: PreviewEvalRunPhase,
     closing: bool,
     released: bool,
+    publication: semio_framework_job::RetainedJobPublication,
+    publishing: Option<semio_framework_job::JobPublicationKind>,
+    source: Vec<u8>,
+    delivered: bool,
     owner_type: std::marker::PhantomData<fn() -> O>,
 }
 
@@ -409,7 +434,7 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
         owner.with_mut::<O, _>(|held| {
             let (mut sessions, link) = held.preview_eval_parts().ok_or_else(preview_eval_session_closing)?;
             for (window_id, _, target) in &link.windows {
-                sessions.get_mut(*target).note_window_tick_outcome(window_id, true);
+                sessions.get_mut(*target).note_window_tick_outcome(window_id, true, PREVIEW_EVAL_BOOKKEEPING_GRANT).map_err(|error| Fault::from(error.to_string()))?;
             }
             link.port = Some(port.clone());
             link.settled = None;
@@ -428,6 +453,10 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
             phase: PreviewEvalRunPhase::Running,
             closing: false,
             released: false,
+            publication: semio_framework_job::RetainedJobPublication::new(),
+            publishing: None,
+            source: Vec::new(),
+            delivered: false,
             owner_type: std::marker::PhantomData,
         })
     }
@@ -475,29 +504,71 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
         self.phase = PreviewEvalRunPhase::Complete;
     }
 
-    fn emit(&mut self, cx: &mut StepContext<'_>, state: ToolRunState) -> StepOutcome {
+    fn stage_fault(&mut self, detail: &[u8]) {
+        self.source.clear();
+        self.source.extend_from_slice(detail);
+        self.publishing = Some(semio_framework_job::JobPublicationKind::Fault);
+    }
+
+    fn stage_emit(&mut self, state: ToolRunState) {
         self.writer.progress(self.progress(state));
-        let payload = self.writer.finish().and_then(|tick| tick.encode().ok()).and_then(|bytes| cx.payload_from_bytes(JobPayloadStream::Preview, &bytes).map_err(|rejected| drop(rejected.into_source())).ok());
-        payload.map_or_else(|| StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }), StepOutcome::PreviewReady)
+        match self.writer.finish().and_then(|tick| tick.encode().ok()) {
+            Some(bytes) => {
+                self.source = bytes;
+                self.publishing = Some(semio_framework_job::JobPublicationKind::Preview);
+            }
+            None => self.stage_fault(b"generation-preview-eval.tick-encode"),
+        }
+    }
+
+    fn close_demands(&self, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.publication.terminal_is_empty() {
+            return self.publication.retirement_demands();
+        }
+        if self.delivered || !self.released {
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if self.source.capacity() != 0 {
+            return Ok(semio_framework_value::RetirementDemand { release_bytes: self.source.capacity(), depth: 1, ..Default::default() });
+        }
+        Ok(Default::default())
     }
 }
 
 impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if self.delivered {
+            let step = self.publication.close_step(cx.retained_grant())?;
+            cx.consume_retained(step.progress())?;
+            if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+                self.delivered = false;
+                self.source = Vec::new();
+            }
+            return Ok(None);
+        }
         if self.closing || cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return JobOutcomeBorrow::admit_cancelled(cx);
+        }
+        if let Some(kind) = self.publishing {
+            let result = self.publication.advance_from_source(kind, &self.source, cx)?;
+            if result.is_some() {
+                self.delivered = true;
+                self.publishing = None;
+            }
+            return Ok(result);
         }
         if self.phase == PreviewEvalRunPhase::Complete {
-            return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
+            return JobOutcomeBorrow::admit_complete(cx, None, None);
         }
         let (port, identity) = (self.port.clone(), self.identity);
+        let grant = cx.retained_grant();
         let turn = self.owner.with_mut::<O, _>(|held| {
             let (mut sessions, link) = held.preview_eval_parts().ok_or_else(preview_eval_session_closing)?;
             let hop = next_preview_eval_hop(&sessions, &link.windows);
             match hop {
                 PreviewEvalHop::Dispatch(index) => {
                     let (window_id, kind, target) = &link.windows[index];
-                    if sessions.get_mut(*target).arm_window_tick(window_id) {
+                    if sessions.get_mut(*target).arm_window_tick(window_id, grant).map_err(|error| Fault::from(error.to_string()))?.0 {
                         port.dispatch(tick_effect(window_id, kind));
                     }
                 }
@@ -513,8 +584,11 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
         });
         let (hop, observation, extension_fault) = match turn {
             Ok(turn) => turn,
-            Err(fault) if fault.code.0 == "interactive-job.instance-owner-busy" => return StepOutcome::Yield,
-            Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            Err(fault) if fault.code.0 == "interactive-job.instance-owner-busy" => return Ok(None),
+            Err(_) => {
+                self.stage_fault(b"generation-preview-eval.owner-fault");
+                return Ok(None);
+            }
         };
         self.record(observation);
         if extension_fault && !self.faulted {
@@ -525,14 +599,28 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
             PreviewEvalHop::Dispatch(_) => {
                 self.hops += 1;
                 cx.consume_fuel(1);
-                self.emit(cx, ToolRunState::Running)
+                self.stage_emit(ToolRunState::Running);
+                Ok(None)
             }
             PreviewEvalHop::Settled => {
                 self.settle();
-                self.emit(cx, ToolRunState::Complete)
+                self.stage_emit(ToolRunState::Complete);
+                Ok(None)
             }
-            PreviewEvalHop::Wait if self.writer.is_empty() => StepOutcome::Yield,
-            PreviewEvalHop::Wait => self.emit(cx, ToolRunState::Running),
+            PreviewEvalHop::Wait if self.writer.is_empty() => Ok(None),
+            PreviewEvalHop::Wait => {
+                self.stage_emit(ToolRunState::Running);
+                Ok(None)
+            }
+        }
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Complete => descriptor.complete(None, None),
+            _ => self.publication.borrow_outcome(descriptor),
         }
     }
 
@@ -540,40 +628,81 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(body)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.depth)
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+        use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
         self.closing = true;
-        if self.released {
-            return InteractiveJobCloseStep::Complete;
+        let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
+        let demand = match self.close_demands(grant.maximum_copy_bytes) {
+            Ok(demand) => demand,
+            Err(error) => return refused(error),
+        };
+        if demand == Default::default() {
+            return InteractiveJobCloseStep::Complete { progress: Default::default() };
         }
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        if grant.maximum_depth < demand.depth {
+            return refused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "preview evaluation run close exceeds its admitted depth"));
         }
-        let identity = self.identity;
-        let released = self.owner.with_mut::<O, _>(|held| {
-            let Some((mut sessions, link)) = held.preview_eval_parts() else { return Ok(()) };
-            if !link.owned_by(identity.id.run) {
-                return Ok(());
-            }
-            link.port = None;
-            link.job_run = None;
-            if link.settled.is_some() {
-                return Ok(());
-            }
-            for (window_id, _, target) in &link.windows {
-                sessions.get_mut(*target).cancel_preview_evaluation(window_id);
-            }
-            Ok(())
-        });
-        match released {
-            Err(fault) if fault.code.0 == "interactive-job.instance-owner-busy" => InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
-            _ => {
-                self.released = true;
-                InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-            }
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return InteractiveJobCloseStep::Pending { progress: Default::default() };
         }
+        let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        if !self.publication.terminal_is_empty() {
+            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+            return match self.publication.close_step(child) {
+                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+                Err(error) => refused(error),
+            };
+        }
+        if self.delivered {
+            self.delivered = false;
+            return InteractiveJobCloseStep::Pending { progress: item };
+        }
+        if !self.released {
+            let identity = self.identity;
+            let released = self.owner.with_mut::<O, _>(|held| {
+                let Some((mut sessions, link)) = held.preview_eval_parts() else { return Ok(()) };
+                if !link.owned_by(identity.id.run) {
+                    return Ok(());
+                }
+                link.port = None;
+                link.job_run = None;
+                if link.settled.is_some() {
+                    return Ok(());
+                }
+                for (window_id, _, target) in &link.windows {
+                    sessions.get_mut(*target).cancel_preview_evaluation(window_id, grant).map_err(|error| Fault::from(error.to_string()))?;
+                }
+                Ok(())
+            });
+            return match released {
+                Err(fault) if fault.code.0 == "interactive-job.instance-owner-busy" => InteractiveJobCloseStep::Pending { progress: Default::default() },
+                _ => {
+                    self.released = true;
+                    InteractiveJobCloseStep::Pending { progress: item }
+                }
+            };
+        }
+        let released_bytes = std::mem::take(&mut self.source).capacity();
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } }
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.released
+        self.closing && self.released && self.publication.terminal_is_empty() && !self.delivered && self.source.capacity() == 0
     }
 }

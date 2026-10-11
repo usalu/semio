@@ -10,7 +10,7 @@ use framework_schema::ArtifactSchema;
 /// 📸️ Persisted Din18599 building energy subject. The monthly climate is parent-owned state and the composed
 /// `s.stdio.semio`/`table` child `climateTable` is derived from it; envelope and zones are id-keyed lists; plant systems
 /// are nested records. Derived H_T / H_V / Q_P are never stored as free inputs.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]

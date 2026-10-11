@@ -50,6 +50,7 @@ semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-artifact-trinity-jack = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-trinity-rewriting = { workspace = true, features = ["component-app-assembly"] }
 semio-framework-dispatch-macros = { workspace = true }
+semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 

@@ -6,6 +6,7 @@ use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::{generation3d_label_number,Generation3dMutation};
 
 use crate::Generation3dSnapshot;
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 
 //#region 🔖️WidgetInputValue
 /// 📏️ The longest text input, in characters (the schema's `maxLength`).
@@ -15,15 +16,26 @@ pub const CHANGE_WIDGET_INPUT_MAXIMUM_CHANNEL: usize = 256;
 /// ✂️ The most characters of a text input a history label prints before it elides the rest with `…`.
 pub const CHANGE_WIDGET_INPUT_LABEL_TEXT: usize = 32;
 
+/// 📐️ A plane literal — an origin point and a normal vector.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct WidgetInputPlane {
+    pub origin: [f64; 3],
+    pub normal: [f64; 3],
+}
+
 /// 🔣️ One typed input literal — on the wire `{type, value}`, a point or a vector as `[x, y, z]`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "type", content = "value", rename_all = "camelCase")]
 pub enum WidgetInputValue {
     Number(f64),
     Text(String),
     Boolean(bool),
     Point([f64; 3]),
     Vector([f64; 3]),
-    Plane { origin: [f64; 3], normal: [f64; 3] },
+    Plane(WidgetInputPlane),
     NumberList(Vec<f64>),
     TextList(Vec<String>),
     BooleanList(Vec<bool>),
@@ -40,7 +52,7 @@ impl WidgetInputValue {
             Self::Boolean(_) | Self::BooleanList(_) => "boolean",
             Self::Point(_) | Self::PointList(_) => "point",
             Self::Vector(_) | Self::VectorList(_) => "vector",
-            Self::Plane { .. } => "plane",
+            Self::Plane(_) => "plane",
         }
     }
 
@@ -77,7 +89,7 @@ impl WidgetInputValue {
         match self {
             Self::Number(value) => value.is_finite(),
             Self::Point(axes) | Self::Vector(axes) => axes.iter().all(|value| value.is_finite()),
-            Self::Plane { origin, normal } => origin.iter().chain(normal).all(|value| value.is_finite()),
+            Self::Plane(WidgetInputPlane { origin, normal }) => origin.iter().chain(normal).all(|value| value.is_finite()),
             Self::Text(text) => text.chars().count() <= CHANGE_WIDGET_INPUT_MAXIMUM_TEXT,
             Self::Boolean(_) => true,
             _ => self.items().is_some_and(|items| items.len() <= 1024 && items.iter().all(Self::admissible)),
@@ -97,7 +109,7 @@ impl WidgetInputValue {
             Self::Text(value) => scalar(semio_framework_value::DslValue::String(value.clone())),
             Self::Boolean(value) => scalar(semio_framework_value::DslValue::Bool(*value)),
             Self::Point(axes) | Self::Vector(axes) => semio_framework_value::DslValue::Object(std::iter::once(schema.clone()).chain(["x", "y", "z"].iter().zip(axes).map(|(axis, value)| (axis.to_string(), semio_framework_value::DslValue::float(*value)))).collect()),
-            Self::Plane { origin, normal } => semio_framework_value::DslValue::Object(vec![schema.clone(), ("origin".to_string(), Self::Point(*origin).literal()), ("normal".to_string(), Self::Vector(*normal).literal())]),
+            Self::Plane(WidgetInputPlane { origin, normal }) => semio_framework_value::DslValue::Object(vec![schema.clone(), ("origin".to_string(), Self::Point(*origin).literal()), ("normal".to_string(), Self::Vector(*normal).literal())]),
             _ => unreachable!(),
         }
     }
@@ -116,7 +128,7 @@ impl WidgetInputValue {
             "point" => Self::Point(axes()?),
             "vector" => Self::Vector(axes()?),
             "plane" => match (Self::of_literal(literal.get("origin")?)?, Self::of_literal(literal.get("normal")?)?) {
-                (Self::Point(origin), Self::Vector(normal)) => Self::Plane { origin, normal },
+                (Self::Point(origin), Self::Vector(normal)) => Self::Plane(WidgetInputPlane { origin, normal }),
                 _ => return None,
             },
             _ => return None,
@@ -147,7 +159,7 @@ impl WidgetInputValue {
                 let [(x_en, x_de), (y_en, y_de), (z_en, z_de)] = axes.map(generation3d_label_number);
                 (format!("({x_en}, {y_en}, {z_en})"), format!("({x_de}; {y_de}; {z_de})"))
             }
-            Self::Plane { origin, normal } => {
+            Self::Plane(WidgetInputPlane { origin, normal }) => {
                 let [(ox_en, ox_de), (oy_en, oy_de), (oz_en, oz_de)] = origin.map(generation3d_label_number);
                 let [(nx_en, nx_de), (ny_en, ny_de), (nz_en, nz_de)] = normal.map(generation3d_label_number);
                 (format!("plane at ({ox_en}, {oy_en}, {oz_en}) facing ({nx_en}, {ny_en}, {nz_en})"), format!("Ebene bei ({ox_de}; {oy_de}; {oz_de}) mit Normale ({nx_de}; {ny_de}; {nz_de})"))
@@ -160,12 +172,38 @@ impl WidgetInputValue {
 
 //#region 🔖️ChangeWidgetInput
 /// 🎛️ Sets input `channel` of operator `id` to the typed literal `input` (a text source's `text` to its text).
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeWidgetInput {
     pub id: String,
     pub channel: String,
     pub input: WidgetInputValue,
+}
+
+/// 🧵️ Canonical tree of the flattened wire record: `id` and `channel` followed by the input's own `type` and `value` fields.
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ChangeWidgetInput {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+        match self.input.canonical_tree_node()? {
+            semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(length) => Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(length + 2)),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "change-widget-input flattened input is not an object")),
+        }
+    }
+
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
+        match ordinal {
+            0 => Ok(&self.id),
+            1 => Ok(&self.channel),
+            _ => self.input.canonical_tree_child(ordinal - 2),
+        }
+    }
+
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+        match ordinal {
+            0 => Ok("id".into()),
+            1 => Ok("channel".into()),
+            _ => self.input.canonical_tree_key(ordinal - 2),
+        }
+    }
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.

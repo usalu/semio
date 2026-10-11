@@ -31,8 +31,8 @@ class CheckScript extends BundleScript {
 /** 🛂️ Validates artifact document behavior and its authored TypeScript surfaces. */
 class CanonicalArchitectureScript extends BundleScript {
   async run(): Promise<void> {
-    await new ContractTestScript(this.root).run();
-    new CheckScript(this.root).run();
+    await new ContractTestScript(this.root, this.repoRoot, this.invocation).run();
+    new CheckScript(this.root, this.repoRoot, this.invocation).run();
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-snapshot-sqlite", SqliteTestScript).register("test-document-contract", ContractTestScript).register("check", CheckScript).register("canonical-architecture", CanonicalArchitectureScript);

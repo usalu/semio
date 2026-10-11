@@ -16,7 +16,8 @@ fn folded_rows_against_declaration(items: &[(usize, usize)]) -> (usize, usize) {
 fn set_active_example_config_gesture_fits_its_declared_fold_envelope() {
     let base = Generation3dConfig::default();
     let mutation = Generation3dConfigMutation::SetSun(SetSun { json: "{\"azimuth\":1.0}".into() });
-    let footprint = admit_generation3d_config_mutation(&mutation).expect("the config sun mutation is admissible");
+    let factory = store::snapshot_clone_preparation::config_apply_preparation_factory::<Generation3dConfig, Generation3dConfigMutation>();
+    let footprint = factory.preflight(&mutation, store::HistoryLane::Document).expect("the config sun mutation is admissible");
     let inverse_rows = ::protocol::Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len();
     assert_eq!(inverse_rows, 1, "a config sun change is point-invertible");
     assert!(inverse_rows + 1 <= footprint.work_items, "one config item folds {} rows against a declared envelope of {}", inverse_rows + 1, footprint.work_items);

@@ -1,5 +1,5 @@
 //! 🛬️ IFC4 reconstruction follows paid semantic row indexes and exclusive ordered ownership.
-use super::{identity,null,unsigned,sort_paid,REAL,IfcSnapshot,IfcHeader,IfcEntity,IfcComplexType,IfcValue};
+use super::{identity,null,unsigned,sort_paid,REAL,IfcSnapshot,IfcHeader,IfcEntity,IfcComplexType,IfcTypedValue, IfcValue};
 use crate::standards::v4::subsets::any::io::sqlite::snapshot::native;
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,artifact::{validate_ieee754_row,ieee754_is_null,read_binary64}};
 use semio_framework_value::NativeDecodeControl;
@@ -45,7 +45,7 @@ impl Forest{
  for column in 2..9{if Some(column)!=active&&!(kind=="reference"&&column==7){null(row,column)?;}}if kind!="real"&&!ieee754_is_null(row,3,REAL)?{return Err(invalid("inactive IFC4 real companions"));}
  let value=match kind{"unset"=>IfcValue::Unset,"derived"=>IfcValue::Derived,"integer"=>IfcValue::Integer(row.integer(2)?),"real"=>IfcValue::Real(read_binary64(row,3,REAL)?),"string"=>IfcValue::String(control.copy_text(row.text(4)?)?),"enum"=>IfcValue::Enum(control.copy_text(row.text(5)?)?),
  "reference"=>{let word=unsigned(row.text(6)?)?;match &row.values[7]{SqliteValue::Null=>{if words.binary_search(&word).is_ok(){return Err(invalid("resolved IFC4 reference lacks its relationship"));}},SqliteValue::Integer(entity)=>{let actual=entities.binary_search_by_key(entity,|item|item.0).ok().map(|index|entities[index].1);if actual!=Some(word){return Err(invalid("IFC4 reference word differs from its related entity"));}},_=>return Err(invalid("invalid IFC4 resolved reference storage"))}IfcValue::Reference(word)},
- "aggregate"=>IfcValue::Aggregate(self.children(catalog,9,id,control)?),"typedValue"=>{let name=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.copy_text(row.text(8)?)?,native::close::<String>);let items=self.children(catalog,10,id,control)?;IfcValue::TypedValue{name:name.take(),items}},_=>unreachable!()};
+ "aggregate"=>IfcValue::Aggregate(self.children(catalog,9,id,control)?),"typedValue"=>{let name=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.copy_text(row.text(8)?)?,native::close::<String>);let items=self.children(catalog,10,id,control)?;IfcValue::TypedValue(IfcTypedValue {name:name.take(),items})},_=>unreachable!()};
  self.state[index]=2;self.values.as_mut()[index]=Some(value);
  }self.pop(catalog,id)
  }

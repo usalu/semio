@@ -61,6 +61,17 @@
         "forwardAllArgs": true
       }
     },
+    "test-bulk-vec-retained-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value",
+        "command": "bun ./📜️script.ts test bulk-vec-retained",
+        "forwardAllArgs": true
+      }
+    },
     "test-scalar-retained-source": {
       "executor": "nx:run-commands",
       "cache": false,

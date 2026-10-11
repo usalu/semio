@@ -47,7 +47,7 @@ pub fn is_snapshot_edit_action(action: &str) -> bool {
     SNAPSHOT_EDIT_ACTION_IDS.contains(&action)
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 pub enum SnapshotEditEvent {
     SetValue { path: String, value: DslValue },
@@ -58,7 +58,7 @@ pub enum SnapshotEditEvent {
     ReplaceSource { source: String },
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "channel", rename_all = "camelCase", deny_unknown_fields)]
 pub enum SnapshotEditingCommand<C> {
     Native(C),
@@ -934,6 +934,36 @@ impl RetainedBytesCopy {
     }
 }
 
+/// 🧪️ The mounted-owner authority registered fixtures close under: one item per turn, bounded copy, capacity and release.
+pub const fn fixture_mounted_owner_policy() -> semio_framework_plugin::MountedOwnerPolicyV1 {
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 64 };
+    semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
+}
+
+/// 🎟️ Funds one generously bounded single-item close turn for drains that already hold their quoted demand.
+pub const fn ample_close_grant() -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: 64 }
+}
+
+/// 📏️ Quotes the exact backing release of one optional owned revision string.
+pub fn revision_close_demand(revision: &Option<String>) -> semio_framework_value::RetirementDemand {
+    revision.as_ref().map_or_else(Default::default, |value| semio_framework_value::RetirementDemand { release_bytes: value.capacity(), depth: 1, ..Default::default() })
+}
+
+/// 🧹️ Releases one optional owned revision string in a single exactly granted close turn.
+pub fn close_revision_turn(revision: &mut Option<String>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    use semio_framework_job::InteractiveJobCloseStep;
+    let demand = revision_close_demand(revision);
+    if demand == semio_framework_value::RetirementDemand::default() {
+        return InteractiveJobCloseStep::Complete { progress: Default::default() };
+    }
+    if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_release_bytes < demand.release_bytes {
+        return InteractiveJobCloseStep::Pending { progress: Default::default() };
+    }
+    drop(revision.take());
+    InteractiveJobCloseStep::Complete { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() } }
+}
+
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct NativeEditPreparationRoute<S, M> {
     recognizes: fn(&M) -> bool,
@@ -968,12 +998,14 @@ where
         }
     }
 
+    fn begin_batch_digest(&self,edit:&mut Option<Box<semio_framework_plugin::plugin_app_close_prelude::store::Edit<M>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreBatchDigest<M>>,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{self.fallback.begin_batch_digest(edit,grant)}
+
     fn begin_demand(&self,mutation:&M,lane:semio_framework_plugin::plugin_app_close_prelude::store::HistoryLane)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,semio_framework_value::ValueError>{if(self.route.recognizes)(mutation){self.route.factory.begin_demand(mutation,lane)}else{self.fallback.begin_demand(mutation,lane)}}
     fn begin(
         &self,
-        request: semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationRequest<S, M>,
+        request: semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationRequest<S, M, M>,
         grant:semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparation<S, M>>,semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError,semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationRequest<S, M>)> {
+    ) -> Result<(Box<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparation<S, M>>,semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError,semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationRequest<S, M, M>)> {
         if (self.route.recognizes)(&request.mutation) {
             self.route.factory.begin(request,grant)
         } else {
@@ -1152,6 +1184,7 @@ pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        retained: request.retained,
         authoring_seed: request.authoring_seed.clone(),
     };
     let payload = ArtifactRetainedCommandPayload::new(
@@ -1368,6 +1401,7 @@ pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: ArtifactO
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        retained: request.retained,
         authoring_seed: request.authoring_seed.clone(),
     };
     let payload = ArtifactRetainedCommandPayload::new(

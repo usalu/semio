@@ -6,7 +6,7 @@
 //! The tree is the typed SVG model of the `s.stdio.svg` artifact and the text is written by the XML writer of `s.stdio.xml`, both behind [`codec`].
 //! 📎 https://www.w3.org/TR/SVG11/
 
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use crate::ModelSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
@@ -58,7 +58,7 @@ pub fn views_to_svg(model: &ModelSnapshot, drawings: &BTreeMap<String, ViewLinew
 
 /// 🎨️ The SVG text of the views of `model`.
 pub fn export_svg(model: &ModelSnapshot) -> Result<String, String> {
-    registry::try_with_inference(None, model, |inferred| views_to_svg(model, &inferred.view_linework)).map_err(|error| error.to_string())?
+    inference::try_with_inference(None, model, |inferred| views_to_svg(model, &inferred.view_linework)).map_err(|error| error.to_string())?
 }
 
 //#region 🔖️Serializer

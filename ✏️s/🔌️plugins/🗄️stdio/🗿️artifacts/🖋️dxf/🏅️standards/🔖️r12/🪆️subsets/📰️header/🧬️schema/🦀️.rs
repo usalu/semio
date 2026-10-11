@@ -1,13 +1,13 @@
 //! 🧬️ DxfArtifact schema — full artifact state (mirrors `DxfSnapshot`'s persisted fields
 //! one-for-one; see `📸️snapshot/🦀️.rs` module docs for the full typed-model rationale).
 
-use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfOtherTable, DxfTables};
+use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfCircle, DxfLine, DxfOther, DxfHeaderVar, DxfOtherTable, DxfTables};
 use crate::DxfSnapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.dxf` artifact state.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dxf")]
 pub struct DxfArtifact {
@@ -121,7 +121,7 @@ pub fn empty_dxf_snapshot() -> DxfSnapshot {
 /// `🎒️.pack.semio` fixtures AND `grammar_conformance_law`/`protocol_walk_law`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_dxf_snapshot() -> DxfSnapshot {
-    use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
+    use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfCircle, DxfLine, DxfOther, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue};
     DxfSnapshot {
         schema: STDIO_DXF_DOCUMENT_SCHEMA.into(),
         header_vars: vec![
@@ -134,11 +134,11 @@ pub fn demo_dxf_snapshot() -> DxfSnapshot {
             linetypes: vec![DxfLinetype { name: "CONTINUOUS".into(), flags: 0, description: "Solid".into(), unknown_group_codes: vec![] }],
         },
         other_tables: vec![DxfOtherTable { name: "VPORT".into(), tags: vec![DxfTag { code: 2, value: "*ACTIVE".into() }] }],
-        blocks: vec![DxfBlock { name: "MYBLOCK".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] }],
+        blocks: vec![DxfBlock { name: "MYBLOCK".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] })], unknown_group_codes: vec![] }],
         entities: vec![
-            DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] },
-            DxfEntity::Circle { center: [1.0, 1.0, 0.0], radius: 2.0, layer: "0".into(), unknown_group_codes: vec![] },
-            DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![(10, DxfValue::Double { value: 0.0 })] },
+            DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }),
+            DxfEntity::Circle(DxfCircle { center: [1.0, 1.0, 0.0], radius: 2.0, layer: "0".into(), unknown_group_codes: vec![] }),
+            DxfEntity::Other(DxfOther { kind: "3DFACE".into(), group_codes: vec![(10, DxfValue::Double { value: 0.0 })] }),
         ],
     }
 }

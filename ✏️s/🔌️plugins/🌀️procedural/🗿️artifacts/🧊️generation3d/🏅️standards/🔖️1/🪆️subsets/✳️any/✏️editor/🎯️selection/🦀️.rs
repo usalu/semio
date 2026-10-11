@@ -140,14 +140,14 @@ pub fn component_pivot(data: &str, mode: &str, ids: &[u32]) -> Option<[f64; 3]> 
 }
 
 /// 🚦️ Reads only current cached geometry; pending component transforms inherit their source topology.
-pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &mut semio_framework_os_flow::FlowEvalSession, ids: &[String], revision: Option<&[u8; 32]>) -> Result<(), String> {
+pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &mut semio_framework_os_flow::FlowEvalSession, ids: &[String], revision: Option<&[u8; 32]>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), String> {
     let (target, _) = component_group(ids)?;
     if target.analytic.is_none() && target.index != 0 { return Err("Extract one mesh from the list before editing its components".into()); }
-    crate::standards::v1::subsets::any::schema::with_host_session(snapshot, session, |host, session| {
-        let pending = host.evaluate_step(semio_framework_os_flow::neural::EvalStepBudget::PROBE,&|_|true).into_iter().collect::<BTreeSet<_>>();
+    crate::standards::v1::subsets::any::schema::with_host_session(snapshot, session, grant, |host, session| {
+        let pending = host.evaluate_cold_step(semio_framework_os_flow::neural::EvalStepBudget::PROBE,&|_|true).map_err(|error| error.to_string())?.into_iter().collect::<BTreeSet<_>>();
         if let Some(source) = &target.analytic {
             if pending.contains(target.widget) { return Err("The selected geometry is still being evaluated".into()); }
-            let value = host.outputs.get(target.widget).and_then(|output| output.get(target.channel)).and_then(|value| value.as_dictionary()).ok_or("The selected geometry no longer exists")?;
+            let value = host.output_channels(target.widget).and_then(|output| output.get(target.channel)).and_then(|value| value.as_dictionary()).ok_or("The selected geometry no longer exists")?;
             let value = if value.schema() == Some("list") { value.get(&target.index.to_string()).and_then(|value| value.as_dictionary()).ok_or("The selected geometry list item no longer exists")? } else if target.index == 0 { value } else { return Err("The selected geometry list item no longer exists".into()); };
             let handle = value.get("handle").and_then(|value| value.as_atom()).and_then(|value| value.as_str()).ok_or("The selected geometry has no analytic source")?;
             if handle != source.handle { return Err("The selected geometry has changed; select its current components".into()); }
@@ -161,7 +161,7 @@ pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow:
         let mut visited = BTreeSet::new();
         while visited.insert(widget) {
             if !pending.contains(widget) {
-                if let Some(mesh) = host.outputs.get(widget).and_then(|output| output.get(channel)).and_then(|value| value.as_dictionary()).filter(|mesh| mesh.schema() == Some("mesh")) {
+                if let Some(mesh) = host.output_channels(widget).and_then(|output| output.get(channel)).and_then(|value| value.as_dictionary()).filter(|mesh| mesh.schema() == Some("mesh")) {
                     let data = mesh.get("data").and_then(|value| value.as_atom()).and_then(|value| value.as_str()).ok_or("The selected mesh has no indexed topology")?;
                     selected_mesh_vertices(ids, data)?;
                     return Ok(());
@@ -177,6 +177,7 @@ pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow:
         }
         Err("The selected mesh is still being evaluated; wait for its preview before editing its components".into())
     })
+    .map_err(|error| error.to_string())?
 }
 
 fn projected_target<'a>(mut target: ComponentTarget<'a>, instances: &semio_framework_pack_json::Value, meshes: &semio_framework_pack_json::Value) -> Option<ComponentTarget<'a>> {
@@ -288,7 +289,7 @@ pub fn selected_analytic_labels(ids: &[String]) -> Result<Vec<String>, String> {
 }
 
 /// 🚦️ Admits exact component labels only against the current evaluated source.
-pub fn validate_analytic_source(ids: &[String], revision: &str, handle: &str, references: &std::collections::BTreeMap<String, Vec<String>>) -> Result<Vec<String>, String> {
+pub fn validate_analytic_source(ids: &[String], revision: &str, handle: &str, references: &semio_framework_mesh_engine::ComponentReferenceTable) -> Result<Vec<String>, String> {
     let labels = selected_analytic_labels(ids)?;
     let target = ComponentTarget::parse(&ids[0]).ok_or("The component selection contains an invalid target")?;
     let source = target.analytic.ok_or("Select analytic faces or edges")?;

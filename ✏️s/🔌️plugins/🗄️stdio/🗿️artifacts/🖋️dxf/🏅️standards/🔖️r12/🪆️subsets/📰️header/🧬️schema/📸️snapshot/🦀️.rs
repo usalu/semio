@@ -30,7 +30,8 @@ use framework_schema::ArtifactSchema;
 /// 🏷️ One raw DXF group-code/value pair — used only as the tokenizer's intermediate unit and as
 /// the raw-retention payload for whole unmodeled tables (`DxfOtherTable`). The typed model above
 /// it (`DxfSnapshot`'s real fields) is the source of truth everywhere else.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DxfTag {
     pub code: i32,
@@ -43,7 +44,8 @@ pub struct DxfTag {
 /// integer (60-79/90-99/160-179/…), double (40-59/110-149/…), and point-component (a combined
 /// 10/20/30-style triplet — see module docs). `classify_group_code_value` never produces `Point`
 /// for a single raw tag; only header-var parsing manually combines an adjacent triplet into one.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum DxfValue {
     Str { value: String },
@@ -70,7 +72,8 @@ impl Default for DxfValue {
 //#region 🔖️Header
 /// 🏷️ One `$VAR` header entry: `9/$NAME` followed by its primary value group code, plus (rare)
 /// any additional group codes beyond a plain scalar/point that this codec still retains losslessly.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DxfHeaderVar {
     pub name: String,
@@ -83,7 +86,8 @@ pub struct DxfHeaderVar {
 
 //#region 🔖️Tables
 /// 🗂️ `LAYER` table entry — group codes 2 (name), 70 (flags), 62 (color), 6 (linetype).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLayer {
     pub name: String,
@@ -95,7 +99,8 @@ pub struct DxfLayer {
 }
 
 /// 🗂️ `STYLE` table entry — group codes 2 (name), 70 (flags), 3 (primary font file).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DxfStyle {
     pub name: String,
@@ -106,7 +111,8 @@ pub struct DxfStyle {
 }
 
 /// 🗂️ `LTYPE` table entry — group codes 2 (name), 70 (flags), 3 (description).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLinetype {
     pub name: String,
@@ -117,7 +123,7 @@ pub struct DxfLinetype {
 }
 
 /// 🗂️ The three name-keyed table kinds this codec typed-models.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct DxfTables {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -131,7 +137,8 @@ pub struct DxfTables {
 /// 🕳️ Raw retention for any R12 `TABLE` kind other than LAYER/STYLE/LTYPE (VPORT, VIEW, UCS,
 /// APPID, DIMSTYLE, BLOCK_RECORD, …) — this codec has no typed view for these, but every tag is
 /// preserved verbatim, per the recipe's raw-retention rule.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DxfOtherTable {
     pub name: String,
@@ -142,7 +149,8 @@ pub struct DxfOtherTable {
 
 //#region 🔖️Entities
 /// 📍 One `POLYLINE` vertex record — group codes 10/20/30 (point), 42 (bulge).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DxfVertex {
     pub x: f64,
@@ -153,88 +161,150 @@ pub struct DxfVertex {
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
+/// `LINE` — 10/20/30 (start), 11/21/31 (end), 8 (layer).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct DxfLine {
+    pub start: [f64; 3],
+    pub end: [f64; 3],
+    pub layer: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub unknown_group_codes: Vec<(i32, DxfValue)>,
+}
+
+/// `CIRCLE` — 10/20/30 (center), 40 (radius), 8 (layer).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct DxfCircle {
+    pub center: [f64; 3],
+    pub radius: f64,
+    pub layer: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub unknown_group_codes: Vec<(i32, DxfValue)>,
+}
+
+/// `ARC` — 10/20/30 (center), 40 (radius), 50/51 (start/end angle), 8 (layer).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct DxfArc {
+    pub center: [f64; 3],
+    pub radius: f64,
+    pub start_angle: f64,
+    pub end_angle: f64,
+    pub layer: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub unknown_group_codes: Vec<(i32, DxfValue)>,
+}
+
+/// `POLYLINE`/`VERTEX`.../`SEQEND` (the real R12 polyline record group — NOT the R14+
+/// `LWPOLYLINE` entity, which does not exist in R12) — 70 bit 0 (closed), 8 (layer), each
+/// vertex its own `DxfVertex`.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct DxfPolyline {
+    pub vertices: Vec<DxfVertex>,
+    pub closed: bool,
+    pub layer: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub unknown_group_codes: Vec<(i32, DxfValue)>,
+}
+
+/// `TEXT` — 10/20/30 (position), 40 (height), 1 (value), 8 (layer).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct DxfText {
+    pub position: [f64; 3],
+    pub height: f64,
+    pub value: String,
+    pub layer: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub unknown_group_codes: Vec<(i32, DxfValue)>,
+}
+
+/// `SOLID` — 10/20/30, 11/21/31, 12/22/32, 13/23/33 (4 corner points), 8 (layer).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct DxfSolid {
+    pub points: [[f64; 3]; 4],
+    pub layer: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub unknown_group_codes: Vec<(i32, DxfValue)>,
+}
+
+/// `INSERT` — 2 (block name), 10/20/30 (position), 41/42/43 (scale, default 1/1/1), 50
+/// (rotation), 8 (layer).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct DxfInsert {
+    pub block_name: String,
+    pub position: [f64; 3],
+    pub scale: [f64; 3],
+    pub rotation: f64,
+    pub layer: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub unknown_group_codes: Vec<(i32, DxfValue)>,
+}
+
+/// 🕳️ Any other entity kind — raw-retained verbatim.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct DxfOther {
+    pub kind: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub group_codes: Vec<(i32, DxfValue)>,
+}
+
 /// 📐️ The R12 entity set this codec types directly. `Other` retains any entity kind this codec
 /// has no typed view for (`3DFACE`, `POINT`, `DIMENSION`, `SHAPE`, `ATTRIB`, …) — its whole
 /// group-code body verbatim, never silently dropped.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
 pub enum DxfEntity {
+
     /// `LINE` — 10/20/30 (start), 11/21/31 (end), 8 (layer).
-    Line {
-        start: [f64; 3],
-        end: [f64; 3],
-        layer: String,
-        #[value(default, skip_serializing_if = "Vec::is_empty")]
-        unknown_group_codes: Vec<(i32, DxfValue)>,
-    },
+    Line(DxfLine),
+
     /// `CIRCLE` — 10/20/30 (center), 40 (radius), 8 (layer).
-    Circle {
-        center: [f64; 3],
-        radius: f64,
-        layer: String,
-        #[value(default, skip_serializing_if = "Vec::is_empty")]
-        unknown_group_codes: Vec<(i32, DxfValue)>,
-    },
+    Circle(DxfCircle),
+
     /// `ARC` — 10/20/30 (center), 40 (radius), 50/51 (start/end angle), 8 (layer).
-    Arc {
-        center: [f64; 3],
-        radius: f64,
-        start_angle: f64,
-        end_angle: f64,
-        layer: String,
-        #[value(default, skip_serializing_if = "Vec::is_empty")]
-        unknown_group_codes: Vec<(i32, DxfValue)>,
-    },
+    Arc(DxfArc),
+
     /// `POLYLINE`/`VERTEX`.../`SEQEND` (the real R12 polyline record group — NOT the R14+
     /// `LWPOLYLINE` entity, which does not exist in R12) — 70 bit 0 (closed), 8 (layer), each
     /// vertex its own `DxfVertex`.
-    Polyline {
-        vertices: Vec<DxfVertex>,
-        closed: bool,
-        layer: String,
-        #[value(default, skip_serializing_if = "Vec::is_empty")]
-        unknown_group_codes: Vec<(i32, DxfValue)>,
-    },
+    Polyline(DxfPolyline),
+
     /// `TEXT` — 10/20/30 (position), 40 (height), 1 (value), 8 (layer).
-    Text {
-        position: [f64; 3],
-        height: f64,
-        value: String,
-        layer: String,
-        #[value(default, skip_serializing_if = "Vec::is_empty")]
-        unknown_group_codes: Vec<(i32, DxfValue)>,
-    },
+    Text(DxfText),
+
     /// `SOLID` — 10/20/30, 11/21/31, 12/22/32, 13/23/33 (4 corner points), 8 (layer).
-    Solid {
-        points: [[f64; 3]; 4],
-        layer: String,
-        #[value(default, skip_serializing_if = "Vec::is_empty")]
-        unknown_group_codes: Vec<(i32, DxfValue)>,
-    },
+    Solid(DxfSolid),
+
     /// `INSERT` — 2 (block name), 10/20/30 (position), 41/42/43 (scale, default 1/1/1), 50
     /// (rotation), 8 (layer).
-    Insert {
-        block_name: String,
-        position: [f64; 3],
-        scale: [f64; 3],
-        rotation: f64,
-        layer: String,
-        #[value(default, skip_serializing_if = "Vec::is_empty")]
-        unknown_group_codes: Vec<(i32, DxfValue)>,
-    },
+    Insert(DxfInsert),
+
     /// 🕳️ Any other entity kind — raw-retained verbatim.
-    Other {
-        kind: String,
-        #[value(default, skip_serializing_if = "Vec::is_empty")]
-        group_codes: Vec<(i32, DxfValue)>,
-    },
+    Other(DxfOther),
 }
+
 //#endregion 🔖️Entities
 
 //#region 🔖️Blocks
 /// 🧱 One `BLOCK` — 2 (name), 10/20/30 (base point), followed by its own nested entity list up
 /// to `ENDBLK`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DxfBlock {
     pub name: String,
@@ -246,7 +316,7 @@ pub struct DxfBlock {
 //#endregion 🔖️Blocks
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dxf")]
 pub struct DxfSnapshot {

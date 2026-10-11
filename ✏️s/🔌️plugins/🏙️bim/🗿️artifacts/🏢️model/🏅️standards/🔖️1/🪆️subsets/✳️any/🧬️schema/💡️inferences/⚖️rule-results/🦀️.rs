@@ -31,7 +31,7 @@ pub const EPSILON: f64 = 1e-9;
 
 //#region 🔖️Values
 /// 🚫️ One member that breaks a rule: what it is, what it measures, the limit and the storey it stands on (empty for a zone).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct RuleFinding {
     pub element: String,
     pub measured: f64,
@@ -40,7 +40,7 @@ pub struct RuleFinding {
 }
 
 /// ⚖️ What one rule finds: how many members it measured and the violations among them.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct RuleResult {
     pub checked: u32,
     pub violations: Vec<RuleFinding>,

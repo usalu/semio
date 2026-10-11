@@ -23,6 +23,12 @@ macro_rules! norm_results_window_config_owner {
             const MAXIMUM_PUBLICATION_BYTES: usize = 4_096;
             type State = $crate::results_window_config::NormResultsWindowConfig;
             type Mutation = $crate::results_window_config::NormResultsWindowConfigMutation;
+            type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
+            const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+
+            fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+                std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new())
+            }
 
             fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
                 semio_framework_plugin::bounded_window_config_store_owners::<Self>()

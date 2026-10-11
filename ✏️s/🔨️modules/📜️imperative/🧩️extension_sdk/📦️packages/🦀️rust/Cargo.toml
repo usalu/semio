@@ -33,6 +33,8 @@ semio-framework-os-kernel = { path = "../../../../../../🧰️framework/🛍️
 # this file references it directly any more (tenth-seam pass, see the docstring above).
 serde_json.workspace = true
 semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-plugin = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-framework-job = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
 
 [dev-dependencies]
 semio-framework-os-kernel = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["mutation-testing"] }

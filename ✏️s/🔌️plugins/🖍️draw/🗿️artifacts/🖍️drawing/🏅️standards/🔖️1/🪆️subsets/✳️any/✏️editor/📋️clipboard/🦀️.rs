@@ -2,8 +2,8 @@
 use crate::{DrawingSnapshot,DrawingLayerNode,DrawingImageAsset};
 use crate::schema::{layer_base,layer_base_mut,find_drawing_layer,find_drawing_layer_location};
 use crate::mutations::DrawingMutation;
-use semio_framework_plugin::{ClipboardFragment,ClipboardError,MediaType,MediaClass,MediaForm};
-use semio_framework_plugin::kernel::{PastePlacement,PasteAnchor};
+use semio_framework_plugin::{MediaType,MediaClass,MediaForm};
+use semio_framework_plugin::kernel::{ClipboardFragment,ClipboardError,PastePlacement,PasteAnchor};
 use std::collections::{BTreeMap,BTreeSet};
 pub const SCHEMA:&str="drawing.clipboard.v1";
 const MAX_BYTES:usize=semio_framework_plugin::kernel::CLIPBOARD_TEXT_MAX_BYTES;
@@ -66,7 +66,7 @@ pub fn copy(document:&DrawingSnapshot,ids:&[String])->Result<ClipboardFragment,C
         let mut node=find_drawing_layer(document,id.as_str()).ok_or_else(||invalid("Clipboard layer no longer exists"))?.clone();
         let mut matrix=world(document,&id)?;
         if matches!(node,DrawingLayerNode::Boolean(_)) {
-            let parent=find_drawing_layer_location(document,&id).and_then(|location|location.parent_id).map(|id|world(document,&id)).transpose()?.unwrap_or([1.0,0.0,0.0,1.0,0.0,0.0]);
+            let parent=find_drawing_layer_location(document,&id).and_then(|location|location.parent_id).map(|id|world(document,&id.to_string_owner())).transpose()?.unwrap_or([1.0,0.0,0.0,1.0,0.0,0.0]);
             matrix=crate::schema::geometry::multiply(matrix,invert(parent)?);
         }
         layer_base_mut(&mut node).transform=crate::schema::geometry::affine::drawing_matrix_to_transform(matrix);

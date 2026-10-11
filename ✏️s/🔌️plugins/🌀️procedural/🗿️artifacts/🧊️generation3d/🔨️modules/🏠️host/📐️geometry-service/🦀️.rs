@@ -8,10 +8,12 @@ use std::cell::RefCell;
 use std::sync::Arc;
 use crate::standards::v1::subsets::any::schema::catalogue::Quality;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::{generation_host_snapshot_for, Generation3dSnapshot};
+use crate::standards::v1::subsets::any::schema::generation_host_snapshot_for;
+use crate::Generation3dSnapshot;
 use protocol::{DepHash, InferenceError};
 use semio_framework_plugin::{ArtifactDocumentPayload, ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferencePayloadContract, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceCacheMode, WireArtifactInferenceDiagnostic};
-use semio_framework_value::ToValue;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::{RetirementDemand, ToValue as _, ValueError};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
@@ -36,6 +38,16 @@ impl GeometryHost {
     pub fn with<R>(&self, body: impl FnOnce(&mut GeometryEngine) -> R) -> Result<R, EngineError> {
         let mut engine = self.engine.try_borrow_mut().map_err(|_| EngineError::Busy)?;
         Ok(body(&mut engine))
+    }
+
+    /// 🧹️ Closes every owner the engine holds; a re-entrant call is [`EngineError::Busy`] and leaves it open.
+    pub fn retire_cold(&self) -> Result<(), EngineError> {
+        self.with(GeometryEngine::retire_cold)
+    }
+
+    /// 🧾️ Whether the engine holds nothing left to close; a busy engine is not terminal.
+    pub fn terminal_is_empty(&self) -> bool {
+        self.with(|engine| engine.terminal_is_empty()).unwrap_or(false)
     }
 
     /// 🛑️ Cancels the run in flight.
@@ -107,7 +119,14 @@ pub const fn geometry_inference_service() -> ArtifactInferenceService {
             payload: Some(GEOMETRY_INFERENCE_CONTRACT),
         },
         infer_geometry,
+        geometry_inference_demands,
     )
+}
+
+/// ♻️ A geometry call ends terminal inside its own turn and keeps no child between turns, so there is nothing to quote.
+fn geometry_inference_demands(_request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn std::any::Any, _copy: usize) -> Result<RetirementDemand, ValueError> {
+    context.downcast_ref::<GeometryHost>().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "geometry demand requires its instance's geometry host"))?;
+    Ok(RetirementDemand::default())
 }
 
 fn invalid(message: impl Into<String>) -> ArtifactInferenceExecutionError {
@@ -168,6 +187,13 @@ fn cache_mode(requested: &WireArtifactInferenceCacheMode) -> CacheMode {
 
 fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn std::any::Any) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     let host = context.downcast_ref::<GeometryHost>().ok_or_else(|| ArtifactInferenceExecutionError::new("generation3d.geometry.context", "geometry inference requires its instance's geometry host"))?;
+    if request.cancelled {
+        host.cancel().map_err(engine_failure)?;
+        return Ok(ArtifactInferenceExecutionStep { execution: None, retained_progress: RetainedCloneProgress::default(), terminal: true });
+    }
+    if request.retained.maximum_items == 0 || request.retained.maximum_depth == 0 {
+        return Ok(ArtifactInferenceExecutionStep { execution: None, retained_progress: RetainedCloneProgress::default(), terminal: false });
+    }
     if request.budgets.work_units == 0 || request.canonical_payload.len() as u64 > request.budgets.allocation_bytes {
         return Err(invalid("geometry inference exceeds its execution budget"));
     }
@@ -214,6 +240,7 @@ fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn
         .collect();
     let quality = quality_name(weakest(result.widgets.iter().map(|widget| widget.quality)));
     Ok(ArtifactInferenceExecution {
+        retirement_progress: RetainedCloneProgress { copied_items: 1, ..Default::default() },
         canonical_payload: Some(semio_framework_pack_json::to_json_string(&result).into_bytes()),
         validity: if diagnostics.is_empty() { "valid" } else { "invalid" }.to_string(),
         diagnostics,

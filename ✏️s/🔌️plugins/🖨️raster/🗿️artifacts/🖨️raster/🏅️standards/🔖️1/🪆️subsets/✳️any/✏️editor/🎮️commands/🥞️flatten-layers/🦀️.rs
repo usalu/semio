@@ -10,7 +10,7 @@ use semio_framework_plugin::{ArtifactView,ConfigView,EditorApp,Emit,Fault};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs,ArtifactCommandWork,ArtifactCommandWorkStep};
 use semio_framework_value_derive::{FromValue,ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword="flatten-layers")]
 pub struct FlattenLayers {pub name:String}
 
@@ -58,6 +58,10 @@ pub struct LayerBakeWork<const MERGE_DOWN:bool> {preparing:Option<RasterStackPre
 impl<const MERGE_DOWN:bool> ArtifactCommandWork<EditorApp<RasterPlayApp>> for LayerBakeWork<MERGE_DOWN> {
     fn tool_id(&self)->&'static str {if MERGE_DOWN {"mergeDown"} else {"flattenLayers"}}
     fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>)->Option<usize> {(matches!((MERGE_DOWN,command),(false,RasterCommand::FlattenLayers(_))|(true,RasterCommand::MergeDown(_)))).then_some(1)}
+    fn work_demands(&self,_input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
+        let stage=if self.encoding.is_some() {std::mem::size_of::<PngEncodeJob>()+std::mem::size_of::<Emit<RasterMutation,RasterConfigMutation>>()} else if self.compositing.is_some() {std::mem::size_of::<RasterStackJob>()+std::mem::size_of::<PngEncodeJob>()} else {std::mem::size_of::<RasterStackPreparation>()+std::mem::size_of::<RasterStackJob>()};
+        Ok(semio_framework_value::RetirementDemand {copy_bytes:stage,depth:1,..Default::default()})
+    }
     fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>,Fault> {
         if self.complete {return Err(Fault::from("raster.flatten-work-complete"));}
         if !matches!((MERGE_DOWN,input.command),(false,RasterCommand::FlattenLayers(_))|(true,RasterCommand::MergeDown(_))) {return Err(Fault::from("raster.bake-work-mismatch"));}
@@ -87,10 +91,16 @@ impl<const MERGE_DOWN:bool> ArtifactCommandWork<EditorApp<RasterPlayApp>> for La
         Ok(ArtifactCommandWorkStep::Progress {stage:"flatten-prepare",preview:br#"{"en":"Preparing layers","de":"Ebenen werden vorbereitet"}"#})
     }
     fn begin_close(&mut self) {if let Some(job)=self.preparing.as_mut(){job.cancel();}if let Some(job)=self.compositing.as_mut(){job.cancel();}if let Some(job)=self.encoding.as_mut(){job.cancel();}}
-    fn close_step(&mut self,maximum_items:usize,_maximum_bytes:usize)->semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items==0 {return semio_framework_job::InteractiveJobCloseStep::Blocked;}
-        self.preparing=None;self.compositing=None;self.encoding=None;semio_framework_job::InteractiveJobCloseStep::Complete
+    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep {
+        if self.terminal_is_empty() {return semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()};}
+        if grant.maximum_items==0||grant.maximum_depth==0 {return semio_framework_job::InteractiveJobCloseStep::Pending {progress:Default::default()};}
+        self.preparing=None;self.compositing=None;self.encoding=None;
+        semio_framework_job::InteractiveJobCloseStep::Complete {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:1,..Default::default()}}
     }
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(0)}
+    fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError> {Ok(0)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(0)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(usize::from(!self.terminal_is_empty()))}
     fn terminal_is_empty(&self)->bool {self.preparing.is_none()&&self.compositing.is_none()&&self.encoding.is_none()}
 }
 #[cfg(test)]

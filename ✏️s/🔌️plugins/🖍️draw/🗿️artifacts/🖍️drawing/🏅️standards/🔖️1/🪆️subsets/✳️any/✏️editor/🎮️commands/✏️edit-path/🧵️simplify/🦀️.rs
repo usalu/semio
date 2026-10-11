@@ -2,7 +2,7 @@
 use super::*;
 use crate::schema::geometry::editing::{PathEdit,simplify::PathSimplifyJob};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
-use semio_framework_value::{list::PagedList,retirement::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
+use semio_framework_value::{list::PagedList,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
 use crate::DrawingLayerNode;
 type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
 #[derive(semio_framework_value::RetireOwned)]
@@ -14,6 +14,7 @@ impl Work {
 impl ArtifactCommandWork<App> for Work {
     fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
     fn tool_id(&self)->&'static str {"editPath"}
+    fn work_demands(&self,_input:&ArtifactCommandInputs<'_,App>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError> {Ok(semio_framework_value::RetirementDemand {copy_bytes:std::mem::size_of::<Self>()+std::mem::size_of::<crate::PathSegment>(),depth:1,..Default::default()})}
     fn extent(&self,command:&DrawingCommand,snapshot:&DrawingSnapshot,interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<App>>)->Option<usize> {
         let DrawingCommand::EditPath(payload)=command else {return None};
         if let PathEdit::Simplify {tolerance}=payload.edit.as_ref() {if !tolerance.is_finite()||!(1e-6..=1e6).contains(tolerance) {return None;}}
@@ -68,7 +69,7 @@ impl ArtifactCommandWork<App> for Work {
         use semio_framework_job::InteractiveJobCloseStep;
         if !self.closing {return InteractiveJobCloseStep::Blocked;}
         let Some(owner)=self.workspace.as_mut() else {return InteractiveJobCloseStep::Complete {progress:Default::default()};};
-        match owner.step(grant) {Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Complete {progress},Ok(RetainedCloneStep::Progress(progress))=>InteractiveJobCloseStep::Pending {progress},Err(error)=>InteractiveJobCloseStep::Refused(error.kind)}
+        match owner.step(grant) {Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Complete {progress},Ok(RetainedCloneStep::Progress(progress))=>InteractiveJobCloseStep::Pending {progress},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError> {self.workspace.as_ref().map(|owner|owner.next_copy_byte_demand()).unwrap_or(Ok(0))}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.workspace.as_ref().map(|owner|owner.next_capacity_byte_demand(copy)).unwrap_or(Ok(0))}
@@ -100,7 +101,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingPathCommandJ
 pub(super) fn build(request:semio_framework_plugin::ArtifactOwnedToolJobRequest<App>)->Result<semio_framework::ToolOperationSpec,Fault> {
     let work=Work::new();
     if request.tool_id!="editPath"||work.extent(&request.command,&request.snapshot,&request.interaction_state,Some(&request.context))!=Some(1) {return Err(Fault::from("Path editing exceeds its registered source capacity"));}
-    let operation=semio_framework_plugin::AppOperationContext {app_instance_id:request.app_instance_id,parent_document_id:request.parent_document_id.clone(),operation_id:request.operation.operation.0,generation:request.operation.generation.0,canonical_base_revision:request.canonical_base_revision,authoring_seed:request.authoring_seed.clone()};
+    let operation=semio_framework_plugin::AppOperationContext {app_instance_id:request.app_instance_id,parent_document_id:request.parent_document_id.clone(),operation_id:request.operation.operation.0,generation:request.operation.generation.0,canonical_base_revision:request.canonical_base_revision,retained: request.retained,authoring_seed:request.authoring_seed.clone()};
     let payload=semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {command:*request.command,snapshot:request.snapshot,config:request.config,history:request.history,interaction_state:request.interaction_state,interaction_hover:request.interaction_hover,context:Some(request.context),operation,completion:request.completion},DrawingCommand::command_id,65536,4096,Box::new(work));
     Ok(semio_framework::ToolOperationSpec::new(request.controller_id,request.tool_id,request.payload_schema_id,payload,request.operation))
 }

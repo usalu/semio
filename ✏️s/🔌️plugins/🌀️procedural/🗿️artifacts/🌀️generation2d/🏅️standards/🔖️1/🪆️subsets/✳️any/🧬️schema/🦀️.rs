@@ -112,11 +112,22 @@ pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut Flo
 /// evaluation baseline, and is retired the same way. `body` receives the session back alongside the
 /// host because every real caller needs it mutably (`sync`/`tick`).
 #[cfg(feature = "component-app-assembly")]
-pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> R {
-    let mut host = flow_host_with_session(host_snapshot, session);
+pub fn host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<FlowHost, semio_framework_value::ValueError> {
+    match flow_host_with_session(FlowHost::from_host_snapshot(host_snapshot.clone()), session, grant) {
+        Ok((host, _)) => Ok(host),
+        Err((error, host)) => {
+            host.retire_cold();
+            Err(error)
+        }
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> Result<R, semio_framework_value::ValueError> {
+    let mut host = host_with_session(host_snapshot, session, grant)?;
     let result = body(&mut host, session);
     host.retire_cold();
-    result
+    Ok(result)
 }
 
 //#region 🔖️HostGestures
@@ -194,7 +205,10 @@ pub fn host_insert_port(host: &mut FlowHost, widget_id: &str, input: bool, index
 pub fn host_reorganize(host: &mut FlowHost, options_json: &str) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
     use crate::standards::v1::subsets::any::schema::mutations::move_widget;
     let before: Vec<(String, semio_framework_artifact_flow_flow::WidgetLayout)> = host.host_snapshot.layout.iter().map(|(id, layout)| (id.clone(), layout.clone())).collect();
-    host.reorganize(options_json).map_err(|error| error.to_string())?;
+    let options: semio_framework_os_infinite::board::schema::layout::DagLayoutOptions = semio_framework_pack_json::from_json_str(options_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let mut progress = |_| true;
+    let mut control = semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000, &mut progress);
+    host.reorganize(&options, &mut control).map_err(|error| error.to_string())?;
     Ok(host
         .host_snapshot
         .layout

@@ -14,7 +14,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// [`Generation2dConfigMutation`]. Selection/hover moved to the framework's own `graph` interaction
 /// domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see
 /// `create_generation2d_app`'s `.interaction(...)` declaration.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact(extension = "generation2dcfg")]
 #[artifact(id = "procedural.generation2dcfg")]
@@ -86,12 +86,29 @@ store::config_diff! { record: Generation2dConfig, diff: Generation2dConfigDiff, 
 //#region 🔖️ConfigOperations
 /// 🧮️ [`Generation2dConfig`]'s operation enum — one variant per settled config write; each variant's inverse is the same
 /// variant carrying the base value of exactly the field it owns.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Generation2dConfigMutation {
     #[dsl(key = "show-mode")]
-    SetShowMode { value: String },
+    SetShowMode(SetShowModeSetting),
     #[dsl(key = "selected-generation")]
-    SetSelectedGeneration { selected_generation_id: Option<String> },
+    SetSelectedGeneration(SetSelectedGenerationSetting),
+}
+
+/// 👁️ The display mode a show-mode write sets; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "show-mode")]
+pub struct SetShowModeSetting {
+    pub value: String,
+}
+
+/// 👁️ The generation selection a selection write sets; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "selected-generation")]
+pub struct SetSelectedGenerationSetting {
+    pub selected_generation_id: Option<String>,
 }
 
 //#region 🔖️OpCodec
@@ -192,8 +209,8 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Generation2dConfigMutation::SetShowMode { .. } => &Self::DESCRIPTORS[0],
-            Generation2dConfigMutation::SetSelectedGeneration { .. } => &Self::DESCRIPTORS[1],
+            Generation2dConfigMutation::SetShowMode(_) => &Self::DESCRIPTORS[0],
+            Generation2dConfigMutation::SetSelectedGeneration(_) => &Self::DESCRIPTORS[1],
         }
     }
 
@@ -201,15 +218,15 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
 
     fn diff(&self, base: &Generation2dConfig) -> protocol::MutationOutcome<Generation2dConfigDiff> {
         protocol::MutationOutcome::new(match self {
-            Generation2dConfigMutation::SetShowMode { value } => Generation2dConfigDiff { show_mode: Some(value.clone()), ..Default::default() },
-            Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id } => Generation2dConfigDiff { selected_generation_id: Some(selected_generation_id.clone()), ..Default::default() },
+            Generation2dConfigMutation::SetShowMode(SetShowModeSetting { value }) => Generation2dConfigDiff { show_mode: Some(value.clone()), ..Default::default() },
+            Generation2dConfigMutation::SetSelectedGeneration(SetSelectedGenerationSetting { selected_generation_id }) => Generation2dConfigDiff { selected_generation_id: Some(selected_generation_id.clone()), ..Default::default() },
         })
     }
 
     fn inverse(&self, base: &Generation2dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            Generation2dConfigMutation::SetShowMode { .. } => Generation2dConfigMutation::SetShowMode { value: base.show_mode.clone() },
-            Generation2dConfigMutation::SetSelectedGeneration { .. } => Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id: base.selected_generation_id.clone() },
+            Generation2dConfigMutation::SetShowMode(_) => Generation2dConfigMutation::SetShowMode(SetShowModeSetting { value: base.show_mode.clone() }),
+            Generation2dConfigMutation::SetSelectedGeneration(_) => Generation2dConfigMutation::SetSelectedGeneration(SetSelectedGenerationSetting { selected_generation_id: base.selected_generation_id.clone() }),
         }])
     }
 }

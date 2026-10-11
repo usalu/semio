@@ -30,7 +30,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant — real per-command payload modules the way `✏️editor/🎮️commands/*`
 /// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum NoteViewCommand {
     #[default]
     Noop,
@@ -71,14 +71,6 @@ impl ArtifactViewer for NoteViewer {
     /// 🔐️ The document-store owner catalogue, identical to the sibling editor's: a viewer owns the
     /// very same `NoteSnapshot` envelope and must allocate and retire it the same way. Read-only
     /// says nothing about ownership.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
-
     /// 🧹️ The four bounded disposers `VcsArtifactApp`'s close ladder drives, one per owned lane
     /// (`document-store`, `config-store`, `presence-store`, `transient-store`); `ViewerApp` supplies
     /// the draft lane itself.

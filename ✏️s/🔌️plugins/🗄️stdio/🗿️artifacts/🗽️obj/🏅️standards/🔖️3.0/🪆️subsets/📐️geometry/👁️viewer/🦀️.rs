@@ -37,7 +37,7 @@ pub const OBJ_ANY_DOCUMENT_SCHEMA: &str = "stdio.obj";
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions, so its typed command channel has exactly one inert variant.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum ObjAnyViewCommand {
     #[default]
     Noop,

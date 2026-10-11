@@ -3,399 +3,17 @@
 use crate::op::WriterMutation;
 use crate::schema;
 use crate::WriterSnapshot;
-use protocol::{Mutation, OpBinary};
 use store::ArtifactEnvelopeMutationFieldTarget;
+use semio_framework_value::retirement::OwnedValueRetirementFactory;
+
+/// 🗃️ The framework-bounded document owner catalog, funded for a store no scheduler grants.
 pub fn writer_document_store_owners() -> store::DocumentStoreOwners<WriterSnapshot, WriterMutation> {
-    store::DocumentStoreOwners::new(
-        std::sync::Arc::new(WriterSnapshotRetirementFactory),
-        std::sync::Arc::new(WriterSnapshotRetirementFactory),
-        std::sync::Arc::new(WriterMutationRetirementFactory),
-        Box::new(store::ArtifactStoreCursorDisposer::<WriterSnapshot, WriterMutation>::new()),
-    )
+    store::funded_bounded_artifact_store_owners::<WriterSnapshot, WriterMutation>().expect("funded Writer document owners")
 }
 
 pub type WriterDocumentStore = store::ArtifactStore<WriterSnapshot, WriterMutation>;
 
-struct WriterStoreInitializationAuthority {
-    actor: protocol::ActorId,
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
-    envelope: std::mem::ManuallyDrop<Option<store::ArtifactEnvelope<WriterSnapshot, WriterMutation>>>,
-    runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<WriterSnapshot>>>,
-    candidate: std::mem::ManuallyDrop<Option<store::ArtifactStore<WriterSnapshot, WriterMutation>>>,
-    active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    initial: std::mem::ManuallyDrop<Option<WriterSnapshot>>,
-    edit_index: store::ArtifactStoreInitializationEditIndex,
-    phase: WriterStoreInitializationPhase,
-    resume_phase: Option<WriterStoreInitializationPhase>,
-    cancel_requested: bool,
-    fault: Option<Vec<u8>>,
-    terminal_handoff: bool,
-}
-
-impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot, WriterMutation> for WriterStoreInitializationAuthority {
-    fn next_close_byte_demand(&self) -> usize {
-        self.active.as_ref().or(self.envelope_retirement.as_ref()).map_or(WRITER_ENVELOPE_FIELD_BYTES, |owner| owner.next_close_byte_demand())
-    }
-
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        if cx.operation() != self.operation || cx.generation() != self.generation {
-            self.fail(b"writer-store.initializer-stale-authority");
-        }
-        if self.cancel_requested && !matches!(self.phase, WriterStoreInitializationPhase::RetireCancelled | WriterStoreInitializationPhase::Cancelled) {
-            self.phase = WriterStoreInitializationPhase::RetireCancelled;
-        }
-        if let Err(error) = self.pump_active() {
-            self.fault = Some(error.into_message().into_bytes());
-            self.phase = WriterStoreInitializationPhase::RetireFault;
-        } else if self.active.is_some() {
-            return semio_framework_job::StepOutcome::Yield;
-        }
-        if !matches!(self.phase, WriterStoreInitializationPhase::RetireCancelled | WriterStoreInitializationPhase::RetireFault | WriterStoreInitializationPhase::Cancelled | WriterStoreInitializationPhase::Fault | WriterStoreInitializationPhase::Complete) {
-            if let Some(runtime) = self.runtime.as_mut() {
-                match runtime.settle_current_retirement_step(1, WRITER_ENVELOPE_FIELD_BYTES) {
-                    Ok(store::SnapshotRetirementStep::Complete) => {}
-                    Ok(_) => { cx.consume_fuel(1); return semio_framework_job::StepOutcome::Yield; }
-                    Err(error) => { self.fault = Some(error.into_message().into_bytes()); self.phase = WriterStoreInitializationPhase::RetireFault; }
-                }
-            }
-        }
-        match self.phase {
-            WriterStoreInitializationPhase::BindGenesis => {
-                let envelope = self.envelope.as_ref().expect("retained initializer genesis");
-                *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), self.actor.clone()));
-                self.phase = WriterStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
-                cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            WriterStoreInitializationPhase::ValidateEnvelope => {
-                let Some(envelope) = self.envelope.as_ref() else {
-                    self.fail(b"writer-store.initializer-envelope-missing");
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                if envelope.schema != crate::WRITER_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > WRITER_ENVELOPE_FIELD_BYTES {
-                    self.fail(b"writer-store.initializer-envelope-invalid");
-                } else {
-                    self.phase = WriterStoreInitializationPhase::ValidateEdit { index: 0 };
-                }
-                cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            WriterStoreInitializationPhase::ValidateEdit { index } => {
-                let envelope = self.envelope.as_ref().expect("validated Writer envelope remains retained");
-                match self.edit_index.admit(&envelope.vcs.edits, index, WRITER_ENVELOPE_FIELD_BYTES) {
-                    store::ArtifactStoreInitializationEditAdmission::Complete => self.phase = WriterStoreInitializationPhase::BindGenesis,
-                    store::ArtifactStoreInitializationEditAdmission::Admitted => self.phase = WriterStoreInitializationPhase::ValidateEdit { index: index + 1 },
-                    store::ArtifactStoreInitializationEditAdmission::Oversized | store::ArtifactStoreInitializationEditAdmission::Duplicate => self.fail(b"writer-store.initializer-duplicate-or-hostile-edit"),
-                }
-                cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            WriterStoreInitializationPhase::CloneInitial { field, offset } => {
-                if field == 10 {
-                    let initial = self.initial.take().expect("Writer initial snapshot was built one field at a time");
-                    match self.runtime.as_mut().expect("retained initializer runtime").adopt_current_owned(initial, std::sync::Arc::new(WriterSnapshotRetirementFactory)) {
-                        Ok(()) => self.phase = self.resume_phase.take().expect("retained mutation resume phase"),
-                        Err(initial) => {
-                            *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterSnapshotRetirementFactory, initial));
-                            self.fail(b"initializer-owned-workspace-adoption");
-                        }
-                    }
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                let envelope = self.envelope.as_ref().expect("Writer envelope remains retained during initial clone");
-                let value = Self::initial_field(envelope.vcs.genesis.facts().snapshot(), field);
-                // ✂️ One PAGE of one field per step. `WriterSnapshot::text` is the document's authored body
-                // and has no length ceiling, so a fixed per-field ceiling would refuse every writer
-                // document over one page (`writer-store.initializer-initial-field-too-large`) instead of
-                // copying it — the initial target starts empty, so the pages simply accumulate.
-                let page = writer_page_boundary(&value[offset..], WRITER_ENVELOPE_FIELD_BYTES);
-                if page == 0 {
-                    if offset < value.len() {
-                        self.fail(b"writer-store.initializer-initial-field-unpageable");
-                        return semio_framework_job::StepOutcome::Yield;
-                    }
-                    self.phase = WriterStoreInitializationPhase::CloneInitial { field: field + 1, offset: 0 };
-                    cx.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                let chunk = &value[offset..offset + page];
-                Self::initial_field_mut(self.initial.as_mut().expect("Writer initial target remains retained"), field).push_str(chunk);
-                self.phase = WriterStoreInitializationPhase::CloneInitial { field, offset: offset + page };
-                cx.consume_fuel(page as u64);
-                semio_framework_job::StepOutcome::Yield
-            }
-            WriterStoreInitializationPhase::SeedHistory { edit, lane, index } => {
-                let envelope = self.envelope.as_ref().expect("Writer envelope remains retained while causal history is seeded");
-                let Some(entry) = envelope.vcs.edits.get(edit) else {
-                    self.phase = WriterStoreInitializationPhase::FoldSupersessions { transition: 0 };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                let runtime = self.runtime.as_mut().expect("Writer runtime remains retained while history is seeded");
-                match lane {
-                    0 => {
-                        if let Err(error) = runtime.seed_mutation(protocol::MutationId(entry.id.clone())) {
-                            self.fault = Some(error.into_bytes());
-                            self.phase = WriterStoreInitializationPhase::RetireFault;
-                        } else {
-                            runtime.observe_sequence(entry.sequence_number);
-                            self.phase = WriterStoreInitializationPhase::SeedHistory { edit, lane: 1, index: 0 };
-                        }
-                    }
-                    1 if index < entry.forwards.len() => {
-                        let id = entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| entry.forwards[index].mutation_id()).unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)));
-                        if let Err(error) = runtime.seed_edit_operation(&entry.id, id) {
-                            self.fault = Some(error.into_bytes());
-                            self.phase = WriterStoreInitializationPhase::RetireFault;
-                        } else {
-                            self.phase = WriterStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
-                        }
-                    }
-                    1 => self.phase = WriterStoreInitializationPhase::SeedHistory { edit, lane: 2, index: 0 },
-                    2 if index < entry.mutation_meta.len() => {
-                        runtime.observe_timestamp(entry.mutation_meta[index].timestamp.clone());
-                        self.phase = WriterStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 };
-                    }
-                    _ => self.phase = WriterStoreInitializationPhase::SeedHistory { edit: edit + 1, lane: 0, index: 0 },
-                }
-                cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            WriterStoreInitializationPhase::FoldSupersessions { transition } => {
-                let envelope = self.envelope.as_ref().expect("Writer envelope remains retained while its supersessions fold");
-                match self.runtime.as_mut().expect("Writer runtime remains retained while its supersessions fold").fold_supersession_step(envelope, transition) {
-                    Ok(true) => self.phase = WriterStoreInitializationPhase::FoldSupersessions { transition: transition + 1 },
-                    Ok(false) => self.phase = WriterStoreInitializationPhase::FindApplied { position: 0 },
-                    Err(error) => {
-                        self.fault = Some(error.into_bytes());
-                        self.phase = WriterStoreInitializationPhase::RetireFault;
-                    }
-                }
-                cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            WriterStoreInitializationPhase::FindApplied { position } => {
-                let Some(id) = self.applied_id(position) else {
-                    let checkpoint = self.envelope.as_ref().and_then(|envelope| envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone()).or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())));
-                    self.runtime.as_mut().expect("Writer runtime remains retained").set_current_checkpoint_id(checkpoint);
-                    self.phase = WriterStoreInitializationPhase::FindRedo { position: 0 };
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
-                let envelope = self.envelope.as_ref().expect("Writer envelope remains retained");
-                let Some(edit) = envelope.vcs.edits.get(scan) else {
-                    self.fail(b"writer-store.initializer-applied-edit-missing");
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                if edit.id == id {
-                    self.phase = WriterStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
-                } else {
-                    self.fail(b"writer-store.initializer-applied-edit-missing");
-                }
-                cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            WriterStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
-                let needs_workspace = {
-                    let envelope = self.envelope.as_ref().expect("retained initializer envelope");
-                    let runtime = self.runtime.as_ref().expect("retained initializer runtime");
-                    envelope.vcs.edits.get(edit).and_then(|entry| runtime.effective_forward(entry, mutation, &envelope.schema)).is_some_and(|effective| effective.operation().is_some())
-                };
-                if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
-                    self.resume_phase = Some(self.phase);
-                    let document = store::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } });
-                    *self.initial = Some(WriterSnapshot { schema: String::new(), id: String::new(), language_id: String::new(), uri: String::new(), text: String::new(), document });
-                    self.phase = WriterStoreInitializationPhase::CloneInitial { field: 0, offset: 0 };
-                    cx.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
-                }
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Writer applied edit remains retained");
-                let envelope = self.envelope.as_ref().expect("Writer envelope remains retained while its forwards fold");
-                let entry = envelope.vcs.edits.get(edit).expect("Writer applied edit remains retained");
-                match self.runtime.as_mut().expect("Writer runtime remains retained while its forwards fold").fold_forward(entry, mutation, &envelope.schema, WRITER_ENVELOPE_FIELD_BYTES) {
-                    Ok(store::ArtifactStoreInitializationForward::Folded { displaced, fuel }) => {
-                        if let Some(previous) = displaced {
-                            *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterSnapshotRetirementFactory, previous));
-                        }
-                        self.phase = WriterStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
-                        cx.consume_fuel(fuel as u64);
-                    }
-                    Ok(store::ArtifactStoreInitializationForward::Exhausted) => self.phase = WriterStoreInitializationPhase::CommitApplied { position, edit },
-                    Err(_) => self.fail(b"writer-store.initializer-forward-encoding"),
-                }
-                semio_framework_job::StepOutcome::Yield
-            }
-            WriterStoreInitializationPhase::CommitApplied { position, edit } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Writer applied edit remains retained");
-
-                let runtime = self.runtime.as_mut().expect("Writer runtime remains retained");
-                if let Err(error) = runtime.push_applied_edit(entry, self.envelope.as_ref().expect("retained history ledger").vcs.edits.key_at(edit).expect("authoritative retained edit key")) {
-                    self.fault = Some(error.into_bytes());
-                    self.phase = WriterStoreInitializationPhase::RetireFault;
-                } else {
-
-                    self.phase = WriterStoreInitializationPhase::FindApplied { position: position + 1 };
-                }
-                cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            WriterStoreInitializationPhase::FindRedo { position } => {
-                let Some(id) = self.redo_id(position) else {
-                    self.edit_index.clear();
-                    self.phase = WriterStoreInitializationPhase::BuildCandidate;
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
-                let envelope = self.envelope.as_ref().expect("Writer envelope remains retained");
-                let Some(edit) = envelope.vcs.edits.get(scan) else {
-                    self.fail(b"writer-store.initializer-redo-edit-missing");
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                if edit.id == id {
-                    self.phase = WriterStoreInitializationPhase::CommitRedo { position, edit: scan };
-                } else {
-                    self.fail(b"writer-store.initializer-redo-edit-missing");
-                }
-                cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            WriterStoreInitializationPhase::CommitRedo { position, edit } => {
-                let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Writer redo edit remains retained");
-                if let Err(error) = self.runtime.as_mut().expect("Writer runtime remains retained").push_redo_edit(entry, self.envelope.as_ref().expect("retained history ledger").vcs.edits.key_at(edit).expect("authoritative retained edit key")) {
-                    self.fault = Some(error.into_bytes());
-                    self.phase = WriterStoreInitializationPhase::RetireFault;
-                } else {
-                    self.phase = WriterStoreInitializationPhase::FindRedo { position: position + 1 };
-                }
-                cx.consume_fuel(1);
-                semio_framework_job::StepOutcome::Yield
-            }
-            WriterStoreInitializationPhase::BuildCandidate => {
-                let Some(candidate_generation) = self.generation.0.checked_add(1) else {
-                    self.fail(b"writer-store.initializer-generation-exhausted");
-                    return semio_framework_job::StepOutcome::Yield;
-                };
-                let envelope = self.envelope.take().expect("Writer envelope remains retained until atomic store construction");
-                let runtime = self.runtime.take().expect("Writer runtime remains retained until atomic store construction");
-                let candidate = store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, candidate_generation, writer_document_store_owners());
-                *self.candidate = Some(candidate);
-                self.phase = WriterStoreInitializationPhase::Complete;
-                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                })
-            }
-            WriterStoreInitializationPhase::RetireCancelled | WriterStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
-                Ok(false) => semio_framework_job::StepOutcome::Yield,
-                Ok(true) => {
-                    self.terminal_handoff = true;
-                    if self.phase == WriterStoreInitializationPhase::RetireCancelled {
-                        self.phase = WriterStoreInitializationPhase::Cancelled;
-                        semio_framework_job::StepOutcome::Cancelled
-                    } else {
-                        self.phase = WriterStoreInitializationPhase::Fault;
-                        let source = self.fault.take().unwrap_or_else(|| b"writer-store.initializer-fault".to_vec());
-                        let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &source).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
-                        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
-                    }
-                }
-                Err(error) => {
-                    self.fault = Some(error.into_message().into_bytes());
-                    semio_framework_job::StepOutcome::Yield
-                }
-            },
-            WriterStoreInitializationPhase::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-            }),
-            WriterStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
-            WriterStoreInitializationPhase::Fault => {
-                let source = self.fault.as_deref().unwrap_or(b"writer-store.initializer-fault");
-                let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, source).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
-                semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
-            }
-        }
-    }
-
-    fn request_cancel(&mut self) {
-        self.cancel_requested = true;
-    }
-
-    fn begin_close(&mut self) {
-        self.cancel_requested = true;
-        if !matches!(self.phase, WriterStoreInitializationPhase::Cancelled | WriterStoreInitializationPhase::Fault) {
-            self.phase = WriterStoreInitializationPhase::RetireCancelled;
-        }
-    }
-
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework::Fault> {
-        self.begin_close();
-        if maximum_items == 0 || maximum_bytes < WRITER_ENVELOPE_FIELD_BYTES {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        match self.pump_terminal_retirement() {
-            Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
-            Ok(true) => {
-                self.terminal_handoff = true;
-                Ok(semio_framework_plugin::PluginCloseStep::Complete)
-            }
-            Err(error) => Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("artifact-store.initializer-close"), format!("Writer initializer close failed: {error}"))),
-        }
-    }
-
-    fn take_candidate(&mut self) -> Option<store::ArtifactStore<WriterSnapshot, WriterMutation>> {
-        if self.phase != WriterStoreInitializationPhase::Complete || self.terminal_handoff {
-            return None;
-        }
-        let candidate = self.candidate.take()?;
-        self.terminal_handoff = true;
-        Some(candidate)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.terminal_is_empty_inner()
-    }
-}
-
 const WRITER_ENVELOPE_FIELD_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
-
-/// ✂️ The largest `index <= limit` that is a UTF-8 char boundary of `text` — a writer body is
-/// authored prose, so a fixed byte page will land mid-codepoint sooner or later and `String::truncate`
-/// panics there. Pages are therefore at most `limit` bytes, never exactly.
-fn writer_page_boundary(text: &str, limit: usize) -> usize {
-    let mut index = limit.min(text.len());
-    while index > 0 && !text.is_char_boundary(index) {
-        index -= 1;
-    }
-    index
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct WriterSnapshotRetirementFactory;
-
-impl store::ArtifactOwnedValueRetirementFactory<WriterSnapshot> for WriterSnapshotRetirementFactory {
-    fn retire_owned(&self, value: WriterSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(WriterSnapshotRetirement { value: std::mem::ManuallyDrop::new(Some(value)), phase: 0 })
-    }
-}
-
-impl store::SnapshotRetirementFactory<WriterSnapshot> for WriterSnapshotRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<WriterSnapshot>) -> usize { std::mem::size_of::<WriterSnapshotRootRetirement>() }
-
-    fn retire(&self, snapshot: std::sync::Arc<WriterSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(WriterSnapshotRootRetirement { owner: std::mem::ManuallyDrop::new(Some(snapshot)), retirement: std::mem::ManuallyDrop::new(None) })
-    }
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct WriterMutationRetirementFactory;
-
-impl store::ArtifactOwnedValueRetirementFactory<WriterMutation> for WriterMutationRetirementFactory {
-    fn retire_owned(&self, value: WriterMutation) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(WriterMutationRetirement { value: std::mem::ManuallyDrop::new(Some(value)), field_released: false })
-    }
-}
 
 /// 🔐️ Opens a Writer store WITH its exact owner catalog installed. `ArtifactStore::new` installs no
 /// catalog, and `reserve_edit_history_slot` then refuses every `Apply`
@@ -405,7 +23,7 @@ impl store::ArtifactOwnedValueRetirementFactory<WriterMutation> for WriterMutati
 /// standalone store goes through here instead. Mirrors `🕸️dag`'s `new_dag_store`.
 pub async fn new_writer_store(envelope: WriterDocumentEnvelope, actor: protocol::ActorId) -> Result<OwnedWriterStore, store::VcsError> {
     let mut store = WriterDocumentStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(writer_document_store_owners());
+    store.install_document_store_owners_exact(writer_document_store_owners()).unwrap_or_else(|(error, _owners)| panic!("{}", error.into_message()));
     Ok(OwnedWriterStore(store))
 }
 
@@ -419,7 +37,9 @@ impl OwnedWriterStore {
     /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
     pub fn close(&mut self) {
         while !self.0.close_owned_terminal_is_empty() {
-            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Writer document store closes through its exact bounded owners");
+            let demand = self.0.close_owned_demands(WRITER_ENVELOPE_FIELD_BYTES).expect("the Writer document store quotes its close");
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(WRITER_ENVELOPE_FIELD_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            self.0.close_owned_step(grant).expect("Writer document store closes through its exact bounded owners");
         }
     }
 }
@@ -442,355 +62,6 @@ impl Drop for OwnedWriterStore {
         if !std::thread::panicking() {
             self.close();
         }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum WriterStoreInitializationPhase {
-    BindGenesis,
-    ValidateEnvelope,
-    ValidateEdit { index: usize },
-    CloneInitial { field: u8, offset: usize },
-    SeedHistory { edit: usize, lane: u8, index: usize },
-    FoldSupersessions { transition: usize },
-    FindApplied { position: usize },
-    ApplyForward { position: usize, edit: usize, mutation: usize },
-    CommitApplied { position: usize, edit: usize },
-    FindRedo { position: usize },
-    CommitRedo { position: usize, edit: usize },
-    BuildCandidate,
-    RetireCancelled,
-    RetireFault,
-    Complete,
-    Cancelled,
-    Fault,
-}
-
-impl WriterStoreInitializationAuthority {
-    fn new(envelope: store::ArtifactEnvelope<WriterSnapshot, WriterMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
-        Self {
-            actor,
-            operation,
-            generation,
-            envelope: std::mem::ManuallyDrop::new(Some(envelope)),
-            runtime: std::mem::ManuallyDrop::new(None),
-            candidate: std::mem::ManuallyDrop::new(None),
-            active: std::mem::ManuallyDrop::new(None),
-            envelope_retirement: std::mem::ManuallyDrop::new(None),
-            initial: std::mem::ManuallyDrop::new(None),
-            edit_index: store::ArtifactStoreInitializationEditIndex::default(),
-            resume_phase: None,
-            phase: WriterStoreInitializationPhase::ValidateEnvelope,
-            cancel_requested: false,
-            fault: None,
-            terminal_handoff: false,
-        }
-    }
-
-    fn initial_field(value: &WriterSnapshot, field: u8) -> &str {
-        match field {
-            0 => &value.schema,
-            1 => &value.id,
-            2 => &value.language_id,
-            3 => &value.uri,
-            4 => &value.text,
-            5 => &value.document.child_id,
-            6 => &value.document.target.artifact_id,
-            7 => &value.document.target.dialect.artifact_kind,
-            8 => &value.document.target.dialect.standard,
-            9 => &value.document.target.dialect.subset,
-            _ => unreachable!("Writer initial field cursor is validated"),
-        }
-    }
-
-    fn initial_field_mut(value: &mut WriterSnapshot, field: u8) -> &mut String {
-        match field {
-            0 => &mut value.schema,
-            1 => &mut value.id,
-            2 => &mut value.language_id,
-            3 => &mut value.uri,
-            4 => &mut value.text,
-            5 => &mut value.document.child_id,
-            6 => &mut value.document.target.artifact_id,
-            7 => &mut value.document.target.dialect.artifact_kind,
-            8 => &mut value.document.target.dialect.standard,
-            9 => &mut value.document.target.dialect.subset,
-            _ => unreachable!("Writer initial field cursor is validated"),
-        }
-    }
-
-    fn applied_id(&self, position: usize) -> Option<&str> {
-        let envelope = self.envelope.as_ref()?;
-        match &envelope.cursor {
-            Some(cursor) => cursor.applied_edit_ids.get(position).map(String::as_str),
-            None => envelope.vcs.edits.get(position).map(|edit| edit.id.as_str()),
-        }
-    }
-
-    fn redo_id(&self, position: usize) -> Option<&str> {
-        self.envelope.as_ref()?.cursor.as_ref()?.redo_edit_ids.get(position).map(String::as_str)
-    }
-
-    fn fail(&mut self, code: &'static [u8]) {
-        self.fault = Some(code.to_vec());
-        self.phase = WriterStoreInitializationPhase::RetireFault;
-    }
-
-    fn pump_active(&mut self) -> Result<bool, semio_framework_value::ValueError> {
-        let Some(active) = self.active.as_mut() else { return Ok(false) };
-        match active.close_step(1, WRITER_ENVELOPE_FIELD_BYTES)? {
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= WRITER_ENVELOPE_FIELD_BYTES => Ok(true),
-            store::SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Writer store initializer retirement exceeded its exact grant")),
-            store::SnapshotRetirementStep::Blocked => Ok(true),
-            store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
-                drop(self.active.take());
-                Ok(true)
-            }
-            store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Writer store initializer retirement reported a false terminal")),
-        }
-    }
-
-    fn pump_terminal_retirement(&mut self) -> Result<bool, semio_framework_value::ValueError> {
-        if self.pump_active()? {
-            return Ok(false);
-        }
-        if let Some(runtime) = self.runtime.as_mut() {
-            match runtime.close_step(&WriterSnapshotRetirementFactory, 1, WRITER_ENVELOPE_FIELD_BYTES)? {
-                store::SnapshotRetirementStep::Complete if runtime.terminal_is_empty() => {
-                    drop(self.runtime.take());
-                    return Ok(false);
-                }
-                store::SnapshotRetirementStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Writer initialization runtime reported a false terminal")),
-                _ => return Ok(false),
-            }
-        }
-        if let Some(initial) = self.initial.take() {
-            *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterSnapshotRetirementFactory, initial));
-            return Ok(false);
-        }
-        if self.envelope_retirement.is_none() {
-            if let Some(envelope) = self.envelope.take() {
-                *self.envelope_retirement = Some(writer_envelope_decode_owner_bundle().retire_envelope(envelope));
-                return Ok(false);
-            }
-        }
-        if let Some(retirement) = self.envelope_retirement.as_mut() {
-            return match retirement.close_step(1, WRITER_ENVELOPE_FIELD_BYTES)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    drop(self.envelope_retirement.take());
-                    Ok(true)
-                }
-                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Writer initialization envelope retirement reported a false terminal")),
-                _ => Ok(false),
-            };
-        }
-        Ok(true)
-    }
-
-    fn terminal_is_empty_inner(&self) -> bool {
-        self.terminal_handoff
-            && self.envelope.is_none()
-            && self.runtime.is_none()
-            && self.candidate.is_none()
-            && self.active.is_none()
-            && self.envelope_retirement.is_none()
-            && self.initial.is_none()
-    }
-}
-
-impl Drop for WriterStoreInitializationAuthority {
-    fn drop(&mut self) {
-        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
-        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
-        // Firing it while the thread is ALREADY unwinding turns a reported failure into
-        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
-        // binary and hides the first, real failure (that is how one red test took this crate's
-        // other 300 with it).
-        assert!(std::thread::panicking() || (self.terminal_is_empty_inner()), "Writer store initialization authority reached Drop before exact candidate handoff or retained rejection close");
-    }
-}
-
-pub fn writer_document_store_initialization_job(
-    envelope: store::ArtifactEnvelope<WriterSnapshot, WriterMutation>,
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
-    actor: protocol::ActorId,
-) -> semio_framework_plugin::ArtifactStoreInitializationJob<WriterSnapshot, WriterMutation> {
-    semio_framework_plugin::ArtifactStoreInitializationJob::new(Box::new(WriterStoreInitializationAuthority::new(envelope, operation, generation, actor)))
-}
-
-struct WriterSnapshotRetirement {
-    value: std::mem::ManuallyDrop<Option<WriterSnapshot>>,
-    phase: u8,
-}
-
-impl WriterSnapshotRetirement {
-    fn take_field(value: &mut WriterSnapshot, phase: u8) -> &mut String {
-        match phase {
-            0 => &mut value.schema,
-            1 => &mut value.id,
-            2 => &mut value.language_id,
-            3 => &mut value.uri,
-            4 => &mut value.text,
-            5 => &mut value.document.child_id,
-            6 => &mut value.document.target.artifact_id,
-            7 => &mut value.document.target.dialect.artifact_kind,
-            8 => &mut value.document.target.dialect.standard,
-            9 => &mut value.document.target.dialect.subset,
-            _ => unreachable!("Writer snapshot retirement phase is validated"),
-        }
-    }
-}
-
-impl store::ErasedSnapshotRetirement for WriterSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        let Some(value) = self.value.as_mut() else { return Ok(store::SnapshotRetirementStep::Complete) };
-        if self.phase < 10 {
-            if maximum_items == 0 || maximum_bytes == 0 {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            let field = Self::take_field(value, self.phase);
-            // ✂️ A field longer than one grant is released a PAGE at a time instead of refusing forever:
-            // `WriterSnapshot::text` is an authored body with no length ceiling, and the old
-            // "too long ⇒ Pending {0, 0}" arm made every close loop spin until its deadline.
-            // Mirrors the framework's own `Bytes` retirement cursor (`♻️retirement/🦀️.rs`).
-            if field.len() > maximum_bytes {
-                let keep = writer_page_boundary(field, field.len() - maximum_bytes);
-                let released_bytes = field.len() - keep;
-                field.truncate(keep);
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
-            }
-            let released_bytes = field.len();
-            drop(std::mem::take(field));
-            self.phase += 1;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
-        }
-        drop(self.value.take());
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
-    }
-}
-
-impl Drop for WriterSnapshotRetirement {
-    fn drop(&mut self) {
-        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
-        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
-        // Firing it while the thread is ALREADY unwinding turns a reported failure into
-        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
-        // binary and hides the first, real failure (that is how one red test took this crate's
-        // other 300 with it).
-        assert!(std::thread::panicking() || (self.value.is_none()), "Writer snapshot retirement reached Drop before every exact string and child-handle owner was terminal-empty");
-    }
-}
-
-struct WriterSnapshotRootRetirement {
-    owner: std::mem::ManuallyDrop<Option<std::sync::Arc<WriterSnapshot>>>,
-    retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-}
-
-impl store::ErasedSnapshotRetirement for WriterSnapshotRootRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(maximum_items.min(1), maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    drop(self.retirement.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
-                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Writer snapshot root retirement reported Complete without terminal-empty authority")),
-                step => Ok(step),
-            };
-        }
-        let Some(owner) = self.owner.take() else { return Ok(store::SnapshotRetirementStep::Complete) };
-        match std::sync::Arc::try_unwrap(owner) {
-            Ok(value) => {
-                *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterSnapshotRetirementFactory, value));
-                Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-            }
-            Err(owner) => {
-                *self.owner = Some(owner);
-                Ok(store::SnapshotRetirementStep::Blocked)
-            }
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.owner.is_none() && self.retirement.is_none()
-    }
-}
-
-impl Drop for WriterSnapshotRootRetirement {
-    fn drop(&mut self) {
-        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
-        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
-        // Firing it while the thread is ALREADY unwinding turns a reported failure into
-        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
-        // binary and hides the first, real failure (that is how one red test took this crate's
-        // other 300 with it).
-        assert!(std::thread::panicking() || (self.owner.is_none() && self.retirement.is_none()), "Writer snapshot root retirement reached Drop before exact Arc handback and bounded field disposal");
-    }
-}
-
-struct WriterMutationRetirement {
-    value: std::mem::ManuallyDrop<Option<WriterMutation>>,
-    field_released: bool,
-}
-
-impl store::ErasedSnapshotRetirement for WriterMutationRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        let Some(value) = self.value.as_mut() else { return Ok(store::SnapshotRetirementStep::Complete) };
-        if !self.field_released {
-            if maximum_items == 0 {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            let field = match value {
-                WriterMutation::RenameWriter(value) => &mut value.new_id,
-                WriterMutation::ChangeUri(value) => &mut value.new_uri,
-                WriterMutation::ChangeLanguage(value) => &mut value.new_language_id,
-                WriterMutation::EditText(value) => &mut value.text,
-                WriterMutation::SpliceText(value) => {
-                    let released_bytes = value.deleted.len() + value.insert.len() + value.before.len() + value.after.len();
-                    if released_bytes > maximum_bytes {
-                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-                    }
-                    for field in [&mut value.deleted, &mut value.insert, &mut value.before, &mut value.after] {
-                        drop(std::mem::take(field));
-                    }
-                    self.field_released = true;
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
-                }
-            };
-            if field.len() > maximum_bytes {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            let released_bytes = field.len();
-            drop(std::mem::take(field));
-            self.field_released = true;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
-        }
-        drop(self.value.take());
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
-    }
-}
-
-impl Drop for WriterMutationRetirement {
-    fn drop(&mut self) {
-        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
-        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
-        // Firing it while the thread is ALREADY unwinding turns a reported failure into
-        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
-        // binary and hides the first, real failure (that is how one red test took this crate's
-        // other 300 with it).
-        assert!(std::thread::panicking() || (self.value.is_none()), "Writer mutation retirement reached Drop before its exact string owner was terminal-empty");
     }
 }
 
@@ -850,10 +121,21 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot> for WriterSna
         Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
-    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
-        Ok(usize::from(self.retirement.is_some()) * store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(0).map(|demand| demand.copy_bytes)
     }
 
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(maximum_copy_bytes).map(|demand| demand.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(0).map(|demand| demand.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(0).map(|demand| demand.depth)
+    }
     fn maximum_close_byte_demand(&self) -> usize {
         store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES
     }
@@ -862,35 +144,41 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot> for WriterSna
         store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        let empty = store::RetainedCloneProgress::default();
+        if store::ArtifactEnvelopeSnapshotFieldAuthority::terminal_is_empty(self) {
+            return Ok(store::RetainedCloneStep::Complete(empty));
+        }
+        if grant.maximum_items == 0 {
+            return Ok(store::RetainedCloneStep::Progress(empty));
+        }
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth {
+            return Err(self.diagnostic("writer-envelope.snapshot-retirement-depth", 0));
+        }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(store::RetainedCloneStep::Progress(empty));
         }
         if let WriterSnapshotDecodeState::Decode(authority) = &mut self.state {
             authority.cancel();
             self.state = WriterSnapshotDecodeState::Closing;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, ..empty }));
         }
-        if self.retirement.is_none() {
-            if let Some(value) = self.value.take() {
-                *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterSnapshotRetirementFactory, value));
-                self.state = WriterSnapshotDecodeState::Closing;
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            self.state = WriterSnapshotDecodeState::Complete;
-            return Ok(store::SnapshotRetirementStep::Complete);
-        }
-        let path = self.path;
-        let retirement = self.retirement.as_mut().expect("Writer snapshot retirement remains retained");
-        match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.snapshot-retirement-fault", offset: 0, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })? {
-            store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                drop(self.retirement.take());
+        let child = store::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if self.retirement.is_some() {
+            let step = store::artifact_retirement_box_close_step(&mut self.retirement, child).map_err(|_| self.diagnostic("writer-envelope.snapshot-retirement-fault", 0))?;
+            if self.retirement.is_none() {
                 self.state = WriterSnapshotDecodeState::Complete;
-                Ok(store::SnapshotRetirementStep::Complete)
             }
-            store::SnapshotRetirementStep::Complete => Err(self.diagnostic("writer-envelope.snapshot-retirement-false-terminal", 0)),
-            step => Ok(step),
+            return Ok(store::RetainedCloneStep::Progress(step.progress()));
         }
+        if self.value.is_some() {
+            let step = store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, child).map_err(|_| self.diagnostic("writer-envelope.snapshot-retirement-admission", 0))?;
+            self.state = WriterSnapshotDecodeState::Closing;
+            return Ok(step);
+        }
+        self.state = WriterSnapshotDecodeState::Complete;
+        Ok(store::RetainedCloneStep::Complete(empty))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1011,12 +299,22 @@ impl WriterMutationDecodeAuthority {
 }
 
 impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMutationDecodeAuthority {
-    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
-        if self.active.is_some() { return Ok(0); }
-        if let Some(retirement) = self.retirement.as_ref() { return Ok(store::artifact_retirement_box_byte_demand(retirement)); }
-        if self.value.is_some() { return Ok(0); }
-        Ok(self.splice.strings.iter().find_map(|value| value.as_ref().map(String::capacity)).or_else(|| self.payload.as_ref().map(String::capacity)).unwrap_or(0))
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(0).map(|demand| demand.copy_bytes)
     }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(maximum_copy_bytes).map(|demand| demand.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(0).map(|demand| demand.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        self.close_demands(0).map(|demand| demand.depth)
+    }
+
     fn accept_token(
         &mut self,
         token: store::OwnedSchemaToken,
@@ -1071,37 +369,41 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMut
         Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        let empty = store::RetainedCloneProgress::default();
+        if store::ArtifactEnvelopeMutationFieldAuthority::terminal_is_empty(self) {
+            return Ok(store::RetainedCloneStep::Complete(empty));
+        }
+        if grant.maximum_items == 0 {
+            return Ok(store::RetainedCloneStep::Progress(empty));
+        }
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth {
+            return Err(self.diagnostic("writer-envelope.mutation-retirement-depth", 0));
+        }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(store::RetainedCloneStep::Progress(empty));
         }
         if let Some(mut active) = self.active.take() {
             active.authority.cancel();
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..empty }));
         }
-        if self.retirement.is_some() { return store::artifact_retirement_box_close_step(&mut self.retirement, maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.mutation-retirement-fault", offset: 0, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }); }
-        if let Some(value) = self.value.take() {
-            *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterMutationRetirementFactory, value));
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        let child = store::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        let fault = |this: &Self| this.diagnostic("writer-envelope.mutation-retirement-fault", 0);
+        if self.retirement.is_some() {
+            return store::artifact_retirement_box_close_step(&mut self.retirement, child).map_err(|_| fault(self));
+        }
+        if self.value.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, child).map_err(|_| fault(self));
         }
         if let Some(index) = self.splice.strings.iter().position(Option::is_some) {
-            let released_bytes = self.splice.strings[index].as_ref().map_or(0, String::capacity);
-            if released_bytes > maximum_bytes {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            drop(self.splice.strings[index].take());
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+            return store::artifact_retirement_admit_owned(&mut self.splice.strings[index], &mut self.retirement, child).map_err(|_| fault(self));
         }
-        if let Some(payload) = self.payload.as_ref() {
-            if payload.capacity() > maximum_bytes {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            let released_bytes = payload.capacity();
-            drop(self.payload.take());
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+        if self.payload.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.payload, &mut self.retirement, child).map_err(|_| fault(self));
         }
         self.terminal = true;
-        Ok(store::SnapshotRetirementStep::Complete)
+        Ok(store::RetainedCloneStep::Complete(empty))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1121,9 +423,41 @@ impl Drop for WriterMutationDecodeAuthority {
     }
 }
 
+impl WriterSnapshotDecodeAuthority {
+    fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+        if matches!(self.state, WriterSnapshotDecodeState::Decode(_)) {
+            return Ok(semio_framework_value::RetirementDemand { release_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, depth: 1, ..Default::default() });
+        }
+        let demand = match self.retirement.as_ref() {
+            Some(owner) => store::artifact_retirement_box_demands(owner, maximum_copy_bytes),
+            None => store::artifact_retirement_owned_birth_demands(&self.value),
+        };
+        demand.map_err(|_| self.diagnostic("writer-envelope.snapshot-retirement-demand", 0))
+    }
+}
+
+impl WriterMutationDecodeAuthority {
+    fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+        if self.active.is_some() {
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        let demand = if let Some(owner) = self.retirement.as_ref() {
+            store::artifact_retirement_box_demands(owner, maximum_copy_bytes)
+        } else if self.value.is_some() {
+            store::artifact_retirement_owned_birth_demands(&self.value)
+        } else if let Some(index) = self.splice.strings.iter().position(Option::is_some) {
+            store::artifact_retirement_owned_birth_demands(&self.splice.strings[index])
+        } else {
+            store::artifact_retirement_owned_birth_demands(&self.payload)
+        };
+        demand.map_err(|_| self.diagnostic("writer-envelope.mutation-retirement-demand", 0))
+    }
+}
+
+
 impl store::ArtifactEnvelopeOwnedFieldCatalog<WriterSnapshot, WriterMutation> for WriterEnvelopeOwnedFieldCatalog {
     fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<WriterSnapshot, WriterMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot>>> {
-        store::ArtifactEnvelopeFreshVcsAuthority::try_new(self.begin_snapshot(operation, generation, path), std::sync::Arc::new(WriterSnapshotRetirementFactory), std::sync::Arc::new(WriterMutationRetirementFactory), self.edit_history_decoder())
+        store::ArtifactEnvelopeFreshVcsAuthority::try_new(self.begin_snapshot(operation, generation, path), std::sync::Arc::new(OwnedValueRetirementFactory::<WriterSnapshot>::default()), std::sync::Arc::new(OwnedValueRetirementFactory::<WriterMutation>::default()), self.edit_history_decoder())
             .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<WriterSnapshot, WriterMutation>>)
     }
 
@@ -1148,15 +482,36 @@ impl store::ArtifactEnvelopeOwnedFieldCatalog<WriterSnapshot, WriterMutation> fo
     }
 
     fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<WriterMutation>>> {
-        store::artifact_owned_spr_edit_history_decoder::<WriterSnapshot, WriterMutation>(std::sync::Arc::new(WriterEnvelopeOwnedFieldCatalog), std::sync::Arc::new(WriterMutationRetirementFactory))
+        store::artifact_owned_spr_edit_history_decoder::<WriterSnapshot, WriterMutation>(std::sync::Arc::new(WriterEnvelopeOwnedFieldCatalog), std::sync::Arc::new(OwnedValueRetirementFactory::<WriterMutation>::default()))
     }
 }
 
 pub fn writer_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwnerBundle<WriterSnapshot, WriterMutation> {
-    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(WriterEnvelopeOwnedFieldCatalog), std::sync::Arc::new(WriterSnapshotRetirementFactory), std::sync::Arc::new(WriterMutationRetirementFactory))
+    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(WriterEnvelopeOwnedFieldCatalog), std::sync::Arc::new(OwnedValueRetirementFactory::<WriterSnapshot>::default()), std::sync::Arc::new(OwnedValueRetirementFactory::<WriterMutation>::default()))
 }
 
 pub type WriterDocumentEnvelope = store::ArtifactEnvelope<WriterSnapshot, WriterMutation>;
+
+/// 🧹️ Closes one erased retirement to its terminal-empty witness, one self-funded exact grant per turn.
+#[cfg(test)]
+pub(crate) fn close_retirement(mut retirement: Box<dyn store::ErasedSnapshotRetirement>) {
+    for _ in 0..1_000_000 {
+        if retirement.terminal_is_empty() {
+            return;
+        }
+        let demand = retirement.next_demand(WRITER_ENVELOPE_FIELD_BYTES).expect("the Writer retirement quotes its next turn");
+        let grant = store::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(WRITER_ENVELOPE_FIELD_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let step = retirement.close_step(grant).expect("the Writer retirement closes within its exact grant");
+        assert!(step.progress().fits(grant));
+    }
+    panic!("Writer retirement did not reach its terminal-empty witness")
+}
+
+/// 🧹️ Retires a fixture envelope that no store adopted, through the artifact's own decode owner bundle.
+#[cfg(test)]
+pub(crate) fn retire_writer_envelope(envelope: WriterDocumentEnvelope) {
+    close_retirement(writer_envelope_decode_owner_bundle().retire_envelope(envelope));
+}
 
 struct WriterSnapshotDecodeAuthority {
     operation: semio_framework_job::OperationId,
@@ -1237,12 +592,28 @@ impl store::ArtifactEnvelopeSprConflictAuthority for WriterRejectedConflictAutho
         Err(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        if grant.maximum_items == 0 {
+            return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress::default()));
         }
         self.terminal = true;
-        Ok(store::SnapshotRetirementStep::Complete)
+        Ok(store::RetainedCloneStep::Complete(store::RetainedCloneProgress::default()))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1250,6 +621,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for WriterRejectedConflictAutho
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct WriterEnvelopeOwnedFieldCatalog;
 
 #[cfg(test)]

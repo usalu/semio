@@ -334,11 +334,11 @@ pub fn render(document: &DrawingSnapshot, ids: &[String], labels: &DrawingPlayLa
         if let DrawingLayerNode::Path(path) = first {
             let edit=ui_value_map([("kind",ui_value_text("simplify")?),("tolerance",ui_value_number(0.5))])?;
             let args=ui_value_map([("edit",edit),("layerId",ui_value_text(&path.base.id)?)])?;
-            let (action,args)=drawing_play_action("editPath",Some(args))?;
+            let (action,mut args)=drawing_play_action("editPath",Some(args))?;
             tree=tree.window_section(windows,"drawing-inspector.path",Some(ui::Label(text(labels.simplify.as_str())?)),true,&[()],|_| {
                 ui::input(InputKind::Number).value(text("0.5")?).min(0.000001).max(1000000.0).step(0.1).commit(text("blur")?).disabled(disabled)
                     .try_id("drawing-inspector.path.simplify").map_err(|_|error())?.try_label(labels.simplify_tolerance.as_str()).map_err(|_|error())?
-                    .try_on_with(Trigger::Commit,action.clone(),args.clone().ok_or_else(error)?).map_err(|_|error())?.try_build().map_err(|_|error())
+                    .try_on_with(Trigger::Commit,action.clone(),args.take().ok_or_else(error)?).map_err(|_|error())?.try_build().map_err(|_|error())
             })?;
             let mut joins = vec![None;path.segments.len()];
             let mut closed = false;

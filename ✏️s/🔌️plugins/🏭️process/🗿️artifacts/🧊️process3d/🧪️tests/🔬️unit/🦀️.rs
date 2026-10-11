@@ -15,7 +15,7 @@ fn inserted_step_cursor_matches_neutral_json_oracle() {
         let config = Process3dConfig { resolved_up_to: cursor, ..Process3dConfig::default() };
         let emit = insert_step_emit(&snapshot, &config, step("inserted".into()));
         assert!(matches!(&emit.artifact_mutations[..], [Process3dMutation::CreateStep(payload)] if payload.index == case["index"].as_u64().unwrap() as usize));
-        let expected = if next == cursor { Vec::new() } else { vec![Process3dConfigMutation::SetCursor { value: next }] };
+        let expected = if next == cursor { Vec::new() } else { vec![Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: next })] };
         assert_eq!(emit.config_mutations, expected);
         let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&emit.config_mutations)).unwrap();
         let oracle = if next == cursor { serde_json::json!([]) } else { serde_json::json!([{ "SetCursor": { "value": case["next"] } }]) };

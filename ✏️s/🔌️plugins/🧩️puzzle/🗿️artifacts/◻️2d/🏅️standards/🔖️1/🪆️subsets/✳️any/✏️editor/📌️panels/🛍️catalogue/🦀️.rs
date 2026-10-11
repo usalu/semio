@@ -58,22 +58,22 @@ fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) ->
     let mut payload = json!({ "kindId": kind_id, "catalogSlice": slice });
     if let Some(obj) = payload.as_object_mut() {
         if let Some(shape) = entry.get("shape") {
-            obj.insert("shape".into(), shape.clone());
+            obj.insert("shape", shape.clone());
         }
         if let Some(radius) = entry.get("radius") {
-            obj.insert("radius".into(), radius.clone());
+            obj.insert("radius", radius.clone());
         }
         if let Some(width) = entry.get("width") {
-            obj.insert("width".into(), width.clone());
+            obj.insert("width", width.clone());
         }
         if let Some(height) = entry.get("height") {
-            obj.insert("height".into(), height.clone());
+            obj.insert("height", height.clone());
         }
         if let Some(icon_kind) = entry.get("iconKind") {
-            obj.insert("iconKind".into(), icon_kind.clone());
+            obj.insert("iconKind", icon_kind.clone());
         }
     }
-    json!({ (PUZZLE2D_CATALOGUE_DRAG_MIME): payload.to_string() })
+    semio_framework_pack_json::object([(PUZZLE2D_CATALOGUE_DRAG_MIME.to_string(), Value::String(payload.to_string()))])
 }
 
 fn add_node_args(kind_id: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {

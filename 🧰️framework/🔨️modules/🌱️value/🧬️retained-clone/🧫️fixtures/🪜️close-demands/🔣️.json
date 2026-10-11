@@ -15,23 +15,22 @@
   },
   "maximumTurns": 64,
   "terminalTicket": {
-    "copyWords": 2,
+    "copyWords": 0,
     "items": 1,
     "depth": 1,
     "capacityBytes": 0,
     "headerWidths": [
       {
         "wordBytes": 4,
-        "copyBytes": 8
+        "copyBytes": 0
       },
       {
         "wordBytes": 8,
-        "copyBytes": 16
+        "copyBytes": 0
       }
     ],
     "refused": [
       "items",
-      "copy",
       "release",
       "depth"
     ],

@@ -6,7 +6,8 @@ use crate::TxtSnapshot;
 
 /// ✂️ One range of the edited body: `delete` scalars at `offset` (Unicode scalar values of the body as the line ending joins it)
 /// are replaced by `insert`.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TextSplice {
     pub offset: u32,
@@ -15,7 +16,8 @@ pub struct TextSplice {
 }
 
 /// ✂️ The ranges of one edit, ascending and disjoint, all in the coordinates of the body they were taken from.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SpliceTextMutation {

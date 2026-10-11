@@ -15,6 +15,9 @@ extern crate semio_framework_value_derive as value_derive;
 
 #[path = "♻️retirement/🦀️.rs"]
 mod retirement;
+
+#[path = "🌲️canonical/🦀️.rs"]
+mod canonical;
 pub use io::sqlite::snapshot::{register_sqlite_snapshot,SQLITE_SNAPSHOT_DIALECT};
 
 use serde::{Deserialize, Serialize};
@@ -23,7 +26,8 @@ use serde::{Deserialize, Serialize};
 /// 🏛️ A space's collaboration shape: `Atelier` (single-writer personal, reconcile-enforced exactly
 /// one `Author`), `Studio` (multi-writer group, any number of `Author`s), `Archive` (frozen, nobody
 /// writes).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SpaceKind {
     Atelier,
     Studio,
@@ -32,7 +36,8 @@ pub enum SpaceKind {
 
 /// 👁️ Whether a space is discoverable/readable by an anonymous visitor (`Public`, implicit anonymous
 /// spectator — wired at the hub layer in W4) or membership-gated (`Private`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SpaceVisibility {
     Private,
     Public,
@@ -42,7 +47,8 @@ pub enum SpaceVisibility {
 /// hub directory (`🌎️hub/🔨️modules/📇️directory`) re-declares this enum string-identically
 /// (`"author"`/`"spectator"`, see `as_str`/`parse`) since it cannot depend on this wasm-facing crate —
 /// keep the two in lockstep by hand.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SpaceRole {
     Author,
     Spectator,
@@ -66,7 +72,8 @@ impl SpaceRole {
 }
 
 /// 🧑️ One space member: identity, display name, optional avatar, and their `SpaceRole`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct SpaceUser {
     pub id: String,
     pub name: String,
@@ -91,7 +98,8 @@ pub const S_SPACE_SCHEMA: &str = "os.space";
 /// `os.collection` document id it addresses (see `🔖️Addressing` in the plan: `CollectionEntry.id ==
 /// artifact id == ArtifactEnvelope.id` for document artifacts; a `CollectionRef` follows the same
 /// convention one level up).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct CollectionRef {
     pub id: String,
     pub name: String,
@@ -103,7 +111,8 @@ pub struct CollectionRef {
 /// `OsSnapshot` in W3 — see `## The inversion` in the plan), and the durable extension ledger
 /// (`extensions`). Session-only `active_plugin_id`/`active_alternative_id` stay OUT of this document
 /// by design (transient UI state, not manifest data) — see os-core's space app glue.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[artifact(id = "os.space")]
 pub struct SpaceSnapshot {
     pub schema: String,
@@ -122,7 +131,8 @@ pub struct SpaceSnapshot {
 
 /// 🧩️ One installed extension recorded in the space ledger — identity, package provenance, and
 /// enablement. Distinct from session-only `loadedPlugins` handles; this is what survives reload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct InstalledExtension {
@@ -223,14 +233,14 @@ pub struct SpaceDiff {
 }
 
 /// 🧱️ Carries the optional member avatar as a present slot, so clearing it stays distinct from leaving it untouched on every wire.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceOptionalAvatar {
     pub value: Option<String>,
 }
 
 /// 🩹 Field patch of one member; every present slot is the new value of exactly that field.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceUserPatch {
     pub name: Option<String>,
@@ -239,7 +249,7 @@ pub struct SpaceUserPatch {
 }
 
 /// 🩹 Field patch of one collection reference.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceCollectionPatch {
     pub name: Option<String>,
@@ -248,7 +258,7 @@ pub struct SpaceCollectionPatch {
 
 
 /// 🩹 Field patch of one installed extension.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceExtensionPatch {
     pub version: Option<String>,
@@ -697,7 +707,7 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
             SpaceMutation::UpsertUser { user, index } => {
                 let delta = match base.users.iter().find(|existing| existing.id == user.id) {
                     Some(existing) => SpaceUsersDelta::modification(user.id.clone(), SpaceUserPatch { name: (existing.name != user.name).then(|| user.name.clone()), avatar: (existing.avatar != user.avatar).then(|| SpaceOptionalAvatar { value: user.avatar.clone() }), role: (existing.role != user.role).then_some(user.role) }),
-                    None => SpaceUsersDelta::insertion(index.map_or(base.users.len(), |at| (*at as usize).min(base.users.len())), user.clone()),
+                    None => SpaceUsersDelta::insertion(index.map_or(base.users.len(), |at| (at as usize).min(base.users.len())), user.clone()),
                 };
                 protocol::MutationOutcome::new(SpaceDiff { users: Some(delta), ..Default::default() })
             }
@@ -709,7 +719,7 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
                 protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Collection {} already exists.", collection.id), [collection.id.clone()])
             }
             SpaceMutation::AddCollection { collection, index } => protocol::MutationOutcome::new(SpaceDiff {
-                collections: Some(SpaceCollectionsDelta::insertion(index.map_or(base.collections.len(), |at| (*at as usize).min(base.collections.len())), collection.clone())),
+                collections: Some(SpaceCollectionsDelta::insertion(index.map_or(base.collections.len(), |at| (at as usize).min(base.collections.len())), collection.clone())),
                 ..Default::default()
             }),
             SpaceMutation::RemoveCollection { collection_id } => match base.collections.iter().position(|collection| &collection.id == collection_id) {
@@ -723,7 +733,7 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
             SpaceMutation::RenameCollection { collection_id, .. } => missing("Collection", collection_id),
             SpaceMutation::InstallProgram { plugin_id, .. } if base.programs.contains(plugin_id) => protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Program {plugin_id} is already installed."), [plugin_id.clone()]),
             SpaceMutation::InstallProgram { plugin_id, index } => protocol::MutationOutcome::new(SpaceDiff {
-                programs: Some(SpaceProgramsDelta::insertion(index.map_or(base.programs.len(), |at| (*at as usize).min(base.programs.len())), plugin_id.clone())),
+                programs: Some(SpaceProgramsDelta::insertion(index.map_or(base.programs.len(), |at| (at as usize).min(base.programs.len())), plugin_id.clone())),
                 ..Default::default()
             }),
             SpaceMutation::UninstallProgram { plugin_id } => match base.programs.iter().position(|existing| existing == plugin_id) {
@@ -734,7 +744,7 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
                 let delta = match base.extensions.iter().find(|existing| &existing.extension_id == extension_id) {
                     Some(existing) => SpaceExtensionsDelta::modification(extension_id.clone(), SpaceExtensionPatch { version: (existing.version != *version).then(|| version.clone()), source_uri: (existing.source_uri != *source_uri).then(|| source_uri.clone()), package_hash: (existing.package_hash != *package_hash).then(|| package_hash.clone()), enabled: (existing.enabled != *enabled).then_some(*enabled) }),
                     None => SpaceExtensionsDelta::insertion(
-                        index.map_or(base.extensions.len(), |at| (*at as usize).min(base.extensions.len())),
+                        index.map_or(base.extensions.len(), |at| (at as usize).min(base.extensions.len())),
                         InstalledExtension { extension_id: extension_id.clone(), version: version.clone(), source_uri: source_uri.clone(), package_hash: package_hash.clone(), enabled: *enabled },
                     ),
                 };

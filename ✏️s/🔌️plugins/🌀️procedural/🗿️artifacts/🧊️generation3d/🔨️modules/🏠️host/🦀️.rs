@@ -67,15 +67,19 @@ impl semio_framework_job::FixedOperationOwner for Generation3dPublicationLease {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 || maximum_bytes < size_of::<Self>() {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep;
+        if !self.closing {
+            return InteractiveJobCloseStep::Blocked;
         }
-        if !self.terminal {
-            self.terminal = true;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: size_of::<Self>() };
+        if self.terminal {
+            return InteractiveJobCloseStep::Complete { progress: Default::default() };
         }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < size_of::<Self>() {
+            return InteractiveJobCloseStep::Pending { progress: Default::default() };
+        }
+        self.terminal = true;
+        InteractiveJobCloseStep::Complete { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: size_of::<Self>(), ..Default::default() } }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -430,97 +434,48 @@ pub fn generation3d_retained_catalog_is_complete() -> bool {
         && !GENERATION3D_RETAINED_OWNER_CATALOG.iter().any(|owner| owner.contains("process2d"))
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 enum Generation3dReplayDisplaced {
     Widget(semio_framework_artifact_flow_flow::Widget),
     Widgets(Vec<semio_framework_artifact_flow_flow::Widget>),
     Layouts(semio_framework_artifact_flow_flow::OrderedMap<semio_framework_artifact_flow_flow::WidgetLayout>),
     Synapse(semio_framework_artifact_flow_flow::SynapseSpec),
-    Layout(std::sync::Arc<semio_framework_artifact_flow_flow::WidgetLayout>),
+    Layout(semio_framework_artifact_flow_flow::WidgetLayout),
     Camera(semio_framework_artifact_flow_flow::CameraJson),
     Text(String),
     Generation(semio_framework_artifact_playbook_playbook::FormGeneration),
-    Json(std::sync::Arc<semio_framework_value::DslValue>),
+    Json(semio_framework_value::DslValue),
 }
 
-/// 🎟️ One bounded unit of the Flow frontier's RESERVE-then-CLOSE protocol.
-///
-/// [`semio_framework_artifact_flow_flow::retained::FlowRetirement`] keeps its continuation owners in
-/// a `PagedList` whose pages must be ADMITTED before they can hold anything, so its `close_step`
-/// answers `Blocked` — never an error — for as long as `next_allocation_bytes` still names a page the
-/// current owner's decomposition needs, and a heap allocation is freed WHOLE or not at all, so it
-/// also answers `Blocked` below the physical demand its `next_close_byte_demand` publishes. This
-/// codec therefore READS that demand and grants it out of its own allocation currency, and charges
-/// the caller's payload page only what fits in it.
-///
-/// See `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🦀️.rs`
-/// (`FlowRetirement::retire_cold` is the same protocol, cold) and the same fix at the flow host's
-/// own ladder in `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs`
-/// (`FlowHostRetirement::close_page`), ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
-fn generation3d_close_flow_frontier(flow: &mut semio_framework_artifact_flow_flow::retained::FlowRetirement, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-    if maximum_items == 0 || maximum_bytes == 0 {
-        return Ok(store::SnapshotRetirementStep::Blocked);
-    }
-    let demand = flow.next_close_byte_demand().map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, message))?;
-    let step = flow.close_page(maximum_items, maximum_bytes.max(demand))?;
-    Ok(match step {
-        store::SnapshotRetirementStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes.min(maximum_bytes) },
-        step => step,
-    })
-}
-
-struct Generation3dReplayRetirement {
-    value: std::mem::ManuallyDrop<Option<Generation3dReplayDisplaced>>,
-    domain: semio_framework_artifact_flow_flow::retained::FlowRetirement,
-    child: Option<Box<dyn store::ErasedSnapshotRetirement>>,
-}
-
-impl ErasedSnapshotRetirement for Generation3dReplayRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if let Some(child) = self.child.as_mut() {
-            let step = child.close_step(maximum_items, maximum_bytes)?;
-            if matches!(step, store::SnapshotRetirementStep::Complete) { self.child = None; return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }); }
-            return Ok(step);
-        }
-        if !self.domain.terminal_is_empty() {
-            return generation3d_close_flow_frontier(&mut self.domain, maximum_items, maximum_bytes);
-        }
-        if maximum_items == 0 || maximum_bytes < GENERATION3D_OWNER_BYTES {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(value) = self.value.take() {
-            match value {
-                Generation3dReplayDisplaced::Widgets(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Widgets(value)),
-                Generation3dReplayDisplaced::Layouts(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(value)),
-                Generation3dReplayDisplaced::Widget(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Widget(value)),
-                Generation3dReplayDisplaced::Synapse(value) => self.domain.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Specs(vec![value])),
-                Generation3dReplayDisplaced::Layout(value) => drop(value),
-                Generation3dReplayDisplaced::Camera(value) => { let _ = value; },
-                Generation3dReplayDisplaced::Text(value) => self.domain.text(value),
-                Generation3dReplayDisplaced::Generation(value) => self.child = Some(Box::new(semio_framework_artifact_playbook_playbook::GenerationPlayRoot::from(semio_framework_artifact_playbook_playbook::GenerationPlayState { generations: vec![value], selected_generation_id: None, preview_text: None }).into_retirement())),
-                Generation3dReplayDisplaced::Json(value) => self.child = Some(semio_framework_value::retirement::shared_lease_retirement(value)),
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: GENERATION3D_OWNER_BYTES });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none() && self.child.is_none() && self.domain.terminal_is_empty()
+/// 🧊️ Retires one displaced replay owner at a cold boundary by paying every currency its own close quote names.
+#[cfg(test)]
+fn generation3d_retire_displaced_cold(value: Generation3dReplayDisplaced) {
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<Generation3dReplayDisplaced>(), maximum_release_bytes: 0, maximum_depth: 2 };
+    let Ok((mut owner, _)) = semio_framework_value::retirement::admit_owned_retirement(value, birth) else { panic!("cold displaced replay owner refused its own birth") };
+    while !owner.terminal_is_empty() {
+        let copy = owner.next_copy_byte_demand().expect("cold displaced copy demand").max(GENERATION3D_OWNER_BYTES);
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).expect("cold displaced capacity demand"), maximum_release_bytes: owner.next_release_byte_demand().expect("cold displaced release demand"), maximum_depth: owner.next_depth_demand().expect("cold displaced depth demand").max(1) };
+        owner.close_step(grant).expect("cold displaced replay close");
     }
 }
 
-impl Drop for Generation3dReplayRetirement {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || (self.value.is_none()), "Generation3d replay displacement reached Drop before terminal-empty close");
-    }
+/// 🪜️ Pays one Flow frontier turn out of the frontier's own quoted currencies — the mounted-pack session ladder this serves still counts items and bytes, so it cannot forward a caller grant.
+fn generation3d_close_flow_frontier(flow: &mut semio_framework_artifact_flow_flow::retained::FlowRetirement) -> Result<(), semio_framework_value::ValueError> {
+    let copy = flow.next_copy_byte_demand()?;
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: flow.next_capacity_byte_demand(copy)?, maximum_release_bytes: flow.next_release_byte_demand()?, maximum_depth: flow.next_depth_demand()?.max(1) };
+    flow.step(grant).map(|_| ())
 }
 
-fn generation3d_retire_displaced(value: Generation3dReplayDisplaced) -> Box<dyn ErasedSnapshotRetirement> {
-    Box::new(Generation3dReplayRetirement { value: std::mem::ManuallyDrop::new(Some(value)), domain: semio_framework_artifact_flow_flow::retained::FlowRetirement::default(), child: None })
+/// 🅿️ Parks one string list on an EMPTY Flow frontier; the callers only park once the previous owner is fully retired.
+fn generation3d_park_flow_strings(flow: &mut semio_framework_artifact_flow_flow::retained::FlowRetirement, values: Vec<String>) {
+    if flow.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Strings(values)).is_err() {
+        unreachable!("an empty Flow frontier admits one owner");
+    }
 }
 
 /// 🧮️ Replays a relative gesture into addressed operators and retains only displaced widget owners.
-fn generation3d_replay_transforms(snapshot: &mut Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&semio_framework_value::DslValue) -> Option<Vec<(&'static str, semio_framework_value::DslValue)>>) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, &'static str> {
+fn generation3d_replay_transforms(snapshot: &mut Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&semio_framework_value::DslValue) -> Option<Vec<(&'static str, semio_framework_value::DslValue)>>) -> Result<Option<Generation3dReplayDisplaced>, &'static str> {
     use crate::standards::v1::subsets::any::schema::mutations::{generation3d_targets_invariant,generation3d_with_params};
 
     generation3d_targets_invariant(targets)?;
@@ -543,12 +498,12 @@ fn generation3d_replay_transforms(snapshot: &mut Generation3dSnapshot, targets: 
     let mut displaced = Vec::new();
     displaced.try_reserve_exact(updates.len()).map_err(|_| "generation3d-replay.displaced-preflight")?;
     for (index, next) in updates { displaced.push(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next)); }
-    Ok(Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widgets(displaced))))
+    Ok(Some(Generation3dReplayDisplaced::Widgets(displaced)))
 }
 
 /// 🔁️ Direct semantic replay table. It consumes the retained mutation and writes only the
 /// addressed field or collection; no VCS diff/apply or whole-snapshot replacement is reachable.
-fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, &'static str> {
+fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<Option<Generation3dReplayDisplaced>, &'static str> {
     let retired = match mutation {
         Generation3dMutation::CreateWidget(payload) => {
             if snapshot.host_snapshot.widgets.iter().any(|entry| crate::widget_id(entry) == crate::widget_id(&payload.widget)) {
@@ -562,11 +517,11 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             let id = crate::widget_id(&payload.widget);
             let index = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == id).ok_or("generation3d-replay.widget-missing")?;
             for (index, synapse) in crate::standards::v1::subsets::any::schema::mutations::update_widget::variable_synapses(&snapshot.host_snapshot.widgets[index], &payload.widget, &snapshot.host_snapshot.synapses) { snapshot.host_snapshot.synapses[index] = synapse; }
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], generation3d_copy_widget(&payload.widget)?))))
+            Some(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], generation3d_copy_widget(&payload.widget)?)))
         }
         Generation3dMutation::DeleteWidget(payload) => {
             let index = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == payload.id).ok_or("generation3d-replay.widget-missing")?;
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widget(snapshot.host_snapshot.widgets.remove(index))))
+            Some(Generation3dReplayDisplaced::Widget(snapshot.host_snapshot.widgets.remove(index)))
         }
         Generation3dMutation::ConnectSynapse(payload) => {
             if snapshot.host_snapshot.synapses.iter().any(|entry| entry.id == payload.synapse.id) {
@@ -578,11 +533,11 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
         }
         Generation3dMutation::UpdateSynapse(payload) => {
             let index = snapshot.host_snapshot.synapses.iter().position(|entry| entry.id == payload.synapse.id).ok_or("generation3d-replay.synapse-missing")?;
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Synapse(std::mem::replace(&mut snapshot.host_snapshot.synapses[index], generation3d_copy_synapse(&payload.synapse)?))))
+            Some(Generation3dReplayDisplaced::Synapse(std::mem::replace(&mut snapshot.host_snapshot.synapses[index], generation3d_copy_synapse(&payload.synapse)?)))
         }
         Generation3dMutation::DisconnectSynapse(payload) => {
             let index = snapshot.host_snapshot.synapses.iter().position(|entry| entry.id == payload.id).ok_or("generation3d-replay.synapse-missing")?;
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Synapse(snapshot.host_snapshot.synapses.remove(index))))
+            Some(Generation3dReplayDisplaced::Synapse(snapshot.host_snapshot.synapses.remove(index)))
         }
         Generation3dMutation::MoveWidget(payload) => {
             if !payload.layout.x.is_finite() || !payload.layout.y.is_finite() {
@@ -593,16 +548,16 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
                 .layout
                 .insert(generation3d_copy_string(&payload.id)?, semio_framework_artifact_flow_flow::WidgetLayout { x: payload.layout.x, y: payload.layout.y })
                 .map(Generation3dReplayDisplaced::Layout)
-                .map(generation3d_retire_displaced)
+                
         }
-        Generation3dMutation::DeleteWidgetPosition(payload) => snapshot.host_snapshot.layout.remove(&payload.id).map(Generation3dReplayDisplaced::Layout).map(generation3d_retire_displaced),
+        Generation3dMutation::DeleteWidgetPosition(payload) => snapshot.host_snapshot.layout.remove(&payload.id).map(Generation3dReplayDisplaced::Layout),
         Generation3dMutation::UpdateCamera(payload) => {
             if !payload.camera.x.is_finite() || !payload.camera.y.is_finite() || !payload.camera.zoom.is_finite() {
                 return Err("generation3d-replay.camera-nonfinite");
             }
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Camera(std::mem::replace(&mut snapshot.host_snapshot.camera, semio_framework_artifact_flow_flow::CameraJson { x: payload.camera.x, y: payload.camera.y, zoom: payload.camera.zoom }))))
+            Some(Generation3dReplayDisplaced::Camera(std::mem::replace(&mut snapshot.host_snapshot.camera, semio_framework_artifact_flow_flow::CameraJson { x: payload.camera.x, y: payload.camera.y, zoom: payload.camera.zoom })))
         }
-        Generation3dMutation::ChangeSchema(payload) => Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Text(std::mem::replace(&mut snapshot.host_snapshot.schema, generation3d_copy_string(&payload.new_schema)?)))),
+        Generation3dMutation::ChangeSchema(payload) => Some(Generation3dReplayDisplaced::Text(std::mem::replace(&mut snapshot.host_snapshot.schema, generation3d_copy_string(&payload.new_schema)?))),
         Generation3dMutation::CreateGeneration(payload) => {
             let generation = snapshot.generation.cold_builder_mut()?;
             if generation.generations.iter().any(|entry| entry.id == payload.generation.id) {
@@ -634,22 +589,22 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
                 }
                 generation.selected_generation_id = selected;
             }
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Generation(removed)))
+            Some(Generation3dReplayDisplaced::Generation(removed))
         }
         Generation3dMutation::RenameGeneration(payload) => {
             let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("generation3d-replay.generation-missing")?;
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Text(std::mem::replace(&mut entry.name, generation3d_copy_string(&payload.new_name)?))))
+            Some(Generation3dReplayDisplaced::Text(std::mem::replace(&mut entry.name, generation3d_copy_string(&payload.new_name)?)))
         }
         Generation3dMutation::ChangeGenerationValue(payload) => {
             let entry = snapshot.generation.cold_builder_mut()?.generations.iter_mut().find(|entry| entry.id == payload.id).ok_or("generation3d-replay.generation-missing")?;
-            entry.values.insert(generation3d_copy_string(&payload.question_id)?, generation3d_copy_json(&payload.new_value, 0)?).map(Generation3dReplayDisplaced::Json).map(generation3d_retire_displaced)
+            entry.values.insert(generation3d_copy_string(&payload.question_id)?, generation3d_copy_json(&payload.new_value, 0)?).map(Generation3dReplayDisplaced::Json)
         }
         Generation3dMutation::ChangeSliderValue(payload) => {
             if !payload.value.is_finite() { return Err("generation3d-replay.slider-nonfinite"); }
             let index = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == payload.id).ok_or("generation3d-replay.widget-missing")?;
             let mut next = generation3d_copy_widget(&snapshot.host_snapshot.widgets[index])?;
             if !semio_framework_artifact_flow_flow::set_widget_slider_value(&mut next, payload.value) { next.retire_cold(); return Err("generation3d-replay.slider-target"); }
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next))))
+            Some(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next)))
         }
         Generation3dMutation::DragTransforms(payload) => {
             use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_vector_literal,GENERATION3D_TRANSLATE_KINDS};
@@ -703,7 +658,7 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             if (payload.dx, payload.dy) == (0.0, 0.0) { None } else {
                 let displaced = snapshot.host_snapshot.layout.clone();
                 for (id, next) in updates { snapshot.host_snapshot.layout.insert(id, next); }
-                Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Layouts(displaced)))
+                Some(Generation3dReplayDisplaced::Layouts(displaced))
             }
         }
         Generation3dMutation::SelectGeneration(payload) => {
@@ -711,11 +666,11 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
                 if !snapshot.generation.generations.iter().any(|entry| &entry.id == id) { return Err("generation3d-replay.generation-missing"); }
             }
             let next = payload.generation_id.as_deref().map(generation3d_copy_string).transpose()?;
-            std::mem::replace(&mut snapshot.generation.cold_builder_mut()?.selected_generation_id, next).map(Generation3dReplayDisplaced::Text).map(generation3d_retire_displaced)
+            std::mem::replace(&mut snapshot.generation.cold_builder_mut()?.selected_generation_id, next).map(Generation3dReplayDisplaced::Text)
         }
         Generation3dMutation::ChangeGenerationPreview(payload) => {
             let next = payload.text.as_deref().map(generation3d_copy_string).transpose()?;
-            std::mem::replace(&mut snapshot.generation.cold_builder_mut()?.preview_text, next).map(Generation3dReplayDisplaced::Text).map(generation3d_retire_displaced)
+            std::mem::replace(&mut snapshot.generation.cold_builder_mut()?.preview_text, next).map(Generation3dReplayDisplaced::Text)
         }
         Generation3dMutation::ChangeWidgetInput(payload) => {
             if !payload.admissible() { return Err("generation3d-replay.input-invariant"); }
@@ -723,7 +678,7 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             let wired = snapshot.host_snapshot.synapses.iter().any(|synapse| synapse.to == payload.id && synapse.to_port == payload.channel);
             match payload.landing(&snapshot.host_snapshot.widgets[index], wired).map_err(|_| "generation3d-replay.input-target")? {
                 None => None,
-                Some(next) => Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next)))),
+                Some(next) => Some(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next))),
             }
         }
     };
@@ -732,159 +687,6 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
 //#endregion 🔖️RetainedMountedIngress
 
 //#region 🔖️TypedOwnedEnvelopeCatalog
-
-struct Generation3dRetainedSnapshotRetirement {
-    value: std::mem::ManuallyDrop<Option<Generation3dSnapshot>>,
-    flow: semio_framework_artifact_flow_flow::retained::FlowRetirement,
-    generation: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-}
-
-impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if let Some(generation) = self.generation.as_mut() {
-            let step = generation.close_step(maximum_items, maximum_bytes)?;
-            if matches!(step, store::SnapshotRetirementStep::Complete) {
-                self.generation.take();
-            }
-            return Ok(store::SnapshotRetirementStep::Pending {
-                released_items: 1,
-                released_bytes: match step {
-                    store::SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes,
-                    _ => 0,
-                },
-            });
-        }
-        if !self.flow.terminal_is_empty() {
-            return generation3d_close_flow_frontier(&mut self.flow, maximum_items, maximum_bytes);
-        }
-        if let Some(value) = self.value.take() {
-            self.flow.push(semio_framework_artifact_flow_flow::retained::FlowOwner::HostSnapshot(value.host_snapshot));
-            *self.generation = Some(Box::new(value.generation.into_retirement()));
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none() && self.flow.terminal_is_empty() && self.generation.is_none()
-    }
-}
-
-impl Drop for Generation3dRetainedSnapshotRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            assert!(std::thread::panicking() || (ErasedSnapshotRetirement::terminal_is_empty(self)), "Generation3d snapshot reached Drop before typed retirement");
-        }
-    }
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct Generation3dRetainedSnapshotRetirementFactory;
-
-pub(crate) fn generation3d_retire_owned_snapshot(value: Generation3dSnapshot) -> Box<dyn ErasedSnapshotRetirement> {
-    Box::new(Generation3dRetainedSnapshotRetirement { value: std::mem::ManuallyDrop::new(Some(value)), flow: Default::default(), generation: std::mem::ManuallyDrop::new(None) })
-}
-
-impl store::ArtifactOwnedValueRetirementFactory<Generation3dSnapshot> for Generation3dRetainedSnapshotRetirementFactory {
-    fn retire_owned(&self, value: Generation3dSnapshot) -> Box<dyn ErasedSnapshotRetirement> {
-        generation3d_retire_owned_snapshot(value)
-    }
-}
-
-struct Generation3dRetainedSnapshotArcRetirement {
-    value: std::mem::ManuallyDrop<Option<std::sync::Arc<Generation3dSnapshot>>>,
-    owned: Generation3dRetainedSnapshotRetirement,
-}
-
-impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotArcRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if let Some(value) = self.value.take() {
-            *self.owned.value = std::sync::Arc::into_inner(value);
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        self.owned.close_step(maximum_items, maximum_bytes)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none() && self.owned.terminal_is_empty()
-    }
-}
-
-impl Drop for Generation3dRetainedSnapshotArcRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            assert!(std::thread::panicking() || (ErasedSnapshotRetirement::terminal_is_empty(self)), "Generation3d Arc snapshot reached Drop before retained close");
-        }
-    }
-}
-
-impl store::SnapshotRetirementFactory<Generation3dSnapshot> for Generation3dRetainedSnapshotRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<Generation3dSnapshot>) -> usize { std::mem::size_of::<Generation3dRetainedSnapshotArcRetirement>() }
-
-    fn retire(&self, snapshot: std::sync::Arc<Generation3dSnapshot>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(Generation3dRetainedSnapshotArcRetirement {
-            value: std::mem::ManuallyDrop::new(Some(snapshot)),
-            owned: Generation3dRetainedSnapshotRetirement { value: std::mem::ManuallyDrop::new(None), flow: Default::default(), generation: std::mem::ManuallyDrop::new(None) },
-        })
-    }
-}
-
-pub fn generation3d_document_store_owners() -> store::DocumentStoreOwners<Generation3dSnapshot, Generation3dMutation> {
-    store::DocumentStoreOwners::new(
-        std::sync::Arc::new(Generation3dRetainedSnapshotRetirementFactory),
-        std::sync::Arc::new(Generation3dRetainedSnapshotRetirementFactory),
-        std::sync::Arc::new(Generation3dRetainedMutationRetirementFactory),
-        Box::new(store::ArtifactStoreCursorDisposer::<Generation3dSnapshot, Generation3dMutation>::new()),
-    )
-}
-
-struct Generation3dRetainedMutationRetirement {
-    value: std::mem::ManuallyDrop<Option<Generation3dMutation>>,
-}
-
-impl ErasedSnapshotRetirement for Generation3dRetainedMutationRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if self.value.is_none() {
-            return Ok(store::SnapshotRetirementStep::Complete);
-        }
-        if maximum_items == 0 || maximum_bytes < store::ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        // 🧹️ A `create-widget`/`update-widget` row owns a whole `Widget`, whose `Dictionary`/
-        // `OrderedSet` roots fail-close on a bare drop — the store's own edit-history retirement
-        // aborted the process on every neuron mutation until this routed through the mutation's
-        // declared cold disposal (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        if let Some(mutation) = self.value.take() {
-            mutation.retire_cold();
-        }
-        Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES })
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
-    }
-}
-
-impl Drop for Generation3dRetainedMutationRetirement {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || (self.value.is_none()), "fresh Generation3d mutation retirement fail-closed with an impossible populated-history owner");
-    }
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct Generation3dRetainedMutationRetirementFactory;
-
-impl store::ArtifactOwnedValueRetirementFactory<Generation3dMutation> for Generation3dRetainedMutationRetirementFactory {
-    fn retire_owned(&self, value: Generation3dMutation) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(Generation3dRetainedMutationRetirement { value: std::mem::ManuallyDrop::new(Some(value)) })
-    }
-}
 
 #[derive(Default)]
 struct Generation3dMutationWidgetOwner {
@@ -1779,15 +1581,15 @@ impl Generation3dRetainedMutationOwner {
     fn close_step(&mut self) -> bool {
         self.string = None;
         if !self.closing_targets.terminal_is_empty() {
-            generation3d_close_flow_frontier(&mut self.closing_targets, 1, GENERATION3D_OWNER_BYTES).expect("admitted semantic target retirement");
+            generation3d_close_flow_frontier(&mut self.closing_targets).expect("admitted semantic target retirement");
             return false;
         }
         if let Some(frame) = self.stack.pop() {
-            if let Generation3dMutationFrame::Strings { values, .. } = frame { self.closing_targets.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Strings(values)); }
+            if let Generation3dMutationFrame::Strings { values, .. } = frame { generation3d_park_flow_strings(&mut self.closing_targets, values); }
             return false;
         }
         if !self.targets.is_empty() {
-            self.closing_targets.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Strings(std::mem::take(&mut self.targets)));
+            generation3d_park_flow_strings(&mut self.closing_targets, std::mem::take(&mut self.targets));
             return false;
         }
         if let Some(mut mutation) = self.value.take() {
@@ -1798,7 +1600,7 @@ impl Generation3dRetainedMutationOwner {
                 Generation3dMutation::MoveNodes(value) => Some(std::mem::take(&mut value.ids)),
                 _ => None,
             };
-            if let Some(targets) = targets { self.closing_targets.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Strings(targets)); }
+            if let Some(targets) = targets { generation3d_park_flow_strings(&mut self.closing_targets, targets); }
             mutation.retire_cold();
             return false;
         }
@@ -2095,6 +1897,21 @@ struct Generation3dPackSnapshotAuthority {
 }
 
 impl Generation3dPackSnapshotAuthority {
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+        let path = self.path;
+        let refusal = move |error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before("generation3d-envelope.snapshot-close-demand", path).with_native(error);
+        if let Some(session) = self.session.as_ref() {
+            return Ok(semio_framework_value::RetirementDemand { release_bytes: session.next_retained_release_allocation_bytes().unwrap_or(0), depth: 1, ..Default::default() });
+        }
+        if let Some(owner) = self.retirement.as_ref() {
+            return store::artifact_retirement_box_demands(owner, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(refusal);
+        }
+        if self.value.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&*self.value).map_err(refusal);
+        }
+        Ok(Default::default())
+    }
+
     fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
         Self {
             operation,
@@ -2245,13 +2062,6 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
         Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
-    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
-        if let Some(session) = self.session.as_ref() {
-            return Ok(session.next_retained_release_allocation_bytes().unwrap_or(0));
-        }
-        Ok(usize::from(self.retirement.is_some()) * store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
-    }
-
     fn maximum_close_byte_demand(&self) -> usize {
         store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
@@ -2260,45 +2070,58 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
         store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(self.close_demands()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(self.close_demands()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(self.close_demands()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(self.close_demands()?.depth)
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let path = self.path;
-        let diagnostic = |code: &'static str| store::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        let diagnostic = move |code: &'static str, error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before(code, path).with_native(error);
+        let empty = RetainedCloneProgress::default();
+        if self.session.is_none() && self.retirement.is_none() && self.value.is_none() {
+            self.state = Generation3dPackSnapshotState::Complete;
+            return Ok(RetainedCloneStep::Complete(empty));
+        }
+        let demand = self.close_demands()?;
+        if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(RetainedCloneStep::Progress(empty));
         }
         if let Some(session) = self.session.as_mut() {
             session.request_cancel();
-            match session.close_step(maximum_items.min(1), maximum_bytes).map_err(|_| diagnostic("generation3d-envelope.snapshot-session-close"))? {
-                store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { released_items, released_bytes } => {
-                    self.state = Generation3dPackSnapshotState::Closing;
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes });
-                }
-                store::mounted_pack_rt::RetainedTypedPackCloseStep::Complete => {}
-            }
-            drop(self.session.take());
-            self.token = None;
             self.state = Generation3dPackSnapshotState::Closing;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            return match session.close_step(1, grant.maximum_release_bytes).map_err(|_| diagnostic("generation3d-envelope.snapshot-session-close", semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "mounted pack session refused its close")))? {
+                store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, released_bytes, ..empty })),
+                store::mounted_pack_rt::RetainedTypedPackCloseStep::Complete => {
+                    drop(self.session.take());
+                    self.token = None;
+                    Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }))
+                }
+            };
         }
         if self.retirement.is_none() {
-            if let Some(value) = self.value.take() {
-                *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&Generation3dRetainedSnapshotRetirementFactory, value));
-                self.state = Generation3dPackSnapshotState::Closing;
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
+            let step = store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.snapshot-retirement-fault", error))?;
+            self.state = Generation3dPackSnapshotState::Closing;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        let step = store::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.snapshot-retirement-fault", error))?;
+        if self.retirement.is_none() {
             self.state = Generation3dPackSnapshotState::Complete;
-            return Ok(store::SnapshotRetirementStep::Complete);
+            return Ok(RetainedCloneStep::Complete(step.progress()));
         }
-        let retirement = self.retirement.as_mut().expect("Generation3d snapshot retirement remains retained");
-        match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| diagnostic("generation3d-envelope.snapshot-retirement-fault"))? {
-            store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                drop(self.retirement.take());
-                self.state = Generation3dPackSnapshotState::Complete;
-                Ok(store::SnapshotRetirementStep::Complete)
-            }
-            store::SnapshotRetirementStep::Complete => Err(diagnostic("generation3d-envelope.snapshot-retirement-false-terminal")),
-            step => Ok(step),
-        }
+        Ok(RetainedCloneStep::Progress(step.progress()))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -2339,6 +2162,21 @@ struct Generation3dMutationDecodeAuthority {
 }
 
 impl Generation3dMutationDecodeAuthority {
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+        let path = self.path;
+        let refusal = move |error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before("generation3d-envelope.mutation-close-demand", path).with_native(error);
+        if let Some(session) = self.session.as_ref() {
+            return Ok(semio_framework_value::RetirementDemand { release_bytes: session.next_retained_release_allocation_bytes().unwrap_or(0), depth: 1, ..Default::default() });
+        }
+        if let Some(owner) = self.retirement.as_ref() {
+            return store::artifact_retirement_box_demands(owner, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(refusal);
+        }
+        if self.value.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&*self.value).map_err(refusal);
+        }
+        Ok(Default::default())
+    }
+
     fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
         Self {
             operation,
@@ -2374,10 +2212,6 @@ impl Generation3dMutationDecodeAuthority {
 }
 
 impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Generation3dMutationDecodeAuthority {
-    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
-        if let Some(session) = self.session.as_ref() { return Ok(session.next_retained_release_allocation_bytes().unwrap_or(0)); }
-        Ok(self.retirement.as_ref().map_or(0, store::artifact_retirement_box_byte_demand))
-    }
     fn accept_token(
         &mut self,
         token: store::OwnedSchemaToken,
@@ -2514,42 +2348,57 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Gen
         Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(self.close_demands()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(self.close_demands()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(self.close_demands()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(self.close_demands()?.depth)
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        let path = self.path;
+        let diagnostic = move |code: &'static str, error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before(code, path).with_native(error);
+        let empty = RetainedCloneProgress::default();
+        if self.session.is_none() && self.retirement.is_none() && self.value.is_none() {
+            self.state = Generation3dMutationDecodeState::Complete;
+            return Ok(RetainedCloneStep::Complete(empty));
+        }
+        let demand = self.close_demands()?;
+        if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(RetainedCloneStep::Progress(empty));
         }
         if let Some(session) = self.session.as_mut() {
-            match session.close_step(maximum_items.min(1), maximum_bytes).map_err(|_| {
-                store::OwnedSchemaDecodeDiagnostic {
-                    code: "generation3d-envelope.mutation-session-close",
-                    offset: 0,
-                    line: 0,
-                    column: 0,
-                    path: self.path,
-                 refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
-            })? {
-                store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items, released_bytes } => {
-                    self.state = Generation3dMutationDecodeState::Closing;
-                    return Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes });
-                }
-                store::mounted_pack_rt::RetainedPackCloseStep::Complete => {}
-            }
-            drop(self.session.take());
-            self.token = None;
             self.state = Generation3dMutationDecodeState::Closing;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            return match session.close_step(1, grant.maximum_release_bytes).map_err(|_| diagnostic("generation3d-envelope.mutation-session-close", semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "mounted mutation session refused its close")))? {
+                store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, released_bytes, ..empty })),
+                store::mounted_pack_rt::RetainedPackCloseStep::Complete => {
+                    drop(self.session.take());
+                    self.token = None;
+                    Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }))
+                }
+            };
         }
         if self.retirement.is_none() {
-            if let Some(value) = self.value.take() {
-                *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&Generation3dRetainedMutationRetirementFactory, value));
-                self.state = Generation3dMutationDecodeState::Closing;
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            self.state = Generation3dMutationDecodeState::Complete;
-            return Ok(store::SnapshotRetirementStep::Complete);
+            let step = store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
+            self.state = Generation3dMutationDecodeState::Closing;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let retirement_fault = self.diagnostic("generation3d-envelope.mutation-retirement-fault", 0);
-        store::artifact_retirement_box_close_step(&mut self.retirement, maximum_items, maximum_bytes).map_err(|_| retirement_fault)
+        let step = store::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
+        if self.retirement.is_none() {
+            self.state = Generation3dMutationDecodeState::Complete;
+            return Ok(RetainedCloneStep::Complete(step.progress()));
+        }
+        Ok(RetainedCloneStep::Progress(step.progress()))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -2578,12 +2427,32 @@ impl store::ArtifactEnvelopeSprConflictAuthority for Generation3dRejectedConflic
         Err(store::OwnedSchemaDecodeDiagnostic { code: "generation3d-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(usize::from(!self.terminal))
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        if self.terminal {
+            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
         self.terminal = true;
-        Ok(store::SnapshotRetirementStep::Complete)
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -2592,20 +2461,21 @@ impl store::ArtifactEnvelopeSprConflictAuthority for Generation3dRejectedConflic
 }
 
 /// 🎭️ Owner-local exact catalog for the Generation3d fresh-envelope decode cohort.
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct Generation3dEnvelopeOwnedFieldCatalog;
 
 /// 📦️ Installs Generation3d's exact field catalog and nested owner retirement factories as
 /// one indivisible app decode authority.
 pub fn generation3d_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwnerBundle<Generation3dSnapshot, Generation3dMutation> {
-    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Generation3dEnvelopeOwnedFieldCatalog), std::sync::Arc::new(Generation3dRetainedSnapshotRetirementFactory), std::sync::Arc::new(Generation3dRetainedMutationRetirementFactory))
+    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Generation3dEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dMutation>::default()))
 }
 
 impl store::ArtifactEnvelopeOwnedFieldCatalog<Generation3dSnapshot, Generation3dMutation> for Generation3dEnvelopeOwnedFieldCatalog {
     fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation3dSnapshot, Generation3dMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot>>> {
         store::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
-            std::sync::Arc::new(Generation3dRetainedSnapshotRetirementFactory),
-            std::sync::Arc::new(Generation3dRetainedMutationRetirementFactory),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dMutation>::default()),
             self.edit_history_decoder(),
         )
         .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation3dSnapshot, Generation3dMutation>>)
@@ -2632,7 +2502,7 @@ impl store::ArtifactEnvelopeOwnedFieldCatalog<Generation3dSnapshot, Generation3d
     }
 
     fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<Generation3dMutation>>> {
-        store::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(Generation3dRetainedMutationRetirementFactory))
+        store::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dMutation>::default()))
     }
 }
 //#endregion 🔖️TypedOwnedEnvelopeCatalog
@@ -2938,13 +2808,23 @@ impl Generation3dSnapshotCopyCursor {
         self.target.take()
     }
 
-    fn close_step(&mut self, maximum_items: usize) -> bool {
-        if maximum_items == 0 {
-            return false;
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if self.target.is_none() {
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
         }
-        drop(self.target.take());
-        self.handed_back = true;
-        true
+        store::artifact_retirement_owned_birth_demands(&*self.target)
+    }
+
+    fn abandon(&mut self, active: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        if self.target.is_none() {
+            self.handed_back = true;
+            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        }
+        let step = store::artifact_retirement_admit_owned(&mut self.target, active, grant)?;
+        if self.target.is_none() {
+            self.handed_back = true;
+        }
+        Ok(step)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -2973,6 +2853,7 @@ enum Generation3dStoreInitializationPhase {
     CommitApplied { position: usize, edit: usize },
     FindRedo { position: usize },
     CommitRedo { position: usize, edit: usize },
+    BuildOwners,
     BuildCandidate,
     Complete,
     RetireCancelled,
@@ -2992,10 +2873,15 @@ struct Generation3dStoreInitializationAuthority {
     copy: std::mem::ManuallyDrop<Option<Generation3dSnapshotCopyCursor>>,
     runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<Generation3dSnapshot>>>,
     candidate: std::mem::ManuallyDrop<Option<store::ArtifactStore<Generation3dSnapshot, Generation3dMutation>>>,
+    owners: std::mem::ManuallyDrop<Option<store::DocumentStoreOwners<Generation3dSnapshot, Generation3dMutation>>>,
     active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    active_terminal: bool,
+    displaced: std::mem::ManuallyDrop<Option<Generation3dReplayDisplaced>>,
+    rejected: std::mem::ManuallyDrop<Option<Generation3dSnapshot>>,
     candidate_disposer: std::mem::ManuallyDrop<Option<semio_framework_plugin::ArtifactDocumentStoreDisposer<Generation3dSnapshot, Generation3dMutation>>>,
-    envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    closer: std::mem::ManuallyDrop<Option<semio_framework_plugin::ArtifactStoreInitializationJob<Generation3dSnapshot, Generation3dMutation>>>,
+    snapshot_factory: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Generation3dSnapshot>>>>,
+    factory_close: std::mem::ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
+    publication: semio_framework_job::RetainedJobPublication,
     edit_index: store::ArtifactStoreInitializationEditIndex,
     phase: Generation3dStoreInitializationPhase,
     resume_phase: Option<Generation3dStoreInitializationPhase>,
@@ -3021,10 +2907,15 @@ impl Generation3dStoreInitializationAuthority {
             copy: std::mem::ManuallyDrop::new(None),
             runtime: std::mem::ManuallyDrop::new(None),
             candidate: std::mem::ManuallyDrop::new(None),
+            owners: std::mem::ManuallyDrop::new(None),
             active: std::mem::ManuallyDrop::new(None),
-            active_terminal: false,
+            displaced: std::mem::ManuallyDrop::new(None),
+            rejected: std::mem::ManuallyDrop::new(None),
             candidate_disposer: std::mem::ManuallyDrop::new(None),
-            envelope_retirement: std::mem::ManuallyDrop::new(None),
+            closer: std::mem::ManuallyDrop::new(None),
+            snapshot_factory: std::mem::ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()))),
+            factory_close: std::mem::ManuallyDrop::new(None),
+            publication: semio_framework_job::RetainedJobPublication::new(),
             edit_index: store::ArtifactStoreInitializationEditIndex::default(),
             resume_phase: None,
             phase: Generation3dStoreInitializationPhase::ValidateEnvelope,
@@ -3055,97 +2946,212 @@ impl Generation3dStoreInitializationAuthority {
         self.envelope.as_ref()?.cursor.as_ref()?.redo_edit_ids.get(position).map(String::as_str)
     }
 
-    fn pump_active(&mut self) -> Result<bool, semio_framework_value::ValueError> {
-        if self.active_terminal {
-            drop(self.active.take());
-            self.active_terminal = false;
+    fn pump_owned(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_value::ValueError> {
+        if self.active.is_some() {
+            let step = store::artifact_retirement_box_close_step(&mut self.active, cx.retained_grant())?;
+            cx.consume_retained(step.progress())?;
             return Ok(true);
         }
-        let Some(active) = self.active.as_mut() else { return Ok(false) };
-        match active.close_step(1, GENERATION3D_OWNER_BYTES)? {
-            store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => self.active_terminal = true,
-            store::SnapshotRetirementStep::Complete => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d-initializer.active-false-terminal")),
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= GENERATION3D_OWNER_BYTES => {}
-            store::SnapshotRetirementStep::Pending { .. } => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d-initializer.active-exceeded-grant")),
-            store::SnapshotRetirementStep::Blocked => {}
+        if self.displaced.is_some() {
+            let step = store::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, cx.retained_grant())?;
+            cx.consume_retained(step.progress())?;
+            return Ok(true);
         }
-        Ok(true)
+        if self.rejected.is_some() {
+            let step = store::artifact_retirement_admit_owned(&mut self.rejected, &mut self.active, cx.retained_grant())?;
+            cx.consume_retained(step.progress())?;
+            return Ok(true);
+        }
+        Ok(false)
     }
 
-    fn pump_retirement(&mut self, maximum_bytes: usize) -> Result<bool, semio_framework_value::ValueError> {
-        if self.pump_active()? {
-            return Ok(false);
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        use semio_framework_plugin::ArtifactOwnedDisposer;
+        use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+        let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> {
+            demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "generation3d initializer close depth overflow"))?;
+            Ok(demand)
+        };
+        if !self.publication.terminal_is_empty() {
+            return self.publication.retirement_demands();
         }
-        if let Some(candidate) = self.candidate.as_mut() {
-            use semio_framework_plugin::ArtifactOwnedDisposer;
+        if let Some(owner) = self.active.as_ref() {
+            return store::artifact_retirement_box_demands(owner, body);
+        }
+        if self.displaced.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&*self.displaced);
+        }
+        if self.rejected.is_some() {
+            return store::artifact_retirement_owned_birth_demands(&*self.rejected);
+        }
+        if let Some(candidate) = self.candidate.as_ref() {
+            return match self.candidate_disposer.as_ref() {
+                Some(disposer) => nested(disposer.retirement_demands(candidate, body)?),
+                None => Ok(RetirementDemand { depth: 1, ..Default::default() }),
+            };
+        }
+        if let Some(runtime) = self.runtime.as_ref() {
+            return nested(runtime.initialization_retirement_demands(body)?);
+        }
+        if let Some(owners) = self.owners.as_ref() {
+            return if owners.constructor_is_complete() && owners.uninstalled_owners_terminal_is_empty() { Ok(RetirementDemand { depth: 1, ..Default::default() }) } else if owners.constructor_is_complete() { nested(owners.uninstalled_owners_demands(body)?) } else { nested(owners.constructor_demands(body)?) };
+        }
+        if let Some(copy) = self.copy.as_ref() {
+            return copy.close_demands();
+        }
+        if let Some(closer) = self.closer.as_ref() {
+            return nested(closer.retirement_demands(body)?);
+        }
+        if self.envelope.is_some() {
+            return Ok(RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if let Some(factory) = self.factory_close.as_ref() {
+            return nested(factory.demands(body)?);
+        }
+        if self.snapshot_factory.is_some() {
+            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() });
+        }
+        Ok(Default::default())
+    }
+
+    fn close_turn(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::ValueError> {
+        use semio_framework_plugin::ArtifactOwnedDisposer;
+        use semio_framework_value::{retained_clone::{admit_retained_clone_close, RetainedCloneGrant, RetainedCloneProgress}, FactoryAuthority, ValueError, ValueRefusalKind};
+        let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if demand == Default::default() {
+            return Ok(Default::default());
+        }
+        if grant.maximum_depth < demand.depth {
+            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "generation3d initializer close exceeds its admitted depth"));
+        }
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(Default::default());
+        }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if !self.publication.terminal_is_empty() {
+            return self.publication.close_step(child).map(|step| step.progress());
+        }
+        if self.active.is_some() {
+            return store::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| step.progress());
+        }
+        if self.displaced.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, grant).map(|step| step.progress());
+        }
+        if self.rejected.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.rejected, &mut self.active, grant).map(|step| step.progress());
+        }
+        if self.candidate.is_some() {
             if self.candidate_disposer.is_none() {
                 *self.candidate_disposer = Some(semio_framework_plugin::ArtifactDocumentStoreDisposer::new());
-                return Ok(false);
+                return Ok(item);
             }
-            let disposer = self.candidate_disposer.as_mut().expect("P3 candidate disposer retained");
-            return match disposer.close_step(candidate, 1, maximum_bytes).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.describe()))? {
-                semio_framework_plugin::PluginCloseStep::Complete if disposer.terminal_is_empty(candidate) => {
-                    *self.candidate_disposer = None;
-                    drop(self.candidate.take());
-                    Ok(false)
-                }
-                semio_framework_plugin::PluginCloseStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d-initializer.candidate-false-terminal")),
-                _ => Ok(false),
-            };
+            let candidate = self.candidate.as_mut().expect("observed original candidate store");
+            let disposer = self.candidate_disposer.as_mut().expect("observed original candidate disposer");
+            let step = disposer.close_step(candidate, child).map_err(|error| ValueError::new(ValueRefusalKind::InvariantViolated, error.describe()))?;
+            if disposer.terminal_is_empty(candidate) {
+                *self.candidate_disposer = None;
+                drop(self.candidate.take());
+            }
+            return Ok(step.progress().unwrap_or_default());
         }
         if let Some(runtime) = self.runtime.as_mut() {
-            return match runtime.close_step(&Generation3dRetainedSnapshotRetirementFactory, 1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if runtime.terminal_is_empty() => {
-                    drop(self.runtime.take());
-                    Ok(false)
-                }
-                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d-initializer.runtime-false-terminal")),
-                _ => Ok(false),
-            };
+            let factory = self.snapshot_factory.as_ref().expect("initializer snapshot issuer outlives its runtime");
+            let step = runtime.close_step(factory, child)?;
+            let step = admit_retained_clone_close(child, step, runtime.terminal_is_empty(), "generation3d initializer runtime close")?;
+            if runtime.terminal_is_empty() {
+                drop(self.runtime.take());
+            }
+            return Ok(step.progress());
+        }
+        if let Some(owners) = self.owners.as_mut() {
+            if !owners.constructor_is_complete() {
+                return owners.admit_constructor(child).map_err(|(error, receipt)| error.with_retained_progress(receipt));
+            }
+            if owners.uninstalled_owners_terminal_is_empty() {
+                drop(self.owners.take());
+                return Ok(item);
+            }
+            let step = owners.close_uninstalled_owners_step(child)?;
+            let step = admit_retained_clone_close(child, step, owners.uninstalled_owners_terminal_is_empty(), "generation3d initializer uninstalled owners close")?;
+            return Ok(step.progress());
         }
         if let Some(copy) = self.copy.as_mut() {
-            if copy.close_step(1) {
+            let step = copy.abandon(&mut self.active, grant)?;
+            if copy.terminal_is_empty() && self.active.is_none() {
                 drop(self.copy.take());
             }
-            return Ok(false);
+            return Ok(step.progress());
         }
-        if self.envelope_retirement.is_none() {
-            if let Some(envelope) = self.envelope.take() {
-                *self.envelope_retirement = Some(generation3d_envelope_decode_owner_bundle().retire_envelope(envelope));
-                return Ok(false);
-            }
-        }
-        if let Some(retirement) = self.envelope_retirement.as_mut() {
-            return match retirement.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    drop(self.envelope_retirement.take());
-                    Ok(false)
+        if self.closer.is_some() {
+            use semio_framework_job::InteractiveJob as _;
+            let closer = self.closer.as_mut().expect("observed original envelope closer");
+            return match closer.close_step(child) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => Ok(progress),
+                semio_framework_job::InteractiveJobCloseStep::Complete { progress } => {
+                    if semio_framework_job::InteractiveJob::terminal_is_empty(closer) {
+                        drop(self.closer.take());
+                    }
+                    Ok(progress)
                 }
-                store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d-initializer.envelope-false-terminal")),
-                _ => Ok(false),
+                semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(Default::default()),
+                semio_framework_job::InteractiveJobCloseStep::Refused { kind, progress } => Err(ValueError::literal(kind, "generation3d initializer envelope close refused").with_retained_progress(progress)),
             };
         }
-        Ok(true)
+        if let Some(envelope) = self.envelope.take() {
+            *self.closer = Some(semio_framework_plugin::bounded_document_store_initialization_job(envelope, crate::GENERATION_3D_SCHEMA, self.operation, self.generation, self.actor.clone()));
+            return Ok(item);
+        }
+        if let Some(factory) = self.factory_close.as_mut() {
+            let step = factory.step(child)?;
+            let step = admit_retained_clone_close(child, step, factory.terminal_is_empty(), "generation3d initializer issuer close")?;
+            if factory.terminal_is_empty() {
+                *self.factory_close = None;
+            }
+            return Ok(step.progress());
+        }
+        if let Some(factory) = self.snapshot_factory.take() {
+            let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory;
+            *self.factory_close = Some(FactoryAuthority::new(factory));
+            return Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() });
+        }
+        Ok(Default::default())
+    }
+
+    fn close_is_empty(&self) -> bool {
+        self.envelope.is_none()
+            && self.copy.is_none()
+            && self.runtime.is_none()
+            && self.owners.is_none()
+            && self.candidate.is_none()
+            && self.active.is_none()
+            && self.displaced.is_none()
+            && self.rejected.is_none()
+            && self.candidate_disposer.is_none()
+            && self.closer.is_none()
+            && self.snapshot_factory.is_none()
+            && self.factory_close.is_none()
+            && self.publication.terminal_is_empty()
+    }
+
+    fn close_is_complete(&self) -> bool {
+        self.close_is_empty()
     }
 
     fn terminal_is_empty_inner(&self) -> bool {
-        self.terminal_handoff
-            && self.envelope.is_none()
-            && self.copy.is_none()
-            && self.runtime.is_none()
-            && self.candidate.is_none()
-            && self.active.is_none()
-            && self.candidate_disposer.is_none()
-            && self.envelope_retirement.is_none()
+        self.terminal_handoff && self.close_is_empty()
     }
 }
 
+const GENERATION3D_INITIALIZER_DEFAULT_FAULT: &[u8] = b"generation3d-store.initializer-fault";
+
 impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSnapshot, Generation3dMutation> for Generation3dStoreInitializationAuthority {
-    fn next_close_byte_demand(&self) -> usize {
-        self.active.as_ref().or(self.envelope_retirement.as_ref()).map_or(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, |owner| owner.next_close_byte_demand())
+    fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        self.close_demands(body)
     }
 
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        use semio_framework_job::JobOutcomeBorrow;
         if cx.operation() != self.operation || cx.generation() != self.generation {
             self.fail(b"generation3d-store.initializer-stale-aba");
         }
@@ -3153,12 +3159,12 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
             self.phase = Generation3dStoreInitializationPhase::RetireCancelled;
         }
         if cx.should_yield() || cx.fuel_remaining() == 0 {
-            return semio_framework_job::StepOutcome::Yield;
+            return Ok(None);
         }
-        match self.pump_active() {
+        match self.pump_owned(cx) {
             Ok(true) => {
                 cx.consume_fuel(1);
-                return semio_framework_job::StepOutcome::Yield;
+                return Ok(None);
             }
             Ok(false) => {}
             Err(error) => {
@@ -3168,10 +3174,17 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
         }
         if !matches!(self.phase, Generation3dStoreInitializationPhase::RetireCancelled | Generation3dStoreInitializationPhase::RetireFault | Generation3dStoreInitializationPhase::Cancelled | Generation3dStoreInitializationPhase::Fault | Generation3dStoreInitializationPhase::Complete) {
             if let Some(runtime) = self.runtime.as_mut() {
-                match runtime.settle_current_retirement_step(1, GENERATION3D_OWNER_BYTES) {
-                    Ok(store::SnapshotRetirementStep::Complete) => {}
-                    Ok(_) => { cx.consume_fuel(1); return semio_framework_job::StepOutcome::Yield; }
-                    Err(error) => { self.fault = Some(error.into_message().into_bytes()); self.phase = Generation3dStoreInitializationPhase::RetireFault; }
+                match runtime.settle_current_retirement_step(cx.retained_grant()) {
+                    Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) => {}
+                    Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)) => {
+                        cx.consume_retained(progress)?;
+                        cx.consume_fuel(1);
+                        return Ok(None);
+                    }
+                    Err(error) => {
+                        self.fault = Some(error.into_message().into_bytes());
+                        self.phase = Generation3dStoreInitializationPhase::RetireFault;
+                    }
                 }
             }
         }
@@ -3181,7 +3194,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                 *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), self.actor.clone()));
                 self.phase = Generation3dStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
                 cx.consume_fuel(1);
-                return semio_framework_job::StepOutcome::Yield;
+                return Ok(None);
             }
             Generation3dStoreInitializationPhase::ValidateEnvelope => {
                 let valid = self.envelope.as_ref().is_some_and(|envelope| envelope.schema == crate::GENERATION_3D_SCHEMA && !envelope.id.is_empty() && envelope.id.len() <= GENERATION3D_OWNER_BYTES);
@@ -3203,14 +3216,14 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                 let envelope = self.envelope.as_ref().expect("P3 envelope retained");
                 let Some(entry) = envelope.vcs.edits.get(edit) else {
                     self.phase = Generation3dStoreInitializationPhase::BindGenesis;
-                    return semio_framework_job::StepOutcome::Yield;
+                    return Ok(None);
                 };
                 if entry.forwards.get(mutation).is_some() {
                     self.history_items = match self.history_items.checked_add(1) {
                         Some(value) if value <= GENERATION3D_MAXIMUM_DOMAIN_ITEMS => value,
                         _ => {
                             self.fail(b"generation3d-store.initializer-history-capacity");
-                            return semio_framework_job::StepOutcome::Yield;
+                            return Ok(None);
                         }
                     };
                     self.phase = Generation3dStoreInitializationPhase::CensusHistory { edit, mutation: mutation + 1 };
@@ -3229,10 +3242,11 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
             Generation3dStoreInitializationPhase::AdoptWorkspace => {
                 let initial = self.copy.as_mut().expect("P3 copy retained").take().expect("P3 copy handoff");
                 drop(self.copy.take());
-                match self.runtime.as_mut().expect("retained initializer runtime").adopt_current_owned(initial, std::sync::Arc::new(Generation3dRetainedSnapshotRetirementFactory)) {
+                let factory = std::sync::Arc::clone(self.snapshot_factory.as_ref().expect("P3 snapshot issuer retained"));
+                match self.runtime.as_mut().expect("retained initializer runtime").adopt_current_owned(initial, factory) {
                     Ok(()) => self.phase = self.resume_phase.take().expect("retained mutation resume phase"),
                     Err(initial) => {
-                        *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&Generation3dRetainedSnapshotRetirementFactory, initial));
+                        *self.rejected = Some(initial);
                         self.fail(b"initializer-owned-workspace-adoption");
                     }
                 }
@@ -3241,7 +3255,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                 let envelope = self.envelope.as_ref().expect("P3 history retained");
                 let Some(entry) = envelope.vcs.edits.get(edit) else {
                     self.phase = Generation3dStoreInitializationPhase::FoldSupersessions { transition: 0 };
-                    return semio_framework_job::StepOutcome::Yield;
+                    return Ok(None);
                 };
                 let runtime = self.runtime.as_mut().expect("P3 runtime retained");
                 match lane {
@@ -3297,9 +3311,9 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                     self.runtime.as_mut().expect("P3 runtime retained").set_current_checkpoint_id(checkpoint);
                     self.phase = Generation3dStoreInitializationPhase::FindRedo { position: 0 };
                     cx.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
+                    return Ok(None);
                 };
-                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
+                let scan = self.edit_index.position(id).unwrap_or(usize::MAX);
                 match self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(scan)) {
                     Some(edit) if edit.id == id => {
                         self.phase = Generation3dStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
@@ -3316,15 +3330,15 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                 };
                 if needs_workspace && self.runtime.as_mut().expect("retained initializer runtime").current_mut().is_none() {
                     self.resume_phase = Some(self.phase);
-                    match Generation3dSnapshotCopyCursor::new(self.envelope.as_ref().expect("retained genesis").vcs.genesis.facts().snapshot()) { Ok(copy) => *self.copy = Some(copy), Err(code) => { self.fail(code.as_bytes()); return semio_framework_job::StepOutcome::Yield; } }
+                    match Generation3dSnapshotCopyCursor::new(self.envelope.as_ref().expect("retained genesis").vcs.genesis.facts().snapshot()) { Ok(copy) => *self.copy = Some(copy), Err(code) => { self.fail(code.as_bytes()); return Ok(None); } }
                     self.phase = Generation3dStoreInitializationPhase::CopyInitial;
                     cx.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
+                    return Ok(None);
                 }
                 let operation = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| entry.forwards.get(mutation));
                 let Some(operation) = operation else {
                     self.phase = Generation3dStoreInitializationPhase::CommitApplied { position, edit };
-                    return semio_framework_job::StepOutcome::Yield;
+                    return Ok(None);
                 };
                 let envelope = self.envelope.as_ref().expect("P3 envelope remains retained while its forwards fold");
                 let entry = envelope.vcs.edits.get(edit).expect("P3 applied edit remains retained");
@@ -3332,14 +3346,14 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                 if effective.operation().is_none() {
                     drop(effective);
                     self.phase = Generation3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
-                    return semio_framework_job::StepOutcome::Yield;
+                    return Ok(None);
                 }
                 let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("P3 runtime current retained");
                 let applied = effective.operation().map(|operation| generation3d_apply_initialization_mutation(current, operation));
                 drop(effective);
                 match applied {
-                    Some(Ok(retired)) => {
-                        *self.active = retired;
+                    Some(Ok(displaced)) => {
+                        *self.displaced = displaced;
                         self.phase = Generation3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
                     }
                     None => self.phase = Generation3dStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 },
@@ -3361,11 +3375,11 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
             Generation3dStoreInitializationPhase::FindRedo { position } => {
                 let Some(id) = self.redo_id(position) else {
                     self.edit_index.clear();
-                    self.phase = Generation3dStoreInitializationPhase::BuildCandidate;
+                    self.phase = Generation3dStoreInitializationPhase::BuildOwners;
                     cx.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
+                    return Ok(None);
                 };
-                let scan = self.edit_index.position(&id).unwrap_or(usize::MAX);
+                let scan = self.edit_index.position(id).unwrap_or(usize::MAX);
                 match self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(scan)) {
                     Some(edit) if edit.id == id => {
                         self.phase = Generation3dStoreInitializationPhase::CommitRedo { position, edit: scan };
@@ -3381,62 +3395,85 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                     Err(_) => self.fail(b"generation3d-store.initializer-redo-capacity"),
                 }
             }
+            Generation3dStoreInitializationPhase::BuildOwners => {
+                if self.owners.is_none() {
+                    match store::bounded_artifact_store_owners::<Generation3dSnapshot, Generation3dMutation>(cx.retained_grant()) {
+                        Ok((owners, progress)) => {
+                            *self.owners = Some(owners);
+                            cx.consume_retained(progress)?;
+                        }
+                        Err(refused) => {
+                            *self.owners = refused.owners;
+                            if refused.error.retained_progress() != Default::default() {
+                                cx.consume_retained(refused.error.retained_progress())?;
+                            }
+                        }
+                    }
+                } else if let Some(owners) = self.owners.as_mut().filter(|owners| !owners.constructor_is_complete()) {
+                    match owners.admit_constructor(cx.retained_grant()) {
+                        Ok(progress) => cx.consume_retained(progress)?,
+                        Err((error, progress)) => {
+                            cx.consume_retained(progress)?;
+                            return Err(error);
+                        }
+                    }
+                } else {
+                    self.phase = Generation3dStoreInitializationPhase::BuildCandidate;
+                }
+                cx.consume_fuel(1);
+                return Ok(None);
+            }
             Generation3dStoreInitializationPhase::BuildCandidate => {
                 let authority = generation3d_validate_publication_authority(self.operation, self.generation);
                 let fresh =
                     cx.operation() == self.operation && cx.generation() == self.generation && authority == Ok((self.base_revision, self.parent_revision)) && self.base_revision == self.parent_revision && self.parent_revision == self.generation.0;
                 let Some(candidate_generation) = self.parent_revision.checked_add(1) else {
                     self.fail(b"generation3d-store.initializer-generation-exhausted");
-                    return semio_framework_job::StepOutcome::Yield;
+                    return Ok(None);
                 };
                 if !fresh {
                     self.fail(b"generation3d-store.initializer-parent-stale-aba");
-                    return semio_framework_job::StepOutcome::Yield;
+                    return Ok(None);
                 }
                 let envelope = self.envelope.take().expect("P3 envelope retained until atomic publication");
                 let runtime = self.runtime.take().expect("P3 runtime retained until atomic publication");
-                *self.candidate = Some(store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, candidate_generation, generation3d_document_store_owners()));
+                let owners = self.owners.take().expect("P3 owners retained until atomic publication");
+                *self.candidate = Some(store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, candidate_generation, owners));
                 self.phase = Generation3dStoreInitializationPhase::Complete;
-                return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                });
+                return JobOutcomeBorrow::admit_complete(cx, None, None);
             }
-            Generation3dStoreInitializationPhase::RetireCancelled | Generation3dStoreInitializationPhase::RetireFault => match self.pump_retirement(GENERATION3D_OWNER_BYTES) {
-                Ok(false) => return semio_framework_job::StepOutcome::Yield,
-                Ok(true) => {
+            Generation3dStoreInitializationPhase::RetireCancelled | Generation3dStoreInitializationPhase::RetireFault => match self.close_turn(cx.retained_grant()) {
+                Ok(progress) => {
+                    cx.consume_retained(progress)?;
+                    if !self.close_is_complete() {
+                        return Ok(None);
+                    }
                     generation3d_release_app_publication_authority(self.operation);
                     self.terminal_handoff = true;
                     if self.phase == Generation3dStoreInitializationPhase::RetireCancelled {
                         self.phase = Generation3dStoreInitializationPhase::Cancelled;
-                        return semio_framework_job::StepOutcome::Cancelled;
+                        return JobOutcomeBorrow::admit_cancelled(cx);
                     }
                     self.phase = Generation3dStoreInitializationPhase::Fault;
-                    let detail = cx
-                        .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, self.fault.as_deref().unwrap_or(b"generation3d-store.initializer-fault"))
-                        .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
-                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail });
+                    return self.publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(GENERATION3D_INITIALIZER_DEFAULT_FAULT), cx);
                 }
                 Err(_) => self.fail(b"generation3d-store.initializer-close"),
             },
-            Generation3dStoreInitializationPhase::Complete => {
-                return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                });
-            }
-            Generation3dStoreInitializationPhase::Cancelled => return semio_framework_job::StepOutcome::Cancelled,
-            Generation3dStoreInitializationPhase::Fault => {
-                let detail = cx
-                    .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, self.fault.as_deref().unwrap_or(b"generation3d-store.initializer-fault"))
-                    .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
-                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail });
-            }
+            Generation3dStoreInitializationPhase::Complete => return JobOutcomeBorrow::admit_complete(cx, None, None),
+            Generation3dStoreInitializationPhase::Cancelled => return JobOutcomeBorrow::admit_cancelled(cx),
+            Generation3dStoreInitializationPhase::Fault => return self.publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, self.fault.as_deref().unwrap_or(GENERATION3D_INITIALIZER_DEFAULT_FAULT), cx),
         }
         cx.consume_fuel(1);
-        semio_framework_job::StepOutcome::Yield
+        Ok(None)
     }
 
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            semio_framework_job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            semio_framework_job::JobOutcomeKind::Complete => descriptor.complete(None, None),
+            _ => self.publication.borrow_outcome(descriptor),
+        }
+    }
     fn request_cancel(&mut self) {
         self.cancel_requested = true;
     }
@@ -3457,20 +3494,16 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework::Fault> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::retained_clone::RetainedCloneStep;
         self.begin_close();
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        let progress = self.close_turn(grant)?;
+        if self.close_is_complete() {
+            generation3d_release_app_publication_authority(self.operation);
+            self.terminal_handoff = true;
+            return Ok(RetainedCloneStep::Complete(progress));
         }
-        match self.pump_retirement(maximum_bytes.min(GENERATION3D_OWNER_BYTES)) {
-            Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
-            Ok(true) => {
-                generation3d_release_app_publication_authority(self.operation);
-                self.terminal_handoff = true;
-                Ok(semio_framework_plugin::PluginCloseStep::Complete)
-            }
-            Err(error) => Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, error.kind.as_str(), error.into_message())),
-        }
+        Ok(RetainedCloneStep::Progress(progress))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -3545,21 +3578,8 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3
 #[cfg(test)]
 pub fn generation3d_apply_retained_mutations_for_test(snapshot: &mut Generation3dSnapshot, mutations: &[Generation3dMutation]) {
     for mutation in mutations {
-        if let Some(mut retirement) = generation3d_apply_initialization_mutation(snapshot, mutation).expect("P3 production fixture retained replay") {
-            for _ in 0..GENERATION3D_MAXIMUM_DOMAIN_ITEMS {
-                match retirement.close_step(1, GENERATION3D_OWNER_BYTES).expect("P3 production fixture displacement close") {
-                    store::SnapshotRetirementStep::Complete => {
-                        assert!(retirement.terminal_is_empty());
-                        break;
-                    }
-                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                        assert!(released_items <= 1);
-                        assert!(released_bytes <= GENERATION3D_OWNER_BYTES);
-                    }
-                    store::SnapshotRetirementStep::Blocked => {}
-                }
-            }
-            assert!(retirement.terminal_is_empty());
+        if let Some(displaced) = generation3d_apply_initialization_mutation(snapshot, mutation).expect("P3 production fixture retained replay") {
+            generation3d_retire_displaced_cold(displaced);
         }
     }
 }

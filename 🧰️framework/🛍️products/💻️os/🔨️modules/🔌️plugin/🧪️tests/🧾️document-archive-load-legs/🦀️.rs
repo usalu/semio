@@ -127,7 +127,7 @@ async fn stamped_single_document_archive(app: &SingleDocumentAppUnderTest, snaps
 
 async fn drive_single_document_archive(app: &mut SingleDocumentAppUnderTest, operation: u64) -> protocol::DocumentArchiveLoadStatus {
     for _ in 0..1_000_000 {
-        let status = Box::pin(PluginApp::poll_document_archive_load(app, operation)).await.expect("single-document archive operation status");
+        let status = Box::pin(PluginApp::poll_document_archive_load(app, operation, &mut crate::app::artifact_app_laws::fixture_identity())).await.expect("single-document archive operation status");
         if matches!(status.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             return status;
         }
@@ -148,7 +148,7 @@ fn archive_fault_text(status: &protocol::DocumentArchiveLoadStatus) -> String {
 /// 🎯️ THE slice's reproduction: a `setActiveExample`-shaped whole-document replace must land.
 #[semio_framework_async_macros::async_test]
 async fn a_childless_whole_document_archive_replaces_the_live_document() {
-    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
     assert_eq!(app.snapshot().expect("initial projection").label, "initial");
     let archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 42, label: "example".into(), slot: Vec::new() })).await;
     PluginApp::begin_document_archive_load(&mut app, 91, archive).expect("whole-document archive admission");
@@ -167,7 +167,7 @@ async fn a_childless_whole_document_archive_replaces_the_live_document() {
 /// leaves here must already name the live store, so this round trip stamps nothing of its own.
 #[semio_framework_async_macros::async_test]
 async fn the_refresh_poll_lane_stamps_the_load_document_it_emits() {
-    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
     let effects = Box::pin(app.pending_effects(None)).await;
     let Some(Effect::LoadDocument { pack, spr }) = effects.first().cloned() else { panic!("the refresh poll lane dropped the LoadDocument effect: {effects:?}") };
     let archive = protocol::DocumentArchivePack { parent_pack: pack, parent_spr: spr, members: Vec::new() };
@@ -185,7 +185,7 @@ async fn the_refresh_poll_lane_stamps_the_load_document_it_emits() {
 /// any of the three replacement legs runs. Whichever dispatch lane carries the effect MUST stamp it.
 #[semio_framework_async_macros::async_test]
 async fn an_unstamped_whole_document_archive_is_refused_by_parent_hydration() {
-    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
     let live_id = app.store.envelope().id.clone();
     let archive = Box::pin(raw_single_document_archive(&live_id, &TestSnapshot { count: 9, label: "unstamped".into(), slot: Vec::new() })).await;
     PluginApp::begin_document_archive_load(&mut app, 93, archive).expect("unstamped archive admission");
@@ -203,7 +203,7 @@ async fn an_unstamped_whole_document_archive_is_refused_by_parent_hydration() {
 /// validation" and no `#[cfg(test)]`-free way to tell which.
 #[semio_framework_async_macros::async_test]
 async fn a_refused_whole_document_archive_names_the_leg_that_refused_it() {
-    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
     let envelope_id = app.store.envelope().id.clone();
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
     let mut archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 7, label: "foreign".into(), slot: Vec::new() })).await;
@@ -235,7 +235,7 @@ fn close_bounded_source_store(source: &mut store::ArtifactStore<TestSnapshot, Te
 #[semio_framework_async_macros::async_test]
 async fn a_whole_document_archive_with_supersessions_loads_its_superseded_state() {
     use crate::test_app_mutation_fixture::{SetCount, SetLabel};
-    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
     let live_id = app.store.envelope().id.clone();
     let genesis = store::create_document_envelope::<TestSnapshot, TestMutation>(SingleDocumentApp::DOCUMENT_SCHEMA, &live_id, TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None);
     let mut source = Box::pin(store::ArtifactStore::new(genesis, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("source store");
@@ -284,7 +284,7 @@ fn archive_history_rows(history: &semio_framework::kernel::HistoryPatch) -> Vec<
 #[semio_framework_async_macros::async_test]
 async fn a_document_archive_round_trip_lists_every_history_row_of_its_source() {
     use crate::test_app_mutation_fixture::{SetCount, SetLabel};
-    let mut source = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    let mut source = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
     for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "edited".into() }), TestMutation::SetCount(SetCount { value: 2 })] {
         crate::with_authoring_identity!(|identity| Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity)).await).expect("source edit");
     }
@@ -299,7 +299,7 @@ async fn a_document_archive_round_trip_lists_every_history_row_of_its_source() {
     let expected = source.snapshot().expect("source projection");
     let before = archive_history_rows(&Box::pin(source.history_snapshot()).await.expect("source history"));
     let archive = Box::pin(PluginApp::document_archive(&source)).await.expect("source archive");
-    let mut target = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    let mut target = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
     crate::with_authoring_identity!(|identity| Box::pin(target.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 42 })], transaction: None }, &mut identity)).await).expect("target example");
     let replaced = archive_history_rows(&Box::pin(target.history_snapshot()).await.expect("target history before the load"));
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();

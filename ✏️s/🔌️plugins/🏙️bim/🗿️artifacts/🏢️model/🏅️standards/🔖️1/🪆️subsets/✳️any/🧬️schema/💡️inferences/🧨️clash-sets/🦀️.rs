@@ -25,7 +25,7 @@ pub const READS: &[&str] = &["clash_sets", "walls", "wall_sweeps", "wall_types",
 
 //#region 🔖️Values
 /// 💥️ How two solids clash: they interpenetrate (hard) or stay closer than the clearance (soft).
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum ClashKind {
     #[default]
     Hard,
@@ -33,7 +33,7 @@ pub enum ClashKind {
 }
 
 /// 💥️ One clash between two elements of a clash set.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct Clash {
     pub first: String,
     pub second: String,
@@ -46,14 +46,14 @@ pub struct Clash {
 }
 
 /// 🗂️ The clashes of one anchor element: their indices into the clashes of the result.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ClashGroup {
     pub anchor: String,
     pub members: Vec<u32>,
 }
 
 /// 🧨️ What one clash set finds: how many elements each side picked, how many pairs were tested exactly and the clashes with their groups.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ClashSetResult {
     pub elements_a: u32,
     pub elements_b: u32,

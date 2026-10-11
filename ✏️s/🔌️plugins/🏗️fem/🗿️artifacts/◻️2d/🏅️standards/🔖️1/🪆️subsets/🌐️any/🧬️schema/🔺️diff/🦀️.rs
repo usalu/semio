@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse delta for the fem2d artifact: per-collection id-keyed rows plus an owned-field analysis patch.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.fem.fem2d")]
 pub struct Fem2dDiff {
@@ -56,7 +56,7 @@ impl protocol::list_delta::Keyed for FemElement {
 }
 
 /// ➖️ One `elements` row removed, with the base index the inverse reinserts it at.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dElementRemoval {
     pub id: String,
@@ -64,7 +64,7 @@ pub struct Fem2dElementRemoval {
 }
 
 /// ➕️ One `elements` row inserted at its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dElementInsertion {
     pub index: usize,
@@ -73,7 +73,7 @@ pub struct Fem2dElementInsertion {
 }
 
 /// ↕️ One `elements` row moved from its base index to its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dElementRelocation {
     pub id: String,
@@ -82,7 +82,7 @@ pub struct Fem2dElementRelocation {
 }
 
 /// 🩹 One modified `elements` row (whole-row replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dElementsModification {
     pub id: String,
@@ -91,7 +91,7 @@ pub struct Fem2dElementsModification {
 }
 
 /// 🧩 Positional keyed delta of the `elements` list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dElementsDelta {
     pub removed: Vec<Fem2dElementRemoval>,
@@ -215,7 +215,7 @@ protocol::list_delta! {
 }
 
 /// 🩹 Owned-field patch of one load case: a rename, a self-weight switch and/or keyed load rows.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dLoadCasePatch {
     pub name: Option<String>,
@@ -231,7 +231,7 @@ impl protocol::list_delta::Keyed for FemLoad {
 }
 
 /// ➖️ One `loads` row removed, with the base index the inverse reinserts it at.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dLoadRemoval {
     pub id: String,
@@ -239,7 +239,7 @@ pub struct Fem2dLoadRemoval {
 }
 
 /// ➕️ One `loads` row inserted at its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dLoadInsertion {
     pub index: usize,
@@ -248,7 +248,7 @@ pub struct Fem2dLoadInsertion {
 }
 
 /// ↕️ One `loads` row moved from its base index to its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dLoadRelocation {
     pub id: String,
@@ -257,7 +257,7 @@ pub struct Fem2dLoadRelocation {
 }
 
 /// 🩹 One modified `loads` row (whole-row replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dLoadsModification {
     pub id: String,
@@ -266,7 +266,7 @@ pub struct Fem2dLoadsModification {
 }
 
 /// 🧩 Positional keyed delta of the `loads` list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dLoadsDelta {
     pub removed: Vec<Fem2dLoadRemoval>,
@@ -338,7 +338,7 @@ protocol::list_delta! {
 }
 
 /// 🎛️ Owned-field patch of the analysis settings: exactly the fields the mutation sets.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dAnalysisPatch {
     pub modal_count: Option<usize>,

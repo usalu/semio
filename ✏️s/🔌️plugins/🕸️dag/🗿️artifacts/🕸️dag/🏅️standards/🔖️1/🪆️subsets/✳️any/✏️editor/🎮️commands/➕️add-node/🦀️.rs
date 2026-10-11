@@ -4,7 +4,7 @@ use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use crate::{DagMutation, DagSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "add-node")]
 pub struct AddNode {
     pub kind: String,

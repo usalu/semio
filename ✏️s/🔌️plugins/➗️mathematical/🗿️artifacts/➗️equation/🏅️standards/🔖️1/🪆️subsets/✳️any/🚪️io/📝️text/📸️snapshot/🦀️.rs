@@ -35,7 +35,7 @@ use store::ArtifactDsl;
 ///
 /// `dsl::Wire` (the framework DSL kernel's wire-literal field type) has no value codec. The enclosing
 /// `EquationGraphDsl` bridges through `EquationGraph` instead.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 pub struct EquationEdgeDsl {
     id: String,
     wire: semio_framework_dsl_record::Wire,
@@ -55,7 +55,7 @@ pub fn math_edge_from_dsl(edge: EquationEdgeDsl) -> Result<EquationEdge, String>
 
 /// 🕸️ DSL-only mirror of `EquationGraph` — `nodes`/`edges` print as SoA tables, `edges` wire-typed via
 /// `EquationEdgeDsl`.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 pub struct EquationGraphDsl {
     directed: bool,
     #[dsl(table)]

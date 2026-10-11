@@ -8,7 +8,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 //#region 🔖️Diff
 /// 🔺️ Sparse parent delta for catalog identity, sourcing entries and selection.
 /// Kit content changes belong to the child's own mutation history.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.sourcing.curation")]
 pub struct CurationDiff {
@@ -51,7 +51,7 @@ impl CurationDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🩹 One patched stock-extra entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CurationObjectKindExtraPatchEntry {
     pub extra: ObjectKindExtra,
@@ -62,7 +62,7 @@ protocol::list_delta! {
 }
 
 /// 🩹 One patched curated entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CurationCuratedPatchEntry {
     pub count: Option<u32>,
@@ -76,7 +76,7 @@ protocol::list_delta! {
 //#region 🔖️Apply
 impl protocol::list_delta::RowPatch<ObjectKindExtra> for CurationObjectKindExtraPatchEntry {
     fn commit_into(&self, row: &mut ObjectKindExtra, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-        if self.extra.id != self.id {
+        if self.extra.id != row.id {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "stock entry patch cannot change its identity"));
         }
         *row = self.extra.clone();

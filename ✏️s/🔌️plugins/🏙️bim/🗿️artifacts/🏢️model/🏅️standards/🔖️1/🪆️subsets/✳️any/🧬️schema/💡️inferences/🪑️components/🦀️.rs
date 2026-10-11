@@ -27,7 +27,7 @@ pub mod findings;
 
 //#region 🔖️Values
 /// 🧱️ How a hosted component clings to its wall: the arc length of the projection of the authored position on the axis, the side of the axis it lies on (`1` left, `-1` right, along the axis direction), the point on the face and the unit normal pointing away from the wall.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct HostFit {
     pub wall: String,
     pub station: f64,
@@ -37,7 +37,7 @@ pub struct HostFit {
 }
 
 /// 🧭️ Where the family origin stands in the building frame (metres, `z` from the building datum) and how the family is turned: `yaw` in radians counter-clockwise about the vertical axis, `mirrored` flips the local `x` first.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ComponentPlacement {
     pub x: f64,
     pub y: f64,
@@ -65,7 +65,7 @@ impl ComponentPlacement {
 }
 
 /// 🔌️ The connector of a terminal: the service it carries, its colour and where it sits.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct Connector {
     pub system: MepSystem,
     pub colour: String,
@@ -73,7 +73,7 @@ pub struct Connector {
 }
 
 /// 🚦️ What is wrong with a component itself (the faults of the placement; the diagnostics of the geometry come from the levels and walls).
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum ComponentIssueCode {
     FamilyMissing,
     FamilyProfile,
@@ -100,7 +100,7 @@ impl ComponentIssueCode {
 }
 
 /// 🚦️ One issue: `subject` is the family, wall or parameter id it is about, `detail` an English fallback text and `family_issue` the issue of the family formulas an override causes (its message is `families::issues::message`).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ComponentIssue {
     pub code: ComponentIssueCode,
     pub subject: String,
@@ -111,7 +111,7 @@ pub struct ComponentIssue {
 
 /// 🪑️ Everything inferred about one component. `footprint` is the oriented rectangle (counter-clockwise, building frame) of the bounds of the visible solids in the family frame, `bounds` the box of that rectangle
 /// and the heights of the visible solids, `volume` the sum of the volumes of the visible solids, `parameters` the parameters of the family under the overrides and `overridden` the names of the overrides that name a parameter.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ComponentValue {
     pub storey: String,
     pub family: String,

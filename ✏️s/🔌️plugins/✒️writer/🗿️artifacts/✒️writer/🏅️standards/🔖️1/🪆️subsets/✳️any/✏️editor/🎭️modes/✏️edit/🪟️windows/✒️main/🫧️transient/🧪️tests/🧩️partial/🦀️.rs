@@ -1,4 +1,4 @@
-//! 🧪️ Writer partial updates retain unrelated fields and close with tiny byte grants.
+//! 🧪️ Writer partial updates retain unrelated fields and construct with one-byte copy grants.
 
 use super::*;
 use semio_framework_plugin::WindowTransientOwner;
@@ -17,10 +17,11 @@ fn writer_window_state_partial_construction_preserves_large_utf8_and_cancels() {
             let mutation: WriterMainWindowTransientMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let mut state = store::TransientStore::<_, WriterMainWindowTransientMutation>::new(base);
             let mut publication = state.begin_publish_one_leased(semio_framework_job::OperationId(1), 0, mutation, owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap();
-            let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 };
+            let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
             assert!(matches!(state.advance_publish_one(&mut publication, zero).unwrap(), store::ArtifactStoreOneItemAdvance::Blocked));
             assert_eq!(publication.progress().completed_bytes, 0);
-            let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 };
+            let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
+            let close = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
             for turn in 0..32_768 {
                 let previous = publication.progress();
                 let step = state.advance_publish_one(&mut publication, grant).unwrap();
@@ -37,12 +38,11 @@ fn writer_window_state_partial_construction_preserves_large_utf8_and_cancels() {
                 expected
             };
             assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(state.current_root().as_ref())).unwrap(), expected);
-            assert_eq!(publication.close_step(zero).unwrap(), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!(publication.close_step(zero).unwrap(), semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
             for _ in 0..65_536 {
-                match publication.close_step(grant).unwrap() {
-                    store::SnapshotRetirementStep::Complete => break,
-                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 1),
-                    store::SnapshotRetirementStep::Blocked => panic!("isolated Writer preparation must retire"),
+                match publication.close_step(close).unwrap() {
+                    semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(close.retained_grant())); break; }
+                    semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(close.retained_grant()) && progress.copied_items <= 1),
                 }
             }
             assert!(publication.terminal_is_empty());

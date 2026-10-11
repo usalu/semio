@@ -72,6 +72,6 @@ async fn a_sweep_written_by_the_tool_is_inferred_with_a_length() {
     let mut rig = Rig::plan("sweep", room());
     rig.down(2.0, 0.05);
     let id = rig.snapshot.wall_sweeps.keys().next().cloned().expect("a sweep");
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &rig.snapshot, |inference| inference.clone());
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, |inference| inference.clone());
     assert!(inference.quantities.elements.get(&id).is_some_and(|row| row.length > 0.0));
 }

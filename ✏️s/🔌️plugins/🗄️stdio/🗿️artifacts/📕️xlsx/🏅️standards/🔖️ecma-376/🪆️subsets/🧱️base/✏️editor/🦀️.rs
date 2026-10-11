@@ -106,7 +106,7 @@ pub(crate) fn xlsx_cell_revision(value: &XlsxCellValue, shared_strings: &[String
 /// ✏️ The editor's typed command channel — exactly the one edit `🪟️main`'s `editable_window_kind()`
 /// action (`set-cell`, contract §2.6) can trigger. The worksheet/row/column tuple is the durable
 /// identity and `revision` guards the user's draft against a concurrent cell change.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum XlsxEditorCommand {
     SetCell { sheet_name: String, row: u32, column: u32, revision: String, value: String },
 }

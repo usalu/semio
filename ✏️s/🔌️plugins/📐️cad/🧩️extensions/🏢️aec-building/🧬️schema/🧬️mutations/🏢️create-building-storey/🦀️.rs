@@ -12,7 +12,8 @@ use semio_s_artifact_cad_cad::{CadMutation, CadNode, CadSnapshot};
 /// `ArtifactContribution::resolve`, never hand-formatted here.
 // 🌱️ `CompositeMutationKind`'s supertrait bound is `ToValue`/`FromValue` (see that trait's own
 // doc) — no `serde` derive needed here at all.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, protocol::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, protocol::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

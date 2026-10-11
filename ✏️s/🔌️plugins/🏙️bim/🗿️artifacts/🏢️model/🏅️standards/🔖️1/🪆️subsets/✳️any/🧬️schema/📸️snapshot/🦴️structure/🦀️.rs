@@ -1,15 +1,20 @@
 //! 🦴️ Authored structural boundary conditions and SI loading; geometry and connectivity are inferred.
 use super::{ModelSnapshot, Point3};
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum StructuralLocation { Point { station: f64 }, Line { start: f64, end: f64 }, Area }
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Restraints { pub x: bool, pub y: bool, pub z: bool, pub rx: bool, pub ry: bool, pub rz: bool }
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-pub struct StructuralSupport { pub name: String, pub member: String, pub location: StructuralLocation, pub offset: Point3, pub restraints: Restraints }
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct StructuralSupport { pub name: String, pub member: String, #[dsl(statements, block)] pub location: StructuralLocation, pub offset: Point3, pub restraints: Restraints }
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct LoadCase { pub name: String, pub category: String, pub factor: f64 }
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-pub struct StructuralLoad { pub name: String, pub load_case: String, pub member: String, pub location: StructuralLocation, pub force: Point3, pub moment: Point3 }
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct StructuralLoad { pub name: String, pub load_case: String, pub member: String, #[dsl(statements, block)] pub location: StructuralLocation, pub force: Point3, pub moment: Point3 }
 /// 🎯️ Whether an authored element participates in structural analysis.
 pub fn member_exists(model: &ModelSnapshot, id: &str) -> bool { model.beams.contains_key(id) || model.columns.contains_key(id) || model.walls.contains_key(id) || model.slabs.contains_key(id) }
 fn finite(p: &Point3) -> bool { p.x.is_finite() && p.y.is_finite() && p.z.is_finite() }

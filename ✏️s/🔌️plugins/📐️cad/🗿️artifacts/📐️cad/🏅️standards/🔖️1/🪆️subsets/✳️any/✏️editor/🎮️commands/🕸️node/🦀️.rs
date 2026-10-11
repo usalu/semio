@@ -16,7 +16,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod add_node {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "add-node")]
     pub struct AddNode {
         pub kind: String,
@@ -29,7 +29,7 @@ pub mod add_node {
         let label = format!("Node {}", document.nodes.len() + 1);
         let node = CadNode { id: id.clone(), label, kind: payload.kind.clone() };
         runtime.selected_node_ids = vec![id];
-        let mut emit = Emit::mutations(vec![CadMutation::CreateNode(CreateNodeMutation { node })]);
+        let mut emit = Emit::mutations(vec![CadMutation::CreateNode(CreateNodeMutation { node, index: None })]);
         emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)?];
         Ok(emit)
     }
@@ -40,7 +40,8 @@ pub mod add_node {
 pub mod rename_node {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[dsl(keyword = "rename-node")]
     pub struct RenameNode {
         pub node_id: String,
@@ -63,7 +64,7 @@ pub mod rename_node {
 pub mod set_node_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "set-node-selection")]
     pub struct SetNodeSelection {
         pub node_ids: Vec<String>,

@@ -9,7 +9,8 @@ pub const OUTPUT_INTENT_SUBTYPE: &str = "GTS_PDFA1";
 pub const OUTPUT_INTENT_DEST_PROFILE: bool = true;
 
 //#region 🔖️Mutation
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetOutputIntent {

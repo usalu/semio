@@ -33,4 +33,11 @@ pub fn decode_rewriting_diff_json(text:&str)->Result<RewritingDiff,semio_framewo
 
 pub use diff_codec::*;
 
-semio_framework_os_kernel::diff_text!(crate::standards::v1::subsets::any::schema::diff::RewritingDiff);
+impl protocol::DiffText for crate::standards::v1::subsets::any::schema::diff::RewritingDiff {
+    fn print_diff(&self) -> String {
+        encode_rewriting_diff_json(self).unwrap_or_else(|error| format!("rewriting diff is not printable: {error}"))
+    }
+    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        decode_rewriting_diff_json(line).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
+    }
+}

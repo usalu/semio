@@ -22,4 +22,4 @@ impl Bytes{
  }
  fn record(&mut self,record:&RecordValue,native:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{native.scoped_stage(|native|{native.begin_stage(record.fields.len())?;for value in record.fields.values(){self.field(value,native)?;native.step()?;}Ok(())})}
 }
-pub(super) fn native(record:&RecordValue,maximum:usize,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{Bytes{used:0,maximum}.record(record,control)}
+pub(crate) fn native(record:&RecordValue,maximum:usize,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{Bytes{used:0,maximum}.record(record,control)}

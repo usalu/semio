@@ -6,22 +6,25 @@ use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,
 fn fixture_grant()->RetainedCloneGrant{let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧩️extension/🧫️fixtures/📨️invoke/🔣️.json")).unwrap();let grant=&fixture["executionGrant"];RetainedCloneGrant{maximum_items:grant["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:grant["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:grant["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:grant["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:grant["maximumDepth"].as_u64().unwrap()as usize}}
 fn fixture_identity()->(OperationId,Generation){let value:serde_json::Value=serde_json::from_str(include_str!("../../../../🧩️extension/🧫️fixtures/📨️invoke/🔣️.json")).unwrap();(OperationId(value["caller"]["operation"].as_u64().unwrap()),Generation(value["caller"]["generation"].as_u64().unwrap()))}
 
-fn admit_fixture(source:&mut Option<OriginalJobAdmission>,grant:RetainedCloneGrant)->Result<bool,ValueError>{
+pub(super) fn admit_fixture(source:&mut Option<OriginalJobAdmission>,grant:RetainedCloneGrant)->Result<bool,ValueError>{
  let(operation,generation)=fixture_identity();let cancel=root_cancel_token();let mut sequence=0;let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(1,u64::MAX,grant),cancel,||Some(1),&mut sequence,&mut receipt);
  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::__async::poll::resolve_ready(start_job(source,&mut cx)));
  assert_eq!((heap.requested_bytes,heap.released_bytes),(cx.retained_progress().retained_capacity_bytes,cx.retained_progress().released_bytes));result
 }
 
-fn step_fixture(job:u64,fuel:u64)->Result<JobStep,ValueError>{
+pub(super) fn step_fixture(job:u64,fuel:u64)->Result<JobStep,ValueError>{
  let grant=fixture_grant();let(operation,generation)=fixture_identity();let cancel=root_cancel_token();let mut sequence=0;let mut receipt=Default::default();let mut cx=StepContext::new(operation,generation,StepBudget::new(fuel,u64::MAX,grant),cancel,||Some(1),&mut sequence,&mut receipt);
  let mut decode_callback=|_|true;let mut encode_callback=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut decode_callback);let mut encode=semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut encode_callback);let mut original=IoRunControl::new(&mut decode,&mut encode,grant);let mut snapshot_callback=|_|true;let mut snapshot=SqliteSnapshotControl::new(&mut snapshot_callback,Default::default());
  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::__async::poll::resolve_ready(step_job(job,JobBudget{fuel,deadline_ms:1},&mut original,&mut snapshot,&mut cx)));
  assert_eq!((heap.requested_bytes,heap.released_bytes),(cx.retained_progress().retained_capacity_bytes,cx.retained_progress().released_bytes),"normal step must report every real allocation and release");assert!(cx.retained_progress().fits(grant));result
 }
 
-fn terminal_fixture(job:u64)->JobStep{for _ in 0..100000{match step_fixture(job,WORK_UNITS_EXECUTE).unwrap(){JobStep::Running(_)=>{},terminal=>return terminal}}panic!("original fixture exceeded its finite step bound")}
+pub(super) fn terminal_fixture(job:u64)->JobStep{for _ in 0..100000{match step_fixture(job,WORK_UNITS_EXECUTE).unwrap(){JobStep::Running(_)=>{},terminal=>return terminal}}panic!("original fixture exceeded its finite step bound")}
 fn admit_body_fixture(job:u64){for _ in 0..10000{if JOBS.with(|slots|slots.borrow().iter().flatten().find(|slot|slot.job==job).is_some_and(|slot|matches!(slot.body,Some(JobBody::Bounded(_))))){return}assert!(matches!(step_fixture(job,1).unwrap(),JobStep::Running(None)))}panic!("original fixture factory admission exceeded finite turns")}
-fn source_fixture(job:u64,kind:&str,input:Vec<u8>,checkpoint:Option<Vec<u8>>)->Option<OriginalJobAdmission>{Some(OriginalJobAdmission{job,kind:kind.into(),input:Some(input),checkpoint})}
+pub(super) fn source_fixture(job:u64,kind:&str,input:Vec<u8>,checkpoint:Option<Vec<u8>>)->Option<OriginalJobAdmission>{Some(OriginalJobAdmission{job,kind:kind.into(),input:Some(input),checkpoint})}
+
+pub(super) fn start_fixture(job:u64,kind:&str,input:Vec<u8>,checkpoint:Option<Vec<u8>>){let mut source=source_fixture(job,kind,input,checkpoint);assert!(admit_fixture(&mut source,fixture_grant()).unwrap(),"original fixture admission refused")}
+pub(super) fn slice_fixture(job:u64)->JobStep{for _ in 0..100000{match step_fixture(job,WORK_UNITS_EXECUTE).unwrap(){JobStep::Running(None)=>{},step=>return step}}panic!("original fixture exceeded its finite slice bound")}
 
 struct FixedOriginalFixture{source:Option<(Vec<u8>,Option<Vec<u8>>)>,closing:Option<semio_framework_value::retirement::controlled::ControlledRetirement<(Vec<u8>,Option<Vec<u8>>)>>,tick:u8,restored:bool,never:bool}
 impl BoundedJob for FixedOriginalFixture{

@@ -45,7 +45,7 @@ use semio_framework_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum Mp3EditCommand {
     /// 🎬️ Navbar example picker payload.
     SetActiveExample {
@@ -257,6 +257,7 @@ impl ArtifactEditor for Mp3Editor {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
+            retained: request.retained,
         };
         let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
@@ -278,7 +279,7 @@ impl ArtifactEditor for Mp3Editor {
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
@@ -308,7 +309,7 @@ impl ArtifactEditor for Mp3Editor {
         if request.port != playback::PORT_ID || request.tool_id != playback::TOOL_ID {
             return Ok(None);
         }
-        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(playback::Mp3PlaybackExportJob::new(request))))
+        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(playback::Mp3PlaybackExportJob::new(request)?)))
     }
 
     fn build_snapshot_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactSnapshotDisposer<Self::Snapshot>>> {

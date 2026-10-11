@@ -93,7 +93,7 @@ fn label(step: InteractiveJobCloseStep) -> &'static str {
         InteractiveJobCloseStep::Blocked => "blocked",
         InteractiveJobCloseStep::Pending { .. } => "pending",
         InteractiveJobCloseStep::Complete { .. } => "complete",
-        InteractiveJobCloseStep::Refused(_) => "refused",
+        InteractiveJobCloseStep::Refused{..} => "refused",
     }
 }
 

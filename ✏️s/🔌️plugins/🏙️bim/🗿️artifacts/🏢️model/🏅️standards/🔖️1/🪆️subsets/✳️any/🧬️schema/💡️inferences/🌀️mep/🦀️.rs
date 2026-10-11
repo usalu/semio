@@ -76,7 +76,7 @@ pub fn part_colour(part: &str) -> Option<[f32; 3]> {
 
 //#region 🔖️Values
 /// 🔩️ The kind of a cross-section.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum MepSectionKind {
     #[default]
     Duct,
@@ -96,7 +96,7 @@ impl MepSectionKind {
 }
 
 /// 📐️ The cross-section of an element in metres and square metres: `width` and `height` (a pipe has both equal to its diameter), `area` and `perimeter` in closed form, and the size `label` (`300x200` in millimetres, `Ø100` for a pipe).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct MepSection {
     pub kind: MepSectionKind,
     pub width: f64,
@@ -119,7 +119,7 @@ impl MepSection {
 }
 
 /// ➖️ One straight stretch of the centre line in the building frame (metres, `z` from the building datum).
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct MepSegment {
     pub from: Point3,
     pub to: Point3,
@@ -134,7 +134,7 @@ impl MepSegment {
 }
 
 /// 🚦️ What is wrong with an element.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum MepIssueCode {
     NonFinite,
     SectionDegenerate,
@@ -153,14 +153,14 @@ impl MepIssueCode {
 }
 
 /// 🚦️ One issue with an English fallback text.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct MepIssue {
     pub code: MepIssueCode,
     pub detail: String,
 }
 
 /// 🌀️ Everything inferred about one MEP element. `path` and `segments` are in the building frame (`z` = storey elevation + authored `z`); `bounds` is the box of the centre line grown by the reach on every side (conservative).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct MepValue {
     pub storey: String,
     pub system: MepSystem,

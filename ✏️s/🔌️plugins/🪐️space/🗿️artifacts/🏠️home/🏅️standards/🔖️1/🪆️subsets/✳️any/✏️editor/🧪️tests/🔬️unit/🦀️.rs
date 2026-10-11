@@ -292,10 +292,10 @@ async fn the_import_job_writes_the_catalog_only_in_its_commit_stage() {
     let mut work = HomeCatalogWork::new("importSpace");
     assert!(matches!(work.advance(&command, &doc).expect("validate stage"), ArtifactCommandWorkStep::Progress { stage: "space-home.catalog.validated", .. }));
     assert_eq!(catalog_entries_named(name), 0, "validate must not write the catalog");
-    let mut checkpoint = [0_u8; 8];
-    let written = ArtifactCommandWork::checkpoint(&work, &mut checkpoint).expect("post-validate checkpoint");
+    let checkpoint: Vec<u8> = (0..8).map_while(|index| ArtifactCommandWork::checkpoint_byte(&work, index)).collect();
+    assert_eq!(checkpoint, vec![1], "the post-validate checkpoint is the validated stage");
     let mut restored = HomeCatalogWork::new("importSpace");
-    ArtifactCommandWork::restore(&mut restored, &checkpoint[..written]).expect("restore");
+    ArtifactCommandWork::restore(&mut restored, &checkpoint).expect("restore");
     let Ok(ArtifactCommandWorkStep::Complete(emit)) = restored.advance(&command, &doc) else { panic!("the restored job commits") };
     assert_eq!(catalog_entries_named(name), 1, "commit admits exactly one studio");
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation(5)]);
@@ -452,7 +452,7 @@ async fn removing_a_local_studio_is_a_config_tombstone_that_keeps_the_studio() {
     let row = |node_id: &str| transient.directory().space(delete_virtual_file_system_node::local_studio_id(node_id));
     let emit = delete_virtual_file_system_node::handle_with_row(&remove(format!("studio:{space_id}")), &doc, &cfg, None).expect("retire the local studio");
     assert!(emit.artifact_mutations.is_empty() && emit.effects.is_empty(), "the removal performs no catalog or host IO");
-    assert_eq!(emit.config_mutations, vec![HomeConfigMutation::RetireLocalStudio { space_id: space_id.clone() }]);
+    assert_eq!(emit.config_mutations, vec![HomeConfigMutation::RetireLocalStudio(crate::editor::home::config::RetireLocalStudio { space_id: space_id.clone() })]);
     let retired = emit.config_mutations[0].diff(&config).diff().clone();
     assert!(retired.is_local_studio_retired(&space_id));
     assert!(::semio_framework_async::poll::resolve_ready(semio_s_space_core::list_all_space_catalog_entries()).iter().any(|entry| entry.id == space_id), "the tombstone never erases the studio");
@@ -461,7 +461,7 @@ async fn removing_a_local_studio_is_a_config_tombstone_that_keeps_the_studio() {
     assert!(matches!(delete_virtual_file_system_node::handle(&remove(format!("studio:{space_id}")), &doc, &cfg), Err(fault) if fault.code.0.as_str() == "s.home.delete-vfs-node.requires-retained-job"), "the direct lane cannot tell a hub space from a local studio");
     assert!(!listed(&retired.retired_local_studio_ids), "Home stops listing a retired studio");
     let inverse = emit.config_mutations[0].inverse(&config).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse, vec![HomeConfigMutation::ListLocalStudio { space_id: space_id.clone() }]);
+    assert_eq!(inverse, vec![HomeConfigMutation::ListLocalStudio(crate::editor::home::config::ListLocalStudio { space_id: space_id.clone() })]);
     assert_eq!(inverse[0].diff(&retired).diff(), &config, "the exact inverse lists the studio again");
     let retired_cfg = ConfigView { snapshot: &retired, window: None };
     for (node_id, code, view) in [

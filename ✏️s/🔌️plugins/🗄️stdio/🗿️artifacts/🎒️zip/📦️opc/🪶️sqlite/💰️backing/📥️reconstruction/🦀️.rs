@@ -166,9 +166,10 @@ pub(in super::super) fn reconstruct(database: &SqliteDatabase, tables: OpcSqlite
         groups.push((key, values));
     }
     control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, work, work)?;
-    output.relationships = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |limits, progress| {
+    output.relationships = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |limits, progress, allocation| {
         let mut callback = |event: semio_framework_value::native_decoding::NativeDecodeProgress| progress(event.completed, event.total);
-        let mut native = semio_framework_value::NativeDecodeControl::new(limits, &mut callback);
+        let mut native_allocation = |request: semio_framework_value::native_decoding::NativeDecodeAllocation| allocation(request.bytes);
+        let mut native = semio_framework_value::NativeDecodeControl::new_forwarded(limits, &mut callback, &mut native_allocation);
         let result = OpcRelationshipOwners::adopt_admitted(groups, &mut native);
         (result, native.owned_bytes())
     })??;

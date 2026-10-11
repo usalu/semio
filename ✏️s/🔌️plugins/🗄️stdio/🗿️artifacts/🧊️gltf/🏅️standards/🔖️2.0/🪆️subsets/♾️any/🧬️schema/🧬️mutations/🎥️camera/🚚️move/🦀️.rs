@@ -5,7 +5,8 @@ use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.move-camera.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/cameras"];
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct GltfMoveCameraPayload {
     pub index: usize,
@@ -39,7 +40,8 @@ pub fn inverse(p: &GltfMoveCameraPayload, base: &GltfSnapshot) -> Vec<super::Glt
 }
 
 //#region 🧬️DirectMutation
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveCameraMutation {

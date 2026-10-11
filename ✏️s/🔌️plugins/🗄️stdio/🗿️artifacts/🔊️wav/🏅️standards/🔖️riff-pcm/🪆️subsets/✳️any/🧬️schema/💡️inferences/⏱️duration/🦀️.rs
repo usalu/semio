@@ -9,7 +9,7 @@ use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSna
 
 //#region 🔖️Duration
 /// ⏱️ wav's `fmt`/`data`-derived playback duration.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct WavDuration {
     pub duration_seconds: f64,

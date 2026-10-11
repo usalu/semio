@@ -68,7 +68,7 @@ pub fn grid2d_active_utility(view: &ViewModel) -> &str {
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — one variant per real `Grid2dMutation` kind plus the
 /// pane-local view verbs (camera, grid chrome, active tile, solve).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum Grid2dEditorCommand {
     #[dsl(key = "change-seed")]
     ChangeSeed { seed: u64 },
@@ -531,7 +531,7 @@ impl Grid2dEditor {
                 change_tile_media(id.clone(), media)
             }
             Grid2dEditorCommand::CreateRule { id, tile_a_id, tile_b_id, direction, allowed } => {
-                let direction = crate::io::text::snapshot::direction_from_token(direction).map_err(|error| Fault::from(format!("wfc-grid2d-invalid-direction:{error}")))?;
+                let direction = crate::standards::v1::subsets::any::io::text::snapshot::direction_from_token(direction).map_err(|error| Fault::from(format!("wfc-grid2d-invalid-direction:{error}")))?;
                 create_rule(WfcAdjacencyRule2d { id: id.clone(), tile_a_id: tile_a_id.clone(), tile_b_id: tile_b_id.clone(), direction, allowed: *allowed })
             }
             Grid2dEditorCommand::DeleteRule { id } => delete_rule(id.clone()),
@@ -559,25 +559,25 @@ impl Grid2dEditor {
                 return Ok(Emit { effects: vec![reset_document_effect(&next)], ..Default::default() });
             }
             Grid2dEditorCommand::SetActiveTile { tile_id } => {
-                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetActiveTile { tile_id: tile_id.clone() });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetActiveTile(window::Grid2dWindowConfigSetActiveTile { tile_id: tile_id.clone() }));
             }
             Grid2dEditorCommand::SetCamera { x, y, zoom } | Grid2dEditorCommand::SyncCamera { x, y, zoom } => {
-                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetCamera { x: *x, y: *y, zoom: if *zoom > 0.0 { *zoom } else { 1.0 } });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetCamera(window::Grid2dWindowConfigSetCamera { x: *x, y: *y, zoom: if *zoom > 0.0 { *zoom } else { 1.0 } }));
             }
             Grid2dEditorCommand::SetGridVisible { visible } => {
-                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetGridVisible { visible: *visible });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetGridVisible(window::Grid2dWindowConfigSetGridVisible { visible: *visible }));
             }
             Grid2dEditorCommand::SetGridSnapEnabled { enabled } => {
-                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetGridSnapEnabled { enabled: *enabled });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetGridSnapEnabled(window::Grid2dWindowConfigSetGridSnapEnabled { enabled: *enabled }));
             }
             Grid2dEditorCommand::SetGridFactor { factor } => {
-                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetGridFactor { factor: if *factor > 0.0 { *factor } else { 1.0 } });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetGridFactor(window::Grid2dWindowConfigSetGridFactor { factor: if *factor > 0.0 { *factor } else { 1.0 } }));
             }
             Grid2dEditorCommand::Solve => {
                 return Ok(Emit::effect(fill_tool::start_effect()));
             }
             Grid2dEditorCommand::CommitFill { solve_json } => {
-                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetSolveJson { solve_json: solve_json.clone() });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetSolveJson(window::Grid2dWindowConfigSetSolveJson { solve_json: solve_json.clone() }));
             }
         };
         Ok(Emit::mutations(vec![mutation]))
@@ -631,17 +631,8 @@ impl ArtifactEditor for Grid2dEditor {
     /// 🗃️ The bounded retirement catalog every store lane is released THROUGH: a store built without
     /// owners answers `artifact store has no owner-supplied bounded disposer` the moment the close
     /// ladder reaches it, so the owners and the disposer below are one declaration in two halves.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
 
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
-    }
 
     /// ♻️ The instance close ladder walks one owned store lane per stage and faults the whole close
     /// with `interactive-job.close-owned-disposer-missing` the moment a lane answers `None`, so an
@@ -724,7 +715,7 @@ impl ArtifactEditor for Grid2dEditor {
     /// 📬️ Publication authority for the document lane. Without it every `Artifact`-lane verb is
     /// refused closed with `interactive-job.publication-authority-missing`.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("wfc-grid2d-artifact-retained", GRID2D_ARTIFACT_MUTATION_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
@@ -741,6 +732,7 @@ impl ArtifactEditor for Grid2dEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

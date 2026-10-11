@@ -87,18 +87,7 @@ impl std::ops::Deref for Owned {
 impl Drop for Owned {
     fn drop(&mut self) {
         if let Some(v) = self.0.take() {
-            let factory = semio_framework_value::retirement::OwnedValueRetirementFactory::<RewritingSnapshot>::default();
-            let mut cursor = store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, v);
-            loop {
-                match cursor.close_step(1, 65536).unwrap() {
-                    store::SnapshotRetirementStep::Complete => {
-                        assert!(cursor.terminal_is_empty());
-                        break;
-                    }
-                    store::SnapshotRetirementStep::Blocked => panic!("rewriting retirement blocked"),
-                    store::SnapshotRetirementStep::Pending { .. } => {}
-                }
-            }
+            semio_s_artifact_trinity_jack::retire_owned_to_terminal(v).expect("rewriting fixture retirement");
         }
     }
 }

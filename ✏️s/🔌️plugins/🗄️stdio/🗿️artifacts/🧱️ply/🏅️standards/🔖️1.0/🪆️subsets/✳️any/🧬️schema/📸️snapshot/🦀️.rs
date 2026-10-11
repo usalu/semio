@@ -12,7 +12,8 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Format
 /// 📦 The three `format` lines a PLY header may declare.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum PlyFormat {
     #[default]
@@ -25,7 +26,8 @@ pub enum PlyFormat {
 //#region 🔖️ScalarType
 /// 🔢 The eight PLY scalar property types (long spelling is canonical on output; both long and
 /// short — `int8`, `uint32`, … — spellings are accepted on input, see the engine's parser).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum PlyScalarType {
     Char,
@@ -44,7 +46,8 @@ pub enum PlyScalarType {
 /// variable-length list column (e.g. `property list uchar int vertex_indices` for face indices).
 /// `form` (the serde tag) distinguishes the two shapes; it is a separate key from `kind`
 /// (the scalar type of a `Scalar` property) to avoid a tag/field name collision.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "form", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PlyProperty {
     Scalar { name: String, kind: PlyScalarType },
@@ -67,7 +70,8 @@ impl PlyProperty {
 /// 🔣 One typed cell value. `List` holds a variable-length run of same-`value_kind` scalars
 /// (e.g. a face's vertex-index list) — adjacently tagged (`kind`/`value`) rather than internally
 /// tagged so newtype variants (all of these) serialize cleanly.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum PlyValue {
     Char(i8),
@@ -85,7 +89,8 @@ pub enum PlyValue {
 //#region 🔖️Row
 /// 📏 One element instance's data — one [`PlyValue`] per declared property, in the same order
 /// as the owning [`PlyElement::properties`].
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PlyRow {
     pub values: Vec<PlyValue>,
@@ -94,7 +99,8 @@ pub struct PlyRow {
 
 //#region 🔖️Element
 /// 🧱 One element declaration owns its unsigned count independently from retained occurrence rows.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PlyElement {
     pub name: String,
@@ -108,7 +114,7 @@ pub struct PlyElement {
 /// 📸️ Persisted `stdio.ply` snapshot — complete per the PLY spec: wire `format`, in-order
 /// `comments` (position matters, see `POLICY_GRAMMAR_HONESTY`'s retention rule), and the
 /// name-keyed `elements` list (each a strong-like entity with its own per-field diff).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ply")]
 pub struct PlySnapshot {

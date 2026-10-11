@@ -33,6 +33,8 @@ pub enum Process3dViewCommand {
     Noop,
 }
 
+semio_framework_value::artifact_retire_leaf!(Process3dViewCommand);
+
 impl protocol::OpBinary for Process3dViewCommand {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
@@ -73,12 +75,6 @@ impl ArtifactViewer for Process3dViewer {
     
 })())
 }
-
-    /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
-    /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::owned::process3d_document_store_owners())
-    }
 
     fn initial_snapshot() -> Process3dSnapshot {
         crate::standards::v1::subsets::any::io::text::snapshot::default_document()

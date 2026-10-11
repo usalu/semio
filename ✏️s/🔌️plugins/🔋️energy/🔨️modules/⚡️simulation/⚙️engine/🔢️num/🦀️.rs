@@ -207,7 +207,7 @@ pub fn gauss_seidel(a: &[Vec<f64>], b: &[f64], x: &mut [f64], max_iter: usize, t
 
 // #region 🔖️LookupTable
 /// 📊️ Regular-grid lookup table with linear interpolation.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct LookupTable2D {
     pub x: Vec<f64>,
     pub y: Vec<f64>,

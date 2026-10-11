@@ -14,7 +14,7 @@ use super::topology::compute_presentation_topology;
 /// filmstrip has no dependency edges of its own, so "topology" here is the honest degenerate case:
 /// a linear chain in persisted tile order (`topoOrder` == tile ids in order, `depth` == each tile's
 /// index, always `cycleFree`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.animate.presentation.inference")]
 pub struct PresentationInference {

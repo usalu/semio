@@ -8,7 +8,7 @@ use protocol::{MutationApplyResult, MutationDiff};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.dwg`; schema identity is intentionally immutable.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg.diff")]
 pub struct DwgDiff {

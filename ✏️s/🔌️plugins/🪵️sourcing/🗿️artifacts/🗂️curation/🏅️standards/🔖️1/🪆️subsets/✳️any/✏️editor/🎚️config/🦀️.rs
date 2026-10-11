@@ -14,7 +14,7 @@ use crate::{Filters, TableSort};
 use protocol::Mutation;
 
 //#region 🔖️Config
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "sourcingcurationcfg")]
 #[artifact(id = "curation.config")]
@@ -179,25 +179,66 @@ impl protocol::DiffAlgebra<SourcingCurationConfig> for SourcingCurationConfigDif
 /// "restore the whole-config snapshot from just before it" — no per-field reverse-patch bookkeeping
 /// needed. `Mutation::Diff` is the sparse `SourcingCurationConfigDiff` (hand-written above): `diff()` sets the slots
 /// where the requested config differs from the base.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SourcingCurationConfigMutation {
+
     #[dsl(key = "filter-query")]
-    SetFilterQuery { value: String },
+    SetFilterQuery(SetFilterQueryEdit),
     #[dsl(key = "filter-modules")]
-    SetFilterModules { module_ids: Vec<String> },
+    SetFilterModules(SetFilterModulesEdit),
     #[dsl(key = "filter-typology")]
-    SetFilterTypology { path: Vec<String> },
+    SetFilterTypology(SetFilterTypologyEdit),
     #[dsl(key = "filter-min-availability")]
-    SetFilterMinAvailability { value: u32 },
+    SetFilterMinAvailability(SetFilterMinAvailabilityEdit),
     #[dsl(key = "sort")]
-    SetSort {
-        #[dsl(block)]
-        sort: Option<TableSort>,
-    },
+    SetSort(SetSortEdit),
     #[dsl(key = "contributions")]
-    SetContributions { json: String },
+    SetContributions(SetContributionsEdit),
 }
 
+/// 📦️ `SetFilterQuery` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetFilterQueryEdit {
+    pub value: String,
+}
+
+/// 📦️ `SetFilterModules` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetFilterModulesEdit {
+    pub module_ids: Vec<String>,
+}
+
+/// 📦️ `SetFilterTypology` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetFilterTypologyEdit {
+    pub path: Vec<String>,
+}
+
+/// 📦️ `SetFilterMinAvailability` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetFilterMinAvailabilityEdit {
+    pub value: u32,
+}
+
+/// 📦️ `SetSort` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetSortEdit {
+    #[dsl(block)]
+    pub sort: Option<TableSort>,
+}
+
+/// 📦️ `SetContributions` payload record — wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetContributionsEdit {
+    pub json: String,
+}
 //#region 🔖️OpCodec
 impl protocol::OpText for SourcingCurationConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -263,34 +304,34 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            SourcingCurationConfigMutation::SetFilterQuery { .. } => &Self::DESCRIPTORS[0],
-            SourcingCurationConfigMutation::SetFilterModules { .. } => &Self::DESCRIPTORS[1],
-            SourcingCurationConfigMutation::SetFilterTypology { .. } => &Self::DESCRIPTORS[2],
-            SourcingCurationConfigMutation::SetFilterMinAvailability { .. } => &Self::DESCRIPTORS[3],
-            SourcingCurationConfigMutation::SetSort { .. } => &Self::DESCRIPTORS[4],
-            SourcingCurationConfigMutation::SetContributions { .. } => &Self::DESCRIPTORS[5],
+            SourcingCurationConfigMutation::SetFilterQuery(_) => &Self::DESCRIPTORS[0],
+            SourcingCurationConfigMutation::SetFilterModules(_) => &Self::DESCRIPTORS[1],
+            SourcingCurationConfigMutation::SetFilterTypology(_) => &Self::DESCRIPTORS[2],
+            SourcingCurationConfigMutation::SetFilterMinAvailability(_) => &Self::DESCRIPTORS[3],
+            SourcingCurationConfigMutation::SetSort(_) => &Self::DESCRIPTORS[4],
+            SourcingCurationConfigMutation::SetContributions(_) => &Self::DESCRIPTORS[5],
         }
     }
 
     fn diff(&self, base: &SourcingCurationConfig) -> protocol::MutationOutcome<SourcingCurationConfigDiff> {
         protocol::MutationOutcome::new(match self {
-            Self::SetFilterQuery { value } => SourcingCurationConfigDiff { filters_query: (base.filters.query != *value).then(|| value.clone()), ..Default::default() },
-            Self::SetFilterModules { module_ids } => SourcingCurationConfigDiff { filters_module_ids: (base.filters.module_ids != *module_ids).then(|| module_ids.clone()), ..Default::default() },
-            Self::SetFilterTypology { path } => SourcingCurationConfigDiff { filters_typology_path: (base.filters.typology_path != *path).then(|| path.clone()), ..Default::default() },
-            Self::SetFilterMinAvailability { value } => SourcingCurationConfigDiff { filters_min_availability: (base.filters.min_availability != *value).then_some(*value), ..Default::default() },
-            Self::SetSort { sort } => SourcingCurationConfigDiff { filters_sort: (base.filters.sort != *sort).then(|| SourcingOptionalSort { value: sort.clone() }), ..Default::default() },
-            Self::SetContributions { json } => SourcingCurationConfigDiff { contributions_json: (base.contributions_json != *json).then(|| json.clone()), ..Default::default() },
+            Self::SetFilterQuery(SetFilterQueryEdit { value }) => SourcingCurationConfigDiff { filters_query: (base.filters.query != *value).then(|| value.clone()), ..Default::default() },
+            Self::SetFilterModules(SetFilterModulesEdit { module_ids }) => SourcingCurationConfigDiff { filters_module_ids: (base.filters.module_ids != *module_ids).then(|| module_ids.clone()), ..Default::default() },
+            Self::SetFilterTypology(SetFilterTypologyEdit { path }) => SourcingCurationConfigDiff { filters_typology_path: (base.filters.typology_path != *path).then(|| path.clone()), ..Default::default() },
+            Self::SetFilterMinAvailability(SetFilterMinAvailabilityEdit { value }) => SourcingCurationConfigDiff { filters_min_availability: (base.filters.min_availability != *value).then_some(*value), ..Default::default() },
+            Self::SetSort(SetSortEdit { sort }) => SourcingCurationConfigDiff { filters_sort: (base.filters.sort != *sort).then(|| SourcingOptionalSort { value: sort.clone() }), ..Default::default() },
+            Self::SetContributions(SetContributionsEdit { json }) => SourcingCurationConfigDiff { contributions_json: (base.contributions_json != *json).then(|| json.clone()), ..Default::default() },
         })
     }
 
     fn inverse(&self, base: &SourcingCurationConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            Self::SetFilterQuery { .. } => Self::SetFilterQuery { value: base.filters.query.clone() },
-            Self::SetFilterModules { .. } => Self::SetFilterModules { module_ids: base.filters.module_ids.clone() },
-            Self::SetFilterTypology { .. } => Self::SetFilterTypology { path: base.filters.typology_path.clone() },
-            Self::SetFilterMinAvailability { .. } => Self::SetFilterMinAvailability { value: base.filters.min_availability },
-            Self::SetSort { .. } => Self::SetSort { sort: base.filters.sort.clone() },
-            Self::SetContributions { .. } => Self::SetContributions { json: base.contributions_json.clone() },
+            Self::SetFilterQuery(_) => Self::SetFilterQuery(SetFilterQueryEdit { value: base.filters.query.clone() }),
+            Self::SetFilterModules(_) => Self::SetFilterModules(SetFilterModulesEdit { module_ids: base.filters.module_ids.clone() }),
+            Self::SetFilterTypology(_) => Self::SetFilterTypology(SetFilterTypologyEdit { path: base.filters.typology_path.clone() }),
+            Self::SetFilterMinAvailability(_) => Self::SetFilterMinAvailability(SetFilterMinAvailabilityEdit { value: base.filters.min_availability }),
+            Self::SetSort(_) => Self::SetSort(SetSortEdit { sort: base.filters.sort.clone() }),
+            Self::SetContributions(_) => Self::SetContributions(SetContributionsEdit { json: base.contributions_json.clone() }),
         }])
     }
 }

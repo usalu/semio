@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse delta for the fem3d artifact: per-collection id-keyed rows plus an owned-field analysis patch.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.fem.fem3d")]
 pub struct Fem3dDiff {
@@ -48,16 +48,104 @@ protocol::list_delta! {
     }
 }
 
-protocol::list_delta! {
-    /// 🧩 Positional keyed rows of the `elements` list.
-    pub Fem3dElementsDelta {
-        removal: Fem3dElementRemoval,
-        insertion: Fem3dElementInsertion,
-        relocation: Fem3dElementRelocation,
-        modification: Fem3dElementsModification,
-        row: FemElement,
-        patch: FemElement,
-        list: Vec<FemElement>, key: String = |row| element_id(row).to_string()
+impl protocol::list_delta::Keyed for FemElement {
+    type Key = String;
+    fn key(&self) -> String {
+        element_id(self).to_string()
+    }
+}
+
+/// ➖️ One `elements` row removed, with the base index the inverse reinserts it at.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase")]
+pub struct Fem3dElementRemoval {
+    pub id: String,
+    pub index: usize,
+}
+
+/// ➕️ One `elements` row inserted at its index in the resulting list.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase")]
+pub struct Fem3dElementInsertion {
+    pub index: usize,
+    #[dsl(statements)]
+    pub row: FemElement,
+}
+
+/// ↕️ One `elements` row moved from its base index to its index in the resulting list.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase")]
+pub struct Fem3dElementRelocation {
+    pub id: String,
+    pub from: usize,
+    pub to: usize,
+}
+
+/// 🩹 One modified `elements` row (whole-row replacement).
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase")]
+pub struct Fem3dElementsModification {
+    pub id: String,
+    #[dsl(statements)]
+    pub patch: Box<FemElement>,
+}
+
+/// 🧩 Positional keyed delta of the `elements` list.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase", default)]
+pub struct Fem3dElementsDelta {
+    pub removed: Vec<Fem3dElementRemoval>,
+    pub inserted: Vec<Fem3dElementInsertion>,
+    pub moved: Vec<Fem3dElementRelocation>,
+    pub modified: Vec<Fem3dElementsModification>,
+}
+
+type Fem3dElementsDeltaParts = protocol::list_delta::Parts<FemElement, Box<FemElement>>;
+
+impl Fem3dElementsDelta {
+    fn into_parts(self) -> Fem3dElementsDeltaParts {
+        protocol::list_delta::Parts {
+            removed: self.removed.into_iter().map(|entry| (entry.id, entry.index)).collect(),
+            inserted: self.inserted.into_iter().map(|entry| (entry.index, entry.row)).collect(),
+            moved: self.moved.into_iter().map(|entry| (entry.id, entry.from, entry.to)).collect(),
+            modified: self.modified.into_iter().map(|entry| (entry.id, entry.patch)).collect(),
+        }
+    }
+
+    fn from_parts(parts: Fem3dElementsDeltaParts) -> Self {
+        Self {
+            removed: parts.removed.into_iter().map(|(id, index)| Fem3dElementRemoval { id, index }).collect(),
+            inserted: parts.inserted.into_iter().map(|(index, row)| Fem3dElementInsertion { index, row }).collect(),
+            moved: parts.moved.into_iter().map(|(id, from, to)| Fem3dElementRelocation { id, from, to }).collect(),
+            modified: parts.modified.into_iter().map(|(id, patch)| Fem3dElementsModification { id, patch }).collect(),
+        }
+    }
+
+    /// ➖️ The delta that removes the row `id` found at `index` of the base list.
+    pub fn removal_by_id(id: impl Into<String>, index: usize) -> Self {
+        Self::from_parts(protocol::list_delta::Parts::removal_by_id(id.into(), index))
+    }
+
+    /// ✍️ The list this delta turns `base` into; reached only from the diff's own `apply`, under the central applier's capability.
+    pub fn commit_onto(&self, base: &Vec<FemElement>, capability: protocol::ApplyCapability) -> Result<Vec<FemElement>, protocol::list_delta::ApplyError> {
+        self.clone().into_parts().commit_onto(base, capability)
+    }
+
+    /// ➕️ Composes `self` with the delta `later` applied after it.
+    pub fn absorb(&mut self, later: Self) {
+        let mut parts = std::mem::take(self).into_parts();
+        parts.absorb(later.into_parts());
+        *self = Self::from_parts(parts);
+    }
+
+    /// 🔁️ The negative delta over `base`, read row by row.
+    pub fn inverse(&self, base: &Vec<FemElement>) -> Self {
+        Self::from_parts(self.clone().into_parts().inverse(base))
+    }
+
+    /// 🕳️ Whether the delta changes nothing.
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| protocol::list_delta::RowPatch::<FemElement>::is_empty(&entry.patch))
     }
 }
 
@@ -127,7 +215,7 @@ protocol::list_delta! {
 }
 
 /// 🩹 Owned-field patch of one load case: a rename, a self-weight switch and/or keyed load rows.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem3dLoadCasePatch {
     pub name: Option<String>,
@@ -143,7 +231,7 @@ impl protocol::list_delta::Keyed for FemLoad {
 }
 
 /// ➖️ One `loads` row removed, with the base index the inverse reinserts it at.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem3dLoadRemoval {
     pub id: String,
@@ -151,7 +239,7 @@ pub struct Fem3dLoadRemoval {
 }
 
 /// ➕️ One `loads` row inserted at its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem3dLoadInsertion {
     pub index: usize,
@@ -160,7 +248,7 @@ pub struct Fem3dLoadInsertion {
 }
 
 /// ↕️ One `loads` row moved from its base index to its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem3dLoadRelocation {
     pub id: String,
@@ -169,7 +257,7 @@ pub struct Fem3dLoadRelocation {
 }
 
 /// 🩹 One modified `loads` row (whole-row replacement).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem3dLoadsModification {
     pub id: String,
@@ -178,7 +266,7 @@ pub struct Fem3dLoadsModification {
 }
 
 /// 🧩 Positional keyed delta of the `loads` list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem3dLoadsDelta {
     pub removed: Vec<Fem3dLoadRemoval>,
@@ -250,7 +338,7 @@ protocol::list_delta! {
 }
 
 /// 🎛️ Owned-field patch of the analysis settings: exactly the fields the mutation sets.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem3dAnalysisPatch {
     pub modal_count: Option<usize>,
@@ -302,8 +390,8 @@ macro_rules! replace_boxed_row_patch {
     )*};
 }
 
-replace_row_patch!(FemNode, FemElement, FemMaterial, FemSection, FemSolid, FemSupport, FemCombination);
-replace_boxed_row_patch!(FemLoad);
+replace_row_patch!(FemNode, FemMaterial, FemSection, FemSolid, FemSupport, FemCombination);
+replace_boxed_row_patch!(FemElement, FemLoad);
 
 impl RowPatch<FemLoadCase> for Fem3dLoadCasePatch {
     fn commit_into(&self, row: &mut FemLoadCase, capability: ApplyCapability) -> Result<(), MutationApplyError> {

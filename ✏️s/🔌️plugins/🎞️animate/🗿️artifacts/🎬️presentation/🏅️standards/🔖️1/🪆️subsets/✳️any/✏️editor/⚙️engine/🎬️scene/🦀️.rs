@@ -446,7 +446,7 @@ pub mod section {
     //! 📑️ Named sections for partial movie output and navigation.
 
     /// 🏷️ Single named section within a scene timeline.
-    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     pub struct Section {
         pub name: String,
         pub start_time: f64,
@@ -469,7 +469,7 @@ pub mod section {
     }
 
     /// 📚️ Ordered section list attached to a scene.
-    #[derive(Clone, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     pub struct SectionList {
         pub sections: Vec<Section>,
         open: Option<Section>,

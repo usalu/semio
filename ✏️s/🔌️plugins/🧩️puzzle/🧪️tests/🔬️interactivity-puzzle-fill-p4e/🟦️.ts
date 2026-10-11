@@ -39,11 +39,11 @@ pub(crate) struct FillBuilder {
 }
 
 impl FillBuilder {
-    fn prepare(&mut self) -> StepOutcome {
+    fn prepare(&mut self) -> JobTurn {
         match self.stage {
             FillJobStage::PrepareScene | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => {
                 self.prepare_one();
-                StepOutcome::Yield
+                JobTurn::Yield
             }
         }
     }
@@ -70,21 +70,21 @@ impl FillBuilder {
         format!("preparation-capacity:{}:{}", self.branch.label(), self.omitted_index)
     }
 
-    fn step_prepared(&mut self, query: &mut CollisionQueryCursor, mutation: &mut CollisionIndexMutation, owner: u64) -> StepOutcome {
+    fn step_prepared(&mut self, query: &mut CollisionQueryCursor, mutation: &mut CollisionIndexMutation, owner: u64) -> JobTurn {
         if let Some(refusal) = self.preparation_capacity_refusal.as_mut() {
             if !refusal.published {
                 refusal.published = true;
                 let _ = self.writer.step(ToolRunStepKind::Danger, 0, refusal.reason(), None, &[]);
-                return StepOutcome::PreviewReady(self.page());
+                return JobTurn::Preview(self.page());
             }
-            return StepOutcome::Fault(JobFault { detail: b"fill-preparation-capacity".to_vec() });
+            return JobTurn::Fault(b"fill-preparation-capacity".to_vec());
         }
         if self.collection_over_capacity {
-            return StepOutcome::Fault(JobFault { detail: b"fill-collection-capacity".to_vec() });
+            return JobTurn::Fault(b"fill-collection-capacity".to_vec());
         }
         let _ = self.spatial_index.step_query(query, owner);
         let _ = self.spatial_index.step_replacement(mutation, owner);
-        StepOutcome::Yield
+        JobTurn::Yield
     }
 }
 
@@ -207,7 +207,7 @@ const CASES: readonly (readonly [name: string, expect: "report" | "silent", role
   ["missing-plus-one-law", "report", "fill", "            let _ = roots(branch, cap + 1);\n", ""],
   ["missing-exact-refusal", "report", "fill", "(len > capacity).then_some((branch, capacity))", "(len >= capacity).then_some((branch, capacity))"],
   ["silent-refusal-fault", "report", "fill", "ToolRunStepKind::Danger", "ToolRunStepKind::Info"],
-  ["fault-before-danger-step", "report", "fill", "                let _ = self.writer.step(ToolRunStepKind::Danger, 0, refusal.reason(), None, &[]);\n                return StepOutcome::PreviewReady(self.page());\n            }\n            return StepOutcome::Fault(JobFault { detail: b\"fill-preparation-capacity\".to_vec() });", "                return StepOutcome::Fault(JobFault { detail: b\"fill-preparation-capacity\".to_vec() });\n            }\n            let _ = self.writer.step(ToolRunStepKind::Danger, 0, refusal.reason(), None, &[]);\n            return StepOutcome::PreviewReady(self.page());"],
+  ["fault-before-danger-step", "report", "fill", "                let _ = self.writer.step(ToolRunStepKind::Danger, 0, refusal.reason(), None, &[]);\n                return JobTurn::Preview(self.page());\n            }\n            return JobTurn::Fault(b\"fill-preparation-capacity\".to_vec());", "                return JobTurn::Fault(b\"fill-preparation-capacity\".to_vec());\n            }\n            let _ = self.writer.step(ToolRunStepKind::Danger, 0, refusal.reason(), None, &[]);\n            return JobTurn::Preview(self.page());"],
   ["ghost-in-refusal", "report", "fill", "                refusal.published = true;", "                refusal.published = true;\n                self.candidate_ghost = None;"],
   ["dynamic-bucket", "report", "geometry", "cells: FixedOwnerMap<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>", "cells: FixedOwnerMap<(i32, i32, i32), Vec<String>>"],
   ["materialized-coverage", "report", "geometry", "struct CollisionCellSpan {", "fn covered_cells() -> Vec<(i32, i32, i32)> { Vec::new() }\n\nstruct CollisionCellSpan {"],
@@ -216,7 +216,7 @@ const CASES: readonly (readonly [name: string, expect: "report" | "silent", role
   ["decorative-query", "report", "fill", "self.spatial_index.step_query(query, owner)", "self.placed.iter().count()"],
   ["whole-checkpoint", "report", "fill", "pub(crate) struct FillBuilder {", "struct FillJobCheckpoint;\n\npub(crate) struct FillBuilder {"],
   ["clone-helper", "report", "geometry", "pub(crate) struct CollisionIndex {", "fn cloned_btree() {}\n\npub(crate) struct CollisionIndex {"],
-  ["sequence-clone", "report", "fill", "        StepOutcome::Yield\n    }\n}\n", "        let _ = self.sequence.clone();\n        StepOutcome::Yield\n    }\n}\n"],
+  ["sequence-clone", "report", "fill", "        JobTurn::Yield\n    }\n}\n", "        let _ = self.sequence.clone();\n        JobTurn::Yield\n    }\n}\n"],
   ["missing-constructor-fixture", "report", "fill", "constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently", "constructor_cap_smoke"],
   ["missing-sparse-query-fixture", "report", "geometry", "spatial_resumable_query_narrows_sparse_cells_without_visiting_distant_population", "spatial_query_smoke"],
   ["commented-constructor-is-silent", "silent", "precompute", "pub struct Puzzle3dPrecomputeSession {", "// FillBuilder::new( and .configure( were retired.\npub struct Puzzle3dPrecomputeSession {"],

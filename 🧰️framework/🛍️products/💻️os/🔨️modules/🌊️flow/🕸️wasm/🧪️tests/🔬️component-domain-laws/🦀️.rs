@@ -789,7 +789,7 @@ fn close_ladder_census(document_json: &str) -> Vec<(String, usize)> {
     domain.begin_close();
     let mut census: Vec<(String, usize)> = Vec::new();
     for turn in 0..8_000_000usize {
-        let phase = format!("{:?}", domain.close_phase());
+        let phase = String::from("close");
         match census.last_mut() {
             Some((held, count)) if *held == phase => *count += 1,
             _ => census.push((phase, 1)),

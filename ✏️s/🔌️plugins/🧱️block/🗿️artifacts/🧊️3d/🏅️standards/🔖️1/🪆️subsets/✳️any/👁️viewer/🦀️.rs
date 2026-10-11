@@ -28,7 +28,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant — real per-command payload modules the way `✏️editor/🎮️commands/*`
 /// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum Block3dViewCommand {
     #[default]
     Noop,
@@ -70,20 +70,12 @@ impl ArtifactViewer for Block3dViewer {
     /// ("app owner did not provide the required bounded disposer for document-store") and the store
     /// then reached `Drop` without its terminal-empty witness. Read-only says nothing about
     /// ownership: a viewer allocates the same envelope and must retire it the same way.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::schema::retirement::document_store_owners())
-    }
-
     /// 🔐️ The bounded store DISPOSERS this surface's close ladder drives. Owners alone are not enough:
     /// `drive_artifact_owned_disposer` faults `interactive-job.close-owned-disposer-missing` ("app owner
     /// did not provide the required bounded disposer for document-store") on the FIRST close turn when a
     /// lane's disposer is `None`, so a mounted `ViewerApp<Block3dViewer>` still could not close with the
     /// owners installed. Same catalogue the sibling editor installs, narrowed to this surface's
     /// `NoConfig`/`NoPresence`/`NoTransient` lanes (the shape `🌊️flow`'s viewer declares).
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<NoConfig, NoConfigMutation>())
-    }
-
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }

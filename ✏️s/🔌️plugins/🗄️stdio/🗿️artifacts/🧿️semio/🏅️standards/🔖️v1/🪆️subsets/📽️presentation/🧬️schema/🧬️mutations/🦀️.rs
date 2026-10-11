@@ -73,7 +73,8 @@ pub mod set_textbox_blocks;
 /// same JSON object the tag lives in, so every committed fixture under `📸️set-snapshot/🧪️tests/`
 /// and the `📽️mutate-semio-presentation` test adapter's `{"mutation":"insertSlide",...}` vectors keep
 /// decoding byte-for-byte unchanged after this migration.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioPresentationSnapshot, diff = SemioPresentationDiff, schema = "SemioPresentationMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioPresentationMutation {

@@ -12,7 +12,7 @@ use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 
 //#region 🔖️TopicStats
 /// 🗒️ Bcf's topic/comment/viewpoint/author counts.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BcfTopicStats {
     pub topic_count: u32,

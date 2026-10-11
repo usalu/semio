@@ -4,7 +4,7 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import type { PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
 import {
   ensurePreview2ShimVendorAt,
@@ -42,7 +42,7 @@ const extensionOutRoot = defaultExtensionInstallRoot(repoRoot);
  * directory is replaced wholesale by `publishBuiltExtension`, so reporting it as retained output would
  * refuse the one build that repairs it — the gate would then have no reachable exit, because its own
  * recovery instruction routes back through this check. */
-function assertExtensionOutputsFresh(root: string = extensionOutRoot, rebuilding: readonly DeployedRegistryEntryV1[] = []): void {
+function assertExtensionOutputsFresh(root: string = extensionOutRoot, rebuilding: readonly PluginBuildTargetV1[] = []): void {
   if (!existsSync(root)) return;
   const currentHostShim = hostShimSource();
   const republished = new Set(rebuilding.filter((target) => target.role === "extension").map((target) => moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]}))));
@@ -60,7 +60,7 @@ function assertExtensionOutputsFresh(root: string = extensionOutRoot, rebuilding
 }
 
 /** 🧩️ Mirrors a just-built extension crate from `🔌️plugin-modules/` into the runtime `/🧩️extension-modules` install root so catalog loads resolve without a separate `.sxt` install step. */
-function publishBuiltExtension(target: DeployedRegistryEntryV1, builtOutDir: string): void {
+function publishBuiltExtension(target: PluginBuildTargetV1, builtOutDir: string): void {
   if (target.role !== "extension") return;
   if (!existsSync(builtOutDir)) return;
   mkdirSync(extensionOutRoot, { recursive: true });
@@ -96,7 +96,7 @@ function publishBuiltExtension(target: DeployedRegistryEntryV1, builtOutDir: str
 }
 
 /** 🧩️ Seeds `/🧩️extension-modules` from any extension crates already present under `🔌️plugin-modules/` (covers restart without rebuild). */
-export function syncBuiltExtensionsToInstallRoot(entries: readonly DeployedRegistryEntryV1[]): void {
+export function syncBuiltExtensionsToInstallRoot(entries: readonly PluginBuildTargetV1[]): void {
   for (const target of entries) {
     if (target.role !== "extension") continue;
     const builtOutDir = join(pluginOutRoot, moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]})));

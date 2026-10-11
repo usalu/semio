@@ -19,7 +19,7 @@ use super::structure::compute_dwg_structure;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an ac1024 dwg snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `structure`, backed by the `🗂️structure/` slug dir).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg.inference")]
 pub struct DwgInference {

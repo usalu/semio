@@ -10,7 +10,7 @@ use crate::editor::grid3d::modes::edit::windows::{grid, preview};
 /// with, and whether masked cells stay drawn. `WindowConfigOwner::State` requires `dsl::DslField`,
 /// which `#[derive(dsl::DslArtifact)]` emits alongside the `__dsl_*` helpers the record-backed
 /// codecs below are written against.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.wfc.grid3d.windowconfig", extension = "wfcgrid3dwindowcfg")]
@@ -49,7 +49,7 @@ impl Grid3dWindowConfig {
 }
 
 /// 🔺️ Field-sparse diff of [`Grid3dWindowConfig`]: each field is an optional absolute value.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Grid3dWindowConfigDiff {
     pub camera_x: Option<f64>,
@@ -145,12 +145,71 @@ impl protocol::MutationDiff<Grid3dWindowConfig> for Grid3dWindowConfigDiff {
     }
 }
 
+/// 🧩️ Payload of [`Grid3dWindowConfigMutation::SetActiveTile`]: the absolute value of exactly its fields.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Grid3dWindowConfigSetActiveTile {
+    pub tile_id: String,
+}
+
+/// 🧩️ Payload of [`Grid3dWindowConfigMutation::SetCamera`]: the absolute value of exactly its fields.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Grid3dWindowConfigSetCamera {
+    pub camera_x: f64,
+    pub camera_y: f64,
+    pub camera_z: f64,
+    pub target_x: f64,
+    pub target_y: f64,
+    pub target_z: f64,
+    pub zoom: f64,
+}
+
+/// 🧩️ Payload of [`Grid3dWindowConfigMutation::SetShowMasked`]: the absolute value of exactly its fields.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Grid3dWindowConfigSetShowMasked {
+    pub show_masked: bool,
+}
+
 /// 🪟️ The 3D grid window configuration's mutation vocabulary: one absolute setter per field group.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Grid3dWindowConfigMutation {
-    SetActiveTile { tile_id: String },
-    SetCamera { camera_x: f64, camera_y: f64, camera_z: f64, target_x: f64, target_y: f64, target_z: f64, zoom: f64 },
-    SetShowMasked { show_masked: bool },
+    SetActiveTile(Grid3dWindowConfigSetActiveTile),
+    SetCamera(Grid3dWindowConfigSetCamera),
+    SetShowMasked(Grid3dWindowConfigSetShowMasked),
+}
+
+impl semio_framework_plugin::WindowConfigApplyMutation<Grid3dWindowConfig> for Grid3dWindowConfigMutation {
+    fn exchange(self, post: &mut Grid3dWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetActiveTile(Grid3dWindowConfigSetActiveTile { mut tile_id }) => {
+                std::mem::swap(&mut tile_id, &mut post.active_tile_id);
+                Self::SetActiveTile(Grid3dWindowConfigSetActiveTile { tile_id })
+            }
+            Self::SetCamera(Grid3dWindowConfigSetCamera { mut camera_x, mut camera_y, mut camera_z, mut target_x, mut target_y, mut target_z, mut zoom }) => {
+                std::mem::swap(&mut camera_x, &mut post.camera_x);
+                std::mem::swap(&mut camera_y, &mut post.camera_y);
+                std::mem::swap(&mut camera_z, &mut post.camera_z);
+                std::mem::swap(&mut target_x, &mut post.target_x);
+                std::mem::swap(&mut target_y, &mut post.target_y);
+                std::mem::swap(&mut target_z, &mut post.target_z);
+                std::mem::swap(&mut zoom, &mut post.camera_zoom);
+                Self::SetCamera(Grid3dWindowConfigSetCamera { camera_x, camera_y, camera_z, target_x, target_y, target_z, zoom })
+            }
+            Self::SetShowMasked(Grid3dWindowConfigSetShowMasked { mut show_masked }) => {
+                std::mem::swap(&mut show_masked, &mut post.show_masked);
+                Self::SetShowMasked(Grid3dWindowConfigSetShowMasked { show_masked })
+            }
+        })
+    }
+    fn payload_bytes(&self) -> usize {
+        match self {
+            Self::SetActiveTile(Grid3dWindowConfigSetActiveTile { tile_id }) => tile_id.len(),
+            _ => 0,
+        }
+    }
 }
 
 impl protocol::Mutation<Grid3dWindowConfig> for Grid3dWindowConfigMutation {
@@ -207,16 +266,16 @@ impl protocol::Mutation<Grid3dWindowConfig> for Grid3dWindowConfigMutation {
     ];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::SetActiveTile { .. } => &Self::DESCRIPTORS[0],
-            Self::SetCamera { .. } => &Self::DESCRIPTORS[1],
-            Self::SetShowMasked { .. } => &Self::DESCRIPTORS[2],
+            Self::SetActiveTile(_) => &Self::DESCRIPTORS[0],
+            Self::SetCamera(_) => &Self::DESCRIPTORS[1],
+            Self::SetShowMasked(_) => &Self::DESCRIPTORS[2],
         }
     }
     fn diff(&self, base: &Grid3dWindowConfig) -> protocol::MutationOutcome<Grid3dWindowConfigDiff> {
         let diff = match self {
-            Self::SetActiveTile { tile_id } => Grid3dWindowConfigDiff { active_tile_id: (base.active_tile_id != *tile_id).then(|| tile_id.clone()), ..Default::default() },
-            Self::SetCamera { camera_x, camera_y, camera_z, target_x, target_y, target_z, zoom } => Grid3dWindowConfigDiff { camera_x: (base.camera_x != *camera_x).then(|| camera_x.clone()), camera_y: (base.camera_y != *camera_y).then(|| camera_y.clone()), camera_z: (base.camera_z != *camera_z).then(|| camera_z.clone()), target_x: (base.target_x != *target_x).then(|| target_x.clone()), target_y: (base.target_y != *target_y).then(|| target_y.clone()), target_z: (base.target_z != *target_z).then(|| target_z.clone()), camera_zoom: (base.camera_zoom != *zoom).then(|| zoom.clone()), ..Default::default() },
-            Self::SetShowMasked { show_masked } => Grid3dWindowConfigDiff { show_masked: (base.show_masked != *show_masked).then(|| show_masked.clone()), ..Default::default() },
+            Self::SetActiveTile(Grid3dWindowConfigSetActiveTile { tile_id }) => Grid3dWindowConfigDiff { active_tile_id: (base.active_tile_id != *tile_id).then(|| tile_id.clone()), ..Default::default() },
+            Self::SetCamera(Grid3dWindowConfigSetCamera { camera_x, camera_y, camera_z, target_x, target_y, target_z, zoom }) => Grid3dWindowConfigDiff { camera_x: (base.camera_x != *camera_x).then(|| camera_x.clone()), camera_y: (base.camera_y != *camera_y).then(|| camera_y.clone()), camera_z: (base.camera_z != *camera_z).then(|| camera_z.clone()), target_x: (base.target_x != *target_x).then(|| target_x.clone()), target_y: (base.target_y != *target_y).then(|| target_y.clone()), target_z: (base.target_z != *target_z).then(|| target_z.clone()), camera_zoom: (base.camera_zoom != *zoom).then(|| zoom.clone()), ..Default::default() },
+            Self::SetShowMasked(Grid3dWindowConfigSetShowMasked { show_masked }) => Grid3dWindowConfigDiff { show_masked: (base.show_masked != *show_masked).then(|| show_masked.clone()), ..Default::default() },
         };
         if protocol::DiffAlgebra::<Grid3dWindowConfig>::is_empty(&diff) {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window configuration already holds that value.");
@@ -225,9 +284,9 @@ impl protocol::Mutation<Grid3dWindowConfig> for Grid3dWindowConfigMutation {
     }
     fn inverse(&self, base: &Grid3dWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            Self::SetActiveTile { .. } => Self::SetActiveTile { tile_id: base.active_tile_id.clone() },
-            Self::SetCamera { .. } => Self::SetCamera { camera_x: base.camera_x.clone(), camera_y: base.camera_y.clone(), camera_z: base.camera_z.clone(), target_x: base.target_x.clone(), target_y: base.target_y.clone(), target_z: base.target_z.clone(), zoom: base.camera_zoom.clone() },
-            Self::SetShowMasked { .. } => Self::SetShowMasked { show_masked: base.show_masked.clone() },
+            Self::SetActiveTile(_) => Self::SetActiveTile(Grid3dWindowConfigSetActiveTile { tile_id: base.active_tile_id.clone() }),
+            Self::SetCamera(_) => Self::SetCamera(Grid3dWindowConfigSetCamera { camera_x: base.camera_x.clone(), camera_y: base.camera_y.clone(), camera_z: base.camera_z.clone(), target_x: base.target_x.clone(), target_y: base.target_y.clone(), target_z: base.target_z.clone(), zoom: base.camera_zoom.clone() }),
+            Self::SetShowMasked(_) => Self::SetShowMasked(Grid3dWindowConfigSetShowMasked { show_masked: base.show_masked.clone() }),
         }])
     }
 }
@@ -307,6 +366,11 @@ macro_rules! config_owner {
             const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
             type State = Grid3dWindowConfig;
             type Mutation = Grid3dWindowConfigMutation;
+            type Edit = semio_framework_plugin::WindowConfigApplyEdit<Grid3dWindowConfig, Grid3dWindowConfigMutation>;
+            const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+            fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+                std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
+            }
             fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
                 semio_framework_plugin::bounded_window_config_store_owners::<Self>()
             }

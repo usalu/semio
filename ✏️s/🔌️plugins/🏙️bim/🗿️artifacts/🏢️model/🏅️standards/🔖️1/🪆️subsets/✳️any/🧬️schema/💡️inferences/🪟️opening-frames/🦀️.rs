@@ -32,7 +32,7 @@ use std::f64::consts::FRAC_PI_2;
 
 //#region 🔖️Values
 /// 🧭️ A vector or point in metres.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -40,7 +40,7 @@ pub struct Vec3 {
 }
 
 /// 🧭️ A right-handed placement: an origin and three unit axes, as the columns of a rigid transform.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct Frame {
     pub origin: Vec3,
     pub x_axis: Vec3,
@@ -57,7 +57,7 @@ impl Frame {
 }
 
 /// ✂️ The rectangle an opening removes from its host, in the host's development: `s` is the arc length along the axis, `z` runs up from the host base.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct OpeningCut {
     pub s_min: f64,
     pub s_max: f64,
@@ -66,7 +66,7 @@ pub struct OpeningCut {
 }
 
 /// 🩺️ Why a placement is not valid; an empty list means valid.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum OpeningIssue {
     HostMissing,
     TypeMissing,
@@ -80,7 +80,7 @@ pub enum OpeningIssue {
 }
 
 /// 🖊️ What a plan stroke depicts.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum PlanRole {
     Leaf,
     Swing,
@@ -88,14 +88,14 @@ pub enum PlanRole {
 }
 
 /// ✏️ A plan primitive in building plan coordinates: a segment, or a circular arc from `start_angle` through the signed `sweep` (radians, counter-clockwise positive).
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum PlanShape {
     Line { from: Point2, to: Point2 },
     Arc { centre: Point2, radius: f64, start_angle: f64, sweep: f64 },
 }
 
 /// 🖊️ One plan stroke of an opening symbol.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct PlanStroke {
     pub role: PlanRole,
     pub shape: PlanShape,
@@ -106,7 +106,7 @@ fn is_false(value: &bool) -> bool {
 }
 
 /// 🪟️ The resolved placement of one opening. Lengths in metres, `local` in building coordinates (`z` up from the building datum), `world` after the building origin, rotation and datum.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct OpeningFrame {
     pub width: f64,
     pub height: f64,

@@ -29,18 +29,18 @@ pub fn evaluate(window_id: &str, window_kind_id: &str, target: PreviewEvalTarget
     let retained = session.eval_json().to_string();
     let retained = (!retained.is_empty()).then_some(retained);
     let outcome = match target {
-        PreviewEvalTarget::Document => preview_eval::evaluate_tick(window_id, window_kind_id, &doc.snapshot.host_snapshot, session, retained.as_deref(), retained_grant),
+        PreviewEvalTarget::Document => preview_eval::evaluate_tick(window_id, window_kind_id, &doc.snapshot.host_snapshot, session, retained.as_deref(), retained_grant).map_err(|error| Fault::from(error.to_string()))?,
         PreviewEvalTarget::Generation => {
             let mut state = doc.snapshot.generation.as_state().clone();
             state.selected_generation_id.clone_from(&cfg.snapshot.selected_generation_id);
             let Some(values) = semio_framework_artifact_playbook_playbook::selected_generation(&state).map(|selected| selected.values.clone()) else {
-                preview_eval::settle_empty_tick(window_id, session);
+                preview_eval::settle_empty_tick(window_id, session, retained_grant).map_err(|error| Fault::from(error.to_string()))?;
                 return Ok((Emit::default(), session.eval_publication_for(retained.as_deref())));
             };
             let host = crate::standards::v1::subsets::any::io::text::snapshot::generation_preview_host(&doc.snapshot.host_snapshot, &values);
             let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, &host.host_snapshot, session, retained.as_deref(), retained_grant);
             host.retire_cold();
-            outcome
+            outcome.map_err(|error| Fault::from(error.to_string()))?
         }
     };
     Ok((Emit { extension_invocations: outcome.extension_invocations, ..Default::default() }, outcome.publication))

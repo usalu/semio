@@ -7,7 +7,8 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️XmlModel
 /// 🏷️ XML attribute pair.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XmlAttr {
     pub name: String,
@@ -19,7 +20,8 @@ pub struct XmlAttr {
 /// so decode->encode preserves the ORIGINAL form -- a `<![CDATA[...]]>` section (common inside
 /// real SVG `<style>`/`<script>` elements) re-emits as CDATA, not as entity-escaped text, and a
 /// `<!--comment-->` between siblings survives instead of being silently dropped.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum XmlNode {
     Element {
@@ -44,7 +46,8 @@ pub enum XmlNode {
 }
 
 /// 📰 Well-formed XML document root.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XmlDocument {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -68,11 +71,13 @@ pub struct XmlDocument {
 }
 
 /// 📜️ Logical XML document type declaration.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct XmlDoctype {
     /// 🧭 Number of logical prolog nodes preceding this declaration.
     #[value(default, skip_serializing_if = "is_zero", serialize_with="position::to_value", deserialize_with="position::from_value", serialize_controlled_with="position::to_value_controlled", deserialize_controlled_with="position::from_value_controlled", retire_with="std::mem::drop")]
+    #[canonical_json(decimal_string)]
     pub prolog_position: u64,
     pub name: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -88,7 +93,8 @@ fn is_zero(value: &u64) -> bool {
 
 
 /// 🔗️ Standard SYSTEM or PUBLIC external identifier.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum XmlExternalId {
     System { system_id: String },
@@ -96,7 +102,8 @@ pub enum XmlExternalId {
 }
 
 /// 🏷️ Parsed internal general or parameter entity declaration.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum XmlDtdDeclaration {
     Entity { parameter: bool, name: String, value: String },
@@ -109,7 +116,8 @@ pub enum XmlDtdDeclaration {
 /// third-party file byte for byte, and the declaration was the one place the writer normalized).
 /// `Double` is the default spelling, so a declaration that never names a quote is the one every
 /// generator in this tree emits and every committed fixture already carries.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, value_derive::RetainedClone, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum XmlQuote {
     #[default]
@@ -150,7 +158,7 @@ impl XmlQuote {
 /// `version` is mandatory per the XML 1.0 spec whenever a declaration is present at all;
 /// `encoding`/`standalone` are each independently optional. `quote` is the delimiter all three
 /// pseudo-attributes are written with (see [`XmlQuote`]).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct XmlDeclaration {
     pub version: String,
@@ -160,6 +168,55 @@ pub struct XmlDeclaration {
     pub standalone: Option<bool>,
     #[value(default, skip_serializing_if = "XmlQuote::is_double")]
     pub quote: XmlQuote,
+}
+
+impl XmlDeclaration {
+    fn canonical_fields(&self) -> ([u8; 4], usize) {
+        let mut fields = [0u8; 4];
+        let mut count = 1;
+        if self.encoding.is_some() {
+            fields[count] = 1;
+            count += 1;
+        }
+        if self.standalone.is_some() {
+            fields[count] = 2;
+            count += 1;
+        }
+        if !self.quote.is_double() {
+            fields[count] = 3;
+            count += 1;
+        }
+        (fields, count)
+    }
+}
+
+/// 🌲️ Projects exactly the fields `ToValue` emits: `version`, then each present optional facet in declaration order.
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for XmlDeclaration {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+        Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(self.canonical_fields().1))
+    }
+
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
+        let (fields, count) = self.canonical_fields();
+        let absent = || semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical XML declaration ordinal is absent");
+        if ordinal >= count {
+            return Err(absent());
+        }
+        match fields[ordinal] {
+            0 => Ok(&self.version),
+            1 => self.encoding.as_ref().map(|value| value as &dyn semio_framework_pack_json::ArtifactCanonicalJsonTree).ok_or_else(absent),
+            2 => self.standalone.as_ref().map(|value| value as &dyn semio_framework_pack_json::ArtifactCanonicalJsonTree).ok_or_else(absent),
+            _ => Ok(&self.quote),
+        }
+    }
+
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+        let (fields, count) = self.canonical_fields();
+        if ordinal >= count {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical XML declaration key is absent"));
+        }
+        Ok(semio_framework_pack_json::ArtifactCanonicalJsonText::from(["version", "encoding", "standalone", "quote"][fields[ordinal] as usize]))
+    }
 }
 
 impl XmlDeclaration {
@@ -177,7 +234,7 @@ impl XmlDeclaration {
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.xml` snapshot.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xml")]
 pub struct XmlSnapshot {

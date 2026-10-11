@@ -5,7 +5,7 @@ use super::{JackResultsWindowTransient, JackResultsWindowTransientDiff};
 mod replace_query_result;
 pub use replace_query_result::ReplaceQueryResult;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 #[mutations(snapshot = JackResultsWindowTransient, diff = JackResultsWindowTransientDiff, schema = "trinity.jackresultswindowtransient")]
 pub enum JackResultsWindowTransientMutation {

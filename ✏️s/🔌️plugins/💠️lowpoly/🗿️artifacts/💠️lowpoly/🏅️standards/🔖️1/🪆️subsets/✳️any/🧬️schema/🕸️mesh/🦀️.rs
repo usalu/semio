@@ -5,7 +5,9 @@ use semio_framework_value_derive::{ToValue,FromValue};
 use semio_framework_3d::mesh::{MeshAttributeDomain,MeshAttributeSemantic,MeshAttributeInterpolation};
 pub use semio_framework_3d::mesh::{MeshAttributeDomain as LowpolyMeshAttributeDomain,MeshAttributeSemantic as LowpolyMeshAttributeSemantic,MeshAttributeInterpolation as LowpolyMeshAttributeInterpolation};
 
-#[derive(Clone,Debug,PartialEq,DslRecord)]
+#[derive(Clone,Debug,PartialEq,DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
 pub struct LowpolyMeshState {
     pub vertices:Vec<LowpolyMeshVertex>,
     pub halfedges:Vec<LowpolyMeshHalfedge>,
@@ -15,13 +17,16 @@ pub struct LowpolyMeshState {
     pub materials:Vec<LowpolyMeshMaterial>,
     pub textures:Vec<LowpolyMeshTexture>,
 }
-#[derive(Clone,Debug,DslRecord,ToValue,FromValue)]
-pub struct LowpolyMeshVertex {pub position:[f32;3],pub normal:Option<[f32;3]>,pub halfedge:Option<u32>}
-#[derive(Clone,Debug,DslRecord,ToValue,FromValue)]
-pub struct LowpolyMeshHalfedge {pub vertex:u32,pub twin:Option<u32>,pub next:u32,pub face:Option<u32>,pub uv:[f32;2]}
-#[derive(Clone,Debug,PartialEq,DslRecord,ToValue,FromValue)]
+#[derive(Clone,Debug,DslRecord,ToValue,FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct LowpolyMeshVertex {#[canonical_json(hex_word)] pub position:[f32;3],#[canonical_json(hex_word)] pub normal:Option<[f32;3]>,pub halfedge:Option<u32>}
+#[derive(Clone,Debug,DslRecord,ToValue,FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct LowpolyMeshHalfedge {pub vertex:u32,pub twin:Option<u32>,pub next:u32,pub face:Option<u32>,#[canonical_json(hex_word)] pub uv:[f32;2]}
+#[derive(Clone,Debug,PartialEq,DslRecord,ToValue,FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct LowpolyMeshFace {pub halfedge:u32,pub smooth:bool,pub flipped:bool}
-#[derive(Clone,Debug,DslRecord,ToValue,FromValue)]
+#[derive(Clone,Debug,DslRecord,ToValue,FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 pub struct LowpolyMeshAttribute {
     pub name:String,
     pub domain:MeshAttributeDomain,
@@ -30,9 +35,10 @@ pub struct LowpolyMeshAttribute {
     pub values:Vec<DslValue>,
     pub indices:Option<Vec<u32>>,
 }
-#[derive(Clone,Debug,DslRecord,ToValue,FromValue)]
+#[derive(Clone,Debug,DslRecord,ToValue,FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 pub struct LowpolyMeshMaterial {pub name:String,pub value:DslValue}
-#[derive(Clone,Debug,PartialEq,DslRecord,ToValue,FromValue)]
+#[derive(Clone,Debug,PartialEq,DslRecord,ToValue,FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct LowpolyMeshTexture {pub name:String,pub mime:String,pub bytes:Vec<u8>}
 
 impl LowpolyMeshState {
@@ -60,7 +66,7 @@ impl LowpolyMeshState {
         let state=guard.get();
         let unique=|names:Vec<&str>|->bool{let mut seen=std::collections::BTreeSet::new();names.into_iter().all(|name|seen.insert(name))};
         if !unique(state.attributes.iter().map(|value|value.name.as_str()).collect())||!unique(state.materials.iter().map(|value|value.name.as_str()).collect())||!unique(state.textures.iter().map(|value|value.name.as_str()).collect()){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate mesh namespace name"))}
-        let mut seams=std::collections::HashSet::new();for value in &state.uv_seams{if !seams.insert(*value){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate mesh seam identity"))}}
+        let mut seams=semio_framework_3d::mesh::HistoryFoldSet::new();for value in &state.uv_seams{if !seams.insert(*value){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate mesh seam identity"))}}
         let state=guard.take();
         let attributes=state.attributes.into_iter().map(|value|(value.name,MeshAttribute{domain:value.domain,semantic:value.semantic,interpolation:value.interpolation,values:value.values,indices:value.indices})).collect();
         let materials=state.materials.into_iter().map(|value|(value.name,value.value)).collect();
@@ -88,6 +94,8 @@ impl PartialEq for LowpolyMeshMaterial{fn eq(&self,other:&Self)->bool{self.name=
 
 #[path="🔣️json/🦀️.rs"]
 pub mod json;
+#[path = "🌳️canonical/🦀️.rs"]
+mod canonical;
 use semio_framework_value::intrinsic_json;
 
 impl semio_framework_value::ToValue for LowpolyMeshState{fn to_value(&self)->DslValue{json::state_value(self)}}

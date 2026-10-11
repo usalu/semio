@@ -66,6 +66,16 @@ fn drawing_viewer_camera_refuses_stale_or_wrong_windows() {
 async fn config_inverse_sums_to_the_negative_diff() {
     let base = DrawingViewerCanvasWindowConfig::default();
     let next = DrawingViewerCanvasWindowConfig { viewport: store::Viewport2d { x: 18.0, y: -9.0, zoom: 2.5 }, framed: true };
-    let mutation = DrawingViewerCanvasWindowConfigMutation::Set { viewport: next.viewport.clone(), framed: next.framed };
+    let mutation = DrawingViewerCanvasWindowConfigMutation::Set(DrawingViewerCanvasWindowConfigSet { viewport: next.viewport.clone(), framed: next.framed });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+}
+
+/// 🧾️ The newtype payload keeps the externally visible `{"kind":"set","viewport":..,"framed":..}` wire byte-identical.
+#[test]
+fn set_mutation_wire_is_the_flat_tagged_record() {
+    use semio_framework_value::{FromValue, ToValue};
+    let mutation = DrawingViewerCanvasWindowConfigMutation::Set(DrawingViewerCanvasWindowConfigSet { viewport: store::Viewport2d { x: 1.5, y: -2.0, zoom: 3.0 }, framed: true });
+    let expected: semio_framework_value::DslValue = serde_json::json!({ "kind": "set", "viewport": { "x": 1.5, "y": -2.0, "zoom": 3.0 }, "framed": true }).into();
+    assert_eq!(mutation.to_value(), expected);
+    assert_eq!(DrawingViewerCanvasWindowConfigMutation::from_value(expected).expect("flat tagged set decodes"), mutation);
 }

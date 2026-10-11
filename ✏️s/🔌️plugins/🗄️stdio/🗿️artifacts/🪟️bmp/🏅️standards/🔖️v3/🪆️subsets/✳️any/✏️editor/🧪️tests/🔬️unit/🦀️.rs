@@ -44,7 +44,7 @@ fn drive(command: &BmpEditCommand, snapshot: &BmpSnapshot, tool_id: &'static str
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "bmp-paint-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "bmp-paint-test".into() };
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "bmp-paint-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "bmp-paint-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = paint_region::PaintRegionWork::new(tool_id);
     assert_eq!(work.extent(command, snapshot, &interaction, None), paint_region::CAPACITY.rows_for_items(1));
     let mut sequence = 0;
@@ -141,7 +141,7 @@ fn cancelled_retained_paint_discards_revision_without_publication() {
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "bmp-paint-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "bmp-paint-cancel".into() };
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "bmp-paint-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "bmp-paint-cancel".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = paint_region::PaintRegionWork::new(paint_region::DIRECT_ACTION_ID);
     let input = ArtifactCommandInputs { command: &command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut sequence = 0;
@@ -150,8 +150,8 @@ fn cancelled_retained_paint_discards_revision_without_publication() {
     let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "bmp-paint-region-copy", .. }));
     work.begin_close();
-    assert_eq!(work.close_step(1, 0),semio_framework_job::InteractiveJobCloseStep::Complete);
-    for _ in 0..100_000 {if work.terminal_is_empty() {break;}work.close_step(1,usize::MAX);}
+    assert!(matches!(work.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant()),semio_framework_job::InteractiveJobCloseStep::Complete{..}));
+    for _ in 0..100_000 {if work.terminal_is_empty() {break;}work.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant());}
     assert!(work.terminal_is_empty());
     assert_eq!(snapshot, &direct_snapshot());
 }

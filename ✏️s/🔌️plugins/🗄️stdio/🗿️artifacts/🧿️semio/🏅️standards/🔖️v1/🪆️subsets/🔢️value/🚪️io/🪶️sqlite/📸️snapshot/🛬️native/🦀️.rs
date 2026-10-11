@@ -9,7 +9,7 @@ pub(crate)fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotCon
  let limits=control.limits();crate::standards::v1::subsets::value::io::sqlite::snapshot::admit_layout(limits)?;
  let size=match payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio value native input exceeds file limit"))}
  control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-  let native_before=native_control.owned_bytes();let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?,|native_control|{
+  let native_before=native_control.owned_bytes();let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native_control|{
   let result=(||->Result<SemioValueSnapshot,ValueError>{let result=match payload{
    store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control)?;let body=native_control.borrow_text(body)?;document(body,native_control,limits)?},
    store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,native_control,limits)?}
@@ -46,3 +46,5 @@ pub(crate) fn value_binary(reader:&mut store::ByteReader<'_>,control:&mut Native
 }
 
 fn children(entities:usize,count:usize,limits:SqliteDatabaseLimits)->Result<(),ValueError>{if count>limits.max_rows.saturating_sub(entities){Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio native values exceed remaining row limit"))}else{Ok(())}}
+/// 🕳️ The empty typed root every native prefix starts from.
+pub(crate) fn empty()->crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot{crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot{schema:String::new(),root:crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Null,nodes:Vec::new()}}

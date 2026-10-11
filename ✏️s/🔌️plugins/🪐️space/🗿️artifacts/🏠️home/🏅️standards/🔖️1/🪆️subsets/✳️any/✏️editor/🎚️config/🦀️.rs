@@ -11,7 +11,7 @@
 use semio_framework_plugin::ToolExecutionContract;
 
 //#region 🔖️Config
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "home.config")]
 #[artifact(extension = "homecfg")]
@@ -162,18 +162,31 @@ impl protocol::DiffAlgebra<HomeConfig> for HomeConfigDiff {
 //#region 🔖️ConfigOperations
 /// 🧮️ `HomeConfig`'s operation enum — two tombstone verbs (retire / list again) whose diff is the sparse
 /// `HomeTombstoneDelta` and whose inverse is the opposite verb on the same studio id.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum HomeConfigMutation {
     /// 🪦️ Retires one local-only studio from Home — a tombstone event; the studio's catalog document is never erased.
     #[dsl(key = "retire-local-studio")]
-    RetireLocalStudio {
-        space_id: String,
-    },
+    RetireLocalStudio(RetireLocalStudio),
     /// 📋️ Lists one retired local-only studio in Home again — the exact inverse of `RetireLocalStudio`.
     #[dsl(key = "list-local-studio")]
-    ListLocalStudio {
-        space_id: String,
-    },
+    ListLocalStudio(ListLocalStudio),
+}
+
+/// 🪦️ The one studio a retire tombstone names; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "retire-local-studio")]
+pub struct RetireLocalStudio {
+    pub space_id: String,
+}
+
+/// 📋️ The one studio a list-again names; its wire record is exactly the former variant's fields.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[dsl(keyword = "list-local-studio")]
+pub struct ListLocalStudio {
+    pub space_id: String,
 }
 
 //#region 🔖️OpCodec
@@ -243,16 +256,16 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            HomeConfigMutation::RetireLocalStudio { .. } => &Self::DESCRIPTORS[0],
-            HomeConfigMutation::ListLocalStudio { .. } => &Self::DESCRIPTORS[1],
+            HomeConfigMutation::RetireLocalStudio(_) => &Self::DESCRIPTORS[0],
+            HomeConfigMutation::ListLocalStudio(_) => &Self::DESCRIPTORS[1],
         }
     }
 
     type Diff = HomeConfigDiff;
 
     fn diff(&self, base: &HomeConfig) -> protocol::MutationOutcome<HomeConfigDiff> {
-        let (HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::ListLocalStudio { space_id }) = self;
-        let retired = matches!(self, HomeConfigMutation::RetireLocalStudio { .. });
+        let (HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id }) | HomeConfigMutation::ListLocalStudio(ListLocalStudio { space_id })) = self;
+        let retired = matches!(self, HomeConfigMutation::RetireLocalStudio(_));
         if base.is_local_studio_retired(space_id) == retired {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Local studio {space_id} is already {}.", if retired { "retired" } else { "listed" }));
         }
@@ -269,12 +282,12 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     fn inverse(&self, base: &HomeConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
         match self {
-            HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::ListLocalStudio { space_id } => {
+            HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id }) | HomeConfigMutation::ListLocalStudio(ListLocalStudio { space_id }) => {
                 let space_id = space_id.clone();
                 if base.is_local_studio_retired(&space_id) {
-                    vec![HomeConfigMutation::RetireLocalStudio { space_id }]
+                    vec![HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id })]
                 } else {
-                    vec![HomeConfigMutation::ListLocalStudio { space_id }]
+                    vec![HomeConfigMutation::ListLocalStudio(ListLocalStudio { space_id })]
                 }
             }
         }
@@ -327,16 +340,14 @@ pub fn home_retained_contract() -> ToolExecutionContract {
 pub struct HomeConfigPreparationFactory;
 
 struct HomeConfigPreparation {
-    base: Option<store::SnapshotRead<HomeConfig>>,
-    mutation: Option<HomeConfigMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    candidate: Option<(HomeConfig, HomeConfigMutation, HomeConfigMutation)>,
-    sealed_candidate: Option<(HomeConfig, protocol::Edit<HomeConfigMutation>)>,
+    owners: store::OneItemOwners<HomeConfig, HomeConfigMutation>,
     serialized_bytes: Option<usize>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
-    closing: bool,
+}
+
+fn home_config_refusal(kind: semio_framework_value::ValueRefusalKind, message: &'static str) -> semio_framework_value::ValueError {
+    semio_framework_value::ValueError::literal(kind, message)
 }
 
 fn home_config_retained_bytes(config: &HomeConfig) -> usize {
@@ -356,10 +367,10 @@ impl std::io::Write for HomeConfigByteCounter {
     fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
 }
 
-fn home_config_edit_bytes(edit: &protocol::Edit<HomeConfigMutation>) -> Result<usize, String> {
+fn home_config_edit_bytes(edit: &protocol::Edit<HomeConfigMutation>) -> Result<usize, semio_framework_value::ValueError> {
     let bytes = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(edit)).len();
     if bytes > HOME_CONFIG_STEP_BYTES {
-        return Err("Space Home config edit exceeds its serialized byte envelope".to_string());
+        return Err(home_config_refusal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Space Home config edit exceeds its serialized byte envelope"));
     }
     Ok(bytes)
 }
@@ -368,12 +379,16 @@ fn home_config_edit_bytes(edit: &protocol::Edit<HomeConfigMutation>) -> Result<u
 /// other mutation never travels the retained lane.
 fn home_config_retained_admission(mutation: &HomeConfigMutation) -> Option<(usize, usize)> {
     match mutation {
-        HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::ListLocalStudio { space_id } if local_studio_id_is_admissible(space_id) => Some((space_id.len(), HOME_RETIRED_LOCAL_STUDIO_ID_BYTES)),
+        HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id }) | HomeConfigMutation::ListLocalStudio(ListLocalStudio { space_id }) if local_studio_id_is_admissible(space_id) => Some((space_id.len(), HOME_RETIRED_LOCAL_STUDIO_ID_BYTES)),
         _ => None,
     }
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutation> for HomeConfigPreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<HomeConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<HomeConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &HomeConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         let Some((mutation_bytes, maximum_bytes)) = home_config_retained_admission(mutation) else {
             return Err("Space Home config preparation rejects non-retained mutations".into());
@@ -385,106 +400,101 @@ impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutatio
     }
 
     fn begin_demand(&self, _mutation: &HomeConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand {capacity_bytes:std::mem::size_of::<HomeConfigPreparation>(),depth:1})
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<HomeConfigPreparation>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>)> {
-        let demand=match self.begin_demand(&request.mutation,request.lane){Ok(demand)=>demand,Err(error)=>return Err((error,request))};
-        let progress=match demand.admit(grant.retained_grant()){Ok(progress)=>progress,Err(error)=>return Err((error,request))};
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation, HomeConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation, HomeConfigMutation>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) {
+            Ok(demand) => demand,
+            Err(error) => return Err((error, request)),
+        };
+        let progress = match demand.admit(grant.retained_grant()) {
+            Ok(progress) => progress,
+            Err(error) => return Err((error, request)),
+        };
         let Some((mutation_bytes, maximum_bytes)) = home_config_retained_admission(&request.mutation) else {
-            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"home preparation rejected original mutation or publication authority"),request));
+            return Err((home_config_refusal(semio_framework_value::ValueRefusalKind::InvariantViolated, "home preparation rejected original mutation or publication authority"), request));
         };
         if request.lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
-            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"home preparation rejected original mutation or publication authority"),request));
+            return Err((home_config_refusal(semio_framework_value::ValueRefusalKind::InvariantViolated, "home preparation rejected original mutation or publication authority"), request));
         }
-        Ok((Box::new(HomeConfigPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), authority: Some(request.authority), candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
-        }),progress))
+        Ok((Box::new(HomeConfigPreparation { owners: store::OneItemOwners::from_request(request), serialized_bytes: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false }), progress))
+    }
+}
+
+impl HomeConfigPreparation {
+    fn progress() -> semio_framework_value::retained_clone::RetainedCloneProgress {
+        semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for HomeConfigPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        // 🎟️ The grant is a PAGE, not the owner's whole envelope: `ArtifactStoreOneItemGrant`'s own
-        // contract is "consume at most one semantic unit", and every framework pump that drives this
-        // preparation grants `TYPED_OPERATION_RESULT_PAGE_BYTES` (4 KiB) — the typed-operation
-        // publication ladder hard-codes it (`🔌️plugin/🦀️.rs`'s `ArtifactStoreOneItemGrant { maximum_items: 1,
-        // maximum_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES }`). Demanding `HOME_CONFIG_STEP_BYTES`
-        // (1 MiB) therefore answered `Blocked` on EVERY unit for ever, and `Blocked` is a silent
-        // non-advance: the operation stayed in `Publishing`, the actor stayed in `MoreWork` with no
-        // effect, no patch and no fault, and the signed-in Home listed 0 spaces while the host's drain
-        // polled it for the whole session (ticket 26/09/18 S8, measured on serve 6190 → hub 7611).
-        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
-        if self.candidate.is_none() && self.sealed_candidate.is_none() {
-            let base = self.base.as_ref().ok_or_else(|| "Space Home config preparation lost its exact base root".to_string())?.get();
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        use semio_framework_value::ValueRefusalKind::{InvalidValue, InvariantViolated, OwnershipLimit};
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.owners.refused.is_some() { return Err(home_config_refusal(InvalidValue, "Space Home config preparation retains its original refusal")); }
+        if self.owners.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
+        if self.owners.candidate.is_none() && self.owners.sealed.is_none() {
+            let base = self.owners.base.as_ref().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its exact base root"))?.get();
             let base_bytes = home_config_retained_bytes(base);
-            if base_bytes > HOME_CONFIG_BASE_BYTES { return Err("Space Home config base exceeds retained byte capacity".into()); }
-            let mutation = self.mutation.take().ok_or_else(|| "Space Home config preparation lost its mutation owner".to_string())?;
-            let (post, inverse) = match &mutation {
-                HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::ListLocalStudio { space_id } => {
-                    let outcome = <HomeConfigMutation as protocol::Mutation<HomeConfig>>::diff(&mutation, base);
+            if base_bytes > HOME_CONFIG_BASE_BYTES { return Err(home_config_refusal(OwnershipLimit, "Space Home config base exceeds retained byte capacity")); }
+            let mutation = self.owners.mutation.as_ref().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its mutation owner"))?;
+            let (post, inverse) = match mutation {
+                HomeConfigMutation::RetireLocalStudio(_) | HomeConfigMutation::ListLocalStudio(_) => {
+                    let outcome = <HomeConfigMutation as protocol::Mutation<HomeConfig>>::diff(mutation, base);
                     let post = (!protocol::DiffAlgebra::<HomeConfig>::is_empty(outcome.diff()))
                         .then(|| protocol::apply_diff(outcome.diff(), base).ok())
                         .flatten()
                         .filter(local_studio_tombstones_are_admissible)
-                        .ok_or_else(|| format!("Space Home config preparation refuses the tombstone of {space_id}: it changes nothing or exceeds its ceiling"))?;
-                    let inverse = <HomeConfigMutation as protocol::Mutation<HomeConfig>>::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?.into_iter().next().ok_or_else(|| "Space Home config preparation lost its tombstone inverse".to_string())?;
+                        .ok_or_else(|| home_config_refusal(InvalidValue, "Space Home config preparation refuses a tombstone that changes nothing or exceeds its ceiling"))?;
+                    let inverse = <HomeConfigMutation as protocol::Mutation<HomeConfig>>::inverse(mutation, base)?.into_iter().next().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its tombstone inverse"))?;
                     (post, inverse)
                 }
-                _ => return Err("Space Home config preparation received a non-retained mutation".into()),
             };
-            self.candidate = Some((post, inverse, mutation));
+            let mutation = self.owners.mutation.take().expect("observed original mutation owner");
+            *self.owners.candidate = Some((post, vec![inverse], mutation));
             self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: base_bytes as u64, digest: [0; 32] };
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Self::progress()));
         }
-        if self.sealed_candidate.is_none() {
-            let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Space Home config preparation lost its candidate".to_string())?;
-            let authority = self.authority.as_ref().ok_or_else(|| "Space Home config preparation lost its Store authority".to_string())?;
-            self.sealed_candidate = Some((post, authority.next_edit(forward, vec![inverse])));
+        if self.owners.sealed.is_none() {
+            let authority = self.owners.authority.as_ref().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its Store authority"))?;
+            let (post, inverse, forward) = self.owners.candidate.take().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its candidate"))?;
+            *self.owners.sealed = Some((post, authority.next_edit(forward, inverse)));
         }
         if self.serialized_bytes.is_none() {
-            let (post, edit) = self.sealed_candidate.as_ref().ok_or_else(|| "Space Home config preparation lost its semantic edit".to_string())?;
+            let (post, edit) = self.owners.sealed.as_ref().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its semantic edit"))?;
             let bytes = home_config_edit_bytes(edit)?;
             if bytes.saturating_add(home_config_retained_bytes(post)).saturating_add(512) > HOME_CONFIG_STEP_BYTES {
-                return Err("Space Home config publication exceeds its complete retained envelope".into());
+                return Err(home_config_refusal(OwnershipLimit, "Space Home config publication exceeds its complete retained envelope"));
             }
             self.serialized_bytes = Some(bytes);
             self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.checkpoint.completed_bytes.saturating_add(bytes as u64), digest: [0; 32] };
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Self::progress()));
         }
-        let (post, edit) = self.sealed_candidate.take().ok_or_else(|| "Space Home config preparation lost its validated edit".to_string())?;
-        let authority = self.authority.as_ref().ok_or_else(|| "Space Home config preparation lost its Store authority".to_string())?;
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its Store authority"))?;
+        let (post, edit) = self.owners.sealed.take().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its validated edit"))?;
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => {
+                *self.owners.refused = Some((edit, post));
+                return Err(error);
+            }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 3, completed_items: 3, completed_bytes: self.checkpoint.completed_bytes.saturating_add(self.serialized_bytes.unwrap_or(0) as u64), digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.owners.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Self::progress()))
     }
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>> { self.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>> { self.prepared.take() }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.closing = true; }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || !grant.permits_one() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-        // 🧹️ One retained owner per granted page, never more bytes than the page granted — the same
-        // reasoning as `advance` above: an owner that answers `Blocked` until it is handed its whole
-        // declared envelope never closes under the framework's 4 KiB pumps.
-        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: grant.maximum_bytes }); }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Space Home config preparation could not return its exact base root")); }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            let bytes = authority.actor().len();
-            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none() }
+    fn begin_close(&mut self) { self.owners.begin_close(); }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
+    fn terminal_is_empty(&self) -> bool { self.owners.terminal_is_empty() }
 }
 //#endregion 📬️ConfigStorePreparation
 

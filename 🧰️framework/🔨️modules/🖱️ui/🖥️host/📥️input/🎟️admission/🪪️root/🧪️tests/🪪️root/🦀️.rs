@@ -4,24 +4,8 @@ use super::{EventQueue, InputGeneration};
 use super::input_root::{InputRootFault, InputRootSequence};
 use std::sync::{atomic::{AtomicU64, Ordering}, Barrier};
 
-//#region 🔎️AllocationObservation
-struct ObservedAllocator;
-thread_local! {
-    static OBSERVE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
-    static ALLOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-    static INTERFERE: std::cell::Cell<Option<u64>> = const { std::cell::Cell::new(None) };
-}
-unsafe impl std::alloc::GlobalAlloc for ObservedAllocator {
-    unsafe fn alloc(&self, layout: std::alloc::Layout) -> *mut u8 {
-        OBSERVE.with(|enabled| if enabled.get() { ALLOCATIONS.with(|count| count.set(count.get() + 1)); });
-        unsafe { std::alloc::GlobalAlloc::alloc(&std::alloc::System, layout) }
-    }
-    unsafe fn dealloc(&self, pointer: *mut u8, layout: std::alloc::Layout) {
-        unsafe { std::alloc::GlobalAlloc::dealloc(&std::alloc::System, pointer, layout) }
-    }
-}
-#[global_allocator]
-static ALLOCATOR: ObservedAllocator = ObservedAllocator;
+thread_local! { static INTERFERE: std::cell::Cell<Option<u64>> = const { std::cell::Cell::new(None) }; }
+pub(super) use crate::observed_allocator::{allocations_end, allocations_start};
 
 pub(super) fn interfere_after_load(counter: &AtomicU64) {
     INTERFERE.with(|pending| if let Some(value) = pending.take() { counter.store(value, Ordering::SeqCst); });
@@ -29,15 +13,6 @@ pub(super) fn interfere_after_load(counter: &AtomicU64) {
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap() }
 fn number(value: &serde_json::Value) -> u64 { value.as_str().unwrap().parse().unwrap() }
 fn grant() -> usize { size_of::<EventQueue>() }
-pub(super) fn allocations_start() {
-    ALLOCATIONS.with(|value| value.set(0));
-    OBSERVE.with(|value| value.set(true));
-}
-pub(super) fn allocations_end() -> usize {
-    OBSERVE.with(|value| value.set(false));
-    ALLOCATIONS.with(std::cell::Cell::get)
-}
-//#endregion 🔎️AllocationObservation
 
 //#region 🧪️InputRoots
 #[test]

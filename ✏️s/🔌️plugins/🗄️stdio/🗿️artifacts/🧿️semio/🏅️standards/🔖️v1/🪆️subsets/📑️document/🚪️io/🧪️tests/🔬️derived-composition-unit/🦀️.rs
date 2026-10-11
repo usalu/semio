@@ -77,7 +77,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn docx_round_trip_is_stable() {
         use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle};
-        use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx;
+        use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
 
         let docx1 = build_minimal_docx(
             DocxDocument {

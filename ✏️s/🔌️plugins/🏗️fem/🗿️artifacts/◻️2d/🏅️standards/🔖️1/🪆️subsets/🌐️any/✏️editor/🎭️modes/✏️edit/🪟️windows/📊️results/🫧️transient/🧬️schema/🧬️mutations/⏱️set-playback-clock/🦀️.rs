@@ -3,7 +3,8 @@
 use super::{FemPlaybackClockChange, FemResultsWindowTransient, FemResultsWindowTransientDiff, FemResultsWindowTransientMutation};
 use crate::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "set-playback-clock")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetPlaybackClock {

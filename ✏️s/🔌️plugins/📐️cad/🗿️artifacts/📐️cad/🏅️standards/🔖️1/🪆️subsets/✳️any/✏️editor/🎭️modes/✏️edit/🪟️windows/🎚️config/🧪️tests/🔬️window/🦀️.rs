@@ -20,7 +20,10 @@ fn cad_document_contract_world_window_config_matches_neutral_fixture_and_codecs(
     assert_eq!(base, CadWorldWindowConfig::default());
     let mut next = base.clone();
     next.camera.zoom = fixture["patchedZoom"].as_f64().expect("patched zoom");
-    let mutation = CadWorldWindowConfigMutation::Set { config: Box::new(next.clone()) };
+    let mutation = CadWorldWindowConfigMutation::Set(CadWorldWindowConfigSet { config: Box::new(next.clone()) });
+    let expected = serde_json::json!({ "Set": { "config": serde_json::Value::from(&semio_framework_value::ToValue::to_value(&next)) } });
+    assert_eq!(serde_json::Value::from(&semio_framework_value::ToValue::to_value(&mutation)), expected, "set-mutation wire stays the externally tagged `{Set:{config}}` form");
+    assert_eq!(<CadWorldWindowConfigMutation as semio_framework_value::FromValue>::from_value(expected.into()).expect("neutral wire decodes"), mutation);
     let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("window config diff");
     assert_eq!(after, next);
     let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("window config inverse"));
@@ -366,5 +369,5 @@ async fn cad_world_window_config_inverse_sums_to_the_negative_diff() {
     let mut next = base.clone();
     next.camera.zoom = 2.5;
     next.dislocate_options.move_enabled = false;
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CadWorldWindowConfigMutation::Set { config: Box::new(next.clone()) }, &base).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CadWorldWindowConfigMutation::Set(CadWorldWindowConfigSet { config: Box::new(next.clone()) }), &base).await;
 }

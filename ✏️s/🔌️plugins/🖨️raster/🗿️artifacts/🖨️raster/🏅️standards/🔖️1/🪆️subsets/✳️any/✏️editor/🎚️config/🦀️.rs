@@ -13,7 +13,7 @@ pub use crate::editor::raster::selection::RasterPixelSelection;
 use protocol::Mutation;
 
 //#region 🔖️Config
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(id = "raster.config")]
 #[artifact(extension = "rastercfg")]
@@ -209,34 +209,102 @@ impl protocol::DiffAlgebra<RasterConfig> for RasterConfigDiff {
 //#region 🔖️ConfigMutations
 /// 🧮️ `RasterConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1 `RasterPlayRuntime` field
 /// writes); each variant's diff carries only the fields it changes and its inverse is the absolute setter of the base values.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum RasterConfigMutation {
     #[dsl(key = "brush-size")]
-    SetBrushSize { value: f64 },
+    SetBrushSize(SetBrushSizeEdit),
     #[dsl(key = "brush-opacity")]
-    SetBrushOpacity { value: f64 },
+    SetBrushOpacity(SetBrushOpacityEdit),
     #[dsl(key = "brush-color")]
-    SetBrushColor { value: String },
+    SetBrushColor(SetBrushColorEdit),
     #[dsl(key = "brush-hardness")]
-    SetBrushHardness { value: f64 },
+    SetBrushHardness(SetBrushHardnessEdit),
     #[dsl(key = "paint-target")]
-    SetPaintTarget {value:String},
+    SetPaintTarget(SetPaintTargetEdit),
     #[dsl(key = "mask-value")]
-    SetMaskValue {value:u32},
-    #[dsl(key="pixel-selection")]
-    SetPixelSelection {#[dsl(block)] selection:Option<RasterPixelSelection>},
+    SetMaskValue(SetMaskValueEdit),
+    #[dsl(key = "pixel-selection")]
+    SetPixelSelection(SetPixelSelectionEdit),
     #[dsl(key = "composite-viewport")]
-    SetCompositeViewport {
-        #[dsl(block)]
-        viewport: Option<RasterConfigViewportSize>,
-    },
+    SetCompositeViewport(SetCompositeViewportEdit),
     #[dsl(key = "camera")]
-    SetCamera {
-        #[dsl(block)]
-        camera: RasterCamera,
-    },
+    SetCamera(SetCameraEdit),
     #[dsl(key = "fill-tolerance")]
-    SetFillTolerance { value: u32 },
+    SetFillTolerance(SetFillToleranceEdit),
+}
+
+/// 📦️ `SetBrushSize` payload record, wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetBrushSizeEdit {
+    pub value: f64,
+}
+
+/// 📦️ `SetBrushOpacity` payload record, wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetBrushOpacityEdit {
+    pub value: f64,
+}
+
+/// 📦️ `SetBrushColor` payload record, wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetBrushColorEdit {
+    pub value: String,
+}
+
+/// 📦️ `SetBrushHardness` payload record, wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetBrushHardnessEdit {
+    pub value: f64,
+}
+
+/// 📦️ `SetPaintTarget` payload record, wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetPaintTargetEdit {
+    pub value: String,
+}
+
+/// 📦️ `SetMaskValue` payload record, wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetMaskValueEdit {
+    pub value: u32,
+}
+
+/// 📦️ `SetPixelSelection` payload record, wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetPixelSelectionEdit {
+    #[dsl(block)]
+    pub selection: Option<RasterPixelSelection>,
+}
+
+/// 📦️ `SetCompositeViewport` payload record, wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetCompositeViewportEdit {
+    #[dsl(block)]
+    pub viewport: Option<RasterConfigViewportSize>,
+}
+
+/// 📦️ `SetCamera` payload record, wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetCameraEdit {
+    #[dsl(block)]
+    pub camera: RasterCamera,
+}
+
+/// 📦️ `SetFillTolerance` payload record, wire-identical to the former named variant.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetFillToleranceEdit {
+    pub value: u32,
 }
 
 //#region 🔖️OpCodec
@@ -463,43 +531,43 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::SetBrushSize { .. } => &Self::DESCRIPTORS[0],
-            Self::SetBrushOpacity { .. } => &Self::DESCRIPTORS[1],
-            Self::SetCompositeViewport { .. } => &Self::DESCRIPTORS[2],
-            Self::SetCamera { .. } => &Self::DESCRIPTORS[3],
-            Self::SetBrushColor { .. } => &Self::DESCRIPTORS[4],
-            Self::SetBrushHardness { .. } => &Self::DESCRIPTORS[5],
-            Self::SetPaintTarget {..}=> &Self::DESCRIPTORS[6],
-            Self::SetMaskValue {..}=> &Self::DESCRIPTORS[7],
-            Self::SetPixelSelection {..}=> &Self::DESCRIPTORS[8],
-            Self::SetFillTolerance { .. } => &Self::DESCRIPTORS[9],
+            Self::SetBrushSize(_) => &Self::DESCRIPTORS[0],
+            Self::SetBrushOpacity(_) => &Self::DESCRIPTORS[1],
+            Self::SetCompositeViewport(_) => &Self::DESCRIPTORS[2],
+            Self::SetCamera(_) => &Self::DESCRIPTORS[3],
+            Self::SetBrushColor(_) => &Self::DESCRIPTORS[4],
+            Self::SetBrushHardness(_) => &Self::DESCRIPTORS[5],
+            Self::SetPaintTarget(_)=> &Self::DESCRIPTORS[6],
+            Self::SetMaskValue(_)=> &Self::DESCRIPTORS[7],
+            Self::SetPixelSelection(_)=> &Self::DESCRIPTORS[8],
+            Self::SetFillTolerance(_) => &Self::DESCRIPTORS[9],
         }
     }
 
     fn diff(&self, base: &RasterConfig) -> protocol::MutationOutcome<RasterConfigDiff> {
         let mut diff = RasterConfigDiff::default();
         match self {
-            RasterConfigMutation::SetBrushSize { value } => {
+            RasterConfigMutation::SetBrushSize(SetBrushSizeEdit { value }) => {
                 if value.is_finite() && (1.0..=2048.0).contains(value) && base.brush_size != *value {
                     diff.brush_size = Some(*value);
                 }
             }
-            RasterConfigMutation::SetBrushOpacity { value } => {
+            RasterConfigMutation::SetBrushOpacity(SetBrushOpacityEdit { value }) => {
                 if value.is_finite() && (0.0..=1.0).contains(value) && base.brush_opacity != *value {
                     diff.brush_opacity = Some(*value);
                 }
             }
-            RasterConfigMutation::SetBrushColor { value } => {
+            RasterConfigMutation::SetBrushColor(SetBrushColorEdit { value }) => {
                 if valid_brush_color(value) && base.brush_color != *value {
                     diff.brush_color = Some(value.clone());
                 }
             }
-            RasterConfigMutation::SetBrushHardness { value } => {
+            RasterConfigMutation::SetBrushHardness(SetBrushHardnessEdit { value }) => {
                 if value.is_finite() && (0.0..=1.0).contains(value) && base.brush_hardness != *value {
                     diff.brush_hardness = Some(*value);
                 }
             }
-            RasterConfigMutation::SetPaintTarget { value } => {
+            RasterConfigMutation::SetPaintTarget(SetPaintTargetEdit { value }) => {
                 if matches!(value.as_str(), "pixels" | "mask") && base.paint_target != *value {
                     diff.paint_target = Some(value.clone());
                     if base.pixel_selection.is_some() {
@@ -507,27 +575,27 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
                     }
                 }
             }
-            RasterConfigMutation::SetPixelSelection { selection } => {
+            RasterConfigMutation::SetPixelSelection(SetPixelSelectionEdit { selection }) => {
                 if selection.as_ref().is_none_or(|value| value.target == base.paint_target && value.validate().is_ok()) && base.pixel_selection != *selection {
                     diff.pixel_selection = Some(RasterPixelSelectionSet { value: selection.clone() });
                 }
             }
-            RasterConfigMutation::SetMaskValue { value } => {
+            RasterConfigMutation::SetMaskValue(SetMaskValueEdit { value }) => {
                 if *value <= 255 && base.mask_value != *value {
                     diff.mask_value = Some(*value);
                 }
             }
-            RasterConfigMutation::SetFillTolerance { value } => {
+            RasterConfigMutation::SetFillTolerance(SetFillToleranceEdit { value }) => {
                 if *value <= 255 && base.fill_tolerance != *value {
                     diff.fill_tolerance = Some(*value);
                 }
             }
-            RasterConfigMutation::SetCompositeViewport { viewport } => {
+            RasterConfigMutation::SetCompositeViewport(SetCompositeViewportEdit { viewport }) => {
                 if base.composite_viewport != *viewport {
                     diff.composite_viewport = Some(RasterViewportSet { value: viewport.clone() });
                 }
             }
-            RasterConfigMutation::SetCamera { camera } => {
+            RasterConfigMutation::SetCamera(SetCameraEdit { camera }) => {
                 if base.camera != *camera {
                     diff.camera = Some(camera.clone());
                 }
@@ -538,22 +606,22 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
 
     fn inverse(&self, base: &RasterConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(match self {
-            RasterConfigMutation::SetBrushSize { .. } => vec![RasterConfigMutation::SetBrushSize { value: base.brush_size }],
-            RasterConfigMutation::SetBrushOpacity { .. } => vec![RasterConfigMutation::SetBrushOpacity { value: base.brush_opacity }],
-            RasterConfigMutation::SetBrushColor { .. } => vec![RasterConfigMutation::SetBrushColor { value: base.brush_color.clone() }],
-            RasterConfigMutation::SetBrushHardness { .. } => vec![RasterConfigMutation::SetBrushHardness { value: base.brush_hardness }],
-            RasterConfigMutation::SetPaintTarget { .. } => vec![RasterConfigMutation::SetPaintTarget { value: base.paint_target.clone() }, RasterConfigMutation::SetPixelSelection { selection: base.pixel_selection.clone() }],
-            RasterConfigMutation::SetPixelSelection { .. } => vec![RasterConfigMutation::SetPixelSelection { selection: base.pixel_selection.clone() }],
-            RasterConfigMutation::SetMaskValue { .. } => vec![RasterConfigMutation::SetMaskValue { value: base.mask_value }],
-            RasterConfigMutation::SetFillTolerance { .. } => vec![RasterConfigMutation::SetFillTolerance { value: base.fill_tolerance }],
-            RasterConfigMutation::SetCompositeViewport { .. } => vec![RasterConfigMutation::SetCompositeViewport { viewport: base.composite_viewport.clone() }],
-            RasterConfigMutation::SetCamera { .. } => vec![RasterConfigMutation::SetCamera { camera: base.camera.clone() }],
+            RasterConfigMutation::SetBrushSize(_) => vec![RasterConfigMutation::SetBrushSize(SetBrushSizeEdit { value: base.brush_size })],
+            RasterConfigMutation::SetBrushOpacity(_) => vec![RasterConfigMutation::SetBrushOpacity(SetBrushOpacityEdit { value: base.brush_opacity })],
+            RasterConfigMutation::SetBrushColor(_) => vec![RasterConfigMutation::SetBrushColor(SetBrushColorEdit { value: base.brush_color.clone() })],
+            RasterConfigMutation::SetBrushHardness(_) => vec![RasterConfigMutation::SetBrushHardness(SetBrushHardnessEdit { value: base.brush_hardness })],
+            RasterConfigMutation::SetPaintTarget(_) => vec![RasterConfigMutation::SetPaintTarget(SetPaintTargetEdit { value: base.paint_target.clone() }), RasterConfigMutation::SetPixelSelection(SetPixelSelectionEdit { selection: base.pixel_selection.clone() })],
+            RasterConfigMutation::SetPixelSelection(_) => vec![RasterConfigMutation::SetPixelSelection(SetPixelSelectionEdit { selection: base.pixel_selection.clone() })],
+            RasterConfigMutation::SetMaskValue(_) => vec![RasterConfigMutation::SetMaskValue(SetMaskValueEdit { value: base.mask_value })],
+            RasterConfigMutation::SetFillTolerance(_) => vec![RasterConfigMutation::SetFillTolerance(SetFillToleranceEdit { value: base.fill_tolerance })],
+            RasterConfigMutation::SetCompositeViewport(_) => vec![RasterConfigMutation::SetCompositeViewport(SetCompositeViewportEdit { viewport: base.composite_viewport.clone() })],
+            RasterConfigMutation::SetCamera(_) => vec![RasterConfigMutation::SetCamera(SetCameraEdit { camera: base.camera.clone() })],
         })
     }
 
     fn inverse_rows(&self) -> usize {
         match self {
-            RasterConfigMutation::SetPaintTarget { .. } => 2,
+            RasterConfigMutation::SetPaintTarget(_) => 2,
             _ => 1,
         }
     }

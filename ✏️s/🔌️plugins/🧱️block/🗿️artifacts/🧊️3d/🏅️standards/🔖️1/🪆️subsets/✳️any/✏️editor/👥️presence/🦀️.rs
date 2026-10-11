@@ -9,7 +9,7 @@ use store::ArtifactPack;
 /// (`selected_ids`/`hovered_vortex_full_id`) — both now broadcast automatically via the framework's
 /// typed `PresenceInteraction` for the declared `vortex` domain (see `crate::editor::block3d::create_block3d_app`),
 /// so this facet is empty until block3d grows genuinely app-specific live state (e.g. a live camera).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -88,6 +88,12 @@ impl protocol::MutationDiff<Block3dPresence> for Block3dPresenceDiff {
 /// 🧮️ An empty presence has no mutation: the enum is uninhabited, so no diff can be raised against it.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub enum Block3dPresenceMutation {}
+
+impl semio_framework_value::retirement::RetireOwned for Block3dPresenceMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { match self {} }
+}
+
+impl store::ArtifactPresenceSnapshot for Block3dPresence {}
 
 impl protocol::Mutation<Block3dPresence> for Block3dPresenceMutation {
     type Diff = Block3dPresenceDiff;

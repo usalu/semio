@@ -16,7 +16,7 @@ use std::hash::{Hash, Hasher};
 
 //#region 🔖️Entries
 /// 🗃️ Census of the working-scene `Model` behind a snapshot's composed children.
-#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct EnergyModelEntries {
     pub entry_count: u32,

@@ -10,7 +10,8 @@ use std::collections::BTreeMap;
 //#region 🔖️Placement
 /// 📍️ The absolute placement fields of one placed element, tagged by its kind: exactly what a move or a rotation may change and
 /// nothing else. A slab carries its slope and a roof its shape because a rotation turns their fall and ridge directions.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Placement {
     Wall {
         axis: Axis,

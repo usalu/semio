@@ -36,7 +36,7 @@ const CONTACT_AREA: f64 = CONTACT_GROWTH * 1e-3;
 
 //#region 🔖️Values
 /// 🩺️ How a room was resolved: `Inferred` from the walls around the seed, `Explicit` as authored; the rest are diagnostics (no outline, zero areas).
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum SpaceStatus {
     #[default]
     Inferred,
@@ -50,7 +50,7 @@ pub enum SpaceStatus {
 /// `outline` is the counter-clockwise outer loop (bulges only for explicit outlines), `holes` the clockwise islands inside it.
 /// `area` is the outline area minus the holes, `net_floor_area` additionally excludes the columns of the storey, `perimeter` adds the hole boundaries.
 /// `clear_height` is the lowest underside above `point` minus the floor: the storey height plus the offset minus the thickness of the slab of the storey above that covers `point` (`ceiling_slab`), or the underside of the lowest ceiling of the storey that covers `point` (`ceiling`), `volume = area * clear_height`.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct SpaceRoom {
     pub status: SpaceStatus,
     pub outline: Vec<Vertex>,

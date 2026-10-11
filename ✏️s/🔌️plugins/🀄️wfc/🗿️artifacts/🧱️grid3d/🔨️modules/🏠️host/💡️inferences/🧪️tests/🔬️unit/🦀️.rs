@@ -170,28 +170,34 @@ fn the_inference_job_publishes_a_twenty_five_byte_preview() {
     let mut verdict = None;
     for _ in 0..100_000 {
         let now = semio_framework_job::default_now_us().expect("clock");
-        let budget = semio_framework_job::StepBudget::new(1, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4);
-        let outcome = semio_framework_job::drive_step(&mut job, "wfc.grid3d.inference.preview.test", operation_id, generation, semio_framework_job::InteractiveStage::InteractiveStep, budget, cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut verdict);
-        match outcome {
-            semio_framework_job::StepOutcome::PreviewReady(mut payload) => {
-                let bytes: Vec<u8> = (0..payload.page_count()).flat_map(|index| payload.page(index).expect("page").to_vec()).collect();
-                while !matches!(payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
-                assert_eq!(bytes.len(), 25, "the parent inference preview is a fixed 25-byte progress record");
-                job.begin_close();
-                for _ in 0..1_000_000 {
-                    if matches!(job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
-                        assert!(job.terminal_is_empty());
-                        return;
-                    }
+        let mut receipt = semio_framework_job::RetainedCloneProgress::default();
+        let grant = semio_framework_job::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
+        let budget = semio_framework_job::StepBudget::new(1, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4, grant);
+        let mut context = semio_framework_job::StepContext::new(operation_id, generation, budget, cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
+        let preview = match semio_framework_job::drive_step(&mut job, &mut context, "wfc.grid3d.inference.preview.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("inference step admission") {
+            Some(semio_framework_job::JobOutcomeBorrow::PreviewReady { payload, .. }) => Some((0..payload.page_count()).flat_map(|index| payload.page(index).expect("page").to_vec()).collect::<Vec<u8>>()),
+            Some(semio_framework_job::JobOutcomeBorrow::Complete { .. } | semio_framework_job::JobOutcomeBorrow::Cancelled { .. } | semio_framework_job::JobOutcomeBorrow::Fault { .. }) => panic!("expected a preview before the terminal outcome"),
+            _ => None,
+        };
+        if let Some(bytes) = preview {
+            assert_eq!(bytes.len(), 25, "the parent inference preview is a fixed 25-byte progress record");
+            drop(context);
+            job.begin_close();
+            for _ in 0..1_000_000 {
+                if job.terminal_is_empty() {
+                    return;
                 }
-                panic!("inference close stalled");
+                let grant = semio_framework_job::RetainedCloneGrant {
+                    maximum_items: 1,
+                    maximum_copy_bytes: job.next_close_copy_byte_demand().expect("a locally owned job quotes its copy demand"),
+                    maximum_capacity_bytes: job.next_close_capacity_byte_demand(usize::MAX).expect("a locally owned job quotes its capacity demand"),
+                    maximum_release_bytes: job.next_close_release_byte_demand().expect("a locally owned job quotes its release demand"),
+                    maximum_depth: job.next_close_depth_demand().expect("a locally owned job quotes its depth demand").max(1),
+                };
+                let step = job.close_step(grant);
+                assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Blocked | semio_framework_job::InteractiveJobCloseStep::Refused { .. }), "a locally owned job close has no external owner and no refusal");
             }
-            semio_framework_job::StepOutcome::Complete(_) | semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => {
-                let mut outcome = outcome;
-                while !matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
-                panic!("expected a preview before the terminal outcome");
-            }
-            _ => {}
+            panic!("inference close stalled");
         }
     }
     panic!("no preview published");

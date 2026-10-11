@@ -331,4 +331,6 @@ pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2
 
 
 use crate::standards::v1::subsets::any::io::text::mutations::{Generation2dOperationDsl,generation2d_operation_to_dsl,generation2d_operation_from_dsl};
-use crate::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, GENERATION2D_RETAINED_STACK_CAPACITY, generation2d_apply_initialization_mutation, generation2d_apply_retained_mutations_for_test, generation2d_close_flow_frontier, generation2d_copy_generation, generation2d_copy_string, generation2d_copy_synapse, generation2d_copy_widget, generation2d_retire_mutations_cold};
+use crate::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, GENERATION2D_RETAINED_STACK_CAPACITY, generation2d_apply_initialization_mutation, generation2d_copy_generation, generation2d_copy_string, generation2d_copy_synapse, generation2d_copy_widget};
+#[cfg(test)]
+use crate::central_apply::{generation2d_apply_retained_mutations_for_test, generation2d_retire_mutations_cold};

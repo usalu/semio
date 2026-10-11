@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️ZoneLoad
 /// 📊️ Predicted zone heating/cooling/humidification loads [W].
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ZoneLoad {
     pub heating_w: f64,
     pub cooling_w: f64,
@@ -33,7 +33,7 @@ impl ZoneLoad {
 
 // #region 🔖️ControlAction
 /// 🎛️ HVAC control action requested by zone controller.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum ControlAction {
     NoAction,
     Heat { power_w: f64 },
@@ -46,7 +46,7 @@ pub enum ControlAction {
 
 // #region 🔖️ThermostatOutput
 /// 🌡️ Thermostat and humidistat combined output.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ThermostatOutput {
     pub heating_fraction: f64,
     pub cooling_fraction: f64,
@@ -61,7 +61,7 @@ pub struct ThermostatOutput {
 
 // #region 🔖️ThermostatSpec
 /// 🌡️ Proportional thermostat with throttle ranges [K].
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ThermostatSpec {
     pub heating_setpoint_c: f64,
     pub cooling_setpoint_c: f64,
@@ -74,7 +74,7 @@ pub struct ThermostatSpec {
 
 // #region 🔖️HumidistatSpec
 /// 💧️ Humidistat with RH setpoints and throttle ranges.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct HumidistatSpec {
     pub humidifying_setpoint_rh: f64,
     pub dehumidifying_setpoint_rh: f64,

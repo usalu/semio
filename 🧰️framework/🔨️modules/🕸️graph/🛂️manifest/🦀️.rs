@@ -45,7 +45,7 @@ fn value_type_from_value(value: semio_framework_value::DslValue) -> Result<Value
 
 // #region 🔖️Property
 /// 📊️ Runtime property value for graph instances.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 pub enum PropertyValue {
     #[default]
     Null,
@@ -58,6 +58,8 @@ pub enum PropertyValue {
 
 #[path = "♻️retirement/🦀️.rs"]
 mod retirement;
+#[path="🌲️canonical/🦀️.rs"]
+mod canonical_tree;
 #[path="🗂️properties/🦀️.rs"]
 mod property_members;
 pub use property_members::PropertyBag;
@@ -149,6 +151,8 @@ fn dsl_value_to_property_value(value: &semio_framework_value::DslValue) -> Prope
     }
 }
 
+impl semio_framework_dsl_record::BorrowedDslField for PropertyValue{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;}
+
 impl semio_framework_dsl_record::DslField for PropertyValue {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{property_control::encode(self,control).map(semio_framework_dsl_record::FieldValue::Value)}
@@ -201,7 +205,7 @@ impl semio_framework_value::FromValue for PropertyValue {
 //#endregion 🔖️ToFromValue
 
 /// 🏷️ Compile-time property kind.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub enum PropertyKind {
     Data,
@@ -209,7 +213,7 @@ pub enum PropertyKind {
 }
 
 /// 📋️ Property definition on a kind.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct PropertyDef {
     pub name: String,
@@ -267,7 +271,7 @@ impl PropertyDef {
 
 // #region 🔖️Manifest
 /// 🔌️ Port direction on a node.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub enum PortDirection {
     In,

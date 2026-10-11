@@ -5,7 +5,7 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.wfc.bitmap.inputwindowconfig", extension = "wfcbitmapinputwindowcfg")]
@@ -21,7 +21,7 @@ impl Default for BitmapInputWindowConfig {
 }
 
 /// 🔺️ Field-sparse diff of [`BitmapInputWindowConfig`]: each field is an optional absolute value.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct BitmapInputWindowConfigDiff {
     pub active_color: Option<u32>,
@@ -62,8 +62,9 @@ impl protocol::MutationDiff<BitmapInputWindowConfig> for BitmapInputWindowConfig
 }
 
 /// 🪟️ The bitmap input window configuration's mutation vocabulary: one absolute setter per field group.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[value(tag = "kind", rename_all = "kebab-case")]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum BitmapInputWindowConfigMutation {
     SetActiveColor { color: u32 },
     SetZoom { zoom: f64 },
@@ -185,6 +186,21 @@ impl protocol::OpBinary for BitmapInputWindowConfigMutation {
     }
 }
 
+impl semio_framework_plugin::WindowConfigApplyMutation<BitmapInputWindowConfig> for BitmapInputWindowConfigMutation {
+    fn exchange(self, post: &mut BitmapInputWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetActiveColor { mut color } => {
+                std::mem::swap(&mut color, &mut post.active_color);
+                Self::SetActiveColor { color }
+            }
+            Self::SetZoom { mut zoom } => {
+                std::mem::swap(&mut zoom, &mut post.zoom);
+                Self::SetZoom { zoom }
+            }
+        })
+    }
+}
+
 pub struct BitmapInputWindowConfigOwner;
 
 impl semio_framework_plugin::WindowConfigOwner for BitmapInputWindowConfigOwner {
@@ -193,6 +209,11 @@ impl semio_framework_plugin::WindowConfigOwner for BitmapInputWindowConfigOwner 
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = BitmapInputWindowConfig;
     type Mutation = BitmapInputWindowConfigMutation;
+    type Edit = semio_framework_plugin::WindowConfigApplyEdit<BitmapInputWindowConfig, BitmapInputWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+        std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
+    }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()
     }

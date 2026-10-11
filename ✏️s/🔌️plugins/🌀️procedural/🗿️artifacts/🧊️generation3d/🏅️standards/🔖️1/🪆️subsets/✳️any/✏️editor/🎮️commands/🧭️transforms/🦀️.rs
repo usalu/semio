@@ -307,7 +307,7 @@ impl GestureTool for Generation3dGumballTool {
     type Mutation = Generation3dMutation;
 
     fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
-        let runner = ToolMachineRunner::start(format!("{}#{verb}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID), protocol::ActorId(authoring_seed.to_string()), GumballToolContext::default(), GumballToolHost)?;
+        let runner = ToolMachineRunner::start(format!("{}#{verb}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID), protocol::ActorId(authoring_seed.into()), GumballToolContext::default(), GumballToolHost)?;
         Ok(Self { runner, verb: verb.to_string(), authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string(), ids: Vec::new() })
     }
 
@@ -316,7 +316,7 @@ impl GestureTool for Generation3dGumballTool {
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: <gumball_tool::GumballTool as machine::Machine>::definition().fingerprint, states: gesture.states.clone(), history: Vec::new(), done: false };
         let snapshot = machine::restore::<gumball_tool::GumballTool, machine::NoMigrations>(&persisted, GumballToolContext { stream }, &[]).map_err(|_| ToolRefusal::Closed)?;
         let transaction = ToolTransaction::resume(gesture.transaction.clone(), gesture.entries.clone());
-        let runner = ToolMachineRunner::resume(format!("{}#{}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID, gesture.verb), protocol::ActorId(gesture.authoring_seed.clone()), GumballToolContext::default(), snapshot, Some(transaction), GumballToolHost)?;
+        let runner = ToolMachineRunner::resume(format!("{}#{}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID, gesture.verb), protocol::ActorId(gesture.authoring_seed.as_str().into()), GumballToolContext::default(), snapshot, Some(transaction), GumballToolHost)?;
         Ok(Self { runner, verb: gesture.verb.clone(), authoring_seed: gesture.authoring_seed.clone(), base_revision: gesture.base_revision.clone(), ids: gesture.ids.clone() })
     }
 

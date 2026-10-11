@@ -15,7 +15,7 @@ use std::collections::{BTreeMap, HashMap};
 //#region 🔖️RowDiff
 /// 🔺️ Sparse diff for a single TSV row (`Vec<String>`) — positional per-column patch list,
 /// `None` at a position means that column is unchanged.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct TsvRowDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -77,7 +77,7 @@ impl TsvRowDiff {
 
 //#region 🔖️RecordsDiff
 /// 🧩 One row apply_patch-in-place at a BASE index.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct TsvRowModified {
     pub index: usize,
@@ -85,7 +85,7 @@ pub struct TsvRowModified {
 }
 
 /// 🧩 One row inserted at a FINAL index.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct TsvRowAdded {
     pub index: usize,
@@ -93,7 +93,7 @@ pub struct TsvRowAdded {
 }
 
 /// 🔺️ Index-keyed removed/modified/added triple over `TsvSnapshot::records`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct TsvRowsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -147,7 +147,7 @@ fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.tsv`. No `snapshot: Option<TsvSnapshot>` full-replace slot — every diff is sparse.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tsv.diff")]
 pub struct TsvDiff {

@@ -29,7 +29,7 @@ impl store::ArtifactDsl for PptxSnapshot {
             .map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        match crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode(
+        match crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode_standalone(
             self,
             semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Text,
             &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()),

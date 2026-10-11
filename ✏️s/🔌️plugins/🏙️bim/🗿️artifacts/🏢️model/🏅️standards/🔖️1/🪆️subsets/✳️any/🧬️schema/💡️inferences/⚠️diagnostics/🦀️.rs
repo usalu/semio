@@ -46,7 +46,7 @@ pub mod wall_depth;
 
 //#region 🔖️Values
 /// 🚦️ How serious a finding is: `Error` breaks the model, `Warning` is probably unintended, `Info` is worth knowing.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum Severity {
     Info,
     Warning,
@@ -54,7 +54,7 @@ pub enum Severity {
 }
 
 /// 🏷️ What a finding is about; the slug and the texts of a code are in [`messages::row_of`].
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum DiagnosticCode {
     ClashWallWall,
     ClashWallColumn,
@@ -226,7 +226,7 @@ impl DiagnosticCode {
 
 /// ⚠️ One finding. `elements` are the ids involved (ordered), `missing` the referenced ids that do not exist, `storey` the storey it is on when it has one,
 /// `values` the numbers of the message (areas, volumes, lengths, levels).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct Diagnostic {
     pub code: DiagnosticCode,
     pub severity: Severity,

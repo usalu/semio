@@ -250,6 +250,27 @@ impl OriginalToolRunJobPortRetirement{
     pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.effects.is_none()}
 }
 impl Drop for OriginalToolRunJobPortRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original tool port retirement abandoned live lease or queue");}}
+/// 🎟️ Erases the original port lease and its final native queue behind the typed retirement ladder of owning containers.
+impl semio_framework_value::retirement::RetireOwned for ToolRunJobPort {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(OriginalToolRunJobPortRetirement{source:std::mem::ManuallyDrop::new(Some(self)),effects:std::mem::ManuallyDrop::new(None)})}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<OriginalToolRunJobPortRetirement>())}
+    fn controlled_retirement_supported()->bool{true}
+}
+impl semio_framework_value::retirement::RetirementCursor for OriginalToolRunJobPortRetirement {
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
+        use semio_framework_value::retirement::RetirementStep;
+        match OriginalToolRunJobPortRetirement::close_step(self,grant){
+            Ok(step)=>{let progress=step.progress();if progress!=RetainedCloneProgress::default(){RetirementStep::Progress(progress)}else if self.terminal_is_empty(){RetirementStep::Complete}else{RetirementStep::BudgetExhausted}}
+            Err(error)=>RetirementStep::Failure(error),
+        }
+    }
+    fn terminal_is_empty(&self)->bool{OriginalToolRunJobPortRetirement::terminal_is_empty(self)}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.depth)}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands()?.copy_bytes)}
+    fn next_close_byte_demand(&self)->Option<usize>{self.demands().ok().map(|demand|demand.release_bytes)}
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+}
 
 #[cfg(test)]
 #[path="📮️port/♻️retirement/🧪️tests/🦀️.rs"]
@@ -260,14 +281,14 @@ mod original_port_admission_tests;
 
 /// 🪟️ What a renderer learns about the run on this document instance (§4.1 layer 1): its identity and state, the
 /// provisional entities, the §2.3 progress (stage, counters, step ring) and the latest plugin payload a tick carried.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct ToolRunView {
     pub tool_id: String,
     pub identity: ToolRunIdentity,
     pub state: ToolRunState,
     pub provisional_entities: Arc<BTreeSet<u64>>,
     pub progress: semio_framework_tool_run::ToolRunProgress,
-    pub payload: Option<Arc<[u8]>>,
+    pub payload: Option<Arc<Vec<u8>>>,
 }
 
 impl ToolRunView {
@@ -297,12 +318,13 @@ struct ToolRunJobSlot<C> {
     generation: semio_framework_job::Generation,
     cancel: semio_framework_job::CancelToken,
     preview_sequence: u64,
+    context: Option<semio_framework_job::StepContextOwner>,
     closing: bool,
 }
 
 impl<C> ToolRunJobSlot<C> {
     fn new(job: ToolRunJobHandle<C>, purpose: ToolRunJobPurpose, generation: u32) -> Self {
-        Self { job, purpose, operation: semio_framework_job::allocate_operation_id(), generation: semio_framework_job::Generation(u64::from(generation)), cancel: semio_framework_job::CancelToken::root_now(), preview_sequence: 0, closing: false }
+        Self { job, purpose, operation: semio_framework_job::allocate_operation_id(), generation: semio_framework_job::Generation(u64::from(generation)), cancel: semio_framework_job::CancelToken::root_now(), preview_sequence: 0, context: None, closing: false }
     }
 
     fn interactive(&mut self) -> &mut dyn semio_framework_job::InteractiveJob {
@@ -312,11 +334,15 @@ impl<C> ToolRunJobSlot<C> {
         }
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    fn job_is_empty(&self) -> bool {
         match &self.job {
             ToolRunJobHandle::Plain(job) => job.terminal_is_empty(),
             ToolRunJobHandle::Retargetable(job) => job.terminal_is_empty(),
         }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.job_is_empty() && self.context.as_ref().is_none_or(semio_framework_job::StepContextOwner::terminal_is_empty)
     }
 
     fn retargetable(&mut self) -> Option<&mut dyn ToolRunRetargetableJob<C>> {
@@ -336,6 +362,7 @@ impl<C> ToolRunJobSlot<C> {
 
     fn next_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let job:&dyn semio_framework_job::InteractiveJob=match &self.job{ToolRunJobHandle::Plain(job)=>job.as_ref(),ToolRunJobHandle::Retargetable(job)=>job.as_ref()};
+        if self.closing&&job.terminal_is_empty(){if let Some(owner)=self.context.as_ref(){return Ok(RetirementDemand{release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?,..Default::default()});}}
         if !self.closing||job.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"tool job cancellation token and terminal dynamic scaffold retain their exact retirement authority"));}
         Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(body)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"tool job close depth overflow"))?})
     }
@@ -343,8 +370,14 @@ impl<C> ToolRunJobSlot<C> {
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let demand=self.next_demands(grant.maximum_copy_bytes).map_err(FaultFrom::into_fault)?;
         if !tool_grant_funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if self.job_is_empty(){if let Some(owner)=self.context.as_mut(){return match owner.close_step(grant){
+            semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>{if owner.terminal_is_empty(){self.context=None;}Ok(RetainedCloneStep::Progress(progress))},
+            semio_framework_job::InteractiveJobCloseStep::Blocked=>Ok(RetainedCloneStep::Progress(Default::default())),
+            semio_framework_job::InteractiveJobCloseStep::Refused{kind,progress}=>Err(ValueError::literal(kind,"tool job step context original close refused its admitted grant").with_retained_progress(progress).into_fault()),
+        };}}
         let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        let step=self.interactive().close_step(child).admit(child,self.terminal_is_empty());
+        let terminal=self.job_is_empty();
+        let step=self.interactive().close_step(child).admit(child,terminal);
         match step{
             semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>Ok(RetainedCloneStep::Progress(progress)),
             semio_framework_job::InteractiveJobCloseStep::Blocked=>Ok(RetainedCloneStep::Progress(Default::default())),
@@ -422,8 +455,6 @@ fn inject_tool_run_trace_lane_into(surface: &mut BuiltNode, lane: &str) -> UiAss
     surface.children.try_push(carrier).map_err(|_| ui_assembly_error("tool-run-trace.carrier"))
 }
 
-fn tool_job_outcome_demands(original:&semio_framework_job::JobOutcomeSlot)->Result<RetirementDemand,ValueError>{semio_framework_job::step_outcome_slot_retirement_demands(original)}
-fn close_tool_job_outcome(original:&mut semio_framework_job::JobOutcomeSlot,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{semio_framework_job::close_step_outcome_slot(original,grant)}
 //#endregion 🔖️Job
 
 //#region 🔖️Ledger
@@ -472,7 +503,7 @@ struct ToolRunFinalize<A: ArtifactApp> {
 
 struct ToolRunEntry<A: ArtifactApp> {
     tool_id: String,
-    actor: String,
+    actor: semio_framework_value::SharedUtf8,
     definition: ToolRunDefinition,
     slot: ToolRunSlot,
     identity: ToolRunIdentity,
@@ -482,7 +513,7 @@ struct ToolRunEntry<A: ArtifactApp> {
     settings_values: ToolRunSettingsValues,
     window: Option<(String, String)>,
     window_bodies: Vec<String>,
-    payload: Option<Arc<[u8]>>,
+    payload: Option<Arc<Vec<u8>>>,
     trace_keys: ToolRunTraceKeys,
     provisional: Vec<A::Mutation>,
     entity_marks: Vec<(u32, u64)>,
@@ -645,7 +676,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
             return Ok(receipt);
         }
         if let Some(payload) = tick.payload.take() {
-            self.payload = Some(payload.into());
+            self.payload = Some(Arc::new(payload));
         }
         self.sequence = self.sequence.max(tick.sequence);
         if let Some(member) = self.member.as_mut() {
@@ -791,7 +822,6 @@ pub struct ToolRunLedger<A: ArtifactApp> {
     snapshot_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     pending_snapshot_alias: Option<Arc<A::Snapshot>>,
     pending_discarded: Option<A::Mutation>,
-    pending_job_outcome: semio_framework_job::JobOutcomeSlot,
     discarded: Vec<A::Mutation>,
     /// 🧩️ Member runs that left their slot, whose typed owners and composed reads still retire against their member store.
     retired_members: Vec<ToolRunMemberRun>,
@@ -824,7 +854,6 @@ impl<A: ArtifactApp> Default for ToolRunLedger<A> {
             snapshot_retirement: None,
             pending_snapshot_alias: None,
             pending_discarded: None,
-            pending_job_outcome: semio_framework_job::JobOutcomeSlot::empty(),
             discarded: Vec::new(),
             retired_members: Vec::new(),
             closing: false,
@@ -998,7 +1027,6 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             || self.snapshot_retirement.is_some()
             || self.pending_snapshot_alias.is_some()
             || self.pending_discarded.is_some()
-            || !self.pending_job_outcome.is_empty()
             || !self.discarded.is_empty()
             || !self.retired_members.is_empty()
             || self.entries.iter().any(|entry| entry.has_pending_work())
@@ -1191,7 +1219,6 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
 
     /// 🧹️ Advances the owners that outlived their slot by one bounded unit; `None` when nothing is retiring.
     fn retirement_demands(&self,store:&ArtifactStore<A::Snapshot,A::Mutation>,body:usize)->Result<RetirementDemand,ValueError>{
-        if !self.pending_job_outcome.is_empty(){return tool_job_outcome_demands(&self.pending_job_outcome);}
         if self.closing&&!self.entries.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool entries retain job cancellation and native metadata until granted entry retirement is available"));}
         if let Some(job)=self.retired_jobs.last(){return job.next_demands(body);}
         if let Some(publication)=self.retired_publications.last(){
@@ -1213,7 +1240,6 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         let demand=self.retirement_demands(store,grant.maximum_copy_bytes).map_err(FaultFrom::into_fault)?;
         if !tool_grant_funds(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
-        if !self.pending_job_outcome.is_empty(){return close_tool_job_outcome(&mut self.pending_job_outcome,grant).map(Some).map_err(FaultFrom::into_fault);}
         if let Some(job)=self.retired_jobs.last_mut(){return job.close_step(grant).map(Some);}
         if let Some(publication)=self.retired_publications.last_mut(){
             if publication.terminal_is_empty(){drop(self.retired_publications.pop());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}
@@ -1248,7 +1274,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        ledger_backing_is_empty(&self.entries)&&ledger_backing_is_empty(&self.retired_jobs)&&ledger_backing_is_empty(&self.retired_publications)&&ledger_backing_is_empty(&self.retired_snapshots)&&ledger_backing_is_empty(&self.discarded)&&ledger_backing_is_empty(&self.retired_members)&&self.snapshot_retirement.is_none()&&self.pending_snapshot_alias.is_none()&&self.pending_discarded.is_none()&&self.pending_job_outcome.is_empty()&&self.trace_windows.is_empty()&&!self.has_original_receipt()
+        ledger_backing_is_empty(&self.entries)&&ledger_backing_is_empty(&self.retired_jobs)&&ledger_backing_is_empty(&self.retired_publications)&&ledger_backing_is_empty(&self.retired_snapshots)&&ledger_backing_is_empty(&self.discarded)&&ledger_backing_is_empty(&self.retired_members)&&self.snapshot_retirement.is_none()&&self.pending_snapshot_alias.is_none()&&self.pending_discarded.is_none()&&self.trace_windows.is_empty()&&!self.has_original_receipt()
     }
 }
 //#endregion 🔖️Ledger
@@ -2118,41 +2144,56 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🦶️ Drives the current job until the turn deadline, a pause, a single step or a terminal outcome.
     fn step_tool_run_job(&mut self, _deadline: u64,grant:RetainedCloneGrant) -> Result<(), Fault> {
-        let handoff=RetirementDemand{copy_bytes:std::mem::size_of::<semio_framework_job::StepOutcome>()+std::mem::size_of::<semio_framework_job::JobOutcomeSlot>(),depth:1,..Default::default()};
-        if grant.maximum_items<=1||!self.tool_runs.pending_job_outcome.is_empty()||!tool_grant_funds(grant,handoff){return Ok(());}
+        enum SeenToolOutcome { Pending, Yield, Preview(Option<Vec<u8>>), Checkpoint(Option<Vec<u8>>), Complete, Terminal }
+        let handoff=RetirementDemand{copy_bytes:std::mem::size_of::<semio_framework_job::JobOutcomeAdmission>(),depth:1,..Default::default()};
+        if grant.maximum_items<=1||!tool_grant_funds(grant,handoff){return Ok(());}
         {
             let Some(entry) = selected_entry_mut!(self.tool_runs) else { return Ok(()) };
             let single = entry.slot.state == ToolRunState::Paused;
             let (run, generation, purpose) = (entry.slot.run, entry.slot.generation, entry.job.as_ref().map(|job| job.purpose));
             let Some(job) = entry.job.as_mut() else { return Ok(()) };
+            if job.context.is_none() {
+                let (context, ownership) = semio_framework_job::StepContextOwner::new(job.operation, job.generation, grant).map_err(FaultFrom::into_fault)?;
+                job.context = Some(context);
+                self.tool_runs.retain_original_receipt(grant, ownership)?;
+                return Ok(());
+            }
             let now = semio_framework_job::default_now_us().unwrap_or(0);
             let fuel = if single { 1 } else { semio_framework_job::INTERACTIVE_LANE_FUEL };
             let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-handoff.copy_bytes,maximum_items:grant.maximum_items.saturating_sub(1),..grant};
             let budget = semio_framework_job::StepBudget::from_duration(fuel, now, semio_framework_job::INTERACTIVE_LANE_WALL_US,child).unwrap_or(semio_framework_job::StepBudget::new(fuel, u64::MAX,child));
             let mut verdict = None;
+            let mut ownership = RetainedCloneProgress::default();
             let interactive: &mut dyn semio_framework_job::InteractiveJob = match &mut job.job {
                 ToolRunJobHandle::Plain(job) => job.as_mut(),
                 ToolRunJobHandle::Retargetable(job) => job.as_mut(),
             };
-            let (mut outcome,mut ownership) = semio_framework_job::drive_step(
-                interactive,
-                TOOL_RUN_JOB_SITE,
-                job.operation,
-                job.generation,
-                semio_framework_job::InteractiveStage::InteractiveStep,
-                budget,
-                job.cancel.clone(),
-                semio_framework_job::default_now_us,
-                &mut job.preview_sequence,
-                &mut verdict,
-            );
-            if single && !matches!(outcome, semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::CheckpointReady(_)) {
+            let owner = job.context.as_ref().expect("tool job step context owner was just admitted");
+            let Some(mut context) = owner.context(budget, job.cancel.clone(), semio_framework_job::default_now_us, &mut job.preview_sequence, &mut ownership) else { return Ok(()) };
+            let stepped = semio_framework_job::drive_step(interactive, &mut context, TOOL_RUN_JOB_SITE, semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict);
+            let seen = match stepped {
+                Ok(Some(loan)) => match loan {
+                    semio_framework_job::JobOutcomeBorrow::Yield { .. } => SeenToolOutcome::Yield,
+                    semio_framework_job::JobOutcomeBorrow::PreviewReady { payload, .. } => SeenToolOutcome::Preview(job_payload_bytes(payload, TOOL_RUN_TICK_BYTES_MAX)),
+                    semio_framework_job::JobOutcomeBorrow::CheckpointReady { state, .. } => SeenToolOutcome::Checkpoint(job_payload_bytes(state, semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES)),
+                    semio_framework_job::JobOutcomeBorrow::Complete { .. } => SeenToolOutcome::Complete,
+                    semio_framework_job::JobOutcomeBorrow::Cancelled { .. } | semio_framework_job::JobOutcomeBorrow::Fault { .. } => SeenToolOutcome::Terminal,
+                },
+                Ok(None) => SeenToolOutcome::Pending,
+                Err(_) => {
+                    drop(context);
+                    self.tool_runs.retain_original_receipt(grant, ownership)?;
+                    self.fault_tool_run(run, generation);
+                    return Ok(());
+                }
+            };
+            drop(context);
+            if single && !matches!(seen, SeenToolOutcome::Yield | SeenToolOutcome::Checkpoint(_)) {
                 entry.pending_step = false;
             }
-            match &mut outcome {
-                semio_framework_job::StepOutcome::Yield => {}
-                semio_framework_job::StepOutcome::PreviewReady(payload) => {
-                    let bytes = job_payload_bytes(payload, TOOL_RUN_TICK_BYTES_MAX);
+            match seen {
+                SeenToolOutcome::Pending | SeenToolOutcome::Yield => {}
+                SeenToolOutcome::Preview(bytes) => {
                     let tick = bytes
                         .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.tick-bytes"), "tool run tick exceeds its byte cap"))
                         .and_then(|bytes| ToolRunTick::decode(&bytes).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.tick-decode"), format!("{error:?}"))));
@@ -2175,22 +2216,21 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                         }
                     }
                 }
-                semio_framework_job::StepOutcome::CheckpointReady(checkpoint) => {
-                    entry.checkpoint = job_payload_bytes(&checkpoint.state, semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES);
+                SeenToolOutcome::Checkpoint(bytes) => {
+                    entry.checkpoint = bytes;
                     entry.settle_refold();
                 }
-                semio_framework_job::StepOutcome::Complete(_) => {
+                SeenToolOutcome::Complete => {
                     entry.settle_refold();
                     match purpose {
                         Some(ToolRunJobPurpose::Revalidate) => self.complete_tool_run_revalidation(),
                         _ => self.complete_tool_run_job(run, generation),
                     }
                 }
-                semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => {
+                SeenToolOutcome::Terminal => {
                     self.fault_tool_run(run, generation);
                 }
             }
-            self.tool_runs.pending_job_outcome.retain(outcome).unwrap_or_else(|_|panic!("tool outcome original slot unexpectedly occupied"));
             ownership.copied_items=ownership.copied_items.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original ToolRun job handoff work overflow").into_fault())?;
             ownership.copied_bytes=ownership.copied_bytes.checked_add(handoff.copy_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original ToolRun job handoff copy overflow").into_fault())?;
             self.tool_runs.retain_original_receipt(grant,ownership)?;

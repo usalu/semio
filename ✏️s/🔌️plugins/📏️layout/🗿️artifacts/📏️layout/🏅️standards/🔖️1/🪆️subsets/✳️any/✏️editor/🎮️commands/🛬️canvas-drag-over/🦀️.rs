@@ -17,9 +17,9 @@ fn surface_is_blueprint(surface_id: Option<&str>) -> bool {
 
 fn screen_to_world_for_surface(config: &LayoutWindowConfig, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
     let camera_runtime = &config.camera;
-    let camera = infinite_canvas::camera::Camera { x: camera_runtime.x, y: camera_runtime.y, zoom: camera_runtime.zoom.max(0.0001) };
-    let viewport = infinite_canvas::camera::Viewport { width: width.max(1.0) as u32, height: height.max(1.0) as u32, dpr: 1.0 };
-    let world = infinite_canvas::camera::screen_to_world(&camera, &viewport, infinite_canvas::Point::new(sx, sy));
+    let camera = semio_framework_canvas::camera::Camera { x: camera_runtime.x, y: camera_runtime.y, zoom: camera_runtime.zoom.max(0.0001) };
+    let viewport = semio_framework_canvas::camera::Viewport { width: width.max(1.0) as u32, height: height.max(1.0) as u32, dpr: 1.0 };
+    let world = semio_framework_canvas::camera::screen_to_world(&camera, &viewport, semio_framework_canvas::Point::new(sx, sy));
     (world.x, world.y)
 }
 
@@ -46,7 +46,7 @@ fn screen_to_world_for_surface(config: &LayoutWindowConfig, sx: f64, sy: f64, wi
 //#region 🔖️CanvasDrop
 //#endregion 🔖️CanvasDrop
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "canvas-drag-over")]
 pub struct CanvasDragOver {
     pub surface_id: Option<String>,

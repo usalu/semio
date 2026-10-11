@@ -11,7 +11,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
             publication: Some(ArtifactToolCompletionValue::Emit(Ok(emit), EphemeralEmit::default())), pending_artifact_publication: None, pending_child_publication: None,
             owned_child_group: None, owned_child_committed: false, owned_child_result_pending: false,
             captured_child_content: Some(std::sync::Arc::new(ChildContentView::clone(&app.child_content_root))), captured_child_content_generation: app.child_content_generation,
-            result_page: None, result_page_presented: false, result_sequence: 0, publication_progress: 0, publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None, publication_attempt: 0,
+            result_page: None, result_page_presented: false, result_sequence: 0, publication_progress: 0, publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None, publication_attempt: 0,
             ui_pending: true, progress: None, progress_pending: false, user_cancel_requested: false, published_artifact: false, published_config: false, published_window_config: false,
             command_logged: false, interaction_revalidated: false, retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault: None, stage: MountedTypedCommandFullOperationStage::Publishing,
         };
@@ -29,7 +29,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
                 }
             }
             assert!(started.elapsed().as_millis() <= 90000, "original mounted publication wall limit");
-            app.publish_mounted_typed_operation_run(&mut mounted).await.expect("actual retained publisher owns original parent and children");
+            app.publish_mounted_typed_operation_run(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await.expect("actual retained publisher owns original parent and children");
             let changed = observe(&app);
             assert!(!changed.is_empty());
             assert!(changed.iter().all(|changed| *changed) || changed.iter().all(|changed| !*changed), "all original child lanes share one visibility decision");
@@ -39,7 +39,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
                 let bytes = page.bytes().to_vec();
                 let token = page.token;
                 assert!(mounted.take_result_page().is_none());
-                app.publish_mounted_typed_operation_run(&mut mounted).await.unwrap();
+                app.publish_mounted_typed_operation_run(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await.unwrap();
                 assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), bytes);
                 assert_eq!(mounted.result_page.as_ref().unwrap().token, token);
                 if page.lane == TypedOperationResultLane::Child { child_page = true; assert!(mounted.owned_child_committed); assert_eq!(app.command_log.len(),command_count+1); assert_eq!(app.command_log.iter().next_back().unwrap().action_id,"compositeEdit"); }

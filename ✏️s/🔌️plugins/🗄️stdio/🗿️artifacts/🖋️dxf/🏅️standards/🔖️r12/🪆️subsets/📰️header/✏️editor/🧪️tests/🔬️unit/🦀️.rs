@@ -22,11 +22,11 @@ semio_framework_plugin::history_edit_acceptance_law!("stdio", super::DxfAnyEdito
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_row() {
-    use crate::schema::snapshot::{DxfEntity, DxfHeaderVar, DxfLayer, DxfValue};
+    use crate::schema::snapshot::{DxfEntity, DxfLine, DxfHeaderVar, DxfLayer, DxfValue};
     use crate::standards::v_r12::subsets::any::schema::mutations::{DxfMutation};
     let mut base = DxfSnapshot::default();
     base.tables.layers.push(DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] });
-    base.entities.push(DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] });
+    base.entities.push(DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }));
     base.header_vars.push(DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1009".into() }, extra_group_codes: vec![] });
     let emit = |event: editing::SnapshotEditEvent| <DxfAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
     let recolor = emit(editing::SnapshotEditEvent::SetValue { path: "/tables/layers/0/color".into(), value: semio_framework_value::DslValue::uint(3) }).expect("a layer field edit resolves");

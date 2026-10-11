@@ -1,6 +1,6 @@
 //! 🧬️ Semantic DagConfig mutation vocabulary and codecs.
 
-use super::DagConfig;
+use super::{DagConfig, DagConfigDiff};
 
 #[path = "🔄️replace-config/🦀️.rs"]
 mod replace_config;
@@ -9,7 +9,8 @@ pub use replace_config::ReplaceConfig;
 mod change_camera;
 pub use change_camera::ChangeCamera;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", content = "payload", rename_all = "camelCase"))]

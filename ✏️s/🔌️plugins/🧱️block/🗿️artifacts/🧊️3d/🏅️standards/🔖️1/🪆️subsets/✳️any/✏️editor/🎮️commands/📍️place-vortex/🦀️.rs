@@ -13,7 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub const PLACE_VORTEX_VERB: &str = "worldSurfacePlace";
 
 /// 🎯️ Manifest action id `worldSurfacePlace`, wire key `placeVortex`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "placeVortex")]
 pub struct PlaceVortex {
     pub window_id: String,

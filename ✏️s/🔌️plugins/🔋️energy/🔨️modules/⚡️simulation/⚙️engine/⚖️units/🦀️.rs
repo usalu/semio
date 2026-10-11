@@ -48,7 +48,7 @@ pub fn rad_to_deg(rad: f64) -> f64 {
 
 // #region 🔖️Quantity
 /// 📊️ Tagged SI scalar for results and limits.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum Unit {
     Dimensionless,
     Meters,
@@ -67,7 +67,7 @@ pub enum Unit {
 }
 
 /// 📏️ Physical quantity with unit tag.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Quantity {
     pub unit: Unit,
     pub value: f64,

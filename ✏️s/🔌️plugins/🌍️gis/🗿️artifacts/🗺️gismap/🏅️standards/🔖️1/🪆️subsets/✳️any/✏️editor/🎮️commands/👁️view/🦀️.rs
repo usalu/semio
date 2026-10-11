@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 pub mod toggle_layer_visibility {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "toggle-layer-visibility")]
     pub struct ToggleLayerVisibility {
         pub layer_id: String,
@@ -28,7 +28,7 @@ pub mod toggle_layer_visibility {
 pub mod fit_world {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "fit-world")]
     pub struct FitWorld {}
 
@@ -42,7 +42,8 @@ pub mod fit_world {
 pub mod set_camera {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "camera")]
     pub struct SetCamera {
@@ -59,7 +60,8 @@ pub mod set_camera {
 pub mod set_render_mode {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "render-mode")]
     pub struct SetRenderMode {
@@ -76,7 +78,8 @@ pub mod set_render_mode {
 pub mod set_vector_style {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "vector-style")]
     pub struct SetVectorStyle {
@@ -93,7 +96,8 @@ pub mod set_vector_style {
 pub mod set_lod_mode {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "lod-mode")]
     pub struct SetLodMode {
@@ -113,7 +117,7 @@ pub mod set_lod_mode {
 pub mod focus_feature {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "focus-feature")]
     pub struct FocusFeature {
         pub feature_id: String,
@@ -130,7 +134,8 @@ pub mod focus_feature {
 pub mod set_layer_stroke_scale {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "layer-stroke-scale")]
     pub struct SetLayerStrokeScale {

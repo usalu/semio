@@ -120,7 +120,7 @@ pub(crate) fn finish_box(owner: &mut Option<Box<dyn ErasedSnapshotRetirement>>) 
 }
 
 pub(crate) fn finish_registry(registry: crate::os_store::SnapshotReadRegistryHandle) {
-    let mut original = Some(registry);
+    let mut original = Some(crate::os_store::SnapshotReadRegistryAliasRetirement::new(registry));
     for _ in 0..4096 {
         observed_step(CLOSE_GRANT, || crate::os_store::snapshot_registry_alias_close_step(&mut original, CLOSE_GRANT));
         if original.is_none() { return; }

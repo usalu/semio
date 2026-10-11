@@ -15,31 +15,3 @@ pub(super) enum DrawingRetirementOwner {
     SegmentCollections(semio_framework_value::list::PagedList<semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>, {usize::MAX}>),
     HistoryId(String),
 }
-
-pub(super) struct DrawingOwnedRetirement {
-    owner: DrawingDecodedFieldRetirement<DrawingRetirementOwner>,
-}
-
-impl DrawingOwnedRetirement {
-    pub(super) fn new(owner: DrawingRetirementOwner) -> Self {
-        Self { owner: DrawingDecodedFieldRetirement::try_new(owner).unwrap_or_else(|_| panic!("Drawing native owner lacks typed retirement authority")) }
-    }
-
-    pub(super) fn next_grant(&self) -> Result<RetainedCloneGrant, semio_framework_value::ValueError> { self.owner.next_grant() }
-
-    pub(super) fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> { self.owner.step_granted(grant) }
-}
-
-impl store::ErasedSnapshotRetirement for DrawingOwnedRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        let step = self.owner.step(maximum_items, maximum_bytes)?;
-        match step {
-            RetainedCloneStep::Progress(progress) => Ok(store::SnapshotRetirementStep::Pending { released_items: progress.copied_items, released_bytes: progress.released_bytes }),
-            RetainedCloneStep::Complete(_) => Ok(store::SnapshotRetirementStep::Complete),
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool { self.owner.terminal_is_empty() }
-
-    fn next_close_byte_demand(&self) -> usize { self.owner.next_close_byte_demand().expect("Drawing typed retirement has an exact next demand") }
-}

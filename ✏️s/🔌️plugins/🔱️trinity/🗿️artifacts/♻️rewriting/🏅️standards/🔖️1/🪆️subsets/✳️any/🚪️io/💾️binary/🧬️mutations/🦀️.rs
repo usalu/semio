@@ -14,15 +14,15 @@ use protocol::OpBinary;
 
 /// 🧾️ Direct-owner binary tags in aggregate declaration order.
 pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[
-    ("EditWorkingGraph", crate::standards::v1::subsets::any::schema::mutations::edit_working_graph::BINARY_TAG),
-    ("EditLhs", crate::standards::v1::subsets::any::schema::mutations::edit_lhs::BINARY_TAG),
-    ("EditRhs", crate::standards::v1::subsets::any::schema::mutations::edit_rhs::BINARY_TAG),
-    ("ChangeParameterBinding", crate::standards::v1::subsets::any::schema::mutations::change_parameter_binding::BINARY_TAG),
-    ("RemoveParameterBinding", crate::standards::v1::subsets::any::schema::mutations::remove_parameter_binding::BINARY_TAG),
-    ("ChangeRuleLayoutPoint", crate::standards::v1::subsets::any::schema::mutations::change_rule_layout_point::BINARY_TAG),
-    ("RemoveRuleLayoutPoint", crate::standards::v1::subsets::any::schema::mutations::remove_rule_layout_point::BINARY_TAG),
-    ("DragRuleNodes", crate::standards::v1::subsets::any::schema::mutations::drag_rule_nodes::BINARY_TAG),
-    ("SetRuleLayoutPoints", crate::standards::v1::subsets::any::schema::mutations::set_rule_layout_points::BINARY_TAG),
+    ("EditWorkingGraph", edit_working_graph::BINARY_TAG),
+    ("EditLhs", edit_lhs::BINARY_TAG),
+    ("EditRhs", edit_rhs::BINARY_TAG),
+    ("ChangeParameterBinding", change_parameter_binding::BINARY_TAG),
+    ("RemoveParameterBinding", remove_parameter_binding::BINARY_TAG),
+    ("ChangeRuleLayoutPoint", change_rule_layout_point::BINARY_TAG),
+    ("RemoveRuleLayoutPoint", remove_rule_layout_point::BINARY_TAG),
+    ("DragRuleNodes", drag_rule_nodes::BINARY_TAG),
+    ("SetRuleLayoutPoints", set_rule_layout_points::BINARY_TAG),
 ];
 
 /// 📦️ Encodes a `RewriteRuleMutation` to its binary command form.

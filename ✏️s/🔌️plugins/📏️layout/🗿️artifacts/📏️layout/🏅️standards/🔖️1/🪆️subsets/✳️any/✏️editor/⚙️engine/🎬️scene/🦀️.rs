@@ -15,8 +15,8 @@ use crate::standards::v1::subsets::any::io::LayoutError;
 use crate::standards::v1::subsets::any::schema::{resolve_page};
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_layout_document};
 use crate::{Frame, LayoutBounds, LayoutRect, LayoutSnapshot, Page, ParagraphStyle, TextStory};
-use infinite_canvas::camera::{self, Camera, Viewport};
-use infinite_canvas::{Affine, BezPath, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
+use semio_framework_canvas::camera::{self, Camera, Viewport};
+use semio_framework_canvas::{Affine, BezPath, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
 #[cfg(test)]
 use serde_json::Value;
 use ui_render::{FontDependencyId, FontFamilyChoice, ShapedText, TextAlignment, TextRunStyle, TextStyle, TextSystem};

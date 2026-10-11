@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 pub const READS: &[&str] = &["option_groups", "design_options", "worksets", "element_options", "element_worksets", "walls", "curtain_walls", "columns", "beams", "slabs", "ceilings", "roofs", "openings", "stairs", "ramps", "railings", "spaces", "components", "mep_elements", "wall_sweeps"];
 
 /// 🧭️ Derived references, visibility sets and quantity totals; no ownership or active choice is persisted here.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct OptionScope {
     pub elements: Vec<String>,
     pub defaults: BTreeMap<String, String>,

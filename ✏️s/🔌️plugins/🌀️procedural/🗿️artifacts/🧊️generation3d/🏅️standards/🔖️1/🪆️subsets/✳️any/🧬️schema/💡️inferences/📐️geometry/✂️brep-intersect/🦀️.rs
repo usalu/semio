@@ -3,7 +3,8 @@
 //! Intersections of edges and wires keep only the hits inside the edge ranges; intersections with a face use its supporting surface. Hits closer than the tolerance are one point, so the joint of two wire members is reported once.
 
 use super::brep_sources::{curve_input, surface_input, CurveSource, SurfaceSource};
-use super::phased_job::{launch, Pipeline, Work};
+use super::brep_curve::guarded;
+use super::phased_job::{Pipeline, Work};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
 use semio_framework_3d::brep::engine::{BrepOperation, GeometryKind, ShapeRoot, ShapeValue, ShapeWire};
 use semio_framework_3d::brep::operations::euler::{make_edge, make_vertex};
@@ -22,7 +23,7 @@ const UNBOUNDED: &str = "generation3d.geometry.domain-unbounded";
 type PlaneOperation = fn(semio_framework_3d::brep::engine::GeometryHandle, [f64; 3], [f64; 3]) -> BrepOperation;
 
 fn plane_operation(kind: &Kind, inputs: &WidgetInputs, operation: PlaneOperation, sides: bool) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let solid = inputs.shape("solid")?.clone();
         let plane = inputs.plane("plane")?;
         let compound = solid.kind() == GeometryKind::Compound;
@@ -135,7 +136,7 @@ fn curve_surface_hits(curve: &CurveSource, surface: &SurfaceSource, tolerance: f
 }
 
 fn curve_curve(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let (a, b) = (curve_input(&inputs, "a")?, curve_input(&inputs, "b")?);
         let tolerance = inputs.number("tolerance")?;
         Ok(Pipeline::new(kind).finish(move |work| {
@@ -146,7 +147,7 @@ fn curve_curve(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 
 fn curve_surface(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let (curve, surface) = (curve_input(&inputs, "curve")?, surface_input(&inputs, "surface")?);
         let tolerance = inputs.number("tolerance")?;
         Ok(Pipeline::new(kind).finish(move |work| {
@@ -157,7 +158,7 @@ fn curve_surface(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 
 fn surface_surface(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let (a, b) = (surface_input(&inputs, "a")?, surface_input(&inputs, "b")?);
         let tolerance = inputs.number("tolerance")?;
         Ok(Pipeline::new(kind).finish(move |_| {

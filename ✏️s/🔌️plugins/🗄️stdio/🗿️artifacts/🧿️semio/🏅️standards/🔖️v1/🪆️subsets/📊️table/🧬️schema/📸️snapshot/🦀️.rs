@@ -38,7 +38,8 @@ pub const STDIO_SEMIOTABLE_DOCUMENT_SCHEMA: &str = "s.stdio.semio.table";
 /// 🏷️ The declared column-type tag — mirrors `SemioValue`'s SCALAR variant names only (`Null`/
 /// `Bool`/`Int`/`Float`/`Str`/`Bytes`; no `List`/`Map`/`Ref` — a column's cells are meant to be
 /// scalar). Text tags: `n`/`b`/`i`/`f`/`s`/`y`. Binary tags: `0`-`5` in declaration order.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum SemioTableCellKind {
     #[default]
@@ -68,7 +69,8 @@ pub struct SemioTableColumn {
 /// ordered, anonymous collection, `📓️taxonomy.md` addressing rule #3), the same shape
 /// `insert-row`/`remove-row`/`reorder-rows` operate on. `SemioValue` (from `🔢️value`) is reused
 /// verbatim for cell data — real reuse, not reinvention.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioTableRow {
     #[value(default)]

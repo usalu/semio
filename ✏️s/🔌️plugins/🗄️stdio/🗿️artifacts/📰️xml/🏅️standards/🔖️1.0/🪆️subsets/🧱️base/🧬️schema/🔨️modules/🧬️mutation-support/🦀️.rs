@@ -2,7 +2,8 @@
 use crate::schema::snapshot::{XmlDocument, XmlNode};
 use crate::XmlSnapshot;
 
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(transparent)]
 pub struct XmlNodePath(pub Vec<usize>);
 impl XmlNodePath {

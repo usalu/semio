@@ -9,7 +9,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 /// 🪪️ The verb a `moveMediaNode` tool transaction is scoped by.
 pub const MOVE_MEDIA_NODE_VERB: &str = "moveMediaNode";
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "move-media-node")]
 pub struct MoveMediaNode {
     pub node_id: String,

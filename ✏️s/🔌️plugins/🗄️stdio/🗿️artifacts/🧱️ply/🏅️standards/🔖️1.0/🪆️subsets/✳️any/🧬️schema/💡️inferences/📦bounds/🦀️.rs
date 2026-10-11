@@ -13,7 +13,7 @@ use crate::PlySnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Ply vertex-element bounding box plus vertex/face row counts.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PlyBounds {
     pub min: [f64; 3],

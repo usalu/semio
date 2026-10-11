@@ -1,5 +1,5 @@
 //! ✏️ BIM model editor: the `ArtifactEditor` implementation, the command table and the manifest stitch. The editor is a routing table: every command body lives in a `🎮️commands/*`
-//! node, every window render in `🎭️modes/✏️edit/🪟️windows/*`, every panel in `📌️panels/*`, derived values in `model_graph::registry`, what an entity kind is in `🧩️entities`. A command only
+//! node, every window render in `🎭️modes/✏️edit/🪟️windows/*`, every panel in `📌️panels/*`, derived values in `model_graph::instance`, what an entity kind is in `🧩️entities`. A command only
 //! emits mutations (or window config, presence and effects); nothing here applies a diff.
 
 use crate::editor::bim::commands::{browse_families, gesture_keys, set_override, analyse_model, arm_utility, attach_walls, export_sheets, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, create_entity, create_view, delete_selection, edit_family, edit_schedule, apply_template, conditions, edit_classification, edit_template, search_classification, engagement_input, export_schedule_csv, export_model, engagement_submit, flip_walls, move_storey, place_elements, place_grid_columns, cursor_keys, remove_classification, remove_property, rename_entity, select_findings, coordinate, set_camera, set_classification, set_field, set_property, set_view, split_wall, world_pointer_down, world_pointer_move};
@@ -574,7 +574,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for BimCommandWork {
         ctx.gestures = Some(self.owner.clone());
         ctx.window_transient = crate::editor::bim::transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
         let emit = input.command.dispatch(&doc, &cfg, &mut ctx)?;
-        crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::record_mutations(Some(&self.owner), input.snapshot, &emit.artifact_mutations);
+        crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::record_mutations(Some(&self.owner), input.snapshot, &emit.artifact_mutations);
         self.completed = true;
         let window_transient = match (ctx.transient_out.take(), view) {
             (Some(transient), Some(view)) => vec![crate::editor::bim::transient::addressed(view, transient)?],
@@ -770,16 +770,16 @@ fn hover_ids(interaction: &InteractionView<'_>, domain: &str) -> Vec<String> {
 
 /// 🚨️ The findings of the model by severity, from the instance's inference (the diagnostic index).
 fn problems_of(doc: &ArtifactView<'_, ModelSnapshot>) -> crate::standards::v1::subsets::any::schema::inferences::diagnostics::SeverityCounts {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, doc.snapshot, |inference| inference.diagnostic_index.total)
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, doc.snapshot, |inference| inference.diagnostic_index.total)
 }
 
 #[allow(clippy::too_many_arguments)]
-fn render_body(instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::Instance<'_>, body_key: &str, doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, elements: &[String], library: &[String], hover: &[String], preview: &crate::editor::bim::gestures::session::Preview) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+fn render_body(instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, body_key: &str, doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, elements: &[String], library: &[String], hover: &[String], preview: &crate::editor::bim::gestures::session::Preview) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let snapshot = doc.snapshot;
     let labels = bim_labels(view_state);
     let utility = crate::editor::bim::utilities::active(view_state);
     let windows = || TreeWindows::for_body(view_state, body_key);
-    let node = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(instance, snapshot, |inference| match body_key {
+    let node = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, snapshot, |inference| match body_key {
         plan::BODY_KEY => {
             let config = plan::config::current(cfg);
             let revision = crate::render::plan::framing_revision(&plan::active_view(snapshot, &config).unwrap_or_default());
@@ -901,6 +901,7 @@ impl ArtifactEditor for BimModelApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(
@@ -936,15 +937,11 @@ impl ArtifactEditor for BimModelApp {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("bim-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("bim-config-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
-    }
-
-    fn build_draft_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>, semio_framework_value::ValueError>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
+        None
     }
 
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {

@@ -1,6 +1,6 @@
 //! 🧪️ Typed reader byte parity, exact Arc ownership, cancellation, and worker laws.
 
-use super::super::borrowed_tests::{MapLifetime, MapMutation, MapRetirementFactory, byte_grant, fixture, quoted_close_grant};
+use super::super::borrowed_tests::{MapLifetime, MapMutation, MapRetirementFactory, fixture, quoted_close_grant};
 use super::*;
 use std::sync::atomic::Ordering;
 
@@ -272,13 +272,13 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
             let retired=snapshot_bytes;let mut physical_released=0;
             for _ in 0..256 {
                 let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| reader.close_step(*RETIREMENT_POLICY).unwrap());
+                eprintln!("[DEBUG] reader close step {:?} heap ({}, {}) demand {:?}", step, heap.requested_bytes, heap.released_bytes, reader.retirement_demands(4096));
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
                 match step {
                     RetainedCloneStep::Progress(progress) => { assert!(progress.fits(*RETIREMENT_POLICY));physical_released+=progress.released_bytes; }
                     RetainedCloneStep::Complete(progress) => { assert!(progress.fits(*RETIREMENT_POLICY));physical_released+=progress.released_bytes;break; },
                 }
             }
-            let retired = STRING_RELEASED.with(std::cell::Cell::get) - scaffold;
             assert!(reader.terminal_is_empty());
             assert_eq!(failure.as_ref().map(|error|error.message.as_ref()), fixture["expectedError"].as_str());
             assert_eq!(actual, prefix);

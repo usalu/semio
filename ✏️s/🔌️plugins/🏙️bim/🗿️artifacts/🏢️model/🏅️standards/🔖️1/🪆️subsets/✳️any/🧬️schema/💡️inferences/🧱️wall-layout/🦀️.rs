@@ -32,7 +32,7 @@ use joins::{Band, JOIN_TOLERANCE};
 
 //#region 🔖️Values
 /// 🔗️ Where on a wall a join sits: at its axis start, at its axis end, or along its interior.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum JoinEnd {
     Start,
     End,
@@ -40,7 +40,7 @@ pub enum JoinEnd {
 }
 
 /// 🔗️ How two walls meet: `Miter` end to end (2 or more walls around a node), `Butt` this wall's end against the face of the other, `Through` the other wall's end against this wall, `Cross` both axes crossing in their interiors.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum JoinKind {
     Miter,
     Butt,
@@ -49,7 +49,7 @@ pub enum JoinKind {
 }
 
 /// 🔗️ One edge of the join graph, as seen from one wall: `end` is the site on this wall, `other_end` the site on `other`. `overlap_area` is the area both bodies cover at a `Cross` (otherwise 0).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct WallJoin {
     pub kind: JoinKind,
     pub end: JoinEnd,
@@ -60,7 +60,7 @@ pub struct WallJoin {
 }
 
 /// 〰️ A join-trimmed face: a line (`bulge == 0`) or an arc from `start` to `end`, `bulge = tan(sweep / 4)`.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct FaceCurve {
     pub start: Point2,
     pub end: Point2,
@@ -79,7 +79,7 @@ impl Default for FaceCurve {
 /// join-trimmed; `footprint` is the counter-clockwise loop `[right.start, right.end, left.end, left.start]` (bulge of the edge to the
 /// next vertex), empty when a face collapses. Side areas are face length times height before openings; `footprint_area` is the exact
 /// loop area, `volume` the footprint area times height. `joins` lists every contact with a neighbour.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct WallLayout {
     pub base_z: f64,
     pub top_z: f64,

@@ -11,6 +11,25 @@ use semio_framework_mesh_engine::io::text::{PolygonSourcePreparation, parse_poly
 
 const LIMIT: usize = 100_000;
 fn invalid(message: impl Into<String>) -> EvalError { EvalError::InvalidInput(message.into()) }
+/// 🎟️ Advances a kernel modeling job by up to `budget` units under the same funding the kernel's own synchronous drivers grant it.
+fn modeling_slice(job: &mut MeshModelingJob, budget: usize) -> Result<MeshModelingStep, MeshKernelError> {
+    let grant = RetainedCloneGrant { maximum_items: budget.max(1), maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+    job.step(budget, grant, &mut RetainedCloneProgress::default())
+}
+
+/// 🎟️ Advances a kernel tessellation by up to `events` producer events, each under the exact grant its own quote asks for.
+fn tessellation_slice(job: &mut MeshTessellationJob, events: usize) -> Result<MeshTessellationStep, MeshKernelError> {
+    let mut last = MeshTessellationStep::Working(job.progress());
+    for _ in 0..events.max(1) {
+        let copy = job.next_normal_copy_byte_demand().map_err(MeshKernelError::Retained)?.max(128);
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: job.next_normal_capacity_byte_demand(copy).map_err(MeshKernelError::Retained)?, maximum_release_bytes: job.next_normal_release_byte_demand().map_err(MeshKernelError::Retained)?, maximum_depth: job.next_normal_depth_demand().map_err(MeshKernelError::Retained)? };
+        last = job.step(grant).map_err(MeshKernelError::Retained)?.0;
+        if !matches!(last, MeshTessellationStep::Working(_)) {
+            break;
+        }
+    }
+    Ok(last)
+}
 fn mesh_error(error: MeshKernelError) -> EvalError {match error{MeshKernelError::Retained(error)=>EvalError::Retained(error),error=>invalid(error.to_string())}}
 fn affine_matrix(input:&Dictionary)->Result<[f64;16],EvalError> {
     let list=input.get("matrix").and_then(Value::as_dictionary).ok_or_else(||invalid("matrix must be a list of 16 numbers"))?;
@@ -102,7 +121,8 @@ impl PolygonMeshSourceGeometry for PolygonMeshSource {
             }
         }
         let mut attributes=mesh.attributes().clone();
-        for attribute in attributes.values_mut() {
+        for slot in 0..attributes.slot_count() {
+            let Some((_,attribute))=attributes.slot_entry_mut(slot) else {continue};
             let ids=match attribute.domain {semio_framework_mesh_engine::MeshAttributeDomain::Corner=>Some(&corner_ids),semio_framework_mesh_engine::MeshAttributeDomain::Edge=>Some(&edge_ids),_=>None};
             if let Some(ids)=ids {
                 if attribute.indices.is_some() || ids.iter().enumerate().any(|(index,id)|index!=*id as usize) {
@@ -112,7 +132,7 @@ impl PolygonMeshSourceGeometry for PolygonMeshSource {
         }
         Ok(Self { vertices,faces,attributes,materials:mesh.materials().clone(),textures:mesh.textures().clone() })
     }
-    fn mesh(self)->Result<HalfedgeMesh,EvalError> {let mut job=HalfedgeMesh::polygon_source_job(self).map_err(mesh_error)?;loop {match job.step(4096).map_err(mesh_error)? {MeshModelingStep::Done(mesh)=>return Ok(mesh),MeshModelingStep::Working(_)=>{},_=>return Err(invalid("mesh construction cancelled"))}}}
+    fn mesh(self)->Result<HalfedgeMesh,EvalError> {let mut job=HalfedgeMesh::polygon_source_job(self).map_err(mesh_error)?;loop {match modeling_slice(&mut job,4096).map_err(mesh_error)? {MeshModelingStep::Done(mesh)=>return Ok(mesh),MeshModelingStep::Working(_)=>{},_=>return Err(invalid("mesh construction cancelled"))}}}
 }
 fn encode_mesh(mesh: &HalfedgeMesh) -> Result<String, EvalError> { Ok(semio_framework_mesh_engine::io::text::encode_polygon_mesh_source(&PolygonMeshSource::from_mesh(mesh)?)) }
 fn indexed_triangle_mesh(positions: &[f32], indices: &[u32]) -> Result<HalfedgeMesh, EvalError> {
@@ -133,22 +153,31 @@ fn read_mesh(input: &Dictionary, name: &str) -> Result<HalfedgeMesh, EvalError> 
     let data = mesh.get("data").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).ok_or_else(|| invalid("mesh data is missing"))?;
     decode_mesh(data)
 }
-fn mesh_output(mesh: &HalfedgeMesh) -> Result<Dictionary, EvalError> {
-    use neural_engine::OperatorJob;
-    let mut job = MeshOperatorJob::output(mesh.clone())?;
-    loop { if let neural_engine::OperatorJobStep::Done(output) = job.step(4096)? { return Ok(output); } }
-}
-fn analyze(mesh: &HalfedgeMesh) -> Result<Dictionary, EvalError> {
+fn drive_job(mut job:MeshOperatorJob)->Result<Dictionary,EvalError> {
     use neural_engine::{OperatorJob,OperatorJobStep};
-    let mut job=MeshOperatorJob::analysis(mesh.clone())?;
-    loop { if let OperatorJobStep::Done(value)=job.step(4096)? { return Ok(value); } }
+    let output=loop {
+        match job.step(4096,sync_grant())?.0 {
+            OperatorJobStep::Done(output)=>break output,
+            OperatorJobStep::Cancelled(_)=>return Err(invalid("mesh operation cancelled")),
+            OperatorJobStep::Working(_)=>{},
+        }
+    };
+    for _ in 0..1_000_000 {if matches!(job.close_step(sync_grant())?,RetainedCloneStep::Complete(_)) {return Ok(output);}}
+    Err(invalid("mesh operation did not reach its terminal retirement"))
 }
+fn mesh_output(mesh: &HalfedgeMesh) -> Result<Dictionary, EvalError> {drive_job(MeshOperatorJob::output(mesh.clone())?)}
+fn analyze(mesh: &HalfedgeMesh) -> Result<Dictionary, EvalError> {drive_job(MeshOperatorJob::analysis(mesh.clone())?)}
 
 fn operator_progress(progress: MeshModelingProgress) -> neural_engine::OperatorProgress {
     neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase }
 }
 
-fn mesh_retirement_grant(items:usize,bytes:usize)->semio_framework_value::retained_clone::RetainedCloneGrant {semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:items,maximum_copy_bytes:bytes,maximum_capacity_bytes:bytes,maximum_release_bytes:bytes,maximum_depth:256}}
+fn add_progress(left:RetainedCloneProgress,right:RetainedCloneProgress)->RetainedCloneProgress {
+    RetainedCloneProgress {copied_items:left.copied_items.saturating_add(right.copied_items),copied_bytes:left.copied_bytes.saturating_add(right.copied_bytes),retained_capacity_bytes:left.retained_capacity_bytes.saturating_add(right.retained_capacity_bytes),released_bytes:left.released_bytes.saturating_add(right.released_bytes)}
+}
+fn turn_grant(grant:RetainedCloneGrant)->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,..grant}}
+fn sync_grant()->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:256}}
+fn value_error(error:EvalError)->ValueError {ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string())}
 
 enum MeshRetirement {
     Source(PolygonSourcePreparation),Modeling(MeshModelingJob),Tessellation(MeshTessellationJob),Output(MeshJobOutput),Transfer(semio_framework_3d::mesh::MeshTransfer),
@@ -202,6 +231,7 @@ struct MeshOperatorJob {
     retirement: Option<MeshRetirement>,
     pending_output:Option<Dictionary>,
     value_retirement:neural_engine::ValueRetirement,
+    receipt:RetainedCloneProgress,
     fault:Option<EvalError>,
     modeling_base: usize,
     output: Option<MeshJobOutput>,
@@ -217,6 +247,7 @@ struct MeshPreparation {
     reconstruction:Option<MeshModelingJob>,
     next:Option<Box<MeshOperatorJob>>,
     input_retirement:neural_engine::ValueRetirement,
+    retire_input:bool,
 }
 
 enum MeshJobOutput { Mesh(MeshOutputState), Analysis(MeshAnalysisState) }
@@ -287,7 +318,7 @@ impl MeshAnalysisState {
                 if self.cursor==mesh.vertex_count() { self.phase=3; }
                 else { let point=mesh.vertex_position(VertexId(self.cursor as u32)).map_err(mesh_error)?.0;for axis in 0..3 { self.min[axis]=self.min[axis].min(point[axis]);self.max[axis]=self.max[axis].max(point[axis]); }self.cursor+=1; }
             }
-            3=>{ match self.tessellation.step(1).map_err(mesh_error)? { MeshTessellationStep::Done(transfer)=>{self.triangles=Some(transfer);self.cursor=0;self.phase=4;},MeshTessellationStep::Working(_)=>{},MeshTessellationStep::Cancelled(_)=>return Err(invalid("analysis cancelled")) } }
+            3=>{ match tessellation_slice(&mut self.tessellation,1).map_err(mesh_error)? { MeshTessellationStep::Done(transfer)=>{self.triangles=Some(transfer);self.cursor=0;self.phase=4;},MeshTessellationStep::Working(_)=>{},MeshTessellationStep::Cancelled(_)=>return Err(invalid("analysis cancelled")) } }
             4=>{
                 let triangles=self.triangles.as_ref().unwrap();
                 if self.cursor==triangles.indices.len() { self.phase=5; }
@@ -382,7 +413,7 @@ impl MeshOutputState {
                 } else {self.data.push(if self.obj_only {'\n'}else {']'});self.corner_base += self.corners.len(); self.corners.clear(); self.halfedges.clear(); self.face += 1; self.phase = 1; }
             }
             3 => {
-                match self.tessellation.as_mut().unwrap().step(1).map_err(mesh_error)? {
+                match tessellation_slice(self.tessellation.as_mut().unwrap(),1).map_err(mesh_error)? {
                     MeshTessellationStep::Working(_) => {},
                     MeshTessellationStep::Cancelled(_) => return Err(invalid("mesh output cancelled")),
                     MeshTessellationStep::Done(transfer) => {
@@ -430,48 +461,68 @@ impl MeshOperatorJob {
     fn preparation(operation:&'static str,session:Session,input:&Dictionary)->Result<Self,EvalError> {
         Self::source_text(operation,input)?;
         let progress=neural_engine::OperatorProgress {phase:"mesh-source-parse",units_done:0,units_total:1};
-        Ok(Self {job:None,brep_job:None,import:None,preparation:Some(MeshPreparation {operation,session,input:Some(input.clone()),source:Some(PolygonSourcePreparation::new()),reconstruction:None,next:None,input_retirement:Default::default()}),retirement:None,pending_output:None,value_retirement:Default::default(),fault:None,modeling_base:0,output:None,progress,cancelled:false})
+        Ok(Self {job:None,brep_job:None,import:None,preparation:Some(MeshPreparation {operation,session,input:None,source:Some(PolygonSourcePreparation::new()),reconstruction:None,next:None,input_retirement:Default::default(),retire_input:false}),retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),fault:None,modeling_base:0,output:None,progress,cancelled:false})
     }
     fn source_text<'a>(operation:&str,input:&'a Dictionary)->Result<&'a str,EvalError> {if operation=="construct" {return input.get("data").and_then(Value::as_dictionary).and_then(|text|text.get("value")).and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(||invalid("data must be text"));}let mesh=input.get("mesh").and_then(Value::as_dictionary).filter(|mesh|mesh.schema()==Some("mesh")).ok_or_else(||invalid("mesh requires a mesh"))?;mesh.get("data").and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(||invalid("mesh data is missing"))}
-    fn step_preparation(&mut self,budget:usize,bytes:usize)->Result<neural_engine::OperatorJobStep,EvalError> {
-        if budget==0 || bytes==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
+    fn step_preparation(&mut self,budget:usize,grant:RetainedCloneGrant)->Result<neural_engine::OperatorJobStep,EvalError> {
+        if budget==0 || grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
+        let child=turn_grant(grant);
         for _ in 0..budget {
             let state=self.preparation.as_mut().expect("mesh preparation");
+            let mut spent=false;
             if self.cancelled || self.fault.is_some() {
                 if self.retirement.is_none() {if let Some(source)=state.source.take() {self.retirement=Some(MeshRetirement::Source(source));}}
                 if self.retirement.is_none() {if let Some(job)=state.reconstruction.take() {self.retirement=Some(MeshRetirement::Modeling(job));}}
-                if let Some(input)=state.input.take() {state.input_retirement.push_dictionary(input);}
-                if let Some(next)=&mut state.next {next.cancel();match next.close_step(1,bytes)? {neural_engine::OperatorJobStep::Working(_)=>continue,_=>state.next=None}}
+                state.retire_input=true;
+                if let Some(next)=&mut state.next {
+                    next.cancel();
+                    let step=next.close_step(child)?;
+                    self.receipt=add_progress(self.receipt,step.progress());
+                    if matches!(step,RetainedCloneStep::Complete(_)) {state.next=None;}
+                    break;
+                }
             }
             if let Some(retirement)=&mut self.retirement {
-                retirement.step(mesh_retirement_grant(1,bytes))?;
+                let step=retirement.step(child)?;
+                self.receipt=add_progress(self.receipt,step.progress());
                 if retirement.terminal_is_empty() {self.retirement=None;}
                 self.progress.phase="mesh-source-retire";
-            } else if !state.input_retirement.terminal_is_empty() {
-                state.input_retirement.close_step(1,bytes);
+                spent=true;
+            } else if state.retire_input && state.input.is_some() {
+                let input=state.input.take().expect("mesh input");
+                match state.input_retirement.push_dictionary(input,child) {
+                    Ok(progress)=>self.receipt=add_progress(self.receipt,progress),
+                    Err((error,input))=>{state.input=Some(input);return Err(error.into());}
+                }
                 self.progress.phase="mesh-input-retire";
+                spent=true;
+            } else if !state.input_retirement.terminal_is_empty() {
+                let step=state.input_retirement.close_step(child)?;
+                self.receipt=add_progress(self.receipt,step.progress());
+                self.progress.phase="mesh-input-retire";
+                spent=true;
             } else if self.cancelled || self.fault.is_some() {
                 self.preparation=None;
                 if !self.cancelled {return Err(self.fault.take().expect("retired source failure"));}
                 self.fault=None;
                 return Ok(neural_engine::OperatorJobStep::Cancelled(self.progress));
             } else if let Some(source)=&mut state.source {
-                let text=Self::source_text(state.operation,state.input.as_ref().unwrap())?;
-                match source.step(text,semio_framework_mesh_engine::io::text::PolygonSourceGrant{maximum_units:1,maximum_projection_bytes:bytes,retirement:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:4096,maximum_release_bytes:1024*1024,maximum_depth:256}}).map(|step|step.source) {
+                let text=Self::source_text(state.operation,state.input.as_ref().ok_or_else(||invalid("mesh preparation lost its original input"))?)?;
+                match source.step(text,semio_framework_mesh_engine::io::text::PolygonSourceGrant{maximum_units:1,maximum_projection_bytes:grant.maximum_copy_bytes,retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth}}).map(|step|step.source) {
                     Ok(Some(source))=>{state.reconstruction=Some(HalfedgeMesh::polygon_source_job(source).map_err(mesh_error)?);self.retirement=Some(MeshRetirement::Source(state.source.take().unwrap()));self.progress.phase="mesh-source-capture";},
                     Ok(None)=>self.progress.phase=source.phase(),
-                    Err(error)=>{self.fault=Some(invalid(error));self.retirement=Some(MeshRetirement::Source(state.source.take().unwrap()));state.input_retirement.push_dictionary(state.input.take().unwrap());self.progress.phase="mesh-fault-retire";},
+                    Err(error)=>{self.fault=Some(invalid(error));self.retirement=Some(MeshRetirement::Source(state.source.take().unwrap()));state.retire_input=true;self.progress.phase="mesh-fault-retire";},
                 }
             } else if let Some(job)=&mut state.reconstruction {
-                match job.step(1) {
+                match modeling_slice(job,1) {
                     Ok(MeshModelingStep::Working(progress))=>self.progress.phase=progress.phase,
                     Ok(MeshModelingStep::Done(mesh))=>{
-                        state.next=Some(Box::new(if state.operation=="construct" {Self::output(mesh)?}else {Self::owned_plan(state.operation,state.session.clone(),state.input.as_ref().unwrap(),mesh)?}));
+                        state.next=Some(Box::new(if state.operation=="construct" {Self::output(mesh)?}else {Self::owned_plan(state.operation,state.session.clone(),state.input.as_ref().ok_or_else(||invalid("mesh preparation lost its original input"))?,mesh)?}));
                         self.retirement=Some(MeshRetirement::Modeling(state.reconstruction.take().unwrap()));
-                        state.input_retirement.push_dictionary(state.input.take().unwrap());
+                        state.retire_input=true;
                     },
                     Ok(MeshModelingStep::Cancelled(_))=>unreachable!(),
-                    Err(error)=>{self.fault=Some(mesh_error(error));self.retirement=Some(MeshRetirement::Modeling(state.reconstruction.take().unwrap()));state.input_retirement.push_dictionary(state.input.take().unwrap());self.progress.phase="mesh-fault-retire";},
+                    Err(error)=>{self.fault=Some(mesh_error(error));self.retirement=Some(MeshRetirement::Modeling(state.reconstruction.take().unwrap()));state.retire_input=true;self.progress.phase="mesh-fault-retire";},
                 }
             } else {
                 let mut next=*state.next.take().expect("prepared mesh continuation");
@@ -479,52 +530,72 @@ impl MeshOperatorJob {
                 next.modeling_base=next.modeling_base.saturating_add(base);
                 next.progress.units_done=next.progress.units_done.saturating_add(base);
                 next.progress.units_total=next.progress.units_total.saturating_add(base);
+                next.receipt=self.receipt;
                 *self=next;
                 return Ok(neural_engine::OperatorJobStep::Working(self.progress));
             }
             if !self.cancelled {self.progress.units_done=self.progress.units_done.saturating_add(1);self.progress.units_total=self.progress.units_total.max(self.progress.units_done.saturating_add(1));}
+            if spent {break;}
         }
         Ok(neural_engine::OperatorJobStep::Working(self.progress))
     }
-    fn close_cancelled(&mut self,items:usize,bytes:usize)->Result<neural_engine::OperatorJobStep,EvalError> {
-        if items==0 || bytes==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
+    fn close_cancelled(&mut self,grant:RetainedCloneGrant)->Result<neural_engine::OperatorJobStep,EvalError> {
+        if grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
+        let child=turn_grant(grant);
         if self.retirement.is_none() {
             if let Some(job)=self.job.take() {self.retirement=Some(MeshRetirement::Modeling(job));}
             else if let Some((session,shape,job))=self.brep_job.take() {self.retirement=Some(MeshRetirement::Kernel(MeshKernelRetirement::new(session,shape,job,None)));}
             else if let Some(output)=self.output.take() {self.retirement=Some(MeshRetirement::Output(output));}
         }
-        if let Some(retirement)=&mut self.retirement {retirement.step(mesh_retirement_grant(items,bytes))?;if !retirement.terminal_is_empty() {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}self.retirement=None;if self.job.is_some() || self.brep_job.is_some() || self.output.is_some() || !self.value_retirement.terminal_is_empty() {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}}
-        if !self.value_retirement.terminal_is_empty() {self.value_retirement.close_step(items,bytes);return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
-        if self.output.is_some() {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
+        if let Some(retirement)=&mut self.retirement {
+            let step=retirement.step(child)?;
+            self.receipt=add_progress(self.receipt,step.progress());
+            if !retirement.terminal_is_empty() {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
+            self.retirement=None;
+            return Ok(neural_engine::OperatorJobStep::Working(self.progress));
+        }
+        if let Some(output)=self.pending_output.take() {
+            match self.value_retirement.push_dictionary(output,child) {
+                Ok(progress)=>{self.receipt=add_progress(self.receipt,progress);return Ok(neural_engine::OperatorJobStep::Working(self.progress));},
+                Err((error,output))=>{self.pending_output=Some(output);return Err(error.into());}
+            }
+        }
+        if !self.value_retirement.terminal_is_empty() {
+            let step=self.value_retirement.close_step(child)?;
+            self.receipt=add_progress(self.receipt,step.progress());
+            return Ok(neural_engine::OperatorJobStep::Working(self.progress));
+        }
+        if self.job.is_some() || self.brep_job.is_some() || self.output.is_some() {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
         Ok(neural_engine::OperatorJobStep::Cancelled(self.progress))
     }
-    fn close_failed(&mut self,items:usize,bytes:usize)->Result<neural_engine::OperatorJobStep,EvalError> {
-        match self.close_cancelled(items,bytes)? {
+    fn close_failed(&mut self,grant:RetainedCloneGrant)->Result<neural_engine::OperatorJobStep,EvalError> {
+        match self.close_cancelled(grant)? {
             neural_engine::OperatorJobStep::Cancelled(progress)=>if self.cancelled {self.fault=None;Ok(neural_engine::OperatorJobStep::Cancelled(progress))}else {Err(self.fault.take().expect("retired mesh failure"))},
             step=>Ok(step),
         }
     }
     fn to_brep(session:Session,mesh:HalfedgeMesh,tolerance:f64)->Result<Self,EvalError> {
-        Ok(Self {job:None,brep_job:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),fault:None,import:Some(MeshImportState {session,tessellation:Some(MeshTessellationJob::with_preview_capacity(mesh,64_000_000)),cursor:None,tolerance,source_retirement:None,transfer_retirement:None,fault:None}),modeling_base:0,output:None,cancelled:false,progress:neural_engine::OperatorProgress {units_done:0,units_total:1,phase:"mesh-to-brep-tessellate"}})
+        Ok(Self {job:None,brep_job:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),fault:None,import:Some(MeshImportState {session,tessellation:Some(MeshTessellationJob::with_preview_capacity(mesh,64_000_000)),cursor:None,tolerance,source_retirement:None,transfer_retirement:None,fault:None}),modeling_base:0,output:None,cancelled:false,progress:neural_engine::OperatorProgress {units_done:0,units_total:1,phase:"mesh-to-brep-tessellate"}})
     }
-    fn step_import(&mut self,budget:usize)->Result<neural_engine::OperatorJobStep,EvalError> {
-        self.step_import_with_bytes(budget,4096)
-    }
-    fn step_import_with_bytes(&mut self,budget:usize,bytes:usize)->Result<neural_engine::OperatorJobStep,EvalError> {
-        if bytes==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
+    fn step_import(&mut self,budget:usize,grant:RetainedCloneGrant)->Result<neural_engine::OperatorJobStep,EvalError> {
+        if grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
+        let child=turn_grant(grant);
         for _ in 0..budget {
+            let mut spent=false;
             let import=self.import.as_mut().expect("retained import");
             if self.cancelled && import.tessellation.is_some() {import.source_retirement=Some(MeshRetirement::Tessellation(import.tessellation.take().unwrap()));}
             let retirement=if import.source_retirement.is_some() {&mut import.source_retirement}else {&mut import.transfer_retirement};
             if let Some(cursor)=retirement {
-                cursor.step(mesh_retirement_grant(1,bytes))?;
+                let step=cursor.step(child)?;
+                self.receipt=add_progress(self.receipt,step.progress());
                 if cursor.terminal_is_empty() {*retirement=None;}
                 self.progress.phase="mesh-to-brep-retire-source";
+                spent=true;
             } else if self.cancelled && import.cursor.is_none() {
                 self.import=None;return Ok(neural_engine::OperatorJobStep::Cancelled(self.progress));
             } else if let Some(error)=import.fault.take() {self.import=None;return Err(error);
             } else if let Some(tessellation)=&mut import.tessellation {
-                match tessellation.step(1) {
+                match tessellation_slice(tessellation,1) {
                     Err(error)=>{import.fault=Some(mesh_error(error));import.source_retirement=Some(MeshRetirement::Tessellation(import.tessellation.take().unwrap()));}
                     Ok(MeshTessellationStep::Cancelled(_))=>{import.source_retirement=Some(MeshRetirement::Tessellation(import.tessellation.take().unwrap()));self.cancelled=true;}
                     Ok(MeshTessellationStep::Working(_))=>{},
@@ -548,34 +619,36 @@ impl MeshOperatorJob {
                 }
             }
             self.progress.units_done=self.progress.units_done.saturating_add(1);self.progress.units_total=self.progress.units_total.max(self.progress.units_done.saturating_add(1));
+            if spent {break;}
         }
         Ok(neural_engine::OperatorJobStep::Working(self.progress))
     }
     fn from_brep(session:Session,shape:GeometryHandle,deflection:f64)->Result<Self,EvalError> {
         let job=session.with_kernel_read(|kernel|kernel.tessellate_job_sync(&shape,deflection).map_err(|error|map_kernel_error(&error)))?;
-        let progress=job.progress();Ok(Self {job:None,brep_job:Some((session,shape,job)),import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),fault:None,modeling_base:0,output:None,cancelled:false,progress:neural_engine::OperatorProgress {units_done:progress.units_done,units_total:progress.units_total,phase:progress.phase.tag()}})
+        let progress=job.progress();Ok(Self {job:None,brep_job:Some((session,shape,job)),import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),fault:None,modeling_base:0,output:None,cancelled:false,progress:neural_engine::OperatorProgress {units_done:progress.units_done,units_total:progress.units_total,phase:progress.phase.tag()}})
     }
     fn modeling_progress(&self,progress:MeshModelingProgress)->neural_engine::OperatorProgress {let mut progress=operator_progress(progress);progress.units_done=progress.units_done.saturating_add(self.modeling_base);progress.units_total=progress.units_total.saturating_add(self.modeling_base);progress}
     fn analysis(mesh:HalfedgeMesh)->Result<Self,EvalError> {
         let output=MeshJobOutput::Analysis(MeshAnalysisState::new(mesh)?);
-        Ok(Self { job:None,brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),fault:None,modeling_base:0,progress:neural_engine::OperatorProgress { units_done:0,units_total:output.estimate(),phase:output.phase() },output:Some(output),cancelled:false })
+        Ok(Self { job:None,brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),fault:None,modeling_base:0,progress:neural_engine::OperatorProgress { units_done:0,units_total:output.estimate(),phase:output.phase() },output:Some(output),cancelled:false })
     }
     fn obj(mesh:HalfedgeMesh)->Result<Self,EvalError> {let mut job=Self::output(mesh)?;let Some(MeshJobOutput::Mesh(output))=&mut job.output else {unreachable!()};output.obj_only=true;output.data="# kernel_3d_mesh OBJ export\n".into();Ok(job)}
     fn json(mesh:HalfedgeMesh)->Result<Self,EvalError> {let mut job=Self::output(mesh)?;let Some(MeshJobOutput::Mesh(output))=&mut job.output else {unreachable!()};output.json_only=true;Ok(job)}
     fn output(mesh: HalfedgeMesh) -> Result<Self, EvalError> {
         let output = MeshJobOutput::Mesh(MeshOutputState::new(mesh)?);
-        Ok(Self { job: None, brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),fault:None,modeling_base:0,progress: neural_engine::OperatorProgress { units_done: 0, units_total: output.estimate(), phase: output.phase() }, output: Some(output), cancelled: false })
+        Ok(Self { job: None, brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),fault:None,modeling_base:0,progress: neural_engine::OperatorProgress { units_done: 0, units_total: output.estimate(), phase: output.phase() }, output: Some(output), cancelled: false })
     }
 }
 
-impl neural_engine::OperatorJob for MeshOperatorJob {
-    fn step(&mut self, budget: usize) -> Result<neural_engine::OperatorJobStep, EvalError> {
-        if self.preparation.is_some() {return self.step_preparation(budget,4096);}
-        if self.fault.is_some() {return self.close_failed(budget,4096);}
-        if self.cancelled && self.import.is_none() {return self.close_cancelled(budget,4096);}
-        if self.import.is_some() { return self.step_import(budget); }
+impl MeshOperatorJob {
+    fn advance(&mut self,budget:usize,grant:RetainedCloneGrant)->Result<neural_engine::OperatorJobStep,EvalError> {
+        if self.preparation.is_some() {return self.step_preparation(budget,grant);}
+        if self.fault.is_some() {return self.close_failed(grant);}
+        if self.cancelled && self.import.is_none() {return self.close_cancelled(grant);}
+        if self.import.is_some() { return self.step_import(budget,grant); }
         if let Some(retirement)=&mut self.retirement {
-            retirement.step(mesh_retirement_grant(budget,4096))?;
+            let step=retirement.step(turn_grant(grant))?;
+            self.receipt=add_progress(self.receipt,step.progress());
             if retirement.terminal_is_empty() {self.retirement=None;}
             self.progress.units_done=self.progress.units_done.saturating_add(budget);self.progress.units_total=self.progress.units_total.max(self.progress.units_done.saturating_add(1));self.modeling_base=self.modeling_base.saturating_add(budget);
             return Ok(neural_engine::OperatorJobStep::Working(self.progress));
@@ -591,7 +664,7 @@ impl neural_engine::OperatorJob for MeshOperatorJob {
         }
         if self.output.is_none() {
             let job = self.job.as_mut().ok_or_else(|| invalid("mesh job is retired"))?;
-            let step=match job.step(budget) {Ok(step)=>step,Err(error)=>{self.fault=Some(mesh_error(error));self.retirement=Some(MeshRetirement::Modeling(self.job.take().unwrap()));self.progress.phase="mesh-fault-retire";return Ok(neural_engine::OperatorJobStep::Working(self.progress));}};
+            let step=match modeling_slice(job,budget) {Ok(step)=>step,Err(error)=>{self.fault=Some(mesh_error(error));self.retirement=Some(MeshRetirement::Modeling(self.job.take().unwrap()));self.progress.phase="mesh-fault-retire";return Ok(neural_engine::OperatorJobStep::Working(self.progress));}};
             match step {
             MeshModelingStep::Working(progress) => {
                 self.progress = self.modeling_progress(progress);
@@ -620,23 +693,75 @@ impl neural_engine::OperatorJob for MeshOperatorJob {
         }
         Ok(neural_engine::OperatorJobStep::Working(self.progress))
     }
-    fn next_close_byte_demand(&self)->usize {
-        if let Some(retirement)=&self.retirement {return retirement.next_close_byte_demand();}
-        if let Some(import)=&self.import {if let Some(retirement)=import.source_retirement.as_ref().or(import.transfer_retirement.as_ref()) {return retirement.next_close_byte_demand();}if let Some(job)=&import.tessellation {return job.retirement_birth_bytes();}}
-        if let Some(state)=&self.preparation {if state.source.is_some() {return semio_framework_value::retirement::owned_retirement_birth_bytes::<PolygonSourcePreparation>();}if let Some(job)=&state.reconstruction {return job.retirement_birth_bytes();}if let Some(next)=&state.next {return next.next_close_byte_demand();}}
-        if let Some(job)=&self.job {return job.retirement_birth_bytes();}
-        if self.brep_job.is_some() {return 1;}
-        if self.output.is_some() {return semio_framework_value::retirement::owned_retirement_birth_bytes::<MeshJobOutput>();}
-        self.value_retirement.next_close_byte_demand().expect("mesh value release demand")
+    fn close_demand(&self,copy:usize)->Result<RetirementDemand,ValueError> {
+        use semio_framework_value::retirement::owned_retirement_birth_bytes as birth;
+        let nested=|capacity:usize|->Result<RetirementDemand,ValueError> {Ok(RetirementDemand {capacity_bytes:capacity,depth:1,..Default::default()})};
+        let value=|owner:&neural_engine::ValueRetirement|->Result<RetirementDemand,ValueError> {Ok(RetirementDemand {copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})};
+        if let Some(retirement)=&self.retirement {return retirement.demands(copy);}
+        if let Some(import)=&self.import {
+            if let Some(retirement)=import.source_retirement.as_ref().or(import.transfer_retirement.as_ref()) {return retirement.demands(copy);}
+            if let Some(job)=&import.tessellation {return nested(job.retirement_birth_bytes());}
+        }
+        if let Some(state)=&self.preparation {
+            if state.retire_input && state.input.is_some() {return nested(neural_engine::ValueRetirement::domain_frame_birth_bytes());}
+            if !state.input_retirement.terminal_is_empty() {return value(&state.input_retirement);}
+            if state.source.is_some() {return nested(birth::<PolygonSourcePreparation>());}
+            if let Some(job)=&state.reconstruction {return nested(job.retirement_birth_bytes());}
+            if let Some(next)=&state.next {return next.close_demand(copy);}
+            if state.input.is_some() {return nested(neural_engine::ValueRetirement::domain_frame_birth_bytes());}
+        }
+        if let Some(job)=&self.job {return nested(job.retirement_birth_bytes());}
+        if self.brep_job.is_some() {return nested(std::mem::size_of::<MeshKernelRetirement>());}
+        if self.output.is_some() {return nested(birth::<MeshJobOutput>());}
+        if self.pending_output.is_some() {return nested(neural_engine::ValueRetirement::domain_frame_birth_bytes());}
+        if !self.value_retirement.terminal_is_empty() {return value(&self.value_retirement);}
+        Ok(Default::default())
     }
-    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<neural_engine::OperatorJobStep,EvalError> {
-        if self.preparation.is_some() {return self.step_preparation(maximum_items,maximum_bytes);}
-        if self.import.is_some() {return self.step_import_with_bytes(maximum_items,maximum_bytes);}
-        if self.fault.is_some() {return self.close_failed(maximum_items,maximum_bytes);}
-        if self.cancelled {return self.close_cancelled(maximum_items,maximum_bytes);}
-        if maximum_bytes==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
-        self.step(maximum_items)
+    fn terminal_is_empty(&self)->bool {
+        self.job.is_none() && self.brep_job.is_none() && self.import.is_none() && self.preparation.is_none() && self.retirement.is_none() && self.pending_output.is_none() && self.output.is_none() && self.value_retirement.terminal_is_empty()
     }
+    fn attach_input(&mut self,input:Dictionary,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Dictionary)> {
+        if let Some(state)=self.preparation.as_mut() {
+            if grant.maximum_items==0 {return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"mesh preparation input transfer requires one admitted item"),input));}
+            state.input=Some(input);
+            return Ok(RetainedCloneProgress {copied_items:1,..Default::default()});
+        }
+        self.value_retirement.push_dictionary(input,turn_grant(grant))
+    }
+}
+
+impl neural_engine::OperatorJob for MeshOperatorJob {
+    fn step(&mut self,budget:usize,grant:RetainedCloneGrant)->Result<(neural_engine::OperatorJobStep,RetainedCloneProgress),EvalError> {
+        self.receipt=Default::default();
+        let step=self.advance(budget,grant)?;
+        Ok((step,self.receipt))
+    }
+    fn normal_step_progress(&self)->RetainedCloneProgress {self.receipt}
+    fn next_step_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
+    fn next_step_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,ValueError> {Ok(0)}
+    fn next_step_release_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
+    fn next_step_depth_demand(&self)->Result<usize,ValueError> {Ok(1)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.close_demand(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,maximum_copy_bytes:usize)->Result<usize,ValueError> {Ok(self.close_demand(maximum_copy_bytes)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.close_demand(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError> {Ok(self.close_demand(0)?.depth.max(usize::from(!self.terminal_is_empty())))}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        if self.terminal_is_empty() {return Ok(RetainedCloneStep::Complete(Default::default()));}
+        self.receipt=Default::default();
+        if !self.cancelled {self.cancel();}
+        let result=if self.preparation.is_some() {self.step_preparation(grant.maximum_items.max(1),grant)}
+            else if self.import.is_some() {self.step_import(grant.maximum_items.max(1),grant)}
+            else if self.fault.is_some() {self.close_failed(grant)}
+            else {self.close_cancelled(grant)};
+        let progress=self.receipt;
+        match result {
+            Ok(_) if self.terminal_is_empty() => Ok(RetainedCloneStep::Complete(progress)),
+            Ok(_) => Ok(RetainedCloneStep::Progress(progress)),
+            Err(_) if self.terminal_is_empty() => Ok(RetainedCloneStep::Complete(progress)),
+            Err(error) => Err(value_error(error)),
+        }
+    }
+    fn terminal_is_empty(&self)->bool {MeshOperatorJob::terminal_is_empty(self)}
     fn progress(&self) -> neural_engine::OperatorProgress { self.progress }
     fn cancel(&mut self) {
         if self.cancelled {return;}
@@ -646,7 +771,6 @@ impl neural_engine::OperatorJob for MeshOperatorJob {
         if let Some(job) = &mut self.job { job.cancel(); let progress=job.progress();self.progress=neural_engine::OperatorProgress {units_done:progress.units_done.saturating_add(self.modeling_base),units_total:progress.units_total.saturating_add(self.modeling_base),phase:progress.phase}; }
         if let Some((_,_,job))=&mut self.brep_job {job.cancel();}
         self.cancelled=true;
-        if let Some(output)=self.pending_output.take() {self.value_retirement.push_dictionary(output);}
 
     }
 }
@@ -654,30 +778,57 @@ impl neural_engine::OperatorJob for MeshOperatorJob {
 enum MeshEvaluation { Mesh(HalfedgeMesh), Value(Dictionary) }
 
 struct MeshOperation(&'static str, SessionCapture);
-impl Operator for MeshOperation {
-    retire_geometry_capture!(1);
-    fn step_plan(&self, input: &Dictionary) -> Result<Option<Box<dyn neural_engine::OperatorJob>>, EvalError> {
+impl MeshOperation {
+    fn plan_job(&self, input: &Dictionary) -> Result<Option<MeshOperatorJob>, EvalError> {
         if self.0=="transform" {HalfedgeMesh::validate_affine_matrix(affine_matrix(input)?).map_err(mesh_error)?;}
-        if self.0=="construct" {return Ok(Some(Box::new(MeshOperatorJob::preparation(self.0,self.1.clone(),input)?)));}
+        if self.0=="construct" {return Ok(Some(MeshOperatorJob::preparation(self.0,self.1.clone(),input)?));}
         let primitive=match self.0 {
             "box"=>Some(HalfedgeMesh::box_primitive_job(positive(input,"width")?,positive(input,"height")?,positive(input,"depth")?)),
             "plane"=>Some(HalfedgeMesh::plane_primitive_job(positive(input,"width")?,positive(input,"depth")?)),
             "cylinder"=>Some(HalfedgeMesh::cylinder_primitive_job(positive(input,"radius")?,positive(input,"height")?,count(input,"segments",3,1024)?)),
             "cone"=>Some(HalfedgeMesh::cone_primitive_job(positive(input,"radius")?,positive(input,"height")?,count(input,"segments",3,1024)?)),
             "sphere"=>Some(HalfedgeMesh::sphere_primitive_job(positive(input,"radius")?,count(input,"subdivisions",0,5)?)),_=>None,
-        };if let Some(job)=primitive {let job=job.map_err(mesh_error)?;let progress=operator_progress(job.progress());return Ok(Some(Box::new(MeshOperatorJob {job:Some(job),brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),fault:None,modeling_base:0,output:None,progress,cancelled:false})));}
-        if self.0=="fromBrep" {return Ok(Some(Box::new(MeshOperatorJob::from_brep(self.1.clone(),read_geometry(input,"geometry")?,positive(input,"deflection")? as f64)?)));}
-        if matches!(self.0,"toBrep"|"analyze"|"exportObj"|"exportJson") {return Ok(Some(Box::new(MeshOperatorJob::preparation(self.0,self.1.clone(),input)?)));}
+        };if let Some(job)=primitive {let job=job.map_err(mesh_error)?;let progress=operator_progress(job.progress());return Ok(Some(MeshOperatorJob {job:Some(job),brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),fault:None,modeling_base:0,output:None,progress,cancelled:false}));}
+        if self.0=="fromBrep" {return Ok(Some(MeshOperatorJob::from_brep(self.1.clone(),read_geometry(input,"geometry")?,positive(input,"deflection")? as f64)?));}
+        if matches!(self.0,"toBrep"|"analyze"|"exportObj"|"exportJson") {return Ok(Some(MeshOperatorJob::preparation(self.0,self.1.clone(),input)?));}
         if !matches!(self.0, "bevel" | "decimate" | "mirror" | "mergeVertices" | "mergeCoplanar" | "dissolveEdges" | "dissolveVertices" | "weld" | "subdivide" | "loopCut" | "knifeCut" | "extrude" | "inset" | "orient" | "fillHoles" | "transform" | "translate" | "rotate" | "scale" | "translateComponents" | "rotateComponents" | "scaleComponents" | "moveVertices" | "triangulate" | "snapVertices" | "moveProportional" | "deleteFaces" | "flip") {
             if matches!(self.0,"inspectVertex" | "inspectEdge" | "inspectFace" | "analyze" | "exportObj" | "exportJson" | "toBrep") { return Ok(None); }
             let MeshEvaluation::Mesh(mesh) = self.prepare(input)? else { return Err(invalid("mesh operator produced an unexpected value")); };
-            return Ok(Some(Box::new(MeshOperatorJob::output(mesh)?)));
+            return Ok(Some(MeshOperatorJob::output(mesh)?));
         }
-        Ok(Some(Box::new(MeshOperatorJob::preparation(self.0,self.1.clone(),input)?)))
+        Ok(Some(MeshOperatorJob::preparation(self.0,self.1.clone(),input)?))
     }
 
+    fn plan_capacity() -> usize { std::mem::size_of::<MeshOperatorJob>().saturating_add(neural_engine::ValueRetirement::domain_frame_birth_bytes()) }
+
+}
+impl Operator for MeshOperation {
+    retire_geometry_capture!(1);
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)> {
+        use neural_engine::OperatorPlanAdmission;
+        if grant.maximum_items==0 || grant.maximum_depth==0 || grant.maximum_capacity_bytes<Self::plan_capacity() {
+            return Err((EvalError::from(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"mesh plan admission requires one item and its job frame")),input));
+        }
+        let mut job=match self.plan_job(&input) {Ok(Some(job))=>job,Ok(None)=>return OperatorPlanAdmission::immediate(input,grant),Err(error)=>return Err((error,input))};
+        match job.attach_input(input,grant) {
+            Ok(progress)=>Ok((OperatorPlanAdmission::Job(Box::new(job)),RetainedCloneProgress {retained_capacity_bytes:progress.retained_capacity_bytes.saturating_add(std::mem::size_of::<MeshOperatorJob>()),..progress})),
+            Err((error,input))=>{
+                job.cancel();
+                for _ in 0..4096 {if matches!(neural_engine::OperatorJob::close_step(&mut job,sync_grant()),Ok(RetainedCloneStep::Complete(_))|Err(_)) {break;}}
+                Err((error.into(),input))
+            }
+        }
+    }
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError> {Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,ValueError> {Ok(Self::plan_capacity())}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError> {Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError> {Ok(1)}
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        if let Some(mut job)=self.step_plan(input)? {loop {match job.step(4096)? {neural_engine::OperatorJobStep::Done(value)=>return Ok(value),neural_engine::OperatorJobStep::Cancelled(_)=>return Err(invalid("mesh operation cancelled")),neural_engine::OperatorJobStep::Working(_)=>{}}}}
+        if let Some(mut job)=self.plan_job(input)? {
+            job.attach_input(input.clone(),sync_grant()).map_err(|(error,_)|EvalError::from(error))?;
+            return drive_job(job);
+        }
         match self.prepare(input)? { MeshEvaluation::Mesh(mesh) => mesh_output(&mesh), MeshEvaluation::Value(output) => Ok(output) }
     }
 }
@@ -742,7 +893,7 @@ impl MeshOperatorJob {
             mesh.merge_vertices_job_owned(&ids,mode,tolerance).map_err(mesh_error)?
         };
         let progress = operator_progress(job.progress());
-        Ok(MeshOperatorJob { job: Some(job), brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),fault:None,modeling_base:0,output: None, progress, cancelled: false })
+        Ok(MeshOperatorJob { job: Some(job), brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),fault:None,modeling_base:0,output: None, progress, cancelled: false })
     }
 }
 

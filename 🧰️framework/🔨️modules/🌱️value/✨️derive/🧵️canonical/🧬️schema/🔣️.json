@@ -8,7 +8,11 @@
     "values",
     "expected",
     "maximumBodyBytes",
-    "maximumTurns"
+    "maximumTurns",
+    "roles",
+    "hexWords",
+    "flatten",
+    "externalVariants"
   ],
   "properties": {
     "tag": {
@@ -45,6 +49,262 @@
     },
     "maximumTurns": {
       "const": 100000
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "padByte",
+          "quote",
+          "position",
+          "octets",
+          "tail",
+          "maybe",
+          "expected"
+        ],
+        "properties": {
+          "padByte": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "quote": {
+            "enum": [
+              "double",
+              "single"
+            ]
+          },
+          "position": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "octets": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "tail": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maybe": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expected": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "hexWords": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "position",
+          "normal",
+          "halfedge",
+          "uv",
+          "weight",
+          "samples",
+          "expected"
+        ],
+        "properties": {
+          "position": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "normal": {
+            "anyOf": [
+              {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "halfedge": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "uv": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "weight": {
+            "type": "number"
+          },
+          "samples": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "expected": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "flatten": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "id",
+          "note",
+          "level",
+          "extraCount",
+          "tail",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "extraCount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 255
+          },
+          "tail": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "expected": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "externalVariants": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "expected"
+        ],
+        "properties": {
+          "variant": {
+            "enum": [
+              "point",
+              "circle",
+              "rect",
+              "frame"
+            ]
+          },
+          "radius": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "edge": {
+            "enum": [
+              "solid",
+              "dashed"
+            ]
+          },
+          "onLength": {
+            "type": "number"
+          },
+          "offLength": {
+            "type": "number"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "expected": {
+            "type": "string"
+          }
+        }
+      }
     }
   }
 }

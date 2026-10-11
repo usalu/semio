@@ -38,8 +38,8 @@ fn mounted_original_close_fault_retains_refused_payload_and_retires_actual_frame
   let pointer=original.message.as_ptr();let original_live=birth.requested_bytes-birth.released_bytes;
   let operation=semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(),semio_framework_job::RevisionId(0),semio_framework_job::Generation(0),17);
   let mut mounted=crate::app::MountedTypedCommandFullOperation::<RetirementApp>{
-   verb:String::new(),meta:crate::app::ActionMeta{actor:String::new(),instance_id:7,view_state:None},operation,canonical_revision:[0;32],artifact_generation:0,config_generation:0,draft_generation:0,presence_generation:0,transient_generation:0,
-   window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:None,cancellation_retirement:None,terminal_outcome:None,terminal_seen:true,publication:None,pending_artifact_publication:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:true,interaction_revalidated:false,
+   verb:String::new(),meta:crate::app::ActionMeta{actor:Default::default(),instance_id:7,view_state:None},operation,canonical_revision:[0;32],artifact_generation:0,config_generation:0,draft_generation:0,presence_generation:0,transient_generation:0,
+   window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:None,cancellation_retirement:None,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,identity:None,identity_progress:Default::default(),worker_resume_pending:false,terminal_seen:true,publication:None,pending_artifact_publication:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:true,interaction_revalidated:false,
    terminal_fault:row["existingCode"].as_str().map(|code|super::super::completion_fault::borrowed_report(FaultOrigin::Framework,code,semio_framework_diagnostic::Severity::Error,"earlier original terminal report",false)),retained_close_fault:Some(original),retained_close_fault_retirement:None,retained_close_fault_refusal:None,stage:crate::app::MountedTypedCommandFullOperationStage::Retiring
   };
   let mut capacity=0;let mut released=0;let mut frame_released=false;
@@ -180,18 +180,6 @@ impl ArtifactApp for RetirementApp {
         registry.register::<RetirementWindowTransientOwner>()
     }
 
-    fn build_document_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::ValueError>> {
-        Some(store::funded_bounded_artifact_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>, semio_framework_value::ValueError>> {
-        Some(store::funded_bounded_artifact_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_draft_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>, semio_framework_value::ValueError>> {
-        Some(store::funded_bounded_artifact_store_owners::<Self::Draft, Self::DraftMutation>())
-    }
-
     fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
@@ -274,8 +262,8 @@ fn mounted_rejection(app:&crate::app::VcsArtifactApp<RetirementApp>,pending:Pend
  let operation=semio_framework_job::Operation::new(semio_framework_job::OperationId(1),semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),semio_framework_job::Generation(app.store.generation_now()),17);
  let lease=app.tool_cancellations.clone().begin(crate::app::ToolOperationKey{app_instance_id:7,document:crate::app::ArtifactDocumentAuthority(7),operation_id:operation.operation,base_revision:operation.base_revision,generation:operation.generation}).expect("original cancellation lease");
  crate::app::MountedTypedCommandFullOperation{
-  verb:String::new(),meta:crate::app::ActionMeta{actor:String::new(),instance_id:7,view_state:None},operation,canonical_revision:revision,artifact_generation:app.store.generation_now(),config_generation:app.config_store.generation_now(),draft_generation:app.draft_store.generation_now(),presence_generation:app.presence_store.generation_now(),transient_generation:app.transient_store.generation_now(),
-  window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:Some(lease),terminal_outcome:None,terminal_seen:true,publication:None,pending_artifact_publication:Some(pending),pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:true,interaction_revalidated:false,retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault:None,stage:crate::app::MountedTypedCommandFullOperationStage::Publishing
+  verb:String::new(),meta:crate::app::ActionMeta{actor:Default::default(),instance_id:7,view_state:None},operation,canonical_revision:revision,artifact_generation:app.store.generation_now(),config_generation:app.config_store.generation_now(),draft_generation:app.draft_store.generation_now(),presence_generation:app.presence_store.generation_now(),transient_generation:app.transient_store.generation_now(),
+  window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:Some(lease),worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,identity:None,identity_progress:Default::default(),worker_resume_pending:false,terminal_seen:true,publication:None,pending_artifact_publication:Some(pending),pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:true,interaction_revalidated:false,retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault:None,stage:crate::app::MountedTypedCommandFullOperationStage::Publishing
  }
 }
 fn granted(demand:semio_framework_value::RetirementDemand)->semio_framework_value::retained_clone::RetainedCloneGrant{
@@ -290,7 +278,7 @@ async fn drive_rejected_retirement(app:&mut crate::app::VcsArtifactApp<Retiremen
  let mut mounted=mounted_rejection(app,pending);
  let mut turns=0;
  for _ in 0..8192{
-  app.publish_mounted_typed_operation_unit(&mut mounted).await.expect("publication pauses until retained outcome delivery");
+  app.publish_mounted_typed_operation_unit(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).expect("publication pauses until retained outcome delivery");
   if !mounted.pending_publication_outcome.pending()&&mounted.pending_artifact_publication.is_none(){break;}
   assert!(mounted.result_page.is_none(),"no premature terminal while original publication body or frame remains");
   let demand=mounted.granted_retirement_demands(512).expect("actual frontier quote");
@@ -314,7 +302,7 @@ async fn drive_rejected_retirement(app:&mut crate::app::VcsArtifactApp<Retiremen
   assert!(mounted.terminal_fault.is_none()&&mounted.result_page.is_none(),"window transient retains its deliberate lenient policy");
   mounted.stage=crate::app::MountedTypedCommandFullOperationStage::Retiring;
  }else{
-  app.publish_mounted_typed_operation_unit(&mut mounted).await.expect("one final fault after physical retirement");
+  app.publish_mounted_typed_operation_unit(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).expect("one final fault after physical retirement");
   let page=mounted.take_result_page().expect("single final fault");
   assert_eq!(page.lane,crate::app::TypedOperationResultLane::Fault);
   let fault=crate::app::decode_typed_operation_fault_page(page.bytes());
@@ -369,6 +357,13 @@ fn document_mutation(value: i32) -> TestMutation {
     SetCount { value }.into()
 }
 
+fn admit_window_config_publication(registry: &mut WindowConfigOwnerRegistry, operation: semio_framework_job::OperationId, authority: &super::window_config::WindowConfigAuthority, mutation: WindowConfigMutation, grant: semio_framework_value::RetainedCloneGrant) -> Box<dyn super::window_config::ErasedWindowConfigPublication> {
+    let (actor, _) = registry.local_actor_id().0.admit_clone(grant).unwrap();
+    let mut actor = Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(actor).map_err(|(error, _)| error).unwrap());
+    let mut mutations = vec![mutation];
+    registry.admit_begin(operation, &mut actor, &mut mutations, authority, grant).unwrap().expect("window config publication admitted").0
+}
+
 fn config_mutation(value: &str) -> TestConfigMutation {
     ChangeTestConfigSelection { selected: Some(value.to_string()) }.into()
 }
@@ -385,7 +380,7 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
     assert_eq!(rows.len(), 7, "the law covers every publication lane");
     assert_eq!(fixture["law"]["incompleteRetirementTurnIsOk"], true);
     let operation = semio_framework_job::OperationId(1);
-    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into())).await;
+    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let view = retirement_view();
     let window_config_authority = app.window_config_store.capture(Some(&view)).await.expect("window config capture").expect("registered window config owner");
     let window_transient_authority = app.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
@@ -471,8 +466,8 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
             }
             "windowConfig" => {
                 let mutation = |value: &str| WindowConfigMutation::of::<RetirementWindowConfigOwner>("publication-retirement-window-left", config_mutation(value));
-                let mut publication = app.window_config_store.begin(operation, app.window_config_store.local_actor_id().0.admit_clone(grant.retained_grant()).unwrap().0, &window_config_authority, mutation("first")).expect("window config publication admitted");
-                let mut superseding = app.window_config_store.begin(operation, app.window_config_store.local_actor_id().0.admit_clone(grant.retained_grant()).unwrap().0, &window_config_authority, mutation("superseding")).expect("superseding window config publication admitted");
+                let mut publication = admit_window_config_publication(&mut app.window_config_store, operation, &window_config_authority, mutation("first"), grant.retained_grant());
+                let mut superseding = admit_window_config_publication(&mut app.window_config_store, operation, &window_config_authority, mutation("superseding"), grant.retained_grant());
                 for _ in 0..4_096 {
                     if matches!(app.window_config_store.advance(superseding.as_mut(), grant).expect("superseding window config advances"), store::ArtifactStoreOneItemAdvance::Published(_)) {
                         assert!(superseding.acknowledge());
@@ -507,7 +502,7 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
         }
     }
     drop((window_config_authority, window_transient_authority));
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
 }
 
 /// 🔁️ The authority captured at admission is now stale by construction, which is exactly why the
@@ -520,7 +515,7 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     assert_eq!(expected["windowKindId"], RETIREMENT_WINDOW_KIND);
     let window_id = expected["windowId"].as_str().expect("fixture window id");
     let operation = semio_framework_job::OperationId(2);
-    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into())).await;
+    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let view = retirement_view();
     let mut authority = app.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
     let captured_generation = authority.generation;
@@ -579,7 +574,7 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     assert!(re_begun.terminal_is_empty());
     drop(authority);
     eprintln!("window transient retired a rejected authority over {turns} Ok turns, refused a stale re-begin, and admitted the refreshed one at generation {}", app.window_transient_store.capture(Some(&view)).unwrap().unwrap().generation);
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
 }
 
 /// 🫧️ LAW: a window-transient emission the registry refuses is never dropped. The typed-operation unit hands the
@@ -588,7 +583,7 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
 /// (the refusal used to consume the mutation, and the retry then completed without it).
 #[semio_framework_async_macros::async_test]
 async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
-    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into())).await;
+    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let authority = app.window_transient_store.capture(Some(&retirement_view())).expect("window transient capture").expect("registered window transient owner");
     let generation = authority.generation;
     let revision = app.store.content_revision_now();
@@ -637,7 +632,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         result_page_presented: false,
         result_sequence: 0,
         publication_progress: 0,
-        publication_checkpoint: None, publication_ownership_progress: None, actor_capture: None,
+        publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,
         publication_attempt: 0,
         ui_pending: true,
         progress: None,
@@ -653,7 +648,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         stage: crate::app::MountedTypedCommandFullOperationStage::Publishing,
     };
     for attempt in 0..3 {
-        let refused = app.publish_mounted_typed_operation_unit(&mut mounted).expect_err("a misaddressed window transient is refused");
+        let refused = app.publish_mounted_typed_operation_unit(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).expect_err("a misaddressed window transient is refused");
         assert_eq!(refused.code.0, "window-transient.address", "attempt {attempt}: the refusal is the registry's typed fault");
         let Some(crate::app::ArtifactToolCompletionValue::Emit(Ok(_), ephemeral)) = mounted.publication.as_ref() else { panic!("the emit stays installed") };
         assert_eq!(ephemeral.window_transient.iter().map(WindowTransientMutation::window_id).collect::<Vec<_>>(), ["publication-retirement-window-right"], "attempt {attempt}: the refused mutation is kept, never dropped");
@@ -663,5 +658,5 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
     mounted.publication = None;
     mounted.window_transient_authority = None;
     drop(mounted);
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
 }

@@ -39,21 +39,24 @@ pub struct Block2dDiff {
 //#region 🔖️Patches
 block_patch!(test; /// 🖌️ Field patch over the rim presentation.
     Block2dPresentationPatch for Block2dPresentation { plain {  } optional { shape: BlockOptionalText, radius: BlockOptionalNumber, width: BlockOptionalNumber, height: BlockOptionalNumber, color: BlockOptionalText, icon_kind: BlockOptionalText } });
+semio_framework_value::artifact_retire_struct!(Block2dPresentationPatch { shape, radius, width, height, color, icon_kind });
 block_patch!(test; /// 🔘️ Field patch over a handle kind (its id is the row identity).
     Block2dHandleKindPatch for Block2dHandleKind { plain { name: String, label: String, color: String, default_wire_kind: String } optional {  } });
+semio_framework_value::artifact_retire_struct!(Block2dHandleKindPatch { name, label, color, default_wire_kind });
 block_patch!(test; /// 🌱️ Field patch over a handle template (its id is the row identity).
     Block2dHandleTemplatePatch for Block2dHandleTemplate { plain { handle_kind: String, angle: f64, radius: f64 } optional {  } });
+semio_framework_value::artifact_retire_struct!(Block2dHandleTemplatePatch { handle_kind, angle, radius });
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the handle kinds.
-    pub Block2dHandleKindsDelta { removal: Block2dHandleKindsRemoval, insertion: Block2dHandleKindsInsertion, relocation: Block2dHandleKindsRelocation, modification: Block2dHandleKindsPatchEntry, row: Block2dHandleKind, patch: Block2dHandleKindPatch, key: id, values_only }
+    pub Block2dHandleKindsDelta { removal: Block2dHandleKindsRemoval, insertion: Block2dHandleKindsInsertion, relocation: Block2dHandleKindsRelocation, modification: Block2dHandleKindsPatchEntry, row: Block2dHandleKind, patch: Block2dHandleKindPatch, key: id }
 }
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the handle templates.
-    pub Block2dHandlesDelta { removal: Block2dHandlesRemoval, insertion: Block2dHandlesInsertion, relocation: Block2dHandlesRelocation, modification: Block2dHandlesPatchEntry, row: Block2dHandleTemplate, patch: Block2dHandleTemplatePatch, key: id, values_only }
+    pub Block2dHandlesDelta { removal: Block2dHandlesRemoval, insertion: Block2dHandlesInsertion, relocation: Block2dHandlesRelocation, modification: Block2dHandlesPatchEntry, row: Block2dHandleTemplate, patch: Block2dHandleTemplatePatch, key: id }
 }
 //#endregion 🔖️Patches
 

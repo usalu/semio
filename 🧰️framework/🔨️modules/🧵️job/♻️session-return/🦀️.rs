@@ -13,10 +13,10 @@ impl<J:InteractiveJob+'static> WorkerJobSession<J>{
  pub fn return_terminal(mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Self)>{
   let bytes=match self.terminal_frame_release_bytes(){Ok(bytes)=>bytes,Err(error)=>return Err((error,self))};
   if grant.maximum_items==0||grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original worker session frame return is not funded"),self));}
-  let inner=unsafe{ManuallyDrop::take(&mut self.inner)};
+  let inner=self.inner.0.take().expect("terminal session retains its original handle");
   match inner.try_return(){
-   Ok(inner)=>{self.inner_returned=true;let retirement=unsafe{(&mut*self.retirement.get()).take().expect("terminal session retains original return node")};WORKER_JOB_RETIREMENT_SLOTS[retirement.header.slot].store(std::ptr::null_mut(),Ordering::Release);drop(inner);drop(retirement);Ok(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})}
-   Err(inner)=>{self.inner=ManuallyDrop::new(inner);Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original worker session still lends a strong handle"),self))}
+   Ok(inner)=>{let retirement=unsafe{(&mut*self.retirement.get()).take().expect("terminal session retains original return node")};WORKER_JOB_RETIREMENT_SLOTS[retirement.header.slot].store(std::ptr::null_mut(),Ordering::Release);drop(inner);drop(retirement);Ok(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})}
+   Err(inner)=>{self.inner.0=Some(inner);Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original worker session still lends a strong handle"),self))}
   }
  }
 }

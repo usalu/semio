@@ -147,9 +147,9 @@ pub(crate) mod context {
     }
 
     pub fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {
-        let camera = infinite_canvas::camera::Camera { x: camera_x, y: camera_y, zoom };
-        let viewport = infinite_canvas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
-        let screen = infinite_canvas::camera::world_to_screen(&camera, &viewport, infinite_canvas::Point::new(world_x, world_y));
+        let camera = semio_framework_canvas::camera::Camera { x: camera_x, y: camera_y, zoom };
+        let viewport = semio_framework_canvas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
+        let screen = semio_framework_canvas::camera::world_to_screen(&camera, &viewport, semio_framework_canvas::Point::new(world_x, world_y));
         (screen.x, screen.y)
     }
 }

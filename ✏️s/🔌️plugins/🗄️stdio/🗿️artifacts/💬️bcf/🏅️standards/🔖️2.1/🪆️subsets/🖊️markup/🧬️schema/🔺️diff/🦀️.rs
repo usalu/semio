@@ -13,7 +13,7 @@ use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
 //#region 🔖️IndexedTriple
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct IndexedDiff<T, D> {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -31,14 +31,14 @@ impl<T, D> IndexedDiff<T, D> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct IndexedModified<D> {
     pub index: usize,
     pub diff: D,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct IndexedAdded<T> {
     pub index: usize,
@@ -235,7 +235,7 @@ pub type BcfPartsDiff = IndexedDiff<BcfRawPart, BcfPartDiff>;
 /// (that sweep found "0 enums" only because it greps for `pub enum` declared IN the diff file
 /// itself; `BcfCamera` lives in the snapshot module and is reached via `BcfViewpointDiff`).
 /// `DiffCodec` is hand-rolled below.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf.diff")]
 pub struct BcfDiff {
@@ -254,7 +254,7 @@ pub struct BcfDiff {
 /// `creation_author` are scalar patches; `labels` is whole-value replaced (not itself a keyed
 /// collection per the completeness target); `comments`/`viewpoints` are recursive index-keyed
 /// triples.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BcfTopicDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -278,7 +278,7 @@ pub struct BcfTopicDiff {
 }
 
 /// 🔺️ Per-comment sparse diff. `viewpoint_ref` is tri-state (`Some(None)` = reference cleared).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BcfCommentDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -293,7 +293,7 @@ pub struct BcfCommentDiff {
 
 /// 🔺️ Per-viewpoint sparse diff. `camera`/`components`/`snapshot` are all weak (whole-value
 /// replaced, per the recipe — never sub-diffed) and tri-state nullable.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BcfViewpointDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -305,7 +305,7 @@ pub struct BcfViewpointDiff {
 }
 
 /// 🔺️ Per-raw-part sparse diff — `name` is the key, so only `data` can change.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BcfPartDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]

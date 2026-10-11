@@ -116,12 +116,12 @@
     {
       "nativeWordBytes": 4,
       "optionalByteHeaderBytes": 12,
-      "ownerSlotHeaderBytes": 8
+      "ownerSlotHeaderBytes": 0
     },
     {
       "nativeWordBytes": 8,
       "optionalByteHeaderBytes": 24,
-      "ownerSlotHeaderBytes": 16
+      "ownerSlotHeaderBytes": 0
     }
   ]
 }

@@ -14,7 +14,7 @@ use protocol::os_spr::command::DiffAlgebra;
 use std::collections::{HashMap, HashSet};
 //#region 🔖️CollectionDiffs
 /// 📦️ Index-keyed `array` triple.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct JsonArrayDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -26,7 +26,7 @@ pub struct JsonArrayDiff {
 }
 
 /// 📦️ One `array.modified[]` entry — `index` refers to BASE state.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct JsonArrayModified {
     pub index: usize,
@@ -35,7 +35,7 @@ pub struct JsonArrayModified {
 
 /// 📦️ One `array.added[]` entry — `index` refers to FINAL state, ascending insert at
 /// `min(index, len)`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct JsonArrayAdded {
     pub index: usize,
@@ -43,7 +43,7 @@ pub struct JsonArrayAdded {
 }
 
 /// 📦️ Name-keyed `object` triple (member insertion order preserved on apply).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct JsonObjectDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -55,7 +55,7 @@ pub struct JsonObjectDiff {
 }
 
 /// 📦️ One `object.modified[]` entry — `key` refers to BASE state.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct JsonObjectModified {
     pub key: String,
@@ -63,7 +63,7 @@ pub struct JsonObjectModified {
 }
 
 /// 📦️ One `object.added[]` entry — `index` is the FINAL Vec position (insertion order hint).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct JsonObjectAdded {
     pub index: usize,
@@ -86,7 +86,7 @@ pub struct JsonObjectAdded {
 /// tri-state (`Option<Option<_>>`) fields anywhere in this artifact (§3b does not apply — this is
 /// the recipe's "enum-only" hand-roll case, same family as `dxf`). `DiffCodec` is hand-rolled
 /// below (§🔖️HandcraftedDiffCodec), grammar template copied from `SvgDiff`'s.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum JsonValueDiff {
     /// 🔁️ Whole-node replace — the node's KIND changed, or a mutation explicitly overwrites it.
@@ -113,7 +113,7 @@ pub enum JsonValueDiff {
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.json`. `schema` is an identity field and is never diffed.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.json.diff")]
 pub struct JsonDiff {

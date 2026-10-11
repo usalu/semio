@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 📦Bounds
 /// 📦 Geographic bounding box across every decoded `(lon, lat)` pair.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct GisTerrainBounds {
     pub lon_min: f64,

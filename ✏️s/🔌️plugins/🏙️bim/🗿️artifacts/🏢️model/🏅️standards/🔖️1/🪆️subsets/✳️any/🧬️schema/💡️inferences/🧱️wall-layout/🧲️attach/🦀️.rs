@@ -30,14 +30,14 @@ const EPS: f64 = 1e-9;
 const PLAN_TOLERANCE: f64 = 1e-6;
 
 /// 📈️ One breakpoint of an elevation edge of a wall: the arc length `s` along the axis and the absolute height `z` in building coordinates.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ElevationPoint {
     pub s: f64,
     pub z: f64,
 }
 
 /// 🔗️ How one attach of a wall resolved: the target id, whether it exists, the fraction `0..=1` of the axis its surface covers, whether the top was lifted to the base and whether the attach chain loops.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct AttachState {
     pub target: String,
     pub found: bool,

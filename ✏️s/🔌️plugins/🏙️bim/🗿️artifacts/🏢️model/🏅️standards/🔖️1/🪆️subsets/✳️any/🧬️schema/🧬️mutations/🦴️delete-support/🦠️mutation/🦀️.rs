@@ -2,7 +2,8 @@
 use crate::{StructuralSupport, StructuralSupportPatch, ModelDiff, ModelMutation, ModelSnapshot};
 use crate::{StructuralLocation, Restraints, Point3};
 use protocol::{MutationKind, SemanticDescriptor};
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct DeleteSupport { pub id: String, }
 impl MutationKind<ModelSnapshot, ModelMutation> for DeleteSupport {

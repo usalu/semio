@@ -1,7 +1,7 @@
 //! 🗂️ Rule layout owns literal unique keys and concrete contiguous point slots.
 use crate::LayoutPoint;
 use semio_framework_value::{DecodedValue,DslValue,FromValue,NativeDecodeControl,NativeEncodeControl,ToValue,ValueError,ValueRefusalKind};
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone)]
 pub struct RuleLayout { members:Vec<(String,LayoutPoint)> }
 impl RuleLayout {
  pub fn new()->Self{Self::default()}
@@ -35,7 +35,11 @@ impl<const N:usize> From<[(String,LayoutPoint);N]> for RuleLayout{fn from(values
 impl FromIterator<(String,LayoutPoint)> for RuleLayout{fn from_iter<T:IntoIterator<Item=(String,LayoutPoint)>>(values:T)->Self{let mut result=Self::new();for(key,value)in values{if let Some(previous)=result.insert(key,value){<LayoutPoint as FromValue>::retire_decoded(previous)}}result}}
 impl IntoIterator for RuleLayout{type Item=(String,LayoutPoint);type IntoIter=std::vec::IntoIter<Self::Item>;fn into_iter(self)->Self::IntoIter{self.members.into_iter()}}
 impl<'a> IntoIterator for &'a RuleLayout{type Item=(&'a String,&'a LayoutPoint);type IntoIter=std::iter::Map<std::slice::Iter<'a,(String,LayoutPoint)>,fn(&'a(String,LayoutPoint))->Self::Item>;fn into_iter(self)->Self::IntoIter{self.members.iter().map(|(key,value)|(key,value))}}
-impl semio_framework_value::retirement::RetireOwned for RuleLayout{fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.members)}}
+impl semio_framework_value::retirement::RetireOwned for RuleLayout{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.members)}
+ fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.members)}
+ fn controlled_retirement_supported()->bool{<Vec<(String,LayoutPoint)> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
+}
 impl FromValue for RuleLayout {
  fn from_value(value:DslValue)->Result<Self,ValueError>{let DslValue::Object(fields)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"rule layout object required"))};fields.into_iter().map(|(key,value)|LayoutPoint::from_value(value).map(|value|(key,value))).collect()}
  fn from_value_controlled(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_depth(64,|control|control.scoped_stage(|control|{let fields=value.object_controlled(control)?;control.begin_stage(0)?;let mut output=DecodedValue::new(Self::from_admitted(control.allocate_vec(fields.len())?),<Self as FromValue>::retire_decoded);for(key,value)in fields{let key=control.copy_text(key)?;let value=LayoutPoint::from_value_controlled(value,control)?;output.get_mut().admitted_insert(key,value,control)?;}control.checkpoint()?;Ok(output.take())}))}
@@ -46,6 +50,7 @@ impl ToValue for RuleLayout {
  fn to_value(&self)->DslValue{DslValue::Object(self.iter().map(|(key,value)|(key.clone(),value.to_value())).collect())}
  fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(0)?;let mut output=DslValue::object_encoding_controlled(self.len(),control)?;for(key,value)in self{let value=value.to_value_controlled(control)?;DslValue::push_encoding_controlled(output.get_mut(),key,value,control)?;control.step()?;}control.checkpoint()?;Ok(DslValue::Object(output.take()))}))}
 }
+impl semio_framework_dsl_record::BorrowedDslField for RuleLayout{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Map(||<LayoutPoint as semio_framework_dsl_record::BorrowedDslField>::SHAPE);}
 impl semio_framework_dsl_record::DslField for RuleLayout {
  fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Map(Box::new(<LayoutPoint as semio_framework_dsl_record::DslField>::shape()))}
  fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,ValueError>{semio_framework_dsl_record::producer::boxed(<LayoutPoint as semio_framework_dsl_record::DslField>::shape_controlled(control)?,control).map(semio_framework_dsl_record::Shape::Map)}

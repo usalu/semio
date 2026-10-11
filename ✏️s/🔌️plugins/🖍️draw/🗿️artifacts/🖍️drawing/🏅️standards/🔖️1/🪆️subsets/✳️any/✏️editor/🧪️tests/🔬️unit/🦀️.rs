@@ -129,17 +129,20 @@ fn drawing_envelope_wire() -> Vec<u8> {
     let envelope = store::create_document_envelope(DRAWING_DOCUMENT_SCHEMA, "drawing-retained-load", snapshot, None);
     let mut retirement = crate::spr::drawing_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
-        match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Drawing fixture envelope retirement") {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                drop(retirement);
-                return wire;
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("unshared Drawing fixture envelope retirement blocked"),
+        let copy_bytes = retirement.next_copy_byte_demand().expect("Drawing fixture envelope copy demand");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: copy_bytes,
+            maximum_capacity_bytes: retirement.next_capacity_byte_demand(copy_bytes).expect("Drawing fixture envelope capacity demand"),
+            maximum_release_bytes: retirement.next_release_byte_demand().expect("Drawing fixture envelope release demand"),
+            maximum_depth: retirement.next_depth_demand().expect("Drawing fixture envelope depth demand").max(1),
+        };
+        let step = retirement.close_step(grant).expect("Drawing fixture envelope retirement");
+        assert!(step.progress().fits(grant));
+        if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+            assert!(retirement.terminal_is_empty());
+            drop(retirement);
+            return wire;
         }
     }
     panic!("Drawing fixture envelope retirement did not reach terminal")

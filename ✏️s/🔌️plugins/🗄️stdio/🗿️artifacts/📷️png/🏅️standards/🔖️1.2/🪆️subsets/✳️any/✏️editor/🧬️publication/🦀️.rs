@@ -2,7 +2,7 @@
 use crate::{PngSnapshot,schema::{mutations::{PngMutation,ReplaceImage,ReplaceSamples,SetGamma},snapshot::PngImage}};
 use crate::schema::operations::{owned_validation::PngOwnedValidationWork,validate_native_paint_target};
 use crate::schema::snapshot::{PngColorType,PngRegion};
-use semio_framework_value::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose};
+use semio_framework_value::retained_clone::{bulk_run_elements,bulk_run_progress,RetainedClone,RetainedCloneCursor,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose};
 use semio_framework_value::ValueError;
 use store::snapshot_clone_preparation::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep,RetainedClonePreparationFactory};
 use std::sync::Arc;
@@ -18,10 +18,10 @@ impl RetainedCloneEdit<PngSnapshot,PngMutation> for PngPublication{
     fn begin(&self,grant:RetainedCloneGrant)->Result<(Self::Cursor,RetainedCloneProgress),ValueError>{let progress=self.begin_demand().admit(grant)?;Ok((PngPublicationCursor::new(),progress))}
 }
 pub struct PngPublicationCursor{
-    phase:u8,copy:Option<<PngImage as RetainedClone>::Cursor>,inverse_image:Option<PngImage>,displaced_image:Option<PngImage>,inverse:Option<Vec<PngMutation>>,old_samples:Vec<u16>,changed:bool,retirement:RetainedCloneClose,validation:PngOwnedValidationWork,pixel:usize,closing:bool,cancelled:bool,
+    phase:u8,copy:Option<<PngImage as RetainedClone>::Cursor>,inverse_image:Option<PngImage>,displaced_image:Option<PngImage>,inverse:Option<Vec<PngMutation>>,old_samples:Vec<u16>,changed:bool,retirement:RetainedCloneClose,validation:PngOwnedValidationWork,pixel:usize,reserved:bool,closing:bool,cancelled:bool,
 }
 impl PngPublicationCursor{
-    pub fn new()->Self{Self{phase:0,copy:Some(PngImage::retained_clone_cursor()),inverse_image:None,displaced_image:None,inverse:None,old_samples:Vec::new(),changed:false,retirement:RetainedCloneClose::default(),validation:PngOwnedValidationWork::default(),pixel:0,closing:false,cancelled:false}}
+    pub fn new()->Self{Self{phase:0,copy:Some(PngImage::retained_clone_cursor()),inverse_image:None,displaced_image:None,inverse:None,old_samples:Vec::new(),changed:false,retirement:RetainedCloneClose::default(),validation:PngOwnedValidationWork::default(),pixel:0,reserved:false,closing:false,cancelled:false}}
     fn close_copy(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,String>{
         let cursor=self.copy.as_mut().ok_or("png: missing image clone cursor")?;
         let step=cursor.close_step(grant).map_err(ValueError::into_message)?;
@@ -31,7 +31,7 @@ impl PngPublicationCursor{
 }
 fn unit()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 impl RetainedCloneEditCursor<PngSnapshot,PngMutation> for PngPublicationCursor{
-    fn advance(&mut self,base:RetainedCloneRef<'_,PngSnapshot>,post:&mut PngSnapshot,mutation:RetainedCloneRef<'_,PngMutation>,grant:RetainedCloneGrant)->Result<RetainedCloneEditStep,String>{
+    fn advance(&mut self,base:RetainedCloneRef<'_,PngSnapshot>,post:&mut PngSnapshot,mutation:RetainedCloneRef<'_,PngMutation>,grant:RetainedCloneGrant)->Result<RetainedCloneEditStep,ValueError>{(||->Result<RetainedCloneEditStep,String>{
         if self.closing||self.cancelled{return Err("png: publication cursor is closing".into());}if grant.maximum_items==0{return Ok(RetainedCloneEditStep::Progress(Default::default()));}
         if self.phase==0&&!matches!(mutation.get(),PngMutation::ReplaceImage(_)){self.copy=None;self.phase=5;}
         let progress=match self.phase{
@@ -63,25 +63,39 @@ impl RetainedCloneEditCursor<PngSnapshot,PngMutation> for PngPublicationCursor{
                     return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<u32>>(),retained_capacity_bytes:bytes,..Default::default()}));
                 }
                 let(region,paint)=match mutation.get(){PngMutation::PatchPixels(value)=>(PngRegion{x:value.x,y:value.y,width:value.width,height:value.height},Some(crate::schema::snapshot::PngNativePaint::rgba(value.red.into(),value.green.into(),value.blue.into(),value.alpha.into()))),PngMutation::PaintNativeSamples(value)=>(value.region,Some(value.paint)),PngMutation::ReplaceSamples(value)=>(value.region,None),_=>return Err("png: paint lost its typed intent".into())};
-                let spp=post.image.color_type.samples_per_pixel();let bytes=spp*std::mem::size_of::<u16>();
-                if grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<bytes{return Ok(RetainedCloneEditStep::Progress(Default::default()));}
-                let pixel=self.pixel;
-                let start=((region.y as usize+pixel/region.width as usize)*post.image.width as usize+region.x as usize+pixel%region.width as usize)*spp;
+                let spp=post.image.color_type.samples_per_pixel();let width=spp*std::mem::size_of::<u16>();
+                let total=region.width as usize*region.height as usize;
+                if !self.reserved{
+                    let planned=total.checked_mul(width).ok_or("png: inverse sample capacity overflow")?;
+                    if grant.maximum_capacity_bytes<planned{return Ok(RetainedCloneEditStep::Progress(Default::default()));}
+                    self.old_samples.try_reserve_exact(total*spp).map_err(|_|"png: inverse sample capacity allocation failed")?;
+                    let actual=self.old_samples.capacity()*std::mem::size_of::<u16>();
+                    if actual>grant.maximum_capacity_bytes{return Err("png: inverse sample allocator exceeded its admitted capacity".into());}
+                    self.reserved=true;
+                    return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:actual,..Default::default()}));
+                }
+                let run=(total-self.pixel).min(bulk_run_elements(grant,width));
+                if run==0{return Ok(RetainedCloneEditStep::Progress(Default::default()));}
                 let paint_samples=paint.map(|paint|paint.samples());
-                let target:&[u16]=match (&paint_samples,mutation.get()){(Some(samples),_)=>&samples[..spp],(None,PngMutation::ReplaceSamples(value))=>&value.samples[pixel*spp..pixel*spp+spp],_=>return Err("png: paint lost its typed intent".into())};
-                if post.image.samples[start..start+spp]!=*target{self.changed=true;}
-                self.old_samples.extend_from_slice(&post.image.samples[start..start+spp]);
-                post.image.samples[start..start+spp].copy_from_slice(target);self.pixel+=1;
-                if self.pixel==region.width as usize*region.height as usize{
+                for pixel in self.pixel..self.pixel+run{
+                    let start=((region.y as usize+pixel/region.width as usize)*post.image.width as usize+region.x as usize+pixel%region.width as usize)*spp;
+                    let target:&[u16]=match (&paint_samples,mutation.get()){(Some(samples),_)=>&samples[..spp],(None,PngMutation::ReplaceSamples(value))=>&value.samples[pixel*spp..pixel*spp+spp],_=>return Err("png: paint lost its typed intent".into())};
+                    if post.image.samples[start..start+spp]!=*target{self.changed=true;}
+                    self.old_samples.extend_from_slice(&post.image.samples[start..start+spp]);
+                    post.image.samples[start..start+spp].copy_from_slice(target);
+                }
+                self.pixel+=run;
+                if self.pixel==total{
                     let old=std::mem::take(&mut self.old_samples);
                     self.inverse=Some(if self.changed{vec![PngMutation::ReplaceSamples(ReplaceSamples{region,samples:old})]}else{self.old_samples=old;Vec::new()});
                     self.phase=7;
                 }
-                RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()}
+                bulk_run_progress(run,width)
             },
             _=>return Ok(RetainedCloneEditStep::Complete(unit())),
         };Ok(RetainedCloneEditStep::Progress(progress))
-    }
+    })().map_err(|message|ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message))}
+    fn foreign_step_presence(&self)->bool{false}
     fn take_inverse(&mut self)->Option<Vec<PngMutation>>{if self.phase==7{self.inverse.take()}else{None}}
     fn cancel(&mut self){self.cancelled=true;self.begin_close();}
     fn begin_close(&mut self)->bool{if self.closing{return false;}self.closing=true;if let Some(copy)=self.copy.as_mut(){copy.begin_close();}true}

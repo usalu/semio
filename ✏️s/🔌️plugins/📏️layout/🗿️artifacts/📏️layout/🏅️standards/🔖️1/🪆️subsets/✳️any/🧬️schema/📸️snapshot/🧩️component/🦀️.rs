@@ -17,7 +17,7 @@ pub fn decode(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_f
         let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected inline Drawing record"))};
         let handle=<store::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(0).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Drawing handle"))?,control)?;control.step()?;
         let Some(semio_framework_dsl_record::FieldValue::Value(content))=record.get(1) else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected inline Drawing content"))};
-        let content=DecodedValue::new(<SemioDrawingSnapshot as FromValue>::from_value_controlled(content,control)?,SemioDrawingSnapshot::retire_owned);
+        let content=DecodedValue::new(<SemioDrawingSnapshot as FromValue>::from_value_controlled(content,control)?,retire_drawing_content);
         control.step()?;Ok(LayoutDrawingChild{handle,content:content.take()})
     })
 }
@@ -29,4 +29,15 @@ pub fn encode(value:&LayoutDrawingChild,control:&mut semio_framework_value::Nati
         Ok(semio_framework_dsl_record::FieldValue::Record(output.take()))
     })
 }
-pub fn retire(value:LayoutDrawingChild){SemioDrawingSnapshot::retire_owned(value.content);}
+pub fn retire(value:LayoutDrawingChild){retire_drawing_content(value.content);}
+
+fn retire_drawing_content(value: SemioDrawingSnapshot) {
+    let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|(error, _)| panic!("Layout drawing cold retirement refused: {error}"));
+    while !owner.terminal_is_empty() {
+        let copy = owner.next_copy_byte_demand().expect("Layout drawing cold copy demand");
+        let release = owner.next_release_byte_demand().expect("Layout drawing cold release demand");
+        let capacity = owner.next_capacity_byte_demand(if copy == 0 { release } else { copy }).expect("Layout drawing cold capacity demand");
+        let depth = owner.next_depth_demand().expect("Layout drawing cold depth demand");
+        owner.step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: depth }).expect("Layout drawing cold grant");
+    }
+}

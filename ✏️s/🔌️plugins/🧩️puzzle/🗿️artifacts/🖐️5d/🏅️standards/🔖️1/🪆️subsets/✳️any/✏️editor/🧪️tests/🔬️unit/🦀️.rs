@@ -159,7 +159,7 @@ pub(crate) mod context {
                 drain_settled(app, &mut result, &mut fault)?;
                 return fault.map_or(Ok(result), Err);
             }
-            PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
+            crate::puzzle_job::testing::maintain(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
             block_on(app.advance_typed_operation_publication())?;
             // 📄️ EVERY presented page and EVERY completion per turn, never one:
             // `has_pending_typed_operations` counts the outboxes and the mounted operations but NOT a
@@ -239,7 +239,7 @@ pub(crate) mod context {
                 eprintln!("{action} settled turn={turn} ms={} census={} pages={lanes:?} fault={fault:?}", started.elapsed().as_millis(), semio_framework_plugin::app::typed_operation_unit_census() - base);
                 return fault.map_or(Ok(result), Err);
             }
-            PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
+            crate::puzzle_job::testing::maintain(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
             let unit = block_on(app.advance_typed_operation_publication());
             while let Some(page) = app.take_typed_operation_result_page(1) {
                 *lanes.entry(format!("{:?}", page.lane)).or_default() += 1;
@@ -328,7 +328,9 @@ pub(crate) mod context {
             if app.close_terminal_is_empty() {
                 return;
             }
-            if PluginApp::close_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Puzzle 5D registered app close") == semio_framework_plugin::PluginCloseStep::Complete {
+            let demand = PluginApp::close_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Puzzle 5D registered app close quote");
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            if matches!(PluginApp::close_step(app, grant).expect("Puzzle 5D registered app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
                 break;
             }
         }
@@ -514,10 +516,10 @@ fn focus_selection_hostile_static_law_rejects_whole_selection_reducers() {
 fn window_owner_routes_are_exact(source: &str) -> bool {
     [
         "struct Puzzle5dWindowCommandWork",
-        "window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window, request.authoring_seed.clone()))",
-        "fn bind_window_owners",
-        "config_from_snapshot(self.window_config.as_ref())",
-        "transient_from_snapshot(self.window_transient.as_ref())",
+        "window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window, request.authoring_seed.clone()).bound(request.instance_operation_owner.clone()))",
+        "context.and_then(|context| context.window_config.as_ref())",
+        "config_from_snapshot(window_config_snapshot)",
+        "transient_from_snapshot(window_transient_snapshot)",
         "window_config_mutations",
         "window_transient",
         "addressed_config(view, window_after)",
@@ -542,14 +544,14 @@ fn window_owner_hostile_static_law_rejects_missing_owner_boundaries_and_app_conf
     assert!(window_owner_routes_are_exact(source));
     for marker in [
         "struct Puzzle5dWindowCommandWork",
-        "fn bind_window_owners",
-        "config_from_snapshot(self.window_config.as_ref())",
-        "transient_from_snapshot(self.window_transient.as_ref())",
+        "context.and_then(|context| context.window_config.as_ref())",
+        "config_from_snapshot(window_config_snapshot)",
+        "transient_from_snapshot(window_transient_snapshot)",
         "addressed_config(view, window_after)",
         "addressed_transient(view, transient_after)",
     ] {
-        // 🧨️ EVERY occurrence, not the first: `fn bind_window_owners` and
-        // `config_from_snapshot(self.window_config.as_ref())` each appear THREE times in the source
+        // 🧨️ EVERY occurrence, not the first: `context.and_then(|context| context.window_config.as_ref())` and
+        // `config_from_snapshot(window_config_snapshot)` each appear THREE times in the source
         // (one per window-owning work struct), so `replacen(.., 1)` left two behind and
         // `window_owner_routes_are_exact` still found the marker — the negative fixture could not bite
         // and the law proved nothing about those two boundaries.
@@ -608,8 +610,8 @@ fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors()
 
 fn engagement_submit_route_is_cursorized(source: &str) -> bool {
     source.contains(r#"const PUZZLE5D_WINDOW_TOOL_IDS: &[&str] = &["#) && PUZZLE5D_WINDOW_TOOL_IDS.iter().all(|tool| source.contains(&format!("    \"{tool}\",\n")) || source.contains(&format!("    \"{tool}\",\r\n")))
-        && source.contains("window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window, request.authoring_seed.clone()))")
-        && source.contains("transient_from_snapshot(self.window_transient.as_ref())")
+        && source.contains("window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => Box::new(Puzzle5dWindowCommandWork::new(window, request.authoring_seed.clone()).bound(request.instance_operation_owner.clone()))")
+        && source.contains("transient_from_snapshot(window_transient_snapshot)")
         && source.contains("addressed_transient(view, transient_after)")
         && source.contains("EphemeralEmit { window_transient, ..Default::default() }")
         && !source.contains("Puzzle5dConfigMutation::SetEngagementInput")
@@ -621,7 +623,7 @@ fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfer
     let source = include_str!("../../🦀️.rs");
     assert!(engagement_submit_route_is_cursorized(source));
     for marker in [
-        "transient_from_snapshot(self.window_transient.as_ref())",
+        "transient_from_snapshot(window_transient_snapshot)",
         "addressed_transient(view, transient_after)",
         "EphemeralEmit { window_transient, ..Default::default() }",
     ] {
@@ -1988,7 +1990,7 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
     let work = Puzzle5dSetActiveExampleWork::default();
     for example_id in ["", "concrete-forest", "nakagin", "capsule-dream"] {
         let command = Puzzle5dCommand::from_action("setActiveExample", Some(semio_framework_pack_json::json!({ "exampleId": example_id })), None);
-        let extent = crate::retained_command::PuzzleCommandWork::extent(&work, &command, &snapshot, &interaction);
+        let extent = semio_framework_plugin::retained_command::ArtifactCommandWork::extent(&work, &command, &snapshot, &interaction, None);
         assert!(extent.is_some(), "setActiveExample {example_id} must declare an extent — `None` is the opaque capacity fault this slice replaced with a notice");
         assert!(extent.is_some_and(|extent| extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), "setActiveExample {example_id} must stay inside the fixed work ceiling");
     }
@@ -2744,3 +2746,17 @@ fn history_edit_reference_chips_name_entities_as_the_outliner_does() {
     assert_eq!(chip(&[], "ghost"), None, "an unknown id keeps the generic label");
 }
 //#endregion 🔖️HistoryEditReferences
+
+//#region 🛡️ReservedWirePreflight
+/// 📏️ The exact route cap admits the wire untouched; one byte more refuses it and hands the original owner back before any fixed-page copy.
+#[test]
+fn reserved_wire_exact_max_and_plus_one_preflight_return_the_original_owner() {
+    let at_cap = vec![7u8; 64];
+    let admitted = puzzle5d_preflight_reserved_wire(at_cap.clone(), 64).expect("the exact cap is admitted");
+    assert_eq!(admitted, at_cap);
+    let over = vec![9u8; 65];
+    let Err((fault, owner)) = puzzle5d_preflight_reserved_wire(over.clone(), 64) else { panic!("one byte over the cap must be refused") };
+    assert_eq!(owner, over, "the refusal hands the original wire back");
+    assert!(fault.message.contains("exceeds its exact route cap"));
+}
+//#endregion 🛡️ReservedWirePreflight

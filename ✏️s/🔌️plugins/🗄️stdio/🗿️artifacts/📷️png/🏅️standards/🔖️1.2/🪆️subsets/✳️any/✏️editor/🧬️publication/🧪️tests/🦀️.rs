@@ -4,6 +4,16 @@ use semio_framework_value::retained_clone::RetainedCloneSource;
 use semio_framework_value::retirement::SharedValueRetirementFactory;
 use crate::schema::snapshot::{PngTextChunk,PngTextKind,PngNativePaint};
 
+fn encoding_grant(items:usize,copy:usize)->store::ArtifactStoreOneItemGrant{store::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
+fn close_policy()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4_096,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
+fn retire_reader<T:Send+Sync+'static>(reader:&mut store::ArtifactCanonicalJsonReader<T>){for _ in 0..100000{if matches!(reader.close_step(close_policy()).unwrap(),RetainedCloneStep::Complete(_)){return;}}panic!("canonical reader did not retire");}
+fn retire_owned_value<T:semio_framework_value::retirement::RetireOwned>(value:T){
+ let birth=close_policy();
+ let(mut owner,receipt)=semio_framework_value::retirement::admit_owned_retirement(value,birth).unwrap_or_else(|(error,_)|panic!("owned retirement birth: {error:?}"));assert!(receipt.fits(birth));
+ for _ in 0..100000{if owner.terminal_is_empty(){break;}let step=owner.close_step(birth).unwrap();assert!(step.progress().fits(birth));if matches!(step,RetainedCloneStep::Complete(_)){break;}}
+ assert!(owner.terminal_is_empty());
+}
+
 fn close(cursor:&mut PngPublicationCursor){
  cursor.begin_close();
  for _ in 0..100000{
@@ -31,7 +41,7 @@ fn retained_png_publication_prepares_authored_intent_and_validates_with_fuel() {
         let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse,vec![PngMutation::ReplaceSamples(crate::schema::mutations::ReplaceSamples{region,samples:snapshot.image.region_samples(region).unwrap()})]);close(&mut cursor);
         let mut bytes=Vec::new();{let mut encoder=png::Encoder::new(&mut bytes,post.image.width,post.image.height);encoder.set_color(png::ColorType::Rgba);encoder.set_depth(png::BitDepth::Eight);let mut writer=encoder.write_header().unwrap();writer.write_image_data(&expected.image.samples.iter().map(|v|*v as u8).collect::<Vec<_>>()).unwrap();}
         let mut reader=png::Decoder::new(std::io::Cursor::new(bytes)).read_info().unwrap();let mut decoded=vec![0;reader.output_buffer_size().unwrap()];let info=reader.next_frame(&mut decoded).unwrap();assert_eq!(decoded[..info.buffer_size()],post.image.samples.iter().map(|v|*v as u8).collect::<Vec<_>>());
-        let mut retirement=semio_framework_value::retirement::owned_retirement(inverse);while retirement.close_step(1,4096).unwrap()!=SnapshotRetirementStep::Complete {} assert!(retirement.terminal_is_empty());
+        retire_owned_value(inverse);
         eprintln!("[DEBUG] retained PNG publication case={} turns={turns} exactSamples={}",case["id"],post.image.samples.len());
     }
 }
@@ -47,7 +57,7 @@ fn retained_png_publication_cancellation_releases_mutation_projection_lease() {
 fn retained_png_publication_canonical_reader_preserves_neutral_owned_fields() {
     use semio_framework_value::FromValue;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
-    let grant=store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:17};
+    let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let snapshot=Arc::new(snapshot);
@@ -55,9 +65,9 @@ fn retained_png_publication_canonical_reader_preserves_neutral_owned_fields() {
         let lifetime=Arc::downgrade(&snapshot);
         let mut reader=store::ArtifactCanonicalJsonReader::new(snapshot,Arc::new(SharedValueRetirementFactory::<PngSnapshot>::default()));
         let mut encoded=Vec::new();let mut chunk=[0;17];let mut turns=0;
-        while !reader.is_complete() {turns+=1;assert!(turns<100000);let count=reader.encode_chunk(grant,&mut chunk).unwrap();assert!(count<=grant.maximum_bytes);encoded.extend_from_slice(&chunk[..count]);}
+        while !reader.is_complete() {turns+=1;assert!(turns<100000);let step=reader.encode_chunk(grant,&mut chunk).unwrap();assert!(step.ownership.progress().fits(grant.retained_grant()));let count=step.written_bytes;assert!(count<=grant.maximum_copy_bytes);encoded.extend_from_slice(&chunk[..count]);}
         let actual:serde_json::Value=serde_json::from_slice(&encoded).unwrap();assert_eq!(actual,expected);assert_eq!(actual,case["snapshot"]);
-        reader.begin_close();for _ in 0..100000 {if reader.close_step(store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:4096}).unwrap()==SnapshotRetirementStep::Complete {break;}}
+        reader.begin_close();retire_reader(&mut reader);
         assert!(reader.terminal_is_empty());assert_eq!(lifetime.strong_count(),0);assert!(lifetime.upgrade().is_none());
         eprintln!("[DEBUG] retained png canonical neutral={} turns={turns} bytes={}",case["name"],encoded.len());
     }
@@ -68,7 +78,7 @@ fn retained_png_publication_canonical_diff_preserves_neutral_owned_fields() {
     use semio_framework_value::FromValue;
     use crate::schema::diff::PngDiff;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
-    let grant=store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:17};
+    let grant=encoding_grant(1,17);
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(case["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         for image in [None,Some(snapshot.image)] {
@@ -76,9 +86,9 @@ fn retained_png_publication_canonical_diff_preserves_neutral_owned_fields() {
             let expected:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(diff.as_ref())).unwrap();
             let mut reader=store::ArtifactCanonicalJsonReader::new(diff,Arc::new(SharedValueRetirementFactory::<PngDiff>::default()));
             let mut encoded=Vec::new();let mut chunk=[0;17];let mut turns=0;
-            while !reader.is_complete(){turns+=1;assert!(turns<100000);let count=reader.encode_chunk(grant,&mut chunk).unwrap();assert!(count<=grant.maximum_bytes);encoded.extend_from_slice(&chunk[..count]);}
+            while !reader.is_complete(){turns+=1;assert!(turns<100000);let step=reader.encode_chunk(grant,&mut chunk).unwrap();assert!(step.ownership.progress().fits(grant.retained_grant()));let count=step.written_bytes;assert!(count<=grant.maximum_copy_bytes);encoded.extend_from_slice(&chunk[..count]);}
             let actual:serde_json::Value=serde_json::from_slice(&encoded).unwrap();assert_eq!(actual,expected);if actual.get("image").is_some(){assert_eq!(actual["image"],case["snapshot"]["image"]);}
-            reader.begin_close();for _ in 0..100000 {if reader.close_step(store::ArtifactStoreOneItemGrant{maximum_items:1,maximum_bytes:4096}).unwrap()==SnapshotRetirementStep::Complete{break;}}
+            reader.begin_close();retire_reader(&mut reader);
             assert!(reader.terminal_is_empty());assert!(lifetime.upgrade().is_none());
             eprintln!("[DEBUG] retained PNG diff neutral={} turns={turns} bytes={}",case["name"],encoded.len());
         }
@@ -156,7 +166,7 @@ fn retained_png_publication_replacement_and_inverse_use_bounded_typed_image_owne
         }
         assert_eq!(post,target);let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse.len(),1);
         let restored=protocol::apply_diff(inverse[0].diff(&post).diff(),&post).unwrap();assert_eq!(restored,base);close(&mut cursor);
-        let mut retirement=semio_framework_value::retirement::owned_retirement(inverse);while retirement.close_step(1,4096).unwrap()!=SnapshotRetirementStep::Complete{}assert!(retirement.terminal_is_empty());
+        retire_owned_value(inverse);
         eprintln!("[DEBUG] retained Png typed image replacement neutral={} turns={turns} inverseCapacityGranted=true nativeWordsExact=true",row["name"]);
     }
 }

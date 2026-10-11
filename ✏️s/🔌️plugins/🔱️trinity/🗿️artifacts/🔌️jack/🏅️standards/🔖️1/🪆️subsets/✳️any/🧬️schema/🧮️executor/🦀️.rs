@@ -15,7 +15,7 @@ pub struct Binding {
 
 /// 🧮️ One effect a query applies to its working graph. A run publishes its effects as graph leaves of the document's
 /// composed `content` child (`crate::graph_leaves`), never as parent-lane leaves (design §20.15).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum GraphEffect {
     CreateNode(Node),
     DeleteNode(String),

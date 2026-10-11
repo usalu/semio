@@ -15,7 +15,7 @@ use super::*;
 use crate::standards::v_r12::subsets::any::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
+use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
 use crate::DxfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -219,24 +219,24 @@ pub(crate) fn dec_vertices(s: &str) -> Result<Vec<DxfVertex>, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_dxf_entity(e: &DxfEntity) -> String {
     match e {
-        DxfEntity::Line { start, end, layer, unknown_group_codes } => {
+        DxfEntity::Line(DxfLine { start, end, layer, unknown_group_codes }) => {
             format!("L[{},{},{},{}]", enc_point3(start), enc_point3(end), enc_str(layer), enc_group_codes(unknown_group_codes))
         }
-        DxfEntity::Circle { center, radius, layer, unknown_group_codes } => {
+        DxfEntity::Circle(DxfCircle { center, radius, layer, unknown_group_codes }) => {
             format!("C[{},{},{},{}]", enc_point3(center), enc_f64(*radius), enc_str(layer), enc_group_codes(unknown_group_codes))
         }
-        DxfEntity::Arc { center, radius, start_angle, end_angle, layer, unknown_group_codes } => {
+        DxfEntity::Arc(DxfArc { center, radius, start_angle, end_angle, layer, unknown_group_codes }) => {
             format!("A[{},{},{},{},{},{}]", enc_point3(center), enc_f64(*radius), enc_f64(*start_angle), enc_f64(*end_angle), enc_str(layer), enc_group_codes(unknown_group_codes))
         }
-        DxfEntity::Polyline { vertices, closed, layer, unknown_group_codes } => format!("W[{},{},{},{}]", enc_vertices(vertices), if *closed { "1" } else { "0" }, enc_str(layer), enc_group_codes(unknown_group_codes)),
-        DxfEntity::Text { position, height, value, layer, unknown_group_codes } => format!("T[{},{},{},{},{}]", enc_point3(position), enc_f64(*height), enc_str(value), enc_str(layer), enc_group_codes(unknown_group_codes)),
-        DxfEntity::Solid { points, layer, unknown_group_codes } => {
+        DxfEntity::Polyline(DxfPolyline { vertices, closed, layer, unknown_group_codes }) => format!("W[{},{},{},{}]", enc_vertices(vertices), if *closed { "1" } else { "0" }, enc_str(layer), enc_group_codes(unknown_group_codes)),
+        DxfEntity::Text(DxfText { position, height, value, layer, unknown_group_codes }) => format!("T[{},{},{},{},{}]", enc_point3(position), enc_f64(*height), enc_str(value), enc_str(layer), enc_group_codes(unknown_group_codes)),
+        DxfEntity::Solid(DxfSolid { points, layer, unknown_group_codes }) => {
             format!("S[{},{},{}]", enc_points4(points), enc_str(layer), enc_group_codes(unknown_group_codes))
         }
-        DxfEntity::Insert { block_name, position, scale, rotation, layer, unknown_group_codes } => {
+        DxfEntity::Insert(DxfInsert { block_name, position, scale, rotation, layer, unknown_group_codes }) => {
             format!("I[{},{},{},{},{},{}]", enc_str(block_name), enc_point3(position), enc_point3(scale), enc_f64(*rotation), enc_str(layer), enc_group_codes(unknown_group_codes))
         }
-        DxfEntity::Other { kind, group_codes } => format!("O[{},{}]", enc_str(kind), enc_group_codes(group_codes)),
+        DxfEntity::Other(DxfOther { kind, group_codes }) => format!("O[{},{}]", enc_str(kind), enc_group_codes(group_codes)),
     }
 }
 
@@ -248,42 +248,42 @@ pub(crate) fn dec_dxf_entity(s: &str) -> Result<DxfEntity, String> {
         "L" => {
             let parts = split_top_level(inner, ',');
             let [start, end, layer, unknown] = parts.as_slice() else { return Err(format!("entity line: expected 4 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Line { start: dec_point3(start)?, end: dec_point3(end)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Line(DxfLine { start: dec_point3(start)?, end: dec_point3(end)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? }))
         }
         "C" => {
             let parts = split_top_level(inner, ',');
             let [center, radius, layer, unknown] = parts.as_slice() else { return Err(format!("entity circle: expected 4 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Circle { center: dec_point3(center)?, radius: dec_f64(radius)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Circle(DxfCircle { center: dec_point3(center)?, radius: dec_f64(radius)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? }))
         }
         "A" => {
             let parts = split_top_level(inner, ',');
             let [center, radius, start_angle, end_angle, layer, unknown] = parts.as_slice() else { return Err(format!("entity arc: expected 6 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Arc { center: dec_point3(center)?, radius: dec_f64(radius)?, start_angle: dec_f64(start_angle)?, end_angle: dec_f64(end_angle)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Arc(DxfArc { center: dec_point3(center)?, radius: dec_f64(radius)?, start_angle: dec_f64(start_angle)?, end_angle: dec_f64(end_angle)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? }))
         }
         "W" => {
             let parts = split_top_level(inner, ',');
             let [vertices, closed, layer, unknown] = parts.as_slice() else { return Err(format!("entity polyline: expected 4 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Polyline { vertices: dec_vertices(vertices)?, closed: *closed == "1", layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Polyline(DxfPolyline { vertices: dec_vertices(vertices)?, closed: *closed == "1", layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? }))
         }
         "T" => {
             let parts = split_top_level(inner, ',');
             let [position, height, value, layer, unknown] = parts.as_slice() else { return Err(format!("entity text: expected 5 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Text { position: dec_point3(position)?, height: dec_f64(height)?, value: dec_str(value)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Text(DxfText { position: dec_point3(position)?, height: dec_f64(height)?, value: dec_str(value)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? }))
         }
         "S" => {
             let parts = split_top_level(inner, ',');
             let [points, layer, unknown] = parts.as_slice() else { return Err(format!("entity solid: expected 3 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Solid { points: dec_points4(points)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Solid(DxfSolid { points: dec_points4(points)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? }))
         }
         "I" => {
             let parts = split_top_level(inner, ',');
             let [block_name, position, scale, rotation, layer, unknown] = parts.as_slice() else { return Err(format!("entity insert: expected 6 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Insert { block_name: dec_str(block_name)?, position: dec_point3(position)?, scale: dec_point3(scale)?, rotation: dec_f64(rotation)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Insert(DxfInsert { block_name: dec_str(block_name)?, position: dec_point3(position)?, scale: dec_point3(scale)?, rotation: dec_f64(rotation)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? }))
         }
         "O" => {
             let parts = split_top_level(inner, ',');
             let [kind, group_codes] = parts.as_slice() else { return Err(format!("entity other: expected 2 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Other { kind: dec_str(kind)?, group_codes: dec_group_codes(group_codes)? })
+            Ok(DxfEntity::Other(DxfOther { kind: dec_str(kind)?, group_codes: dec_group_codes(group_codes)? }))
         }
         other => Err(format!("dxf entity: unknown tag {other:?}")),
     }
@@ -776,7 +776,7 @@ mod diff_wire_codec {
 use super::*;
 use crate::standards::v_r12::subsets::any::schema::diff::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
+use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
 use crate::DxfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;

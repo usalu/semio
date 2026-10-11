@@ -39,7 +39,7 @@ fn parse_document_json(json: &str) -> Emit<WriterMutation, NoConfigMutation> {
 //#region 🔖️CommitRename
 //#endregion 🔖️CommitRename
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "load-document-json")]
 pub struct LoadDocumentJson {
     pub json: String,

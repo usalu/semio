@@ -16,7 +16,7 @@ use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology
 /// 🧭️ Sequence's step-DAG topology — see module doc for the Kahn's-algorithm derivation.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SequenceTopology {

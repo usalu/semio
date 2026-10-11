@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️AirSystem
 /// 🏭️ Central air system configuration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum AirSystem {
     Cav { supply_fan: Fan, return_fan: Option<Fan>, cooling: CoolingCoil, heating: Option<HeatingCoil>, design_flow_m3_s: f64 },
     Vav { supply_fan: Fan, return_fan: Option<Fan>, cooling: CoolingCoil, heating: Option<HeatingCoil>, min_flow_m3_s: f64, max_flow_m3_s: f64 },
@@ -22,7 +22,7 @@ pub enum AirSystem {
 }
 
 /// 📥️ Air system simulation boundary conditions.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct AirSystemRequest {
     pub outdoor_temperature_c: f64,
     pub outdoor_humidity_ratio: f64,
@@ -38,7 +38,7 @@ pub struct AirSystemRequest {
 }
 
 /// 📤️ Air system simulation result.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct AirSystemOutput {
     pub supply_temperature_c: f64,
     pub supply_humidity_ratio: f64,

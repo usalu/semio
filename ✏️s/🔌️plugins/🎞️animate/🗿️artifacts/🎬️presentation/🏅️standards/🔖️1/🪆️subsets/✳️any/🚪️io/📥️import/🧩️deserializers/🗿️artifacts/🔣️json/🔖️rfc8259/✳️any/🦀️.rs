@@ -25,7 +25,7 @@ impl Deserializer<PresentationSnapshot> for JsonIntoPresentation {
         let value = parse_json_text(text).map_err(|mut error| { error.message=format!("JsonIntoPresentation: {}",error.message);IoError::from_text_error_controlled(error,&mut semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut |_|true)).unwrap_or_else(IoError::from_value_error) })?;
         let json = JsonSnapshot::from_value(value);
         let dsl_value: semio_framework_value::DslValue = json.to_serde_value().into();
-        let mut out: PresentationSnapshot = semio_framework_value::FromValue::from_value(dsl_value).map_err(|error| { let mut cause=error;cause.message=format!("JsonIntoPresentation: {}",cause.message);IoError::from_value_error(cause) })?;
+        let mut out: PresentationSnapshot = semio_framework_value::FromValue::from_value(dsl_value).map_err(|error| { let mut cause=error;cause.message=format!("JsonIntoPresentation: {}",cause.message).into();IoError::from_value_error(cause) })?;
         if out.schema.is_empty() {
             out.schema = PRESENTATION_DOCUMENT_SCHEMA.into();
         }

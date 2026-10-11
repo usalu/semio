@@ -59,3 +59,10 @@ export async function receiveScriptProcessInvocation<T>(environment: Readonly<Re
 export function scriptProcessEnvironment(envelope: ScriptProcessEnvelope, environment: Readonly<Record<string, string | undefined>>): Record<string, string | undefined> {
   return { ...environment, [SCRIPT_PROCESS_INVOCATION_ENV]: JSON.stringify(readScriptProcessEnvelope(envelope, Date.now())) };
 }
+
+/** 📤️ Hands the caller's current original invocation, with its remaining deadline, to an owned child process environment. */
+export function scriptInvocationEnvironment(invocation: ScriptInvocation, environment: Readonly<Record<string, string | undefined>>): Record<string, string | undefined> {
+  checkScriptInvocation(invocation);
+  const now = Date.now(), remaining = invocation.control.remainingMilliseconds();
+  return scriptProcessEnvironment(readScriptProcessEnvelope({ version: 1, policy: invocation.policy, deadlineEpochMilliseconds: remaining === null ? null : now + remaining, capabilities: invocation.capabilities }, now), environment);
+}

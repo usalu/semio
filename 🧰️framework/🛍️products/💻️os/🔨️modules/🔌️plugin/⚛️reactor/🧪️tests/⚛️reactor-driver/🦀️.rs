@@ -31,13 +31,13 @@ pub(crate) async fn poll_with_patch_output_fault<PA: crate::app::PluginApp>(
             }
         },
         |_, ()| (),
-    )
+    , &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context())
     .await;
     (result, receipt)
 }
 
 pub(crate) async fn poll_with_output_failure<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, events: Vec<Event>, budget: semio_framework::kernel::Budget) -> Result<(), semio_framework::Fault> {
-    turn::poll_kernel_output(runtime, events, None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| ()).await
+    turn::poll_kernel_output(runtime, events, None, None, budget, |_| Err(reactor_close_fault("injected output conversion failure")), |_, ()| (), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await
 }
 
 /// ▶️ The exact `run_until_idle` call `poll` makes after routing events, exposed directly.

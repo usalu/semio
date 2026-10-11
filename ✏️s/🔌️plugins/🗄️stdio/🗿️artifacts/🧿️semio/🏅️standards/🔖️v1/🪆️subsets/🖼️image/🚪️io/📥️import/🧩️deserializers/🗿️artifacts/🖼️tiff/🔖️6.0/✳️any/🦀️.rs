@@ -10,31 +10,34 @@
 //!   depth, so unlike BMP this one IS directly comparable to PNG's.
 //! - `icc`: no ICC tag (34675, `ICCProfile`) extraction is attempted here — TIFF6.0's core tag
 //!   table (this codec's typed scope) doesn't include it; always `None`.
-//! - `metadata`: every OTHER IFD-0 tag (not width/height/bits/compression/photometric/samples/
-//!   rows-per-strip/strip offsets or counts) becomes one entry keyed by its decimal tag id, valued
+//! - `metadata`: every OTHER IFD-0 tag (not width/height/bits/photometric/samples/extra-samples;
+//!   native strip, tile and compression policy is never a semantic tag) becomes one entry keyed by its decimal tag id, valued
 //!   by `first_u32()` when numeric or the raw `Ascii` string — real, lossless-enough for the
-//!   common informational tags (`ImageDescription` 270, `Software` 305, …), though non-numeric/
+//!   common informational tags (`ImageDescription` 270, `Software` 305, …; several ASCII strings join with a newline), though non-numeric/
 //!   non-ASCII typed values (e.g. `Rational`) fall back to a `Debug`-formatted string (documented
 //!   as a readable-but-not-machine-parseable representation).
 
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_tiff::{
-    schema::snapshot::{TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP, TAG_SAMPLES_PER_PIXEL, TAG_STRIP_BYTE_COUNTS, TAG_STRIP_OFFSETS},
+    schema::snapshot::{TiffValues, TAG_BITS_PER_SAMPLE, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_SAMPLES_PER_PIXEL},
     TiffSnapshot,
 };
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 
-/// 🕳️ Core strip/geometry tags — already surfaced as typed `SemioImageSnapshot` fields, so they
+/// 🫥️ TIFF6 §18 `ExtraSamples`: what the fourth sample of a pixel means (2 = unassociated alpha).
+const TAG_EXTRA_SAMPLES: u16 = 338;
+
+/// 🕳️ Core geometry tags — already surfaced as typed `SemioImageSnapshot` fields, so they
 /// don't ALSO become generic metadata entries (would duplicate the same information twice).
-const CORE_TAGS: [u16; 9] = [TAG_IMAGE_WIDTH, TAG_IMAGE_LENGTH, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_SAMPLES_PER_PIXEL, TAG_ROWS_PER_STRIP, TAG_STRIP_BYTE_COUNTS];
+const CORE_TAGS: [u16; 6] = [TAG_IMAGE_WIDTH, TAG_IMAGE_LENGTH, TAG_BITS_PER_SAMPLE, TAG_PHOTOMETRIC, TAG_SAMPLES_PER_PIXEL, TAG_EXTRA_SAMPLES];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn value_to_metadata_string(v: &TiffValues) -> String {
     match v {
-        TiffValues::Ascii(bytes) => String::from_utf8_lossy(bytes.strip_suffix(&[0]).unwrap_or(bytes)).into_owned(),
+        TiffValues::Ascii(texts) => texts.join("\n"),
         other => other.first_u32().map_or_else(|| format!("{other:?}"), |n| n.to_string()),
     }
 }

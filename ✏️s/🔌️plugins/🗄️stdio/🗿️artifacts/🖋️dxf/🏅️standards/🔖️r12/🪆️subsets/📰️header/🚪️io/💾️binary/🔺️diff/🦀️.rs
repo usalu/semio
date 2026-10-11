@@ -8,7 +8,7 @@ mod diff_codec {
 use super::*;
 use crate::standards::v_r12::subsets::any::schema::diff::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
+use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
 use crate::DxfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -212,21 +212,21 @@ pub(crate) fn dec_vertices_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_dxf_entity_bin(e: &DxfEntity, out: &mut Vec<u8>) {
     match e {
-        DxfEntity::Line { start, end, layer, unknown_group_codes } => {
+        DxfEntity::Line(DxfLine { start, end, layer, unknown_group_codes }) => {
             out.push(0);
             write_point3_bin(out, start);
             write_point3_bin(out, end);
             write_str_lp(out, layer);
             enc_group_codes_bin(unknown_group_codes, out);
         }
-        DxfEntity::Circle { center, radius, layer, unknown_group_codes } => {
+        DxfEntity::Circle(DxfCircle { center, radius, layer, unknown_group_codes }) => {
             out.push(1);
             write_point3_bin(out, center);
             write_f64_bin(out, *radius);
             write_str_lp(out, layer);
             enc_group_codes_bin(unknown_group_codes, out);
         }
-        DxfEntity::Arc { center, radius, start_angle, end_angle, layer, unknown_group_codes } => {
+        DxfEntity::Arc(DxfArc { center, radius, start_angle, end_angle, layer, unknown_group_codes }) => {
             out.push(2);
             write_point3_bin(out, center);
             write_f64_bin(out, *radius);
@@ -235,14 +235,14 @@ pub(crate) fn enc_dxf_entity_bin(e: &DxfEntity, out: &mut Vec<u8>) {
             write_str_lp(out, layer);
             enc_group_codes_bin(unknown_group_codes, out);
         }
-        DxfEntity::Polyline { vertices, closed, layer, unknown_group_codes } => {
+        DxfEntity::Polyline(DxfPolyline { vertices, closed, layer, unknown_group_codes }) => {
             out.push(3);
             enc_vertices_bin(vertices, out);
             out.push(if *closed { 1 } else { 0 });
             write_str_lp(out, layer);
             enc_group_codes_bin(unknown_group_codes, out);
         }
-        DxfEntity::Text { position, height, value, layer, unknown_group_codes } => {
+        DxfEntity::Text(DxfText { position, height, value, layer, unknown_group_codes }) => {
             out.push(4);
             write_point3_bin(out, position);
             write_f64_bin(out, *height);
@@ -250,13 +250,13 @@ pub(crate) fn enc_dxf_entity_bin(e: &DxfEntity, out: &mut Vec<u8>) {
             write_str_lp(out, layer);
             enc_group_codes_bin(unknown_group_codes, out);
         }
-        DxfEntity::Solid { points, layer, unknown_group_codes } => {
+        DxfEntity::Solid(DxfSolid { points, layer, unknown_group_codes }) => {
             out.push(5);
             write_points4_bin(out, points);
             write_str_lp(out, layer);
             enc_group_codes_bin(unknown_group_codes, out);
         }
-        DxfEntity::Insert { block_name, position, scale, rotation, layer, unknown_group_codes } => {
+        DxfEntity::Insert(DxfInsert { block_name, position, scale, rotation, layer, unknown_group_codes }) => {
             out.push(6);
             write_str_lp(out, block_name);
             write_point3_bin(out, position);
@@ -265,7 +265,7 @@ pub(crate) fn enc_dxf_entity_bin(e: &DxfEntity, out: &mut Vec<u8>) {
             write_str_lp(out, layer);
             enc_group_codes_bin(unknown_group_codes, out);
         }
-        DxfEntity::Other { kind, group_codes } => {
+        DxfEntity::Other(DxfOther { kind, group_codes }) => {
             out.push(7);
             write_str_lp(out, kind);
             enc_group_codes_bin(group_codes, out);
@@ -282,14 +282,14 @@ pub(crate) fn dec_dxf_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<D
             let end = read_point3_bin(reader)?;
             let layer = read_str_lp(reader)?;
             let unknown_group_codes = dec_group_codes_bin(reader)?;
-            Ok(DxfEntity::Line { start, end, layer, unknown_group_codes })
+            Ok(DxfEntity::Line(DxfLine { start, end, layer, unknown_group_codes }))
         }
         1 => {
             let center = read_point3_bin(reader)?;
             let radius = read_f64_bin(reader)?;
             let layer = read_str_lp(reader)?;
             let unknown_group_codes = dec_group_codes_bin(reader)?;
-            Ok(DxfEntity::Circle { center, radius, layer, unknown_group_codes })
+            Ok(DxfEntity::Circle(DxfCircle { center, radius, layer, unknown_group_codes }))
         }
         2 => {
             let center = read_point3_bin(reader)?;
@@ -298,14 +298,14 @@ pub(crate) fn dec_dxf_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<D
             let end_angle = read_f64_bin(reader)?;
             let layer = read_str_lp(reader)?;
             let unknown_group_codes = dec_group_codes_bin(reader)?;
-            Ok(DxfEntity::Arc { center, radius, start_angle, end_angle, layer, unknown_group_codes })
+            Ok(DxfEntity::Arc(DxfArc { center, radius, start_angle, end_angle, layer, unknown_group_codes }))
         }
         3 => {
             let vertices = dec_vertices_bin(reader)?;
             let closed = reader.read_u8().map_err(|e| e.to_string())? != 0;
             let layer = read_str_lp(reader)?;
             let unknown_group_codes = dec_group_codes_bin(reader)?;
-            Ok(DxfEntity::Polyline { vertices, closed, layer, unknown_group_codes })
+            Ok(DxfEntity::Polyline(DxfPolyline { vertices, closed, layer, unknown_group_codes }))
         }
         4 => {
             let position = read_point3_bin(reader)?;
@@ -313,13 +313,13 @@ pub(crate) fn dec_dxf_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<D
             let value = read_str_lp(reader)?;
             let layer = read_str_lp(reader)?;
             let unknown_group_codes = dec_group_codes_bin(reader)?;
-            Ok(DxfEntity::Text { position, height, value, layer, unknown_group_codes })
+            Ok(DxfEntity::Text(DxfText { position, height, value, layer, unknown_group_codes }))
         }
         5 => {
             let points = read_points4_bin(reader)?;
             let layer = read_str_lp(reader)?;
             let unknown_group_codes = dec_group_codes_bin(reader)?;
-            Ok(DxfEntity::Solid { points, layer, unknown_group_codes })
+            Ok(DxfEntity::Solid(DxfSolid { points, layer, unknown_group_codes }))
         }
         6 => {
             let block_name = read_str_lp(reader)?;
@@ -328,12 +328,12 @@ pub(crate) fn dec_dxf_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<D
             let rotation = read_f64_bin(reader)?;
             let layer = read_str_lp(reader)?;
             let unknown_group_codes = dec_group_codes_bin(reader)?;
-            Ok(DxfEntity::Insert { block_name, position, scale, rotation, layer, unknown_group_codes })
+            Ok(DxfEntity::Insert(DxfInsert { block_name, position, scale, rotation, layer, unknown_group_codes }))
         }
         7 => {
             let kind = read_str_lp(reader)?;
             let group_codes = dec_group_codes_bin(reader)?;
-            Ok(DxfEntity::Other { kind, group_codes })
+            Ok(DxfEntity::Other(DxfOther { kind, group_codes }))
         }
         other => Err(format!("dxf entity binary: unknown tag {other}")),
     }
@@ -923,7 +923,7 @@ mod diff_wire_codec {
 use super::*;
 use crate::standards::v_r12::subsets::any::schema::diff::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
+use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
 use crate::DxfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;

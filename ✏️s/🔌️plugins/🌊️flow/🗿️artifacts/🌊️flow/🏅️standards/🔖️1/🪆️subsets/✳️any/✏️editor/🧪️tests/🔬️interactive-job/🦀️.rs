@@ -141,7 +141,9 @@ fn graph_operation_route_declares_one_work_capacity() {
 async fn flow_play_app_boots_through_the_real_registry_without_a_catalog_authority_fault() {
     let mut app = flow_app_closing().await;
     assert!(!semio_framework_plugin::PluginApp::has_pending_typed_operations(&*app), "a freshly booted flow app owns no in-flight typed operation");
-    assert!(matches!(semio_framework_plugin::PluginApp::maintenance_step(&mut *app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), Ok(_)), "a booted flow app runs its own maintenance turn");
+    let demand = semio_framework_plugin::PluginApp::maintenance_retirement_demands(&*app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("a booted flow app quotes its own maintenance turn");
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+    assert!(matches!(semio_framework_plugin::PluginApp::maintenance_step(&mut *app, grant), Ok(_)), "a booted flow app runs its own maintenance turn");
 }
 
 /// ⚖️ LAW: every graph-operation route is admitted by `FlowGraphOperationJobFactory` and returns a

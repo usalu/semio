@@ -38,7 +38,7 @@ pub mod parts {
 }
 
 /// 🧩️ What a solid represents.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum SolidFamily {
     #[default]
     Wall,
@@ -73,7 +73,7 @@ impl SolidKey {
 }
 
 /// 📍️ A point in metres.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct SolidPoint {
     pub x: f64,
     pub y: f64,
@@ -81,14 +81,14 @@ pub struct SolidPoint {
 }
 
 /// 📦️ Axis-aligned bounds of a solid.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct SolidBounds {
     pub min: SolidPoint,
     pub max: SolidPoint,
 }
 
 /// 🧭️ Instance transform of a building-local solid into the world: rotate about `+Z` by `rotation`, then translate by `(x, y, z)`.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct SolidPlacement {
     pub x: f64,
     pub y: f64,
@@ -97,7 +97,7 @@ pub struct SolidPlacement {
 }
 
 /// 🎨️ A run of faces that share a part, a material and a layer.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct SolidGroup {
     pub part: String,
     pub material: String,
@@ -105,7 +105,7 @@ pub struct SolidGroup {
 }
 
 /// 🧊️ The owned tessellation of one element: counter-clockwise outward triangles, one vertex triple per triangle.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ElementSolid {
     pub family: SolidFamily,
     pub storey: String,

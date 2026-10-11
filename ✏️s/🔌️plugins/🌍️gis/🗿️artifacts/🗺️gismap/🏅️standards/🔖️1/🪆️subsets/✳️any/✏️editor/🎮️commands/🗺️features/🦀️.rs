@@ -198,7 +198,7 @@ pub mod add_feature {
 
     /// 🆕️ Appends a feature to one document collection. `collection` picks the triplet, the id is
     /// minted, and `(lon, lat, span)` seed the geometry that collection needs.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "add-feature")]
     pub struct AddFeature {
         pub collection: String,
@@ -228,7 +228,7 @@ pub mod move_feature {
 
     /// 🚚️ Moves the addressed feature's anchor to `(lon, lat)` — a point is re-seated, a polyline or
     /// ring is translated whole so its shape survives the move.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "move-feature")]
     pub struct MoveFeature {
         pub collection: String,
@@ -262,7 +262,7 @@ pub mod rename_feature {
 
     /// 🏷️ Retitles the addressed feature — the attribute half of feature editing, kept apart from the
     /// geometry half so each verb does exactly one thing.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "rename-feature")]
     pub struct RenameFeature {
         pub collection: String,
@@ -295,7 +295,7 @@ pub mod delete_feature {
     use super::*;
 
     /// 🗑️ Removes the addressed feature from its collection.
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "delete-feature")]
     pub struct DeleteFeature {
         pub collection: String,
@@ -333,7 +333,7 @@ pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], 
 pub mod patch_positions {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "patch-positions")]
     pub struct PatchPositions {
         pub positions_json: String,
@@ -353,7 +353,7 @@ pub mod patch_positions {
 pub mod patch_routes {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "patch-routes")]
     pub struct PatchRoutes {
         pub route_ids: Vec<String>,
@@ -371,7 +371,7 @@ pub mod patch_routes {
 pub mod patch_route {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "patch-route")]
     pub struct PatchRoute {
         pub route_id: String,

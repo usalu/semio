@@ -10,7 +10,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔃️RotateFrames
 /// 🔃️ `rotate-frames` payload — the page, the frames it turns (literal ids), the pivot and the counter-clockwise angle
 /// in radians.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]

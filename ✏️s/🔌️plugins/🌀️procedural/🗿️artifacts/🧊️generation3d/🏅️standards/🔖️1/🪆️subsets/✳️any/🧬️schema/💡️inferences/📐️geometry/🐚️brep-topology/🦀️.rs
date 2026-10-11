@@ -2,7 +2,8 @@
 //!
 //! Selected edges and faces are persistent labels of the input value and resolve through the imported session (`generation3d.geometry.selection-stale` when a label is gone). Every component of a decomposition is exported one per unit of fuel, so a large shape never holds the interactive turn.
 
-use super::phased_job::{launch, Pipeline, Work};
+use super::brep_curve::guarded;
+use super::phased_job::{Pipeline, Work};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
 use semio_framework_3d::brep::engine::{GeometryHandle, GeometryKind};
 
@@ -26,7 +27,7 @@ fn list(values: Vec<GeometryValue>) -> GeometryValue {
 }
 
 fn vertex(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let point = inputs.point("point")?;
         Ok(Pipeline::new(kind).once(move |work| {
             let handle = work.session.brep().vertex_sync(point).map_err(kernel)?;
@@ -37,7 +38,7 @@ fn vertex(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 
 fn deconstruct(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let shape = inputs.shape("shape")?.clone();
         let edges = match inputs.get("edges") {
             Some(_) => Some(inputs.selection("edges")?.clone()),
@@ -76,7 +77,7 @@ fn deconstruct(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 
 fn shells(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let solid = inputs.shape("solid")?.clone();
         let compound = solid.kind() == GeometryKind::Compound;
         Ok(Pipeline::new(kind).import(&solid).once(move |work| {
@@ -92,7 +93,7 @@ fn shells(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 
 fn compound(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let solids: Vec<_> = inputs.shapes("solids")?.into_iter().cloned().collect();
         let mut pipeline = Pipeline::new(kind);
         for solid in &solids {
@@ -115,7 +116,7 @@ fn compound(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 
 fn explode(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let compound = inputs.shape("compound")?.clone();
         Ok(Pipeline::new(kind).import(&compound).once(|work| {
             let handle = work.handle(0)?;
@@ -134,7 +135,7 @@ fn label(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 
 fn sew(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let faces: Vec<_> = inputs.shapes("faces")?.into_iter().cloned().collect();
         let tolerance = inputs.number("tolerance")?;
         let mut pipeline = Pipeline::new(kind);
@@ -142,7 +143,8 @@ fn sew(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
             pipeline = pipeline.import(face);
         }
         Ok(pipeline.once(move |work| {
-            let sewn = work.session.brep().sew_faces_sync(&work.handles(), tolerance).map_err(kernel)?;
+            let handles = work.handles();
+            let sewn = work.session.brep().sew_faces_sync(&handles, tolerance).map_err(kernel)?;
             work.groups = vec![vec![sewn]];
             Ok(())
         }).exported("shape"))
@@ -150,7 +152,7 @@ fn sew(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 
 fn heal(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let shape = inputs.shape("shape")?.clone();
         let tolerance = inputs.number("tolerance")?;
         Ok(Pipeline::new(kind).import(&shape).once(move |work| {
@@ -163,7 +165,7 @@ fn heal(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 
 fn convert_to_nurbs(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    launch(kind, || {
+    guarded(kind, || {
         let shape = inputs.shape("shape")?.clone();
         let compound = shape.kind() == GeometryKind::Compound;
         Ok(Pipeline::new(kind).import(&shape).once(move |work| {

@@ -7,19 +7,19 @@ use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 /// 📐️ Unsolved structural member in world SI coordinates; path stations are normalized by exact analytical length.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct AnalyticalMember { pub element: String, pub storey: String, pub kind: String, pub path: Vec<Point3>, pub boundary: Vec<Point3>, pub holes: Vec<Vec<Point3>>, pub length: f64, pub area: f64, pub start_offset: f64, pub end_offset: f64 }
 /// 🔗️ A rigid eccentricity between connected physical members; no stiffness is invented.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct RigidLink { pub member: String, pub other: String, pub start: Point3, pub end: Point3, pub length: f64 }
 /// 🧱️ Authored support resolved on current world geometry.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ResolvedSupport { pub authored: StructuralSupport, pub points: Vec<Point3> }
 /// ⬇️ Authored load with current application geometry and load-case factor.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ResolvedLoad { pub authored: StructuralLoad, pub points: Vec<Point3>, pub factor: f64 }
 /// 📦️ Structural solver input projection; findings report orphaned or unsupported authored records.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct StructuralAnalysis { pub members: BTreeMap<String, AnalyticalMember>, pub rigid_links: BTreeMap<String, RigidLink>, pub supports: BTreeMap<String, ResolvedSupport>, pub loads: BTreeMap<String, ResolvedLoad>, pub findings: Vec<String> }
 pub const READS: &[&str] = &["walls", "beams", "columns", "slabs", "wall_types", "beam_types", "column_types", "slab_types", "storeys", "buildings", "sites", "supports", "load_cases", "loads"];
 /// 🔑️ Every authored input not supplied by a graph parent.

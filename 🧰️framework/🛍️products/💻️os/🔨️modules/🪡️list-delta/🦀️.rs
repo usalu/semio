@@ -484,7 +484,7 @@ macro_rules! list_delta {
         $crate::list_delta! { $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: Vec<$row>, key: String = |row| row.$key.clone() } }
     };
     (@types [$($dsl:path),*] $(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, list: $list:ty, key: $key_ty:ty, keyer: $keyer:ty $(,)? }) => {
-        $crate::list_delta! { @native_types [$crate::__value_derive::ToValue, $crate::__value_derive::FromValue $(, $dsl)*] [#[value(rename_all = "camelCase")]] [#[value(rename_all = "camelCase", default)]] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $keyer } }
+        $crate::list_delta! { @native_types [$crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned $(, $dsl)*] [#[value(rename_all = "camelCase")]] [#[value(rename_all = "camelCase", default)]] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $keyer } }
     };
     (@native_types [$($codec:path),*] [$($record_attrs:tt)*] [$($delta_attrs:tt)*] $(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, list: $list:ty, key: $key_ty:ty, keyer: $keyer:ty $(,)? }) => {
         $(#[$meta])*
@@ -682,7 +682,7 @@ macro_rules! plain_list_delta {
     };
     (@wire [$($dsl:path),*] $(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, row: $row:ty, list: $list:ty, key: $key_ty:ty, keyer: $keyer:ty $(,)? }) => {
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue $(, $dsl)*)]
+        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned $(, $dsl)*)]
         #[value(rename_all = "camelCase")]
         $vis struct $removal {
             pub id: $key_ty,
@@ -690,7 +690,7 @@ macro_rules! plain_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue $(, $dsl)*)]
+        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned $(, $dsl)*)]
         #[value(rename_all = "camelCase")]
         $vis struct $insertion {
             pub index: usize,
@@ -698,7 +698,7 @@ macro_rules! plain_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue $(, $dsl)*)]
+        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned $(, $dsl)*)]
         #[value(rename_all = "camelCase")]
         $vis struct $relocation {
             pub id: $key_ty,
@@ -707,7 +707,7 @@ macro_rules! plain_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, Default, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue $(, $dsl)*)]
+        #[derive(Clone, Debug, Default, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned $(, $dsl)*)]
         #[value(rename_all = "camelCase", default)]
         $vis struct $delta {
             pub removed: Vec<$removal>,
@@ -855,7 +855,7 @@ macro_rules! plain_list_delta {
 macro_rules! row_patch {
     ($(#[$meta:meta])* $vis:vis $patch:ident of $row:ty { set { $($set:ident : $set_ty:ty),* $(,)? } $(nest { $($nest:ident : $nest_delta:ty),* $(,)? })? }) => {
         $(#[$meta])*
-        #[derive(Clone, Debug, Default, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__dsl_record_derive::DslRecord)]
+        #[derive(Clone, Debug, Default, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned, $crate::__dsl_record_derive::DslRecord)]
         #[value(rename_all = "camelCase", default)]
         $vis struct $patch {
             $(pub $set: Option<$set_ty>,)*

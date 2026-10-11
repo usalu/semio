@@ -95,14 +95,14 @@ fn original_dynamic_value_clone_fullgrant_and_original_custody(){
     for depth in law["depths"].as_array().unwrap(){let depth=depth.as_u64().unwrap()as usize;let mut value=serde_json::json!({"kind":"text","value":"ä日🌱"});for _ in 0..depth{value=serde_json::json!({"kind":"array","value":[value]});}cases.push((format!("depth-{depth}"),value));}
     for(name,encoded)in cases {for copy in [1,3,64] {for cancelled in [None,Some(0),Some(1),Some(3),Some(8),Some(17)]{
         let(owner,heap)=observe(||decode(&encoded));let(mut born,mut freed)=heap;let mut original=Vec::new();pointers(&owner,&mut original);
-        let demand=RetainedCloneSource::<DslValue>::owned_constructor_demand::<()>();let admitted=RetainedCloneGrant {maximum_items:1,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};
+        let demand=RetainedCloneSource::<DslValue>::owned_constructor_demand::<()>();let admitted=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<DslValue>::constructor_copy_bytes(),maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};
         let(result,heap)=observe(||RetainedCloneSource::admit_owned(owner,(),admitted));let(mut source,progress)=result.map_err(|(error,_,_)|error).unwrap();assert!(progress.fits(admitted));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;freed+=heap.1;
         let root=source.borrow().get()as *const DslValue as usize;let mut observed=Vec::new();pointers(source.borrow().get(),&mut observed);assert_eq!(observed,original);
         let(mut cursor,heap)=observe(DslValue::retained_clone_cursor);assert_eq!(heap,(0,0));let mut output=None;let mut turns=0;
         for _ in 0..100000 {
             if cancelled==Some(turns){break;}
             let(demand,heap)=observe(||cursor.normal_demands(source.borrow(),64).unwrap());assert_eq!(heap,(0,0));let admitted=grant(demand,64);
-            for denied in denied(admitted,demand){let leases=Arc::strong_count(source.borrow().lease);let(result,heap)=observe(||cursor.advance(source.borrow(),denied));check_denied(result,heap,denied,demand);assert_eq!(Arc::strong_count(source.borrow().lease),leases);assert_eq!(cursor.normal_demands(source.borrow(),64).unwrap(),demand);assert_eq!(source.borrow().get()as *const DslValue as usize,root);}
+            for denied in denied(admitted,demand){let bound=cursor.state.source.is_some();let(result,heap)=observe(||cursor.advance(source.borrow(),denied));check_denied(result,heap,denied,demand);assert_eq!(cursor.state.source.is_some(),bound);assert_eq!(cursor.normal_demands(source.borrow(),64).unwrap(),demand);assert_eq!(source.borrow().get()as *const DslValue as usize,root);}
             let(result,heap)=observe(||cursor.advance(source.borrow(),admitted));let done=matches!(result,Ok(RetainedCloneStep::Complete(_)));let progress=check(result,heap,admitted);assert_eq!(progress.copied_items,1);born+=heap.0;freed+=heap.1;turns+=1;
             if done {let(value,heap)=observe(||cursor.take());assert_eq!(heap,(0,0));let value=value.unwrap();assert_eq!(encode(&value),encoded);output=Some(value);break;}
         }

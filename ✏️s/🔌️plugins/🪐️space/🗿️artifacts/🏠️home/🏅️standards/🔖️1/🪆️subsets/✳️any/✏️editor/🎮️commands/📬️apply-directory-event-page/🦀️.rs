@@ -12,7 +12,7 @@ use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCo
 use semio_framework_plugin::{AppEvent, ArtifactApp, ArtifactView, ConfigView, Emit, EphemeralEmit, Fault, FaultOrigin};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "apply-directory-event-page")]
 pub struct ApplyDirectoryEventPage {
     /// 📄️ Canonical `DirectoryEventPageV1` JSON returned by the authenticated hub.
@@ -63,6 +63,11 @@ impl<A: ArtifactApp> HomeDirectoryPageWork<A> {
     }
 }
 
+/// 🧮️ The transient bytes one Home work step may materialize: the work's own frame plus the one emit it can stage.
+pub(crate) fn home_work_step_demands<A: ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(std::mem::size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
+}
+
 impl<A> ArtifactCommandWork<A> for HomeDirectoryPageWork<A>
 where
     A: ArtifactApp<Transient = HomeTransient, TransientMutation = HomeTransientMutation>,
@@ -73,6 +78,14 @@ where
 
     fn extent(&self, command: &A::Command, _snapshot: &A::Snapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>) -> Option<usize> {
         (self.page_json)(command).filter(|page_json| page_json.len() <= HOME_DIRECTORY_PAGE_BYTES).map(|_| 1)
+    }
+
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, A>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        home_work_step_demands::<A>(std::mem::size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {

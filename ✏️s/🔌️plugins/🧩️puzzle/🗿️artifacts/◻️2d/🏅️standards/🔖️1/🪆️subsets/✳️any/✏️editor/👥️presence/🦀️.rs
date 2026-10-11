@@ -5,7 +5,7 @@ use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of puzzle camera state.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "puzzle2d.presence")]
 #[dsl(layout = "lines")]
@@ -85,6 +85,9 @@ impl protocol::DiffAlgebra<Puzzle2dPresence> for Puzzle2dPresenceDiff {
     }
 }
 
+/// 📸️ Native snapshot codec: the canonical JSON of the value projection, no hand-written frame.
+impl store::ArtifactPresenceSnapshot for Puzzle2dPresence {}
+
 impl store::ArtifactDsl for Puzzle2dPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
@@ -132,7 +135,7 @@ impl ArtifactPack for Puzzle2dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum Puzzle2dPresenceMutation {
     #[dsl(key = "snapshot")]

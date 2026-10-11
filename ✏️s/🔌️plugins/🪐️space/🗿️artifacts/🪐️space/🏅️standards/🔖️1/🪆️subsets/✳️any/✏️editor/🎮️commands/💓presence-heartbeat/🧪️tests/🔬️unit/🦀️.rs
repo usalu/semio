@@ -14,7 +14,7 @@ async fn heartbeat_sets_presence_for_a_new_artifact() {
     let cfg = ConfigView { snapshot: &config_snapshot, window: None };
     let result = handle(&PresenceHeartbeat { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }, &doc, &cfg).expect("heartbeat");
     assert_eq!(result.config_mutations.len(), 1);
-    assert_eq!(result.config_mutations[0], SpaceIndexConfigMutation::SetArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() });
+    assert_eq!(result.config_mutations[0], SpaceIndexConfigMutation::SetArtifactPresence(crate::editor::space_index::config::ArtifactPresenceSetting { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }));
     let after = protocol::apply_diff(result.config_mutations[0].diff(&config_snapshot).diff(), &config_snapshot).expect("the heartbeat applies");
     assert_eq!(after.presence_for("artifact-1"), vec!["user:1", "user:2"]);
 }

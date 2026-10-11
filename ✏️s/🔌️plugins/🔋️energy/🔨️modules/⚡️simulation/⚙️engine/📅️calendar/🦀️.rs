@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️Date
 /// 📅️ Calendar date for scheduling.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SimDate {
     pub year: u16,
     pub month: u8,
@@ -57,7 +57,8 @@ impl SimDate {
 
 // #region 🔖️RunPeriod
 /// 📅️ Run period specification.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct RunPeriod {
     pub start_month: u8,
     pub start_day: u8,
@@ -106,7 +107,7 @@ impl RunPeriod {
 }
 
 /// 📅️ Hour iterator for a run period.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct RunPeriodHours {
     current: SimDate,
     end: SimDate,
@@ -149,7 +150,7 @@ impl Iterator for RunPeriodHours {
 
 // #region 🔖️Dst
 /// 🕐️ Daylight saving time rule (simplified US-style).
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct DstRule {
     pub start_month: u8,
     pub start_week: u8,

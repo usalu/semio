@@ -39,8 +39,15 @@ pub(crate) mod context {
                 if self.0.close_terminal_is_empty() {
                     return;
                 }
-                match PluginApp::close_step(&mut self.0, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-                    Ok(semio_framework_plugin::PluginCloseStep::Complete) => return,
+                let demand = match PluginApp::close_retirement_demands(&self.0, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                    Ok(demand) => demand,
+                    Err(error) => {
+                        assert!(std::thread::panicking(), "Process3d fixture close demand faulted: {error:?}");
+                        return;
+                    }
+                };
+                match PluginApp::close_step(&mut self.0, crate::host::owned::process3d_demand_grant(demand)) {
+                    Ok(semio_framework_plugin::PluginLifecycleStep::Complete(_)) => return,
                     Ok(_) => continue,
                     Err(fault) => {
                         assert!(std::thread::panicking(), "Process3d fixture close faulted: {fault:?}");
@@ -363,19 +370,15 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     }))
     .expect("schema-first Process3d production fixture envelope");
     let envelope = store::create_document_envelope(crate::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None);
-    let mut retirement = crate::host::owned::process3d_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let owners = store::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog");
+    let funded = crate::host::owned::process3d_demand_grant(owners.uninstalled_envelope_retirement_demands(&envelope));
+    let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, funded).map_err(|(error, _, _)| error).expect("Process3d fixture envelope retirement admission");
     for _ in 0..100_000 {
-        match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture envelope retirement") {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                drop(retirement);
-                return (wire, expected, expected_digest);
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("unshared Process3d fixture envelope retirement blocked"),
+        let demand = retirement.next_demand(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture envelope retirement demand");
+        let step = retirement.close_step(crate::host::owned::process3d_demand_grant(demand)).expect("Process3d fixture envelope retirement");
+        if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) && retirement.terminal_is_empty() {
+            drop(retirement);
+            return (wire, expected, expected_digest);
         }
     }
     panic!("Process3d fixture envelope retirement did not reach terminal")
@@ -589,14 +592,15 @@ fn document_preparation_uses_the_mutations_own_semantics_and_a_fixed_per_turn_gr
     assert!(PROCESS3D_DOCUMENT_MAXIMUM_BYTES > PROCESS3D_DOCUMENT_GRANT_BYTES, "the document maximum is a validation, never the per-turn grant");
     let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let step = ProcessStep { id: "step-retained".into(), label: "Retained Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::Pose::default() } };
-    let (post, inverse, forward) = prepare_process3d_document(&base, Process3dMutation::CreateStep(CreateStep { index: 0, step: step.clone() })).expect("create step prepares");
+    let forward = Process3dMutation::CreateStep(CreateStep { index: 0, step: step.clone() });
+    let (post, inverse) = prepare_process3d_document(&base, &forward).expect("create step prepares");
     assert!(matches!(forward, Process3dMutation::CreateStep(_)));
     assert!(!inverse.is_empty(), "a retained edit must carry its own inverse");
     assert!(post.step_payloads.iter().any(|payload| payload.id == step.id), "the post-state must come from the mutation's own diff");
     assert_ne!(post.step_payloads.len(), base.step_payloads.len());
-    let duplicate = prepare_process3d_document(&post, Process3dMutation::CreateStep(CreateStep { index: 0, step })).expect_err("a duplicate id is refused, not published as a no-op");
+    let duplicate = prepare_process3d_document(&post, &Process3dMutation::CreateStep(CreateStep { index: 0, step })).expect_err("a duplicate id is refused, not published as a no-op");
     assert!(duplicate.contains("refused by its own vocabulary"), "{duplicate}");
-    let missing = prepare_process3d_document(&base, Process3dMutation::DeleteStep(DeleteStep { id: "ghost".into() })).expect_err("a missing target is refused");
+    let missing = prepare_process3d_document(&base, &Process3dMutation::DeleteStep(DeleteStep { id: "ghost".into() })).expect_err("a missing target is refused");
     assert!(missing.contains("refused by its own vocabulary"), "{missing}");
     let delete = Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() });
     let footprint = store::ArtifactStoreOneItemFootprint::for_leaf(&delete, process3d_mutation_retained_bytes(&delete).expect("retained bytes"));
@@ -653,11 +657,12 @@ async fn retained_resumable_progress_checkpoint_identity_replay_and_close_are_ex
     assert_eq!(replayed_progress, uninterrupted_progress);
     assert!(uninterrupted_emit.artifact_mutations.is_empty() && uninterrupted_emit.effects.is_empty());
     assert!(replayed_emit.artifact_mutations.is_empty() && replayed_emit.effects.is_empty());
-    assert_eq!(uninterrupted_emit.config_mutations, vec![Process3dConfigMutation::SetContributions { json: "x".repeat(4_096) }]);
+    assert_eq!(uninterrupted_emit.config_mutations, vec![Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: "x".repeat(4_096) })]);
     assert_eq!(replayed_emit.config_mutations, uninterrupted_emit.config_mutations);
-    assert_eq!(replayed.close_step(0, 0), InteractiveJobCloseStep::Blocked);
+    let no_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 };
+    assert_eq!(replayed.close_step(no_grant), InteractiveJobCloseStep::Blocked);
     replayed.begin_close();
-    assert_eq!(replayed.close_step(0, 0), InteractiveJobCloseStep::Complete);
+    assert_eq!(replayed.close_step(no_grant), InteractiveJobCloseStep::Complete { progress: Default::default() });
     assert!(replayed.terminal_is_empty());
 }
 
@@ -861,7 +866,7 @@ fn host_contributions_resolve_to_the_event_sourced_config_lane() {
     assert_ne!(distilled, "[]", "the addressed process.machines entry must survive the lane");
     assert!(distilled.len() < pack.len(), "the foreign entry must be dropped, not retained");
     let mutation = <Process3dPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&DslValue::from(&serde_json::json!({ "json": pack })))).expect("host configuration").expect("process contribution mutation");
-    assert_eq!(mutation, Process3dConfigMutation::SetContributions { json: distilled });
+    assert_eq!(mutation, Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: distilled }));
     assert_eq!(<Process3dPlayApp as ArtifactEditor>::host_configuration_mutation("setCursor", None).expect("non-host action"), None);
 }
 
@@ -1359,9 +1364,9 @@ fn the_real_demonstrator_pack_is_admitted_distilled_and_retained() {
     assert!(kept.iter().all(|entry| entry.topic_contribution.as_ref().is_some_and(|topic| topic.topic == "process.machines")));
     assert!(distilled.len() <= PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
 
-    let mutation = Process3dConfigMutation::SetContributions { json: distilled.clone() };
+    let mutation = Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: distilled.clone() });
     assert!(admit_process3d_config_mutation(&mutation).is_ok(), "the distilled roster fits the retained contributions lane");
-    let (post, _, _) = prepare_process3d_config(&Process3dConfig::default(), mutation).expect("the retained config admits the real roster");
+    let (post, _) = prepare_process3d_config(&Process3dConfig::default(), &mutation).expect("the retained config admits the real roster");
     assert_eq!(post.contributions_json, distilled);
 
     let catalogs = installed_catalogs(&distilled);
@@ -1425,11 +1430,11 @@ fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
     use protocol::OpBinary;
     let pack = demonstrator_contributions_pack();
     let distilled = installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
-    let encoded = Process3dConfigMutation::SetContributions { json: distilled.clone() }.encode_op().expect("encode real roster");
+    let encoded = Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: distilled.clone() }).encode_op().expect("encode real roster");
     println!("[STATS] process3d contributions roster={} encoded={} cap={PROCESS3D_RESUMABLE_OUTPUT_BYTES}", distilled.len(), encoded.len());
     assert!(encoded.len() > 16_384, "the real roster is past the gesture output — the regression this law guards");
     assert!(encoded.len() <= process3d_resumable_contract().max_output_bytes, "the real roster must fit the declared output cap");
-    let worst = Process3dConfigMutation::SetContributions { json: "x".repeat(PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES) }.encode_op().expect("encode lane-sized roster");
+    let worst = Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: "x".repeat(PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES) }).encode_op().expect("encode lane-sized roster");
     assert!(worst.len() <= PROCESS3D_RESUMABLE_OUTPUT_BYTES, "a lane-filling roster encodes to {} B, past the declared {PROCESS3D_RESUMABLE_OUTPUT_BYTES} B", worst.len());
 
     // 🚪️ The registry-backed dispatch runs the SAME `admit_host_configuration_json` + output-cap gate

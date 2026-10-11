@@ -197,17 +197,21 @@ impl Record for SpaceHistoryMutation {
 //#endregion 🧬️Records
 
 impl ArtifactCanonicalJson for SpaceHistoryMutation {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<N<'_>, String> {
-        Child::Record(self).node(path)
+    fn canonical_json_node(&self, path: &[usize]) -> Result<N<'_>, semio_framework_value::ValueError> {
+        Child::Record(self).node(path).map_err(canonical_refusal)
     }
 
-    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<T<'_>, String> {
-        Child::Record(self).key(object_path, index)
+    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<T<'_>, semio_framework_value::ValueError> {
+        Child::Record(self).key(object_path, index).map_err(canonical_refusal)
     }
 
-    fn canonical_json_borrowed_root(&self) -> Result<Option<V<'_>>, String> {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<V<'_>>, semio_framework_value::ValueError> {
         Ok(Some(Child::Record(self).borrowed()))
     }
+}
+
+fn canonical_refusal(message: String) -> semio_framework_value::ValueError {
+    semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message)
 }
 
 //#region 🧪️Tests

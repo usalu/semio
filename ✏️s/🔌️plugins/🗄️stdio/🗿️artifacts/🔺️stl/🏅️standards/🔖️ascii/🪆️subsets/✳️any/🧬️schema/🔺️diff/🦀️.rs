@@ -34,7 +34,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 //#region 🔖️TriangleDiff
 /// 🔺️ Sparse per-field patch for one `StlTriangle`. Both fields are fixed-size arrays — whole-
 /// value replace, never sub-diffed (matches the recipe's weak-entity rule for value structs).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct StlTriangleDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -80,7 +80,7 @@ fn absorb_triangle_rows(base: &mut StlTriangleDiff, other: &StlTriangleDiff) {
 
 //#region 🔖️TrianglesTriple
 /// 📦️ One `triangles.modified[]` entity — `index` is the triangle's position **in BASE**.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct StlTriangleModified {
     pub index: usize,
@@ -90,7 +90,7 @@ pub struct StlTriangleModified {
 /// 📦️ One `triangles.added[]` entity — `index` is the triangle's position in the FINAL sequence
 /// (apply semantics: `added` indices refer to final state, inserted ascending at `min(index,
 /// len)`; see the recipe's `## Absorb` section for the full apply/absorb contract).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct StlTriangleAdded {
     pub index: usize,
@@ -98,7 +98,7 @@ pub struct StlTriangleAdded {
 }
 
 /// 📦️ Sparse index-keyed `triangles` triple.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct StlTrianglesDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -329,7 +329,7 @@ fn absorb_triangles(d1: Option<StlTrianglesDiff>, d2: Option<StlTrianglesDiff>) 
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.stl`. `schema` is an identity field and never appears here.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.stl.diff")]
 pub struct StlDiff {

@@ -1995,7 +1995,7 @@ fn original_vcs_close_admission_and_receipts_match_neutral_wallet(){
  let grant=|row:&serde_json::Value|RetainedCloneGrant{maximum_items:row["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:row["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:row["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:row["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};
  for row in law["closeAdmissionCases"].as_array().unwrap(){
   let d=&row["demands"];let demands=FlowVcsCloseDemands{copy_bytes:d["copyBytes"].as_u64().unwrap()as usize,capacity_bytes:d["capacityBytes"].as_u64().unwrap()as usize,release_bytes:d["releaseBytes"].as_u64().unwrap()as usize,depth:d["depth"].as_u64().unwrap()as usize};
-  let(result,heap)=observe(||retirement::admit_turn(grant(&row["grant"]),demands));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+  let(result,heap)=observe(||admit_turn(grant(&row["grant"]),demands));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   let actual=match result{Ok(true)=>"accepted",Ok(false)=>"deferred",Err(failure)=>{assert_eq!(failure.fault,FlowVcsFault::Depth);assert_eq!(failure.retained_progress,Default::default());"refused_depth"}};assert_eq!(actual,row["expected"].as_str().unwrap());
  }
  for row in law["closeReceiptCases"].as_array().unwrap(){

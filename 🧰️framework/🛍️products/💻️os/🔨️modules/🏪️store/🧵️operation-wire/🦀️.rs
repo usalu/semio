@@ -242,6 +242,10 @@ impl<P: 'static, M: 'static> Default for ArtifactCanonicalAuthoringFactory<P, M>
 }
 
 impl<P: 'static, M: super::ArtifactCanonicalJson + 'static> super::ArtifactStoreOneItemPreparationFactory<P, M> for ArtifactCanonicalAuthoringFactory<P, M> {
+    fn begin_batch_digest(&self, _edit: &mut Option<Box<super::Edit<M>>>, _grant: RetainedCloneGrant) -> Result<Option<(Box<dyn super::ArtifactStoreBatchDigest<M>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, ValueError> {
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "canonical authoring catalog prepares no retained gesture"))
+    }
+
     fn operation_wire_source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> {
         Some(ArtifactPreparedOperationSource::CanonicalJson { header: b"op", body: mutation })
     }
@@ -254,7 +258,7 @@ impl<P: 'static, M: super::ArtifactCanonicalJson + 'static> super::ArtifactStore
         Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "canonical authoring catalog prepares no retained gesture"))
     }
 
-    fn begin(&self, request: super::ArtifactStoreOneItemPreparationRequest<P, M>, _grant: super::ArtifactStoreOneItemGrant) -> Result<(Box<dyn super::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, super::ArtifactStoreOneItemPreparationRequest<P, M>)> {
+    fn begin(&self, request: super::ArtifactStoreOneItemPreparationRequest<P, M, M>, _grant: super::ArtifactStoreOneItemGrant) -> Result<(Box<dyn super::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, super::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
         Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner, "canonical authoring catalog prepares no retained gesture"), request))
     }
 }

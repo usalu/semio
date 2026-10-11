@@ -29,59 +29,77 @@ mod agent_lane_preview_tests {
         cursor: usize,
         closing: bool,
         released: bool,
+        outcomes: crate::reserved_job_outcomes::ReservedJobOutcomes,
+        pending: Option<(crate::reserved_job_outcomes::ReservedOutcomeKind, Vec<u8>)>,
     }
 
     impl ScriptedPreviewJob {
-        fn payload(cx: &mut semio_framework_job::StepContext<'_>, stream: semio_framework_job::JobPayloadStream, bytes: &[u8]) -> semio_framework_job::RetainedJobPayload {
-            cx.payload_from_bytes(stream, bytes).unwrap_or_else(|rejected| {
-                drop(rejected.into_source());
-                semio_framework_job::RetainedJobPayload::empty(stream)
-            })
+        fn new(script: Vec<ScriptedStep>) -> Self {
+            Self { script, cursor: 0, closing: false, released: false, outcomes: crate::reserved_job_outcomes::ReservedJobOutcomes::new(), pending: None }
         }
     }
 
     impl semio_framework_job::InteractiveJob for ScriptedPreviewJob {
-        fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+            use crate::reserved_job_outcomes::ReservedOutcomeKind;
+            use semio_framework_job::JobOutcomeBorrow;
             if cx.is_cancelled() {
-                return semio_framework_job::StepOutcome::Cancelled;
+                return JobOutcomeBorrow::admit_cancelled(cx);
+            }
+            if self.outcomes.is_delivered() {
+                self.outcomes.retire(cx)?;
+                return Ok(None);
+            }
+            if let Some((kind, source)) = self.pending.as_ref() {
+                let outcome = self.outcomes.advance(*kind, source, cx)?;
+                if outcome.is_some() {
+                    self.pending = None;
+                }
+                return Ok(outcome);
             }
             let entry = &self.script[self.cursor.min(self.script.len() - 1)];
             self.cursor += 1;
-            match entry {
-                ScriptedStep::Progress => semio_framework_job::StepOutcome::PreviewReady(Self::payload(cx, semio_framework_job::JobPayloadStream::Preview, br#"{"en":"Working","de":"Arbeitet"}"#)),
+            self.pending = Some(match entry {
+                ScriptedStep::Progress => (ReservedOutcomeKind::Preview, br#"{"en":"Working","de":"Arbeitet"}"#.to_vec()),
                 ScriptedStep::Checkpoint => {
                     let applied_progress = self.cursor as u64;
-                    semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: Self::payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &applied_progress.to_le_bytes()), applied_progress })
+                    (ReservedOutcomeKind::Checkpoint { applied_progress }, applied_progress.to_le_bytes().to_vec())
                 }
-                ScriptedStep::Yield => semio_framework_job::StepOutcome::Yield,
-                ScriptedStep::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                }),
-                ScriptedStep::Cancelled => semio_framework_job::StepOutcome::Cancelled,
-                ScriptedStep::Fault(detail) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: Self::payload(cx, semio_framework_job::JobPayloadStream::Fault, detail) }),
-            }
+                ScriptedStep::Yield => return JobOutcomeBorrow::admit_yield(cx),
+                ScriptedStep::Complete => (ReservedOutcomeKind::Commit, Vec::new()),
+                ScriptedStep::Cancelled => return JobOutcomeBorrow::admit_cancelled(cx),
+                ScriptedStep::Fault(detail) => (ReservedOutcomeKind::Fault, detail.clone()),
+            });
+            Ok(None)
+        }
+
+        fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+            self.outcomes.borrow_outcome(descriptor)
         }
 
         fn begin_close(&mut self) {
             self.closing = true;
         }
 
-        fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
-        fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
-        fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
-        fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+        fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.outcomes.close_demands()?.copy_bytes) }
+        fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.outcomes.close_demands()?.capacity_bytes) }
+        fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.outcomes.close_demands()?.release_bytes) }
+        fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.outcomes.close_demands()?.depth) }
 
-        fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+        fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
             if !self.closing {
                 return semio_framework_job::InteractiveJobCloseStep::Blocked;
+            }
+            self.pending = None;
+            if !self.outcomes.terminal_is_empty() {
+                return crate::reserved_job_outcomes::close_result(self.outcomes.close_step(grant));
             }
             self.released = true;
             semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.closing && self.released
+            self.closing && self.released && self.outcomes.terminal_is_empty()
         }
     }
 
@@ -112,7 +130,7 @@ mod agent_lane_preview_tests {
             let name = case["name"].as_str().expect("case name");
             let stride = case["clockMicrosPerRead"].as_u64().expect("clock stride");
             SCRIPTED_CLOCK.with(|clock| clock.set((1_000_000, stride)));
-            let job = ScriptedPreviewJob { script: case["script"].as_array().expect("script").iter().map(scripted_step).collect(), cursor: 0, closing: false, released: false };
+            let job = ScriptedPreviewJob::new(case["script"].as_array().expect("script").iter().map(scripted_step).collect());
             let cancel = semio_framework_job::root_cancel_token();
             if case["cancelled"].as_bool() == Some(true) {
                 cancel.cancel_now();
@@ -121,10 +139,10 @@ mod agent_lane_preview_tests {
                 operation: semio_framework_job::allocate_operation_id(),
                 generation: semio_framework_job::Generation(1),
                 cancel,
-                config: semio_framework_job::BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "agent_lane_preview_law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1_000, step_budget_us: 7_500 },
+                config: semio_framework_job::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().maintenance, site: "agent_lane_preview_law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1_000, step_budget_us: 7_500 },
                 now_us: scripted_now_us,
             };
-            let verdict = drive_agent_lane_preview(job, params, name);
+            let verdict = drive_agent_lane_preview(job, params, crate::app::artifact_app_laws::fixture_mounted_policy().close, name);
             let expected = &case["verdict"];
             match (expected["steps"].as_u64(), &expected["fault"]) {
                 (Some(steps), _) => assert_eq!(verdict.as_ref().map_err(|fault| fault.code.0.clone()), Ok(&steps), "{name}"),

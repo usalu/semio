@@ -5,7 +5,7 @@ mod mutations_codec {
 use super::*;
 use crate::editor::block3d::modes::edit::windows::world::transient::component::mutations::*;
 use crate::editor::block3d::modes::edit::windows::world::transient::component::Block3dWorldWindowTransient;
-use crate::editor::block3d::modes::edit::windows::world::transient::mutations::SetBrushPreview;
+use crate::editor::block3d::modes::edit::windows::world::transient::component::mutations::SetBrushPreview;
 
 impl protocol::OpText for Block3dWorldWindowTransientMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -35,7 +35,7 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::block3d::modes::edit::windows::world::transient::component::mutations::*;
 use crate::editor::block3d::modes::edit::windows::world::transient::component::Block3dWorldWindowTransient;
-use crate::editor::block3d::modes::edit::windows::world::transient::mutations::SetBrushPreview;
+use crate::editor::block3d::modes::edit::windows::world::transient::component::mutations::SetBrushPreview;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`protocol::apply_diff`) and the mutation's own inverse over `Block3dWorldWindowTransient`.

@@ -4,7 +4,7 @@
   "generation": 11,
   "grant": {
     "maximumItems": 1,
-    "maximumCopyBytes": 4096,
+    "maximumCopyBytes": 65536,
     "maximumCapacityBytes": 65536,
     "maximumReleaseBytes": 262144,
     "maximumDepth": 64
@@ -18,7 +18,7 @@
     "maximumItems",
     "maximumDepth"
   ],
-  "maximumFaultTurns": 128,
+  "maximumFaultTurns": 512,
   "maximumCloseTurns": 100000,
   "admission": {
     "callerGeneration": 0,

@@ -3,7 +3,7 @@ type ParentFixtureChild = store::ArtifactChild<TestSnapshot>;
 
 thread_local! { static PARENT_SNAPSHOT_CLONES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
 
-#[derive(Debug, Default, PartialEq, semio_framework_value::RetireOwned, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_schema::ArtifactSchema)]
+#[derive(Debug, Default, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_schema::ArtifactSchema)]
 #[artifact_schema(id = "s.test.composed")]
 struct ComposedParentSnapshot {
     #[state(artifact)]
@@ -56,7 +56,8 @@ impl Clone for ComposedParentSnapshot {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct RecursiveFixtureMutation {
@@ -328,30 +329,9 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot> for C
             self.state = ComposedParentSnapshotDecodeState::Closing;
             return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, ..empty }));
         }
-        if self.retirement.is_none() {
-            if let Some(value) = self.value.take() {
-                *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&ComposedParentOwnedRetirementFactory::<ComposedParentSnapshot>::default(), value));
-                self.state = ComposedParentSnapshotDecodeState::Closing;
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-            }
-            self.state = ComposedParentSnapshotDecodeState::Complete;
-            return Ok(store::SnapshotRetirementStep::Complete);
-        }
-        let path = self.path;
-        let retirement = self.retirement.as_mut().expect("composed-parent snapshot retirement remains retained");
-        match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic {
-            code: "composed-parent-envelope.snapshot-retirement-fault",
-            offset: 0,
-            line: 0,
-            column: 0,
-            path,
-         refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })? {
-            store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                drop(self.retirement.take());
-                self.state = ComposedParentSnapshotDecodeState::Complete;
-                return Ok(store::RetainedCloneStep::Complete(step.progress()));
-            }
-            return Ok(step);
+        if self.retirement.is_some() {
+            let fault = self.diagnostic("composed-parent-envelope.snapshot-retirement-fault", 0);
+            return store::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|_| fault);
         }
         if self.value.is_some() {
             let step = store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|_| self.diagnostic("composed-parent-envelope.snapshot-retirement-admission", 0))?;
@@ -556,8 +536,12 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
             std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RecursiveFixtureMutation>::default()),
         ))
     }
-    fn build_document_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::ValueError>> {
-        Some(funded_recursive_fixture_owners::<Self::Snapshot>("recursive-parent"))
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let birth = recursive_fixture_owners_birth_demand::<Self::Snapshot>()?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth, ..Default::default() })
+    }
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(recursive_fixture_owners::<Self::Snapshot>("recursive-parent", grant))
     }
     fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> { Some(bounded_document_store_disposer()) }
     fn build_document_store_initialization_job(
@@ -573,9 +557,7 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
         }
         Ok(crate::app::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::new(envelope, candidate_generation, actor))))
     }
-    fn build_config_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>, semio_framework_value::ValueError>> { TestApp::<false>::build_config_store_owners() }
     fn build_config_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> { TestApp::<false>::build_config_store_disposer() }
-    fn build_draft_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>, semio_framework_value::ValueError>> { TestApp::<false>::build_draft_store_owners() }
     fn build_draft_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> { TestApp::<false>::build_draft_store_disposer() }
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { TestApp::<false>::build_presence_local_root_retirement_factory() }
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { TestApp::<false>::build_presence_peer_retirement_factory() }
@@ -585,7 +567,7 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
 
 type RecursiveFixtureChild = store::ArtifactChild<TestSnapshot>;
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_schema::ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_schema::ArtifactSchema)]
 #[artifact_schema(id = "s.test.child")]
 struct RecursiveBranchSnapshot {
     #[state(artifact)]
@@ -707,22 +689,22 @@ impl protocol::SemanticMutation<ComposedParentSnapshot> for RecursiveFixtureMuta
 }
 
 impl store::ArtifactCanonicalJson for RecursiveFixtureMutation {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<store::ArtifactCanonicalJsonNode<'_>, String> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<store::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
         match path {
             [] => Ok(store::ArtifactCanonicalJsonNode::Object(1)),
             [0] => Ok(store::ArtifactCanonicalJsonNode::I64(i64::from(self.value))),
-            _ => Err("canonical-edit.invalid-typed-path".into()),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "canonical-edit.invalid-typed-path")),
         }
     }
 
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<store::ArtifactCanonicalJsonText<'_>, String> {
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<store::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
         match (path, index) {
             ([], 0) => Ok("value".into()),
-            _ => Err("canonical-edit.invalid-typed-path".into()),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "canonical-edit.invalid-typed-path")),
         }
     }
 
-    fn canonical_json_borrowed_root(&self) -> Result<Option<store::ArtifactCanonicalJsonValue<'_>>, String> {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<store::ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
         use store::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonObject as Object, ArtifactCanonicalJsonValue as Value};
         Ok(Some(Value::Object(Object::new([("value", Value::Scalar(Node::I64(i64::from(self.value))))].into_iter()))))
     }
@@ -739,11 +721,11 @@ fn recursive_fixture_wire_schema(_mutation: &RecursiveFixtureMutation) -> Option
 /// 🌱️ Quotes the fixture catalog: the bounded retirement source plus the wire-carrying preparation authority that lets its stores author.
 fn recursive_fixture_owners_birth_demand<P>() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
     let base = store::bounded_artifact_store_owners_birth_demand::<P, RecursiveFixtureMutation>()?;
-    let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(crate::app::bounded_config_store_one_item_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>())?;
+    let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<P, RecursiveFixtureMutation, store::MutationApplyEdit<P, RecursiveFixtureMutation>>(), depth: 1 })?;
     let capacity_bytes = base.capacity_bytes.checked_add(preparation.capacity_bytes).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "fixture catalog original source tree capacity overflow"))?;
     Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: base.depth.max(preparation.depth) })
 }
@@ -751,20 +733,20 @@ where
 /// 🗃️ Admits the fixture catalog under `grant`: bounded retirement owners and one wire-carrying preparation factory.
 fn recursive_fixture_owners<P>(prefix: &'static str, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<P, RecursiveFixtureMutation>>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
-    let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(crate::app::bounded_config_store_one_item_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>())
+    let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<P, RecursiveFixtureMutation, store::MutationApplyEdit<P, RecursiveFixtureMutation>>(), depth: 1 })
         .map_err(|error| store::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
     store::bounded_artifact_store_owners_with_one_item_preparation(grant, preparation, || {
-        store::operation_wire_preparation_factory(bounded_config_store_one_item_preparation_factory::<P, RecursiveFixtureMutation>(prefix, 4096), recursive_fixture_wire_source, recursive_fixture_wire_schema)
+        store::operation_wire_preparation_factory(store::mutation_apply_preparation_factory::<P, RecursiveFixtureMutation>(), recursive_fixture_wire_source, recursive_fixture_wire_schema)
     })
 }
 
 /// 🏗️ Funds the fixture catalog from its own quotes for stores no scheduler grants.
 fn funded_recursive_fixture_owners<P>(prefix: &'static str) -> Result<store::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::ValueError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
     store::fund_document_store_owners(recursive_fixture_owners_birth_demand::<P>()?, |grant| recursive_fixture_owners::<P>(prefix, grant))
@@ -986,7 +968,7 @@ store::space_members! {
 }
 
 async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value) {
-    let mut app = VcsArtifactApp::<ComposedParentApp<HAS_CHILD>, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut app = VcsArtifactApp::<ComposedParentApp<HAS_CHILD>, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let dialect = test_child_dialect().await;
     let child_id = row["childId"].as_str().unwrap();
     let slot = row["slot"].as_str().unwrap();
@@ -998,7 +980,7 @@ async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value) {
     let packed = member.envelope_pack_bytes().await.unwrap();
     close_member_admission_fixture(&mut member);
     PARENT_SNAPSHOT_CLONES.with(|count| count.set(0));
-    let admitted = app.open_child(slot, child_id, dialect, &packed).await.is_ok();
+    let admitted = app.open_child(slot, child_id, dialect, &packed, &mut crate::app::artifact_app_laws::fixture_identity()).await.is_ok();
     let parent_clones = PARENT_SNAPSHOT_CLONES.with(std::cell::Cell::get);
     let published = app.test_child_admission_state(1).generation;
     close_member_admission_app(&mut app);
@@ -1076,14 +1058,12 @@ impl ReadyComposedParentInitialization {
         }
     }
 
-    fn fault(cx: &mut semio_framework_job::StepContext<'_>, code: &[u8]) -> semio_framework_job::StepOutcome {
-        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-            detail: crate::app::retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, code),
-        })
+    fn fault(code: &[u8]) -> semio_framework_value::ValueError {
+        semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, String::from_utf8_lossy(code).into_owned())
     }
 }
 
-impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, RecursiveFixtureMutation> for ReadyComposedParentInitialization {
+impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, RecursiveFixtureMutation> for ReadyComposedParentInitialization {
     fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let nested = |mut demand: semio_framework_value::RetirementDemand| {
             demand.depth += 1;
@@ -1101,13 +1081,13 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
         Ok(semio_framework_value::RetirementDemand { depth: usize::from(self.envelope.is_some()), ..Default::default() })
     }
 
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         if self.closing || cx.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
         }
         if self.retirement.is_some() {
             if cx.should_yield() {
-                return semio_framework_job::StepOutcome::Yield;
+                return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
             }
             let bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(4096);
             let stepped = crate::app::retirement_self_grant(|body| store::artifact_retirement_box_demands(self.retirement.as_ref().expect("replay retirement remains retained"), body), bytes)
@@ -1116,13 +1096,13 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
                 Ok((grant, step)) if step.progress().fits(grant) => {
                     let progress = step.progress();
                     cx.consume_fuel((progress.copied_items + progress.released_bytes).max(1) as u64);
-                    semio_framework_job::StepOutcome::Yield
+                    semio_framework_job::JobOutcomeBorrow::admit_yield(cx)
                 }
-                _ => Self::fault(cx, b"recursive-parent-replay-retirement-rejected"),
+                _ => Err(Self::fault(b"recursive-parent-replay-retirement-rejected")),
             };
         }
         if cx.should_yield() {
-            return semio_framework_job::StepOutcome::Yield;
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
         }
         if let Some(runtime) = self.runtime.as_mut() {
             let bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(4096);
@@ -1131,21 +1111,18 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
                 Ok((_, store::RetainedCloneStep::Complete(_))) => {}
                 Ok((grant, store::RetainedCloneStep::Progress(progress))) if progress.fits(grant) => {
                     cx.consume_fuel((progress.copied_items + progress.released_bytes).max(1) as u64);
-                    return semio_framework_job::StepOutcome::Yield;
+                    return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
                 }
-                _ => return Self::fault(cx, b"recursive-parent-current-retirement-rejected"),
+                _ => return Err(Self::fault(b"recursive-parent-current-retirement-rejected")),
             }
         }
         cx.consume_fuel(1);
         let envelope = match self.envelope.as_ref() {
             Some(envelope) => envelope,
             None if self.phase == ReadyComposedParentInitializationPhase::Complete => {
-                return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                });
+                return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None);
             }
-            None => return Self::fault(cx, b"recursive-parent-envelope-owner-missing"),
+            None => return Err(Self::fault(b"recursive-parent-envelope-owner-missing")),
         };
         match self.phase {
             ReadyComposedParentInitializationPhase::Begin => {
@@ -1156,16 +1133,16 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
             }
             ReadyComposedParentInitializationPhase::Seed => {
                 if let Some(edit) = envelope.vcs.edits.get(self.edit_index) {
-                    let Some(runtime) = self.runtime.as_mut() else { return Self::fault(cx, b"recursive-parent-runtime-owner-missing") };
+                    let Some(runtime) = self.runtime.as_mut() else { return Err(Self::fault(b"recursive-parent-runtime-owner-missing")) };
                     if self.operation_index == 0 {
                         if runtime.seed_mutation(protocol::MutationId(edit.id.clone())).is_err() {
-                            return Self::fault(cx, b"recursive-parent-edit-seed-rejected");
+                            return Err(Self::fault(b"recursive-parent-edit-seed-rejected"));
                         }
                         self.operation_index = 1;
                     } else if let Some(meta) = edit.mutation_meta.get(self.operation_index - 1) {
                         if let Some(id) = &meta.mutation_id {
                             if runtime.seed_edit_operation(&edit.id, id.clone()).is_err() {
-                                return Self::fault(cx, b"recursive-parent-mutation-seed-rejected");
+                                return Err(Self::fault(b"recursive-parent-mutation-seed-rejected"));
                             }
                         }
                         runtime.observe_timestamp(meta.timestamp);
@@ -1182,20 +1159,20 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
                 }
             }
             ReadyComposedParentInitializationPhase::Replay => {
-                let Some(cursor) = envelope.cursor.as_ref() else { return Self::fault(cx, b"recursive-parent-cursor-missing") };
+                let Some(cursor) = envelope.cursor.as_ref() else { return Err(Self::fault(b"recursive-parent-cursor-missing")) };
                 if let Some(edit_id) = cursor.applied_edit_ids.get(self.lane_index) {
-                    let Some(edit) = envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id) else { return Self::fault(cx, b"recursive-parent-applied-edit-missing") };
+                    let Some(edit) = envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id) else { return Err(Self::fault(b"recursive-parent-applied-edit-missing")) };
                     if let Some(operation) = edit.forwards.get(self.operation_index) {
                         let Some(runtime) = self.runtime.as_mut() else {
-                            return Self::fault(cx, b"recursive-parent-current-owner-missing");
+                            return Err(Self::fault(b"recursive-parent-current-owner-missing"));
                         };
                         let current = runtime.current_ref();
                         let next = match protocol::apply_diff(operation.diff(current).diff(), current) {
                             Ok(next) => next,
-                            Err(_) => return Self::fault(cx, b"recursive-parent-replay-rejected"),
+                            Err(_) => return Err(Self::fault(b"recursive-parent-replay-rejected")),
                         };
                         if runtime.adopt_current_owned(next, std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<ComposedParentSnapshot>::default())).is_err() {
-                            return Self::fault(cx, b"recursive-parent-current-adoption-rejected");
+                            return Err(Self::fault(b"recursive-parent-current-adoption-rejected"));
                         }
                         self.operation_index += 1;
                     } else {
@@ -1208,14 +1185,14 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
                 }
             }
             ReadyComposedParentInitializationPhase::Applied | ReadyComposedParentInitializationPhase::Redo => {
-                let Some(cursor) = envelope.cursor.as_ref() else { return Self::fault(cx, b"recursive-parent-cursor-missing") };
+                let Some(cursor) = envelope.cursor.as_ref() else { return Err(Self::fault(b"recursive-parent-cursor-missing")) };
                 let ids = if self.phase == ReadyComposedParentInitializationPhase::Applied { &cursor.applied_edit_ids } else { &cursor.redo_edit_ids };
                 if let Some(id) = ids.get(self.lane_index) {
-                    let Some((ledger_key, edit)) = envelope.vcs.edits.find_near_key(|edit| edit.id == *id) else { return Self::fault(cx, b"recursive-parent-lane-edit-missing") };
-                    let Some(runtime) = self.runtime.as_mut() else { return Self::fault(cx, b"recursive-parent-runtime-owner-missing") };
+                    let Some((ledger_key, edit)) = envelope.vcs.edits.find_near_key(|edit| edit.id == *id) else { return Err(Self::fault(b"recursive-parent-lane-edit-missing")) };
+                    let Some(runtime) = self.runtime.as_mut() else { return Err(Self::fault(b"recursive-parent-runtime-owner-missing")) };
                     let result = if self.phase == ReadyComposedParentInitializationPhase::Applied { runtime.push_applied_edit(edit, ledger_key) } else { runtime.push_redo_edit(edit, ledger_key) };
                     if result.is_err() {
-                        return Self::fault(cx, b"recursive-parent-lane-seed-rejected");
+                        return Err(Self::fault(b"recursive-parent-lane-seed-rejected"));
                     }
                     self.lane_index += 1;
                 } else {
@@ -1233,18 +1210,19 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
                 runtime.set_current_checkpoint_id(cursor.checkpoint_id.clone());
                 let envelope = self.envelope.take().expect("recursive parent envelope remains retained");
                 let runtime = self.runtime.take().expect("recursive parent runtime remains retained");
-                let owners = ComposedParentApp::<true>::build_document_store_owners().expect("recursive parent owners").expect("funded recursive parent owners");
+                let owners = funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent").expect("funded recursive parent owners");
                 self.candidate = Some(store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, self.candidate_generation, owners));
                 self.phase = ReadyComposedParentInitializationPhase::Complete;
             }
             ReadyComposedParentInitializationPhase::Complete => {
-                return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                });
+                return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None);
             }
         }
-        semio_framework_job::StepOutcome::Yield
+        semio_framework_job::JobOutcomeBorrow::admit_yield(cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        crate::app::artifact_app_laws::fixture_job_outcome(descriptor)
     }
 
     fn request_cancel(&mut self) {
@@ -1268,7 +1246,7 @@ impl crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Re
         if grant.maximum_items == 0 {
             return Ok(store::RetainedCloneStep::Progress(empty));
         }
-        let demand = <Self as crate::app::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, RecursiveFixtureMutation>>::retirement_demands(self, grant.maximum_copy_bytes)?;
+        let demand = <Self as store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, RecursiveFixtureMutation>>::retirement_demands(self, grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth {
             return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "composed parent initializer retirement exceeds admitted depth"));
         }
@@ -1372,10 +1350,10 @@ async fn composed_replacement_candidate(
     let mut envelope = store::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(ComposedParentApp::<true>::DOCUMENT_SCHEMA, parent_id, snapshot, None);
     envelope.dialect = Some(parent_dialect);
     let mut candidate = store::ArtifactStore::new(envelope, app.store.local_actor_id().clone()).await.expect("candidate parent store");
-    store::install_unscheduled_catalog(&mut candidate, ComposedParentApp::<true>::build_document_store_owners().expect("candidate parent owners")).expect("candidate parent catalog installs");
+    store::install_unscheduled_catalog(&mut candidate, funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent")).expect("candidate parent catalog installs");
     let job = crate::app::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::from_candidate(candidate)));
     let operation = semio_framework_job::OperationId(operation);
-    app.store_replacement_jobs.insert_admitted(operation.0, crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job));
+    app.store_replacement_jobs.insert_admitted(operation.0, crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job, app.mounted_policy.maintenance));
     crate::app::ArtifactEnvelopeDecodeOperationHandle { operation, generation }
 }
 
@@ -1409,10 +1387,10 @@ async fn drive_composed_replacement_to(
 }
 
 async fn live_composed_replacement_app() -> VcsArtifactApp<ComposedParentApp, TestMembers> {
-    let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let dialect = test_child_dialect().await;
     let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), app.store.local_actor_id().clone()).await.expect("live child");
-    app.register_child("slot", "child-1", dialect, member).await.expect("live child publication");
+    app.register_child("slot", "child-1", dialect, member, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("live child publication");
     app
 }
 
@@ -1570,7 +1548,7 @@ async fn recursive_parent_document_files(
     let mut envelope = store::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(schema, parent_id, snapshot, None);
     envelope.dialect = Some(dialect);
     let mut parent_store = Box::new(Box::pin(store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("recursive archive parent store"));
-    store::install_unscheduled_catalog(&mut parent_store, ComposedParentApp::<true>::build_document_store_owners().expect("recursive archive parent owners")).expect("recursive archive parent catalog installs");
+    store::install_unscheduled_catalog(&mut parent_store, funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent")).expect("recursive archive parent catalog installs");
     let generation = parent_store.generation_now();
     crate::with_authoring_identity!(|identity| Box::pin(parent_store.apply_one(
         generation,
@@ -1628,7 +1606,7 @@ async fn drive_recursive_document_archive_load(
     operation: u64,
 ) -> protocol::DocumentArchiveLoadStatus {
     for _ in 0..1_000_000 {
-        let status = Box::pin(PluginApp::poll_document_archive_load(app, operation)).await.expect("recursive archive operation status");
+        let status = Box::pin(PluginApp::poll_document_archive_load(app, operation, &mut crate::app::artifact_app_laws::fixture_identity())).await.expect("recursive archive operation status");
         if matches!(
             status.state,
             protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault
@@ -1658,12 +1636,12 @@ async fn retained_recursive_replacement_fixture(
     let mut envelope = store::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(ComposedParentApp::<true>::DOCUMENT_SCHEMA, parent_id, snapshot, None);
     envelope.dialect = Some(parent_dialect);
     let mut candidate = store::ArtifactStore::new(envelope, app.store.local_actor_id().clone()).await.expect("recursive candidate parent store");
-    store::install_unscheduled_catalog(&mut candidate, ComposedParentApp::<true>::build_document_store_owners().expect("recursive candidate parent owners")).expect("recursive candidate parent catalog installs");
+    store::install_unscheduled_catalog(&mut candidate, funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent")).expect("recursive candidate parent catalog installs");
     let job = crate::app::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::from_candidate(candidate)));
     let operation = semio_framework_job::OperationId(operation);
     app.store_replacement_jobs.insert_admitted(
         operation.0,
-        crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job),
+        crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job, app.mounted_policy.maintenance),
     );
 
     let branch_owner = store::OwnerRef { parent: root_reference.clone(), slot: "slot".into(), child_id: branch_reference.artifact_id.clone() };
@@ -1729,10 +1707,10 @@ async fn drive_recursive_replacement_to(
 }
 
 async fn live_recursive_replacement_app() -> Box<VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>> {
-    let mut app = Box::pin(VcsArtifactApp::<ComposedParentApp, RecursiveTestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await;
+    let mut app = Box::pin(VcsArtifactApp::<ComposedParentApp, RecursiveTestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
     let dialect = test_child_dialect().await;
     let member = Box::pin(RecursiveTestMembers::create("child-1", &dialect, &RecursiveBranchSnapshot { count: 0, label: "live".into(), nested: None }.encode_pack(), app.store.local_actor_id().clone())).await.expect("live recursive child");
-    Box::pin(app.register_child("slot", "child-1", dialect, member)).await.expect("live recursive child publication");
+    Box::pin(app.register_child("slot", "child-1", dialect, member, &mut crate::app::artifact_app_laws::fixture_identity())).await.expect("live recursive child publication");
     Box::new(app)
 }
 
@@ -2129,7 +2107,7 @@ async fn retained_window_input_recursive_document_archive_cancel_retires_the_exa
     PluginApp::begin_document_archive_load(app.as_mut(), 84, archive).expect("recursive archive cancellation admission");
     assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err());
     PluginApp::cancel_document_archive_load(app.as_mut(), 84).expect("recursive archive cancellation request");
-    let requested = Box::pin(PluginApp::poll_document_archive_load(app.as_mut(), 84)).await.expect("recursive archive cancellation request status");
+    let requested = Box::pin(PluginApp::poll_document_archive_load(app.as_mut(), 84, &mut crate::app::artifact_app_laws::fixture_identity())).await.expect("recursive archive cancellation request status");
     assert!(!matches!(requested.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Fault), "a cancelled recursive archive published or faulted: {:?}", requested.state);
     if requested.state != protocol::DocumentArchiveLoadState::Cancelled {
         assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err(), "a cancelled archive short of its terminal status was acknowledgeable");
@@ -2370,7 +2348,7 @@ fn pump_envelope_decode_worker_close(app: &mut VcsArtifactApp<ComposedParentApp,
 async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle) -> crate::app::ArtifactEnvelopeDecodeOperationPoll {
     let mut poll = crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending;
     for _ in 0..100_000 {
-        PluginApp::advance_typed_operation_publication(app).await.expect("one reactor turn drives the envelope decode worker");
+        PluginApp::advance_typed_operation_publication(app, &mut crate::app::artifact_app_laws::fixture_identity(), crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await.expect("one reactor turn drives the envelope decode worker");
         poll = app.poll_artifact_envelope_decode(handle);
         if matches!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault | crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
             return poll;

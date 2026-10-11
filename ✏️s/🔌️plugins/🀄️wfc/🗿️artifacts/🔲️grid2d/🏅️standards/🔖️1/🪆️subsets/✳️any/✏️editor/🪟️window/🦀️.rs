@@ -11,7 +11,7 @@ use crate::editor::grid2d::modes::edit::windows::{grid, preview};
 /// 🎚️ ONE exact pane's persisted-local options. `WindowConfigOwner::State` requires
 /// `dsl::DslField`, which `#[derive(dsl::DslArtifact)]` emits alongside the `__dsl_*` helpers the
 /// record-backed `ArtifactDsl`/`ArtifactPack` below are written against.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.wfc.grid2d.windowconfig", extension = "wfcgrid2dwindowcfg")]
@@ -49,14 +49,14 @@ pub fn effective_camera(document: &crate::schema::snapshot::Grid2dSnapshot, conf
 }
 
 /// 🫧️ Per-pane scratch that must never reach the document: the hovered cell under the pointer.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Grid2dWindowTransient {
     pub hovered_cell: String,
 }
 
 /// 🔺️ Field-sparse diff of [`Grid2dWindowConfig`]: each field is an optional absolute value.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Grid2dWindowConfigDiff {
     pub camera_x: Option<f64>,
@@ -144,15 +144,100 @@ impl protocol::MutationDiff<Grid2dWindowConfig> for Grid2dWindowConfigDiff {
     }
 }
 
+/// 🧩️ Payload of [`Grid2dWindowConfigMutation::SetActiveTile`]: the absolute value of exactly its fields.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Grid2dWindowConfigSetActiveTile {
+    pub tile_id: String,
+}
+
+/// 🧩️ Payload of [`Grid2dWindowConfigMutation::SetCamera`]: the absolute value of exactly its fields.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Grid2dWindowConfigSetCamera {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
+}
+
+/// 🧩️ Payload of [`Grid2dWindowConfigMutation::SetGridVisible`]: the absolute value of exactly its fields.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Grid2dWindowConfigSetGridVisible {
+    pub visible: bool,
+}
+
+/// 🧩️ Payload of [`Grid2dWindowConfigMutation::SetGridSnapEnabled`]: the absolute value of exactly its fields.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Grid2dWindowConfigSetGridSnapEnabled {
+    pub enabled: bool,
+}
+
+/// 🧩️ Payload of [`Grid2dWindowConfigMutation::SetGridFactor`]: the absolute value of exactly its fields.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Grid2dWindowConfigSetGridFactor {
+    pub factor: f64,
+}
+
+/// 🧩️ Payload of [`Grid2dWindowConfigMutation::SetSolveJson`]: the absolute value of exactly its fields.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Grid2dWindowConfigSetSolveJson {
+    pub solve_json: String,
+}
+
 /// 🪟️ The 2D grid window configuration's mutation vocabulary: one absolute setter per field group.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Grid2dWindowConfigMutation {
-    SetActiveTile { tile_id: String },
-    SetCamera { x: f64, y: f64, zoom: f64 },
-    SetGridVisible { visible: bool },
-    SetGridSnapEnabled { enabled: bool },
-    SetGridFactor { factor: f64 },
-    SetSolveJson { solve_json: String },
+    SetActiveTile(Grid2dWindowConfigSetActiveTile),
+    SetCamera(Grid2dWindowConfigSetCamera),
+    SetGridVisible(Grid2dWindowConfigSetGridVisible),
+    SetGridSnapEnabled(Grid2dWindowConfigSetGridSnapEnabled),
+    SetGridFactor(Grid2dWindowConfigSetGridFactor),
+    SetSolveJson(Grid2dWindowConfigSetSolveJson),
+}
+
+impl semio_framework_plugin::WindowConfigApplyMutation<Grid2dWindowConfig> for Grid2dWindowConfigMutation {
+    fn exchange(self, post: &mut Grid2dWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetActiveTile(Grid2dWindowConfigSetActiveTile { mut tile_id }) => {
+                std::mem::swap(&mut tile_id, &mut post.active_tile_id);
+                Self::SetActiveTile(Grid2dWindowConfigSetActiveTile { tile_id })
+            }
+            Self::SetCamera(Grid2dWindowConfigSetCamera { mut x, mut y, mut zoom }) => {
+                std::mem::swap(&mut x, &mut post.camera_x);
+                std::mem::swap(&mut y, &mut post.camera_y);
+                std::mem::swap(&mut zoom, &mut post.camera_zoom);
+                Self::SetCamera(Grid2dWindowConfigSetCamera { x, y, zoom })
+            }
+            Self::SetGridVisible(Grid2dWindowConfigSetGridVisible { mut visible }) => {
+                std::mem::swap(&mut visible, &mut post.grid_visible);
+                Self::SetGridVisible(Grid2dWindowConfigSetGridVisible { visible })
+            }
+            Self::SetGridSnapEnabled(Grid2dWindowConfigSetGridSnapEnabled { mut enabled }) => {
+                std::mem::swap(&mut enabled, &mut post.grid_snap_enabled);
+                Self::SetGridSnapEnabled(Grid2dWindowConfigSetGridSnapEnabled { enabled })
+            }
+            Self::SetGridFactor(Grid2dWindowConfigSetGridFactor { mut factor }) => {
+                std::mem::swap(&mut factor, &mut post.grid_factor);
+                Self::SetGridFactor(Grid2dWindowConfigSetGridFactor { factor })
+            }
+            Self::SetSolveJson(Grid2dWindowConfigSetSolveJson { mut solve_json }) => {
+                std::mem::swap(&mut solve_json, &mut post.solve_json);
+                Self::SetSolveJson(Grid2dWindowConfigSetSolveJson { solve_json })
+            }
+        })
+    }
+    fn payload_bytes(&self) -> usize {
+        match self {
+            Self::SetActiveTile(Grid2dWindowConfigSetActiveTile { tile_id }) => tile_id.len(),
+            Self::SetSolveJson(Grid2dWindowConfigSetSolveJson { solve_json }) => solve_json.len(),
+            _ => 0,
+        }
+    }
 }
 
 impl protocol::Mutation<Grid2dWindowConfig> for Grid2dWindowConfigMutation {
@@ -257,22 +342,22 @@ impl protocol::Mutation<Grid2dWindowConfig> for Grid2dWindowConfigMutation {
     ];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::SetActiveTile { .. } => &Self::DESCRIPTORS[0],
-            Self::SetCamera { .. } => &Self::DESCRIPTORS[1],
-            Self::SetGridVisible { .. } => &Self::DESCRIPTORS[2],
-            Self::SetGridSnapEnabled { .. } => &Self::DESCRIPTORS[3],
-            Self::SetGridFactor { .. } => &Self::DESCRIPTORS[4],
-            Self::SetSolveJson { .. } => &Self::DESCRIPTORS[5],
+            Self::SetActiveTile(_) => &Self::DESCRIPTORS[0],
+            Self::SetCamera(_) => &Self::DESCRIPTORS[1],
+            Self::SetGridVisible(_) => &Self::DESCRIPTORS[2],
+            Self::SetGridSnapEnabled(_) => &Self::DESCRIPTORS[3],
+            Self::SetGridFactor(_) => &Self::DESCRIPTORS[4],
+            Self::SetSolveJson(_) => &Self::DESCRIPTORS[5],
         }
     }
     fn diff(&self, base: &Grid2dWindowConfig) -> protocol::MutationOutcome<Grid2dWindowConfigDiff> {
         let diff = match self {
-            Self::SetActiveTile { tile_id } => Grid2dWindowConfigDiff { active_tile_id: (base.active_tile_id != *tile_id).then(|| tile_id.clone()), ..Default::default() },
-            Self::SetCamera { x, y, zoom } => Grid2dWindowConfigDiff { camera_x: (base.camera_x != *x).then(|| x.clone()), camera_y: (base.camera_y != *y).then(|| y.clone()), camera_zoom: (base.camera_zoom != *zoom).then(|| zoom.clone()), ..Default::default() },
-            Self::SetGridVisible { visible } => Grid2dWindowConfigDiff { grid_visible: (base.grid_visible != *visible).then(|| visible.clone()), ..Default::default() },
-            Self::SetGridSnapEnabled { enabled } => Grid2dWindowConfigDiff { grid_snap_enabled: (base.grid_snap_enabled != *enabled).then(|| enabled.clone()), ..Default::default() },
-            Self::SetGridFactor { factor } => Grid2dWindowConfigDiff { grid_factor: (base.grid_factor != *factor).then(|| factor.clone()), ..Default::default() },
-            Self::SetSolveJson { solve_json } => Grid2dWindowConfigDiff { solve_json: (base.solve_json != *solve_json).then(|| solve_json.clone()), ..Default::default() },
+            Self::SetActiveTile(Grid2dWindowConfigSetActiveTile { tile_id }) => Grid2dWindowConfigDiff { active_tile_id: (base.active_tile_id != *tile_id).then(|| tile_id.clone()), ..Default::default() },
+            Self::SetCamera(Grid2dWindowConfigSetCamera { x, y, zoom }) => Grid2dWindowConfigDiff { camera_x: (base.camera_x != *x).then(|| x.clone()), camera_y: (base.camera_y != *y).then(|| y.clone()), camera_zoom: (base.camera_zoom != *zoom).then(|| zoom.clone()), ..Default::default() },
+            Self::SetGridVisible(Grid2dWindowConfigSetGridVisible { visible }) => Grid2dWindowConfigDiff { grid_visible: (base.grid_visible != *visible).then(|| visible.clone()), ..Default::default() },
+            Self::SetGridSnapEnabled(Grid2dWindowConfigSetGridSnapEnabled { enabled }) => Grid2dWindowConfigDiff { grid_snap_enabled: (base.grid_snap_enabled != *enabled).then(|| enabled.clone()), ..Default::default() },
+            Self::SetGridFactor(Grid2dWindowConfigSetGridFactor { factor }) => Grid2dWindowConfigDiff { grid_factor: (base.grid_factor != *factor).then(|| factor.clone()), ..Default::default() },
+            Self::SetSolveJson(Grid2dWindowConfigSetSolveJson { solve_json }) => Grid2dWindowConfigDiff { solve_json: (base.solve_json != *solve_json).then(|| solve_json.clone()), ..Default::default() },
         };
         if protocol::DiffAlgebra::<Grid2dWindowConfig>::is_empty(&diff) {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window configuration already holds that value.");
@@ -281,12 +366,12 @@ impl protocol::Mutation<Grid2dWindowConfig> for Grid2dWindowConfigMutation {
     }
     fn inverse(&self, base: &Grid2dWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            Self::SetActiveTile { .. } => Self::SetActiveTile { tile_id: base.active_tile_id.clone() },
-            Self::SetCamera { .. } => Self::SetCamera { x: base.camera_x.clone(), y: base.camera_y.clone(), zoom: base.camera_zoom.clone() },
-            Self::SetGridVisible { .. } => Self::SetGridVisible { visible: base.grid_visible.clone() },
-            Self::SetGridSnapEnabled { .. } => Self::SetGridSnapEnabled { enabled: base.grid_snap_enabled.clone() },
-            Self::SetGridFactor { .. } => Self::SetGridFactor { factor: base.grid_factor.clone() },
-            Self::SetSolveJson { .. } => Self::SetSolveJson { solve_json: base.solve_json.clone() },
+            Self::SetActiveTile(_) => Self::SetActiveTile(Grid2dWindowConfigSetActiveTile { tile_id: base.active_tile_id.clone() }),
+            Self::SetCamera(_) => Self::SetCamera(Grid2dWindowConfigSetCamera { x: base.camera_x.clone(), y: base.camera_y.clone(), zoom: base.camera_zoom.clone() }),
+            Self::SetGridVisible(_) => Self::SetGridVisible(Grid2dWindowConfigSetGridVisible { visible: base.grid_visible.clone() }),
+            Self::SetGridSnapEnabled(_) => Self::SetGridSnapEnabled(Grid2dWindowConfigSetGridSnapEnabled { enabled: base.grid_snap_enabled.clone() }),
+            Self::SetGridFactor(_) => Self::SetGridFactor(Grid2dWindowConfigSetGridFactor { factor: base.grid_factor.clone() }),
+            Self::SetSolveJson(_) => Self::SetSolveJson(Grid2dWindowConfigSetSolveJson { solve_json: base.solve_json.clone() }),
         }])
     }
 }
@@ -357,7 +442,6 @@ macro_rules! mutation_wire {
 
 mutation_wire!(Grid2dWindowConfigMutation);
 
-semio_framework_value::artifact_retire_struct!(Grid2dWindowTransient { hovered_cell });
 
 macro_rules! owners {
     ($config:ident, $transient:ident, $kind:expr) => {
@@ -368,6 +452,11 @@ macro_rules! owners {
             const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
             type State = Grid2dWindowConfig;
             type Mutation = Grid2dWindowConfigMutation;
+            type Edit = semio_framework_plugin::WindowConfigApplyEdit<Grid2dWindowConfig, Grid2dWindowConfigMutation>;
+            const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+            fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+                std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
+            }
             fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
                 semio_framework_plugin::bounded_window_config_store_owners::<Self>()
             }

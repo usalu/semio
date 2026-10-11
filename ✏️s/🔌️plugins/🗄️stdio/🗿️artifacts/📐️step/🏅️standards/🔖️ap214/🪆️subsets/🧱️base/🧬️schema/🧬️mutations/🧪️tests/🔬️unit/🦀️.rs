@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::snapshot::{StepHeader, StepValue as SV};
+use crate::schema::snapshot::{StepHeader, StepTypedValue, StepValue as SV};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
@@ -120,14 +120,14 @@ async fn op_text_binary_roundtrip_law() {
                     SV::Enum("T".into()),
                     SV::Reference(9),
                     SV::Aggregate(vec![SV::Integer(1), SV::Real(2.0)]),
-                    SV::TypedValue { type_name: "LENGTH_MEASURE".into(), value: Box::new(SV::Real(3000.0)) },
+                    SV::TypedValue(StepTypedValue { type_name: "LENGTH_MEASURE".into(), value: Box::new(SV::Real(3000.0)) }),
                 ],
             ),
         }),
         StepMutation::RemoveEntity(remove_entity::RemoveEntity { id: 2 }),
         StepMutation::SetEntityName(set_entity_name::SetEntityName { id: 1, name: "RENAMED".into() }),
         StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: 1, arg_index: 1, value: SV::Aggregate(vec![SV::Real(1.0), SV::Real(2.0), SV::Real(3.0)]) }),
-        StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: 1, arg_index: 2, value: SV::TypedValue { type_name: "X".into(), value: Box::new(SV::Aggregate(vec![SV::Integer(1), SV::Integer(2)])) } }),
+        StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: 1, arg_index: 2, value: SV::TypedValue(StepTypedValue { type_name: "X".into(), value: Box::new(SV::Aggregate(vec![SV::Integer(1), SV::Integer(2)])) }) }),
         StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: 1, arg_index: 0 }),
     ];
     for mutation in mutations {

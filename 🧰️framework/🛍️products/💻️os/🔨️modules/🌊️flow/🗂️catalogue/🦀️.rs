@@ -273,8 +273,11 @@ pub(crate) fn node_graph_operator_record_to_operator_info(record: &ui_wgpu::wgpu
 pub fn flow_backed_node_graph_extras(host_snapshot: &FlowHostSnapshot, lod_mode: &str, proximity_distance: f64, grid_visible: bool, grid_snap_enabled: bool, grid_factor: f64, session: Option<&FlowEvalSession>) -> FlowBackedNodeGraphExtras {
     let automatic = lod_mode.is_empty() || lod_mode == FLOW_LOD_MODE_AUTOMATIC;
     let status_json = session.map(|session| {
-        let host = flow_host_with_session(host_snapshot, session);
-        let status = session.status_json_for_host(&host);
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 4096 };
+        let (host, status) = match flow_host_with_session(FlowHost::from_host_snapshot(host_snapshot.clone()), session, grant) {
+            Ok((host, _)) => { let status = session.status_json_for_host(&host); (host, status) }
+            Err((_, host)) => (host, String::new()),
+        };
         host.retire_cold();
         status
     });

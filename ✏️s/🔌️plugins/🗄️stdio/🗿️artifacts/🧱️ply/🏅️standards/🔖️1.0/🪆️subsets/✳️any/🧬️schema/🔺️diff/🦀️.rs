@@ -31,7 +31,7 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 //#region 🔖️CommentsTriple
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct IndexedDiff<T, D> {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -49,14 +49,14 @@ impl<T, D> IndexedDiff<T, D> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct IndexedModified<D> {
     pub index: usize,
     pub diff: D,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct IndexedAdded<T> {
     pub index: usize,
@@ -236,7 +236,7 @@ pub fn inverse_indexed<T: Clone, D>(diff: &IndexedDiff<T, D>, base: &[T], invers
 /// 🔣️ One changed cell inside a row's sparse patch, keyed by the owning element's property
 /// NAME (stable per-element schema — see module doc; positions can shift if `properties`
 /// itself is replaced, names don't).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PlyRowFieldChange {
     pub name: String,
@@ -244,7 +244,7 @@ pub struct PlyRowFieldChange {
 }
 
 /// 🔺️ Sparse per-property patch for one [`PlyRow`] — only changed cells appear.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PlyRowDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -286,7 +286,7 @@ fn apply_row_diff(properties: &[PlyProperty], row: &mut PlyRow, diff: &PlyRowDif
 
 //#region 🔖️RowsTriple
 /// 📦️ One `rows.modified[]` entity — `index` is the row's position in BASE.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PlyRowModified {
     pub index: usize,
@@ -294,7 +294,7 @@ pub struct PlyRowModified {
 }
 
 /// 📦️ One `rows.added[]` entity — `index` is the row's position in the FINAL sequence.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PlyRowAdded {
     pub index: usize,
@@ -303,7 +303,7 @@ pub struct PlyRowAdded {
 
 /// 🔺️ Index-keyed removed/modified/added triple over one element's `rows` (PLY rows have no
 /// stable identity beyond position, same rationale as csv's `records` triple).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PlyRowsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -487,7 +487,7 @@ fn apply_row_field_changes_by_position_fallback(row: &mut PlyRow, diff: &PlyRowD
 /// (`properties: Option<Vec<PlyProperty>>` — `PlyProperty: DslField` unsatisfied); it needs no
 /// `dsl` derive at all, it's a plain leaf type consumed by the hand-rolled `print_diff`/
 /// `parse_diff`/`encode_diff`/`decode_diff` below.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PlyElementDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -536,7 +536,7 @@ fn absorb_element_rows(base: &mut PlyElementDiff, other: PlyElementDiff) {
 
 //#region 🔖️ElementsTriple
 /// 📦️ One `elements.modified[]` entity — `name` is the element's identity.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PlyElementModified {
     pub name: String,
@@ -544,7 +544,7 @@ pub struct PlyElementModified {
 }
 
 /// 📦️ One `elements.added[]` entity — `index` is the element's position in the FINAL sequence.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PlyElementAdded {
     pub index: usize,
@@ -552,7 +552,7 @@ pub struct PlyElementAdded {
 }
 
 /// 🔺️ Sparse name-keyed `elements` triple.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct PlyElementsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -643,7 +643,7 @@ pub type PlyCommentsDiff = IndexedDiff<String, String>;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.ply`. `schema` is an identity field and never appears here.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ply.diff")]
 pub struct PlyDiff {

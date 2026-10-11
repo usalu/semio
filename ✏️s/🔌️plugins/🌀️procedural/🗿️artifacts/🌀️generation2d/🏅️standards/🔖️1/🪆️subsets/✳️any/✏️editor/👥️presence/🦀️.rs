@@ -12,7 +12,7 @@ use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of procedural 2d view state (camera, show-mode, generation).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "generation2d.presence")]
 #[dsl(layout = "lines")]
@@ -31,6 +31,9 @@ impl Default for Generation2dPresence {
         Self { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: "preview".into(), selected_generation_id: None }
     }
 }
+
+/// 🫴️ Native presence snapshot — the framework's generic codec carries it.
+impl store::ArtifactPresenceSnapshot for Generation2dPresence {}
 
 /// 🩹 Wire change of the active generation selection; the inner `None` clears it.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -124,7 +127,7 @@ impl ArtifactPack for Generation2dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum Generation2dPresenceMutation {
     #[dsl(key = "set-camera")]

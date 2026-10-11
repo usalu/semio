@@ -7,7 +7,8 @@ pub mod mutation {
     use crate::RasterSnapshot;
 
     //#region 🔖️ReorderLayers
-    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+    #[canonical_json(owner = semio_framework_pack_json)]
     #[mutation_leaf(contract = ::protocol)]
     #[value(rename_all = "camelCase")]
     pub struct ReorderLayers {

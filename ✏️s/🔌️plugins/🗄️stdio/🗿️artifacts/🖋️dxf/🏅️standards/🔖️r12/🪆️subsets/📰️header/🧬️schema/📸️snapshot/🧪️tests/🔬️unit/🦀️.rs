@@ -47,24 +47,24 @@ async fn parses_every_section_and_entity_kind() {
     assert_eq!(snap.blocks.len(), 1);
     assert_eq!(snap.blocks[0].name, "MYBLOCK");
     assert_eq!(snap.blocks[0].entities.len(), 1);
-    assert!(matches!(snap.blocks[0].entities[0], DxfEntity::Line { .. }));
+    assert!(matches!(snap.blocks[0].entities[0], DxfEntity::Line(DxfLine { .. })));
 
     assert_eq!(snap.entities.len(), 8);
-    assert!(matches!(snap.entities[0], DxfEntity::Line { .. }));
-    assert!(matches!(snap.entities[1], DxfEntity::Circle { .. }));
-    assert!(matches!(snap.entities[2], DxfEntity::Arc { .. }));
-    assert!(matches!(snap.entities[3], DxfEntity::Text { .. }));
-    assert!(matches!(snap.entities[4], DxfEntity::Solid { .. }));
-    assert!(matches!(snap.entities[5], DxfEntity::Insert { .. }));
+    assert!(matches!(snap.entities[0], DxfEntity::Line(DxfLine { .. })));
+    assert!(matches!(snap.entities[1], DxfEntity::Circle(DxfCircle { .. })));
+    assert!(matches!(snap.entities[2], DxfEntity::Arc(DxfArc { .. })));
+    assert!(matches!(snap.entities[3], DxfEntity::Text(DxfText { .. })));
+    assert!(matches!(snap.entities[4], DxfEntity::Solid(DxfSolid { .. })));
+    assert!(matches!(snap.entities[5], DxfEntity::Insert(DxfInsert { .. })));
     match &snap.entities[6] {
-        DxfEntity::Polyline { vertices, closed, .. } => {
+        DxfEntity::Polyline(DxfPolyline { vertices, closed, .. }) => {
             assert_eq!(vertices.len(), 2);
             assert!(*closed);
         }
         other => panic!("expected Polyline, got {other:?}"),
     }
     match &snap.entities[7] {
-        DxfEntity::Other { kind, .. } => assert_eq!(kind, "3DFACE"),
+        DxfEntity::Other(DxfOther { kind, .. }) => assert_eq!(kind, "3DFACE"),
         other => panic!("expected Other(3DFACE), got {other:?}"),
     }
 }

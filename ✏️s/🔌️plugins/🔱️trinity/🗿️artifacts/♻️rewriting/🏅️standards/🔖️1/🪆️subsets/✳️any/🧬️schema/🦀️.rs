@@ -102,7 +102,7 @@ pub mod rule;
 pub use rule::{Pattern,Lhs,Rhs,Assignment,ParameterKind,ParameterSpec,Rule};
 
 impl Pattern {
-    fn to_jack_pattern(&self) -> JackPattern {
+    pub(crate) fn to_jack_pattern(&self) -> JackPattern {
         let left = PatternNode { var: self.left_var.clone(), kind: self.left_kind.clone() };
         if let (Some(right_var), Some(right_kind)) = (&self.right_var, &self.right_kind) {
             JackPattern { nodes: vec![left], edge: Some(PatternEdge { var: self.edge_var.clone(), kind: self.edge_kind.clone(), directed: true, right: PatternNode { var: right_var.clone(), kind: right_kind.clone() } }) }
@@ -128,7 +128,7 @@ impl Pattern {
 
 /// ♻️ Apply a rewrite rule to a graph.
 pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &semio_framework_graph::manifest::PropertyBag) -> Result<QueryResult, TrinityRewritingError> {
-    let query = build_rule_query(rule, bindings);
+    let query = crate::standards::v1::subsets::any::io::text::snapshot::build_rule_query(rule, bindings);
     let parsed = parse(&query).map_err(TrinityRewritingError::Jack)?;
     let (result, effects) = execute(graph, &parsed).map_err(TrinityRewritingError::Jack)?;
     semio_s_artifact_trinity_jack::apply_graph_effects(graph, &effects)?;

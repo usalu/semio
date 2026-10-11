@@ -185,7 +185,7 @@ use crate::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapIm
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_plugin::{io_dispatch,  ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
+use semio_framework_plugin::{ArtifactSerializer}; use semio_framework_plugin::io::{io_dispatch, ErasedComposeSource, IoDirection, IoKey, IoPayload};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::geometry::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
@@ -252,7 +252,7 @@ use crate::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapIm
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_plugin::{io_dispatch,  ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
+use semio_framework_plugin::{ArtifactSerializer}; use semio_framework_plugin::io::{io_dispatch, ErasedComposeSource, IoDirection, IoKey, IoPayload};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::geometry::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;

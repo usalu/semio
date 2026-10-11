@@ -5,7 +5,8 @@
 /// fields rather than a nested record so the whole config is one `lines` DSL document, and the
 /// SAME three keys the react `World3dHost` sends under `camera` (`position`/`target`/`zoom`), so the
 /// wire pose needs no renaming on the way in or out.
-#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -42,7 +43,7 @@ impl EnergyModelViewerCameraPose {
 /// 🎚️ Persisted local state for ONE concrete `energy.model.3d` window: its camera, and nothing else.
 /// Per WINDOW, not per app — two open 3d windows orbit independently, which is exactly why this is a
 /// `WindowConfigOwner` state and not a field on `EnergyModelConfig`.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Copy, Debug, Default, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Copy, Debug, Default, PartialEq, semio_framework_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -54,7 +55,7 @@ pub struct EnergyModelViewerWindowConfig {
 }
 
 /// 🔺️ Sparse field delta over [`EnergyModelViewerWindowConfig`]: every present slot is the new value of exactly that field.
-#[derive(Clone, Copy, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct EnergyModelViewerWindowConfigDiff {
     #[value(skip_serializing_if = "Option::is_none")]

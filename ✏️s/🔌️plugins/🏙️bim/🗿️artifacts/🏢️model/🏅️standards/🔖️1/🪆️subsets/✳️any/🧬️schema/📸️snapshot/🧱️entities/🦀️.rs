@@ -3,7 +3,8 @@
 use super::values::*;
 
 /// 🏷️ A property set template: the property set `name` that elements (and types) of the listed kinds are expected to carry, with the definition of each of its properties. Library data: it owns no entries and no element is changed by it; the effective properties of an element are inferred.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct PropertyTemplate {
     /// The name of the property set the template defines; unique among the templates.
     pub name: String,
@@ -14,7 +15,8 @@ pub struct PropertyTemplate {
 }
 
 /// 🗂️ A classification system of the project library (for example Uniclass 2015, DIN 276 or OmniClass): its name and edition and the authored table of its entries. Library data: it owns no entries of elements.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct ClassificationSystem {
     /// The name of the system.
     pub name: String,
@@ -27,7 +29,7 @@ pub struct ClassificationSystem {
 }
 
 /// 🌡️ The thermal conditions of one space, keyed by the id of the space: occupancy type and density, heating and cooling set points, outdoor air flow, lighting and equipment power density and the reference of the schedule profile that drives them. Every field is optional; the envelope, the areas and the U-values are inferred.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]
 pub struct SpaceConditions {
     /// The occupancy type of the space (for example Office, Residential or Classroom); absent leaves it unstated.
     #[value(default, skip_serializing_if = "Option::is_none")] pub occupancy: Option<String>,
@@ -48,7 +50,8 @@ pub struct SpaceConditions {
 }
 
 /// 📏️ A dimension: the distances between consecutive anchors measured along `angle`, drawn `offset` metres beside the first anchor. Its values and text are inferred from the current geometry of the anchors, never stored; an optional lock names the value it must keep.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Dimension {
     /// The storey plan the dimension is drawn on.
     pub storey: String,
@@ -65,7 +68,8 @@ pub struct Dimension {
 }
 
 /// 🏷️ A tag: text read from an element of the model, placed `offset` metres from the reference point of the element so it follows the element.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Tag {
     pub storey: String,
     pub element: String,
@@ -76,7 +80,8 @@ pub struct Tag {
 }
 
 /// 🗒️ A free text on a storey plan.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct TextNote {
     pub storey: String,
     #[dsl(block)] pub position: Point2,
@@ -87,7 +92,8 @@ pub struct TextNote {
 }
 
 /// ↗️ A leader: a text joined by a line to an anchor; the text sits `offset` metres from the anchor point so it follows the anchored element.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Leader {
     pub storey: String,
     #[dsl(statements, block)] pub anchor: AnnotationAnchor,
@@ -98,7 +104,8 @@ pub struct Leader {
 }
 
 /// 🎨️ A style shared by dimensions, tags, notes and leaders: text height, line end mark, printed unit and precision.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct AnnotationStyle {
     pub name: String,
     /// Height of the text in metres of model space.
@@ -116,14 +123,15 @@ pub struct AnnotationStyle {
 }
 
 /// 🧩 A parametric family: a named, categorised set of parameters and solids. Its parameter values, solids and profile outline are inferred, never stored.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Family {
     pub name: String,
     pub category: FamilyCategory,
 }
 
 /// 🔢 One parameter of a family: its kind and the formula (canonical text of the expression language) that gives its value. Keyed by `family.name`.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]
 pub struct FamilyParameter {
     /// The family the parameter belongs to.
     pub family: String,
@@ -135,7 +143,8 @@ pub struct FamilyParameter {
 }
 
 /// 🧊 One solid of a family: its shape, the material and the visibility as formulas, and an offset of the solid in the family frame.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct FamilySolid {
     pub family: String,
     pub name: String,
@@ -149,7 +158,8 @@ pub struct FamilySolid {
 }
 
 /// 🪑️ A placed instance of a family: furniture, equipment, casework, a fixture or a terminal. Its solids are the evaluated solids of the family under the per-instance overrides; they are inferred, never stored.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Component {
     /// The storey the component stands on; its elevation is measured from the elevation of this storey.
     pub storey: String,
@@ -171,7 +181,7 @@ pub struct Component {
 }
 
 /// 🎚️ One per-instance override of a family parameter: the formula (canonical text of the expression language) that replaces the formula of the parameter `name` for the component. Keyed by `component.name`.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]
 pub struct ComponentOverride {
     /// The component the override belongs to.
     pub component: String,
@@ -182,7 +192,8 @@ pub struct ComponentOverride {
 }
 
 /// 🌀️ A routed MEP element: a duct, pipe or cable tray of a system along a polyline in space, its section given by the shape. Its solid, plan symbol, length and clashes are inferred.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct MepElement {
     pub storey: String,
     /// The service the element carries; it decides the colour in the plan and in 3D and the group in the quantities.
@@ -195,7 +206,8 @@ pub struct MepElement {
 }
 
 /// 💥️ A clash set: the elements of side A are tested against the elements of side B. Two elements clash hard when their solids interpenetrate by more than the tolerance and softly when they stay closer than the clearance; touching or sharing a face is no clash. The clashes are inferred, grouped and never stored.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct ClashSet {
     /// The name of the clash set as listed in the clash panel.
     pub name: String,
@@ -210,7 +222,8 @@ pub struct ClashSet {
 }
 
 /// ⚖️ A rule: one numeric code check with a limit, a severity and a scope. Its findings (the elements that break the limit, with the measured value) are inferred and never stored.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Rule {
     /// The name of the rule as listed in the rules panel.
     pub name: String,
@@ -225,7 +238,8 @@ pub struct Rule {
 }
 
 /// 🚩️ An issue (a BCF topic): what is wrong, who raised it and who has to fix it, the elements it concerns, the clash it was raised from and the viewpoint that shows it. Comments are records of their own.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Issue {
     /// The headline of the issue.
     pub title: String,
@@ -252,7 +266,8 @@ pub struct Issue {
 }
 
 /// 💬️ One comment of an issue: who wrote it, when and what.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct IssueComment {
     /// The issue the comment belongs to.
     pub issue: String,
@@ -265,7 +280,8 @@ pub struct IssueComment {
 }
 
 /// 📄️ A sheet of the drawing set: number, name, paper and the authored fields of its title block. Its frame, title block and revision table are inferred, and so are the drawings its viewports show.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Sheet {
     /// The sheet number as printed on the drawing, unique within the project (for example A-101).
     pub number: String,
@@ -290,7 +306,8 @@ pub struct Sheet {
 }
 
 /// 🖼️ A viewport: one authored view placed on one sheet at a drawing scale. The drawing is the inferred linework of the view, scaled to the viewport and clipped to its window.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Viewport {
     /// The sheet the viewport stands on.
     pub sheet: String,
@@ -307,7 +324,8 @@ pub struct Viewport {
 }
 
 /// 🧾️ One row of the revision table of a sheet: the revision mark, its date, what changed and who changed it.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct SheetRevision {
     /// The sheet whose revision table holds the row.
     pub sheet: String,
@@ -322,7 +340,8 @@ pub struct SheetRevision {
 }
 
 /// 🧷️ A wall sweep: a profile run along one face of a wall (a baseboard, a cornice, a drip rail). It follows its host by inference: along the join-trimmed face, interrupted by the openings that reach its height, and clipped where the top of the wall is attached. Its solid, length and areas are inferred, never stored.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct WallSweep {
     /// The wall the sweep runs along.
     pub host: String,
@@ -340,7 +359,8 @@ pub struct WallSweep {
 }
 
 /// 🧱️ A material of the project library.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Material {
     pub name: String,
     pub category: MaterialCategory,
@@ -351,35 +371,40 @@ pub struct Material {
 }
 
 /// 🧱️ Layered wall build-up.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct WallType {
     pub name: String,
     #[dsl(table)] #[value(default)] pub layers: Vec<Layer>,
 }
 
 /// 🧱️ Layered slab build-up.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct SlabType {
     pub name: String,
     #[dsl(table)] #[value(default)] pub layers: Vec<Layer>,
 }
 
 /// 🧱️ Layered ceiling build-up: the first layer is topmost, the last one is the visible underside.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct CeilingType {
     pub name: String,
     #[dsl(table)] #[value(default)] pub layers: Vec<Layer>,
 }
 
 /// 🧱️ Layered roof build-up.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct RoofType {
     pub name: String,
     #[dsl(table)] #[value(default)] pub layers: Vec<Layer>,
 }
 
 /// 🏛️ Column profile and material.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct ColumnType {
     pub name: String,
     #[dsl(statements, block)] pub profile: Profile,
@@ -387,7 +412,8 @@ pub struct ColumnType {
 }
 
 /// 🏛️ Beam profile and material.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct BeamType {
     pub name: String,
     #[dsl(statements, block)] pub profile: Profile,
@@ -395,7 +421,8 @@ pub struct BeamType {
 }
 
 /// 🪟️ Window family parameters.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct WindowType {
     pub name: String,
     pub width: f64,
@@ -414,7 +441,8 @@ pub struct WindowType {
 }
 
 /// 🚪️ Door family parameters.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct DoorType {
     pub name: String,
     pub width: f64,
@@ -429,7 +457,8 @@ pub struct DoorType {
 }
 
 /// 🌍️ A site: geographic anchor and boundary.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Site {
     pub name: String,
     pub latitude: f64,
@@ -440,7 +469,8 @@ pub struct Site {
 }
 
 /// 🏢️ A building on a site.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Building {
     pub site: String,
     pub name: String,
@@ -450,7 +480,8 @@ pub struct Building {
 }
 
 /// 🪜️ A storey: authored level index, height and optional plan cut height; its elevation is inferred.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Storey {
     pub building: String,
     pub name: String,
@@ -461,7 +492,8 @@ pub struct Storey {
 }
 
 /// 📏️ A labelled grid line of a building.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct GridLine {
     pub building: String,
     pub label: String,
@@ -470,7 +502,8 @@ pub struct GridLine {
 }
 
 /// 🧱️ A wall: axis, type, location line and base/top constraints; never its height.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Wall {
     pub storey: String,
     pub wall_type: String,
@@ -489,7 +522,8 @@ pub struct Wall {
 }
 
 /// 🏬️ A curtain wall type: the grid rules of both directions, the mullion sections of the interior grid lines and of the border, the default panel of every cell, the glass material and the mullion material.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct CurtainWallType {
     pub name: String,
     /// Grid rule along the wall: equal cells of about the spacing, or explicit lines in metres from the start of the axis.
@@ -515,7 +549,8 @@ pub struct CurtainWallType {
 }
 
 /// 🎯️ The panel of one cell of a curtain wall that differs from the default panel of its type; the cell is named by its indices along the wall and up it, at most one override per cell.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct CurtainPanelOverride {
     /// The curtain wall whose cell is overridden.
     pub curtain: String,
@@ -528,7 +563,8 @@ pub struct CurtainPanelOverride {
 }
 
 /// 🪟️ A curtain wall: axis, base and top constraints, the type that carries its grid rules, mullions and panels, and optional grid rules of its own.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct CurtainWall {
     pub storey: String,
     /// The curtain wall type that carries the grid rules, mullion sections, default panel and materials.
@@ -545,7 +581,8 @@ pub struct CurtainWall {
 }
 
 /// 🏛️ A column placed on a storey, plumb or leaning.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Column {
     pub storey: String,
     pub column_type: String,
@@ -560,7 +597,8 @@ pub struct Column {
 }
 
 /// ➖️ A beam along a line or an arc, level or inclined: its top lies `top_offset` metres above (positive) or below (negative) the storey top at the start and `end_top_offset` at the end; zero is flush with the storey top.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Beam {
     pub storey: String,
     pub beam_type: String,
@@ -575,7 +613,8 @@ pub struct Beam {
 }
 
 /// ⬜️ A slab: boundary loop, holes, offset and optional slope.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Slab {
     pub storey: String,
     pub slab_type: String,
@@ -588,7 +627,8 @@ pub struct Slab {
 }
 
 /// 🔲️ A ceiling: boundary loop, holes, drop below the storey top and optional slope; the layers of its type hang downward.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Ceiling {
     pub storey: String,
     pub ceiling_type: String,
@@ -602,7 +642,8 @@ pub struct Ceiling {
 }
 
 /// 🏠️ A roof: footprint loop and shape.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Roof {
     pub storey: String,
     pub roof_type: String,
@@ -615,7 +656,8 @@ pub struct Roof {
 }
 
 /// 🪟️ A window, door or void hosted by a wall or curtain wall; `sill_override` replaces the sill of its type (zero for doors and voids).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Opening {
     pub host: String,
     #[dsl(statements, block)] pub kind: OpeningKind,
@@ -634,7 +676,8 @@ pub struct Opening {
 }
 
 /// 🪜️ A stair run: placement, flight, limits and construction (stringer, nosing, tread thickness, risers, landing depth).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Stair {
     pub storey: String,
     #[dsl(block)] pub start: Point2,
@@ -659,7 +702,8 @@ pub struct Stair {
 }
 
 /// 🛤️ A railing along a path: heights, rail and post sections, optional balusters and an infill.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Railing {
     pub storey: String,
     #[dsl(table)] #[value(default)] pub path: Vec<Point2>,
@@ -682,7 +726,8 @@ pub struct Railing {
 }
 
 /// 🛝️ A ramp: a sloped slab of constant thickness and width along a centre-line path whose rise is resolved by its top constraint; the slope, the landings and the compliance are inferred.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Ramp {
     pub storey: String,
     /// Centre line of the ramp from its foot to its head: vertices with the bulge of the segment to the next one; the ramp climbs along it.
@@ -712,7 +757,8 @@ pub struct Ramp {
 }
 
 /// 🏠️ A room: its zone and the materials that finish its floor, walls and ceiling are authored references.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Space {
     pub storey: String,
     pub number: String,
@@ -731,7 +777,8 @@ pub struct Space {
 }
 
 /// 🏘️ A zone: a named group of spaces of any storey that share a purpose and an occupancy density.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Zone {
     pub name: String,
     /// What the zone groups the spaces for (for example a fire compartment, a ventilation or a tenant zone).
@@ -741,7 +788,8 @@ pub struct Zone {
 }
 
 /// 🗃️ An area scheme (gross, net or rentable area): the authored rule that decides which spaces it adds up, by usage and by zone.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct AreaScheme {
     pub name: String,
     pub measure: AreaMeasure,
@@ -752,7 +800,8 @@ pub struct AreaScheme {
 }
 
 /// 🖼️ An authored view of a building: a plan of a storey, a section or elevation through a vertical plane, or a camera; with its cut height, view depth, crop, hidden categories, phase filter, scale and detail level. The linework it draws is inferred.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct View {
     /// The building the view belongs to; a plan view's storey is one of its storeys.
     pub building: String,
@@ -780,7 +829,8 @@ pub struct View {
 }
 
 /// 📋️ A user-defined schedule: the authored definition (category, columns, sort, filter, grouping, scope) of a table whose rows and totals are inferred from the quantity take-off and the authored fields; no row is stored.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Schedule {
     pub name: String,
     pub category: ScheduleCategory,
@@ -802,13 +852,15 @@ pub struct Schedule {
 
 
 /// 🧭️ Authored OptionGroup record.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct OptionGroup {
     pub name: String,
 }
 
 /// 🧭️ Authored DesignOption record.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct DesignOption {
     pub group: String,
     pub name: String,
@@ -816,14 +868,15 @@ pub struct DesignOption {
 }
 
 /// 🧭️ Authored Workset record.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Workset {
     pub name: String,
     pub default_visible: bool,
 }
 
 /// 🧭️ Authored ElementMembership record.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]
 pub struct ElementMembership {
     pub target: String,
 }

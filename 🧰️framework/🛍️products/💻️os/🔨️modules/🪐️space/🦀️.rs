@@ -3,13 +3,13 @@
 pub use semio_framework_artifact_space_collection::{
     artifact_backbone_uri, collection_backbone_uri, empty_collection_snapshot, entry_path, folder_path,
     package_descriptor as collection_package_descriptor, reconcile_collection_integrity, resolve_entry_by_path, ArtifactBody, CollectionArtifactPackage,
-    CollectionDiff, CollectionFolderRemoval, CollectionFolderInsertion, CollectionFolderRelocation, CollectionEntryRemoval, CollectionEntryInsertion, CollectionEntryRelocation, CollectionEntriesDelta, CollectionEntry, CollectionEntryPatch, CollectionFolder, CollectionFolderPatch, CollectionFoldersDelta, CollectionMutation,
+    CollectionDiff, CollectionFoldersModification, CollectionEntriesModification, CollectionFolderRemoval, CollectionFolderInsertion, CollectionFolderRelocation, CollectionEntryRemoval, CollectionEntryInsertion, CollectionEntryRelocation, CollectionEntriesDelta, CollectionEntry, CollectionEntryPatch, CollectionFolder, CollectionFolderPatch, CollectionFoldersDelta, CollectionMutation,
     CollectionOptionalLink, CollectionPackageError, CollectionSnapshot, S_COLLECTION_SCHEMA,
 };
 pub use semio_framework_artifact_space_space::{
     can_write, empty_space_snapshot, package_descriptor as space_package_descriptor, reconcile_space_atelier_invariant, space_backbone_uri,
     space_role_of, CollectionRef, InstalledExtension, SpaceArtifactPackage, SpaceCollectionPatch, SpaceCollectionsDelta, SpaceDiff, SpaceExtensionPatch, SpaceExtensionsDelta, SpaceKind,
-    SpaceMutation, SpaceOptionalAvatar, SpacePackageError, SpaceProgramsDelta, SpaceUsersModification, SpaceCollectionsModification, SpaceExtensionsModification, CollectionFoldersModification, CollectionEntriesModification, SpaceUserRemoval, SpaceUserInsertion, SpaceUserRelocation, SpaceCollectionRemoval, SpaceCollectionInsertion, SpaceCollectionRelocation, SpaceProgramRemoval, SpaceProgramInsertion, SpaceProgramRelocation, SpaceExtensionRemoval, SpaceExtensionInsertion, SpaceExtensionRelocation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceUserPatch, SpaceUsersDelta, SpaceVisibility, S_SPACE_SCHEMA,
+    SpaceMutation, SpaceOptionalAvatar, SpacePackageError, SpaceProgramsDelta, SpaceUsersModification, SpaceCollectionsModification, SpaceExtensionsModification, SpaceUserRemoval, SpaceUserInsertion, SpaceUserRelocation, SpaceCollectionRemoval, SpaceCollectionInsertion, SpaceCollectionRelocation, SpaceProgramRemoval, SpaceProgramInsertion, SpaceProgramRelocation, SpaceExtensionRemoval, SpaceExtensionInsertion, SpaceExtensionRelocation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceUserPatch, SpaceUsersDelta, SpaceVisibility, S_SPACE_SCHEMA,
 };
 
 use serde::{Deserialize, Serialize};
@@ -124,10 +124,10 @@ impl DraftCatalog {
     }
 
     /// 🌱️ Registers bookkeeping only after the caller's original authority admits the draft identity.
-    pub fn create_draft(&self, kind_id: &str, schema: &str, name: &str, now_ms: u64, ttl_ms: Option<u64>, identity: &mut vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<DraftEntry, vcs::VcsError> {
+    pub fn create_draft(&self, kind_id: &str, schema: &str, name: &str, now_ms: u64, ttl_ms: Option<u64>, identity: &mut vcs::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<DraftEntry, vcs::VcsError> {
         static DRAFT_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
         let seq = DRAFT_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let artifact_id = identity.encode(|control| vcs::io::binary::entity_identity::mint_draft_id(kind_id, schema, name, now_ms, seq, control))?;
+        let artifact_id = identity.encode(|control| vcs::os_vcs::io::binary::entity_identity::mint_draft_id(kind_id, schema, name, now_ms, seq, control))?;
         let entry = DraftEntry { artifact_id, kind_id: kind_id.into(), schema: schema.into(), name: name.into(), created_at_ms: now_ms, expires_at_ms: ttl_ms.map(|ttl| now_ms + ttl) };
         self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(entry.artifact_id.clone(), entry.clone());
         Ok(entry)

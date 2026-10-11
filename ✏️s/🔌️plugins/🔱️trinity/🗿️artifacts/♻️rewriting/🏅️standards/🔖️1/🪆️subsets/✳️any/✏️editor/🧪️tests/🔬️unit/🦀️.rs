@@ -113,7 +113,7 @@ impl std::ops::DerefMut for RewritingTestApp {
 impl Drop for RewritingTestApp {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_s_artifact_trinity_jack::trinity_mounted_owner_policy());
         }
     }
 }

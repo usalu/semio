@@ -6,7 +6,8 @@ use super::HomeTransient;
 mod apply_directory_page;
 pub use apply_directory_page::ApplyDirectoryPage;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = HomeTransient, diff = HomeTransientDiff, schema = "s.space.home.transient")]
 pub enum HomeTransientMutation {
     #[dsl(key = "apply-directory-page")]

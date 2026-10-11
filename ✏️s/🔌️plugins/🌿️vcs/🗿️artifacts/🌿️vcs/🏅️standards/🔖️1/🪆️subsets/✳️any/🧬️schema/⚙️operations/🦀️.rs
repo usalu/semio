@@ -19,7 +19,7 @@ pub type VcsStore = store::ArtifactStore<VcsSnapshot, VcsDemoMutation>;
 /// catalog for the app-hosted store; every standalone store goes through here instead.
 pub async fn new_vcs_store(envelope: VcsEnvelope, actor: protocol::ActorId) -> Result<OwnedVcsStore, store::VcsError> {
     let mut store = VcsStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<VcsSnapshot, VcsDemoMutation>());
+    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<VcsSnapshot, VcsDemoMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     Ok(OwnedVcsStore(store))
 }
 
@@ -32,9 +32,7 @@ pub struct OwnedVcsStore(VcsStore);
 impl OwnedVcsStore {
     /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
     pub fn close(&mut self) {
-        while !self.0.close_owned_terminal_is_empty() {
-            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("VCS document store closes through its exact bounded owners");
-        }
+        self.0.close_owned_unscheduled().expect("VCS document store closes through its exact bounded owners");
     }
 }
 

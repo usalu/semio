@@ -6,7 +6,7 @@ fn fem2d_window_config_results_matches_neutral_fixture_and_codecs() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document-contract/🔣️.json")).expect("FEM window fixture");
     for candidate in fixture["valid"].as_array().expect("neutral valid cases") {
         let base: Fem2dResultsWindowConfig = semio_framework_pack_json::from_json_str(&candidate.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM window config");
-        let mutation = Fem2dResultsWindowConfigMutation::Update { patch: Box::new(Fem2dResultsWindowConfigPatch::replacing(&base)) };
+        let mutation = Fem2dResultsWindowConfigMutation::Update(Fem2dResultsWindowConfigUpdate { patch: Box::new(Fem2dResultsWindowConfigPatch::replacing(&base)) });
         let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("FEM window diff");
         assert_eq!(after, base);
         assert_eq!(Fem2dResultsWindowConfigMutation::parse_op(&mutation.print_op()).expect("FEM text mutation"), mutation);

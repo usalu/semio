@@ -79,7 +79,7 @@ pub struct FlowEvalTick {
 /// arming source cannot duplicate it; a hop with unfinished work that no installed extension can
 /// serve abandons the window instead, because its next hop would park the identical request.
 pub(crate) fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession, window_id: &str, window_kind_id: &str) -> Emit<FlowMutation, NoConfigMutation> {
-    session.begin_window_tick(window_id);
+    session.begin_window_tick(window_id, crate::editor::flow::cold_grant()).expect("flow cold session grant");
     let mut host = host_from_snapshot(snapshot, config, session);
     let more = session.tick_cold(&mut host, None);
     let parked = host.take_pending_extension_evals();
@@ -100,15 +100,15 @@ pub(crate) fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig
         let origin=session.invocation_origin_cold(window_id,hash).expect("invocation source is retained before dispatch");
         extension_invocations.push(ExtensionInvocation::new(origin.extension_id.clone(),"evaluate",origin.request_json_cold(resume),"flowEvalResolve"));
     }
-    session.note_window_tick_outcome(window_id, more || !extension_invocations.is_empty());
+    session.note_window_tick_outcome(window_id, more || !extension_invocations.is_empty(), crate::editor::flow::cold_grant()).expect("flow cold session grant");
     let effects = if !extension_invocations.is_empty() {
-        session.note_window_extensions_in_flight(window_id, extension_invocations.len());
+        session.note_window_extensions_in_flight(window_id, extension_invocations.len(), crate::editor::flow::cold_grant()).expect("flow cold session grant");
         Vec::new()
-    } else if more && servable && session.arm_window_tick(window_id) {
+    } else if more && servable && session.arm_window_tick(window_id, crate::editor::flow::cold_grant()).expect("flow cold session grant").0 {
         vec![eval_tick_effect(window_id, window_kind_id)]
     } else {
         if more && !servable {
-            session.abandon_window_tick(window_id);
+            session.abandon_window_tick(window_id, crate::editor::flow::cold_grant()).expect("flow cold session grant");
         }
         Vec::new()
     };

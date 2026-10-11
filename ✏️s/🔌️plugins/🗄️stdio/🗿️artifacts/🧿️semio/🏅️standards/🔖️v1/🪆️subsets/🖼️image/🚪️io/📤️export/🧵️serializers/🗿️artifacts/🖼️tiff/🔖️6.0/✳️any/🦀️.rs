@@ -1,21 +1,21 @@
-//! 📤️ `s.stdio.semio/v1/image` → `tiff` (6.0) — `encode_tiff` recomputes every core strip tag
-//! fresh from `pixels`/`width()`/`height()` and carries over any OTHER `ifds[0]` tag verbatim
-//! (see that engine's own `EncodeScopeNote`), so this leaf only needs to plant `TAG_IMAGE_WIDTH`/
-//! `TAG_IMAGE_LENGTH` in `ifds[0]` (required — `encode_tiff` errors without them) plus rebuild
-//! the non-core tags this leaf's import side extracted into `metadata`.
+//! 📤️ `s.stdio.semio/v1/image` → `tiff` (6.0) — the owned page is one logical RGBA8 sample block
+//! plus its semantic tags (`TAG_IMAGE_WIDTH`/`TAG_IMAGE_LENGTH`, 8-bit samples, photometric RGB,
+//! `ExtraSamples`) and the non-core tags this leaf's import side extracted into `metadata`;
+//! `encode_tiff` chooses the native strip, tile and compression layout on its own.
 //!
 //! Honest lossy points (documented):
 //! - Only the FIRST frame is exported (TIFF baseline single-IFD encode here is not animated).
-//! - The frame is written as ONE uncompressed strip of 8-bit RGBA with unassociated alpha (`ExtraSamples` = 2) —
+//! - The frame is written as ONE sample block of 8-bit RGBA with unassociated alpha (`ExtraSamples` = 2) —
 //!   `colorspace`/`bit_depth` are not fed back beyond that.
 //! - Metadata entries round-trip back as `Ascii` tags (best-effort — numeric-looking values that
 //!   came from a non-Ascii source type on import re-emit as text, a real, honest normalization,
-//!   not a byte-exact inverse of every possible TIFF field type).
+//!   not a byte-exact inverse of every possible TIFF field type). A metadata value that is not
+//!   ASCII or contains a NUL has no owned TIFF text form and is refused by the page validation.
 
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_tiff::{
-    schema::snapshot::{TiffFieldType, TiffIfd, TiffStorage, TiffStorageKind, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_ROWS_PER_STRIP, TAG_SAMPLES_PER_PIXEL},
+    schema::snapshot::{TiffIfd, TiffSampleBlock, TiffTag, TiffValues, TiffWord64, TAG_BITS_PER_SAMPLE, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_SAMPLES_PER_PIXEL},
     TiffSnapshot,
 };
 
@@ -43,28 +43,21 @@ impl ArtifactSerializer for SemioImageToTiff {
             TiffTag { tag: TAG_IMAGE_WIDTH, values: TiffValues::Long(vec![from.width]) },
             TiffTag { tag: TAG_IMAGE_LENGTH, values: TiffValues::Long(vec![from.height]) },
             TiffTag { tag: TAG_BITS_PER_SAMPLE, values: TiffValues::Short(vec![8, 8, 8, 8]) },
-            TiffTag { tag: TAG_COMPRESSION, values: TiffValues::Short(vec![1]) },
             TiffTag { tag: TAG_PHOTOMETRIC, values: TiffValues::Short(vec![2]) },
             TiffTag { tag: TAG_SAMPLES_PER_PIXEL, values: TiffValues::Short(vec![4]) },
-            TiffTag { tag: TAG_ROWS_PER_STRIP, values: TiffValues::Long(vec![from.height]) },
             TiffTag { tag: TAG_EXTRA_SAMPLES, values: TiffValues::Short(vec![2]) },
         ];
         for m in &from.metadata {
             if let Ok(tag) = m.key.parse::<u16>() {
-                let mut bytes = m.value.as_bytes().to_vec();
-                if !bytes.ends_with(&[0]) { bytes.push(0); }
-                entries.push(TiffTag { tag, values: TiffValues::Ascii(bytes) });
+                entries.push(TiffTag { tag, values: TiffValues::Ascii(vec![m.value.clone()]) });
             }
         }
         entries.sort_by_key(|t| t.tag);
-        Ok(TiffSnapshot {
-            schema: semio_s_artifact_stdio_tiff::STDIO_TIFF_DOCUMENT_SCHEMA.into(),
-            byte_order: Default::default(),
-            ifds: vec![TiffIfd {
-                entries,
-                storage: TiffStorage { kind: TiffStorageKind::Strips, offsets_kind: TiffFieldType::Long, byte_counts_kind: TiffFieldType::Long, chunks: vec![frame.rgba8.clone()] },
-            }],
-        })
+        entries.dedup_by_key(|t| t.tag);
+        let block = TiffSampleBlock { x: 0, y: 0, width: from.width, height: from.height, channels: 4, samples: frame.rgba8.iter().map(|byte| TiffWord64::from_word(u64::from(*byte))).collect() };
+        let snapshot = TiffSnapshot { schema: semio_s_artifact_stdio_tiff::STDIO_TIFF_DOCUMENT_SCHEMA.into(), ifds: vec![TiffIfd { entries, blocks: vec![block] }] };
+        snapshot.validate().map_err(|message| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("semio/image→tiff: {message}"))))?;
+        Ok(snapshot)
     }
 }
 //#endregion 🔖️Serializer

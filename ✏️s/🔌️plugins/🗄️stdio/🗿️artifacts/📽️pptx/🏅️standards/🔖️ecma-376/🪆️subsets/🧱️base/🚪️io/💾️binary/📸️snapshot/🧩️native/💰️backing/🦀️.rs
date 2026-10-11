@@ -29,12 +29,11 @@ pub(super) fn preflight(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, con
         (result, native.owned_bytes())
     })?
 }
-pub(crate) fn encode(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<IoPayload, ValueError> {let native_control=native_owner.native();
+pub(crate) fn encode(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_control: &mut NativeEncodeControl<'_>) -> Result<IoPayload, ValueError> {
     let limits = control.limits();
     control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint| {
-        let mut callback = |event: semio_framework_value::native_encoding::NativeEncodeProgress| checkpoint(event.completed, event.total);
         let native_before=native_control.owned_bytes();
-    let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
+    let result=native_control.scoped_maximum(match native_before.checked_add(remaining) {Some(maximum) => maximum, None => return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "native snapshot allowance overflow")), 0)}, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
 
         let result = (|| {
             let total = measured(snapshot, encoding, limits, native)?;
@@ -56,26 +55,29 @@ pub(crate) fn encode(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, contro
     (result,native_control.owned_bytes().saturating_sub(native_before))
     })?
 }
-pub(crate) fn input(bytes: &[u8], binary: bool, control: &mut SqliteSnapshotControl<'_>) -> Result<PptxSnapshot, ValueError> {
+pub(crate) fn input(bytes: &[u8], binary: bool, control: &mut SqliteSnapshotControl<'_>, native_control: &mut NativeDecodeControl<'_>) -> Result<PptxSnapshot, ValueError> {
     let limits = control.limits();
     if bytes.len() > limits.max_file_bytes {
         return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "PPTX native input exceeds caller file ceiling"));
     }
     control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative, |remaining, checkpoint| {
-        let mut callback = |event: semio_framework_value::native_decoding::NativeDecodeProgress| checkpoint(event.completed, event.total);
-        let mut native = NativeDecodeControl::new(remaining, &mut callback);
-        let result = (|| {
-            let body = if binary {
-                store::semio_format::unwrap_binary_controlled(bytes, "stdio.pptx", store::semio_format::Component::Pack, 1, &mut native)?
-            } else {
-                let text = native.borrow_text(bytes)?;
-                store::semio_format::split_text_preamble_controlled(text, "stdio.pptx", store::semio_format::Component::Dsl, 1, &mut native).map_err(store::semio_format::SemioError::into_value_error)?.as_bytes()
-            };
-            native.begin_stage(body.len())?;
-            let snapshot = DecodedValue::new(super::read(&mut OpcNativeReader { bytes: body, position: 0, rows: 0, limits, binary, control: &mut native })?, retire);
-            native.checkpoint()?;
-            Ok(snapshot.take())
-        })();
-        (result, native.owned_bytes())
+        let native_before = native_control.owned_bytes();
+        let result = native_control.scoped_maximum(match native_before.checked_add(remaining) { Some(maximum) => maximum, None => return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "native snapshot allowance overflow")), 0) }, |native| {
+            native.scoped_observer(&mut |event: semio_framework_value::native_decoding::NativeDecodeProgress| checkpoint(event.completed, event.total), |native| {
+                (|| {
+                    let body = if binary {
+                        store::semio_format::unwrap_binary_controlled(bytes, "stdio.pptx", store::semio_format::Component::Pack, 1, native)?
+                    } else {
+                        let text = native.borrow_text(bytes)?;
+                        store::semio_format::split_text_preamble_controlled(text, "stdio.pptx", store::semio_format::Component::Dsl, 1, native).map_err(store::semio_format::SemioError::into_value_error)?.as_bytes()
+                    };
+                    native.begin_stage(body.len())?;
+                    let snapshot = DecodedValue::new(super::read(&mut OpcNativeReader { bytes: body, position: 0, rows: 0, limits, binary, control: native })?, retire);
+                    native.checkpoint()?;
+                    Ok(snapshot.take())
+                })()
+            })
+        });
+        (result, native_control.owned_bytes().saturating_sub(native_before))
     })?
 }

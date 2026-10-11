@@ -16,6 +16,7 @@ impl store::ErasedMemberStoreOneItemPublication for MemberReceiptPublication {
     fn next_group_byte_demand(&self) -> usize { 0 }
     fn retirement_demands(&self, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
     fn fault(&self) -> Option<&str> { None }
+    fn preparation_refusal(&self) -> Option<&ValueError> { None }
     fn retry(&mut self) -> bool { false }
     fn acknowledge(&mut self) -> bool { false }
     fn begin_close(&mut self) {}

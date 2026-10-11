@@ -50,9 +50,11 @@ impl PptxParagraph {
 #[path = "🧭️transform/🦀️.rs"]
 mod transform;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PptxTransform {
+    #[canonical_json(decimal_string)]
     #[value(
         serialize_with = "transform::to_value",
         deserialize_with = "transform::from_value",
@@ -61,6 +63,7 @@ pub struct PptxTransform {
         retire_with = "std::mem::drop"
     )]
     pub x: i64,
+    #[canonical_json(decimal_string)]
     #[value(
         serialize_with = "transform::to_value",
         deserialize_with = "transform::from_value",
@@ -69,6 +72,7 @@ pub struct PptxTransform {
         retire_with = "std::mem::drop"
     )]
     pub y: i64,
+    #[canonical_json(decimal_string)]
     #[value(
         serialize_with = "transform::to_value",
         deserialize_with = "transform::from_value",
@@ -77,6 +81,7 @@ pub struct PptxTransform {
         retire_with = "std::mem::drop"
     )]
     pub cx: i64,
+    #[canonical_json(decimal_string)]
     #[value(
         serialize_with = "transform::to_value",
         deserialize_with = "transform::from_value",
@@ -145,7 +150,7 @@ pub struct PptxPresentation {
 
 //#region 🔖️XmlParts
 /// 📄 One authoritative OPC XML part retained as a logical XML document.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct PptxXmlPart {
     pub path: String,
@@ -164,7 +169,7 @@ pub fn pptx_part_is_xml(path: &str, content_type: &str) -> bool {
 //#endregion 🔖️XmlParts
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pptx")]
 pub struct PptxSnapshot {

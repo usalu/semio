@@ -70,7 +70,7 @@ pub fn import_mesh_bytes(name: &str, bytes: &[u8]) -> Result<LowpolySnapshot, Fa
 pub mod export_mesh {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "export-mesh")]
     pub struct ExportMesh {
@@ -89,7 +89,7 @@ pub mod export_mesh {
 pub mod load_mesh_request {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "load-mesh-request")]
     pub struct LoadMeshRequest {}
@@ -104,7 +104,7 @@ pub mod load_mesh_request {
 pub mod import_mesh_file {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "import-mesh-file")]
     pub struct ImportMeshFile {

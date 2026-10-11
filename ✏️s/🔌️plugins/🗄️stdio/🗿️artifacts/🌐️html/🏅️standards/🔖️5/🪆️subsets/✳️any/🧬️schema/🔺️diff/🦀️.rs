@@ -18,7 +18,7 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.html`. No `snapshot: Option<HtmlSnapshot>` full-replace slot — every diff is sparse and field-by-field.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.html.diff")]
 pub struct HtmlDiff {
@@ -38,7 +38,7 @@ pub struct HtmlDiff {
 
 //#region 🔖️NodeDiff
 /// 🌳 Recursive per-node diff, shaped like the `HtmlNode` it targets.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum HtmlNodeDiff {
     Element(HtmlElementDiff),
@@ -65,7 +65,7 @@ pub enum HtmlNodeDiff {
 }
 
 /// 🏷️ Per-element diff.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct HtmlElementDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -79,7 +79,7 @@ pub struct HtmlElementDiff {
 /// 🏷️ Name-keyed, ORDER-preserving attribute triple. Deliberately a Vec-based triple (not a
 /// `HashMap`) — attribute order carries no HTML-spec meaning but IS significant for byte-preserving
 /// round-trips.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct HtmlAttributesDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -92,7 +92,7 @@ pub struct HtmlAttributesDiff {
 
 /// 🏷️ `value: None` sets/keeps the attribute VALUELESS (e.g. `disabled`) — distinct from removal,
 /// which is tracked separately via `HtmlAttributesDiff::removed`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct HtmlAttrModified {
     pub name: String,
@@ -100,7 +100,7 @@ pub struct HtmlAttrModified {
     pub value: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct HtmlAttrAdded {
     pub index: usize,
@@ -111,7 +111,7 @@ pub struct HtmlAttrAdded {
 
 /// 🌳 Index-keyed, recursive children triple. `removed`/`modified` indices refer to BASE state
 /// (descending removal order on apply); `added` indices refer to FINAL state (ascending insert).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct HtmlChildrenDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -122,14 +122,14 @@ pub struct HtmlChildrenDiff {
     pub added: Vec<HtmlChildAdded>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct HtmlChildModified {
     pub index: usize,
     pub diff: HtmlNodeDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct HtmlChildAdded {
     pub index: usize,

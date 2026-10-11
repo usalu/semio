@@ -13,7 +13,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, InteractionW
 use semio_framework_tool_machine::{authoring_clock, Scrub, ScrubInput, ToolStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "edit-mesh-selection")]
 #[value(rename_all = "camelCase")]
 pub struct EditMeshSelection {
@@ -176,7 +176,7 @@ pub fn edit_rows(payload: &EditMeshSelection, host_snapshot: &FlowHostSnapshot, 
 pub(crate) fn mesh_edit_emit(verb: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, rows: Vec<Generation3dMutation>) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let seed = doc.operation().map(|operation| operation.authoring_seed.clone()).unwrap_or_default();
     let tool = format!("{}#{verb}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID);
-    match Scrub::start(tool, protocol::ActorId(seed.clone()), "").send(ScrubInput::Commit { gesture: verb.to_string(), leaves: rows }, authoring_clock(0)) {
+    match Scrub::start(tool, protocol::ActorId(seed.as_str().into()), "").send(ScrubInput::Commit { gesture: verb.to_string(), leaves: rows }, authoring_clock(0)) {
         Ok(ToolStep::Committed(transaction, rows)) if !seed.is_empty() => Emit::commit_transaction(transaction, rows),
         Ok(ToolStep::Committed(_, rows)) => Emit::mutations(rows),
         _ => Emit::default(),

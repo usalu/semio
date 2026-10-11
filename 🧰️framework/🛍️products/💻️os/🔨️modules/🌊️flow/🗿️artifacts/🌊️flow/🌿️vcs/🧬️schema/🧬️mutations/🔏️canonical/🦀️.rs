@@ -1,6 +1,7 @@
 //! 🔏️ Borrowed exact typed Flow mutation traversal: one indexed navigator serves operation identity, canonical sealing and the borrowed root.
 use super::super::super::*;
 use super::FlowMutation;
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use crate::neural::{Atom, Dictionary, Neuron, Tree, Value as NeuralValue};
 use crate::os_store::{ArtifactCanonicalJson, ArtifactCanonicalJsonArray as A, ArtifactCanonicalJsonNode as N, ArtifactCanonicalJsonObject as O, ArtifactCanonicalJsonText as T, ArtifactCanonicalJsonValue as V, ArtifactPreparedOperationSource};
 
@@ -15,7 +16,7 @@ enum Node<'a> {
     Previews(&'a [FlowPreviewGui]), Preview(&'a FlowPreviewGui), Channel(&'a FlowChannelRef),
 }
 
-fn invalid() -> String { "canonical-edit.invalid-typed-path".into() }
+fn invalid() -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, "canonical-edit.invalid-typed-path") }
 
 fn kind(mutation: &FlowMutation) -> &'static str {
     match mutation {
@@ -62,7 +63,7 @@ impl<'a> Node<'a> {
         }
     }
 
-    fn key(self, index: usize) -> Result<T<'a>, String> {
+    fn key(self, index: usize) -> Result<T<'a>, ValueError> {
         if let Some(fields) = self.fields() {
             return fields.get(index).map(|key| T::from(*key)).ok_or_else(invalid);
         }
@@ -73,7 +74,7 @@ impl<'a> Node<'a> {
         }
     }
 
-    fn child(self, index: usize) -> Result<Self, String> {
+    fn child(self, index: usize) -> Result<Self, ValueError> {
         if let Some(fields) = self.fields() {
             return self.field(*fields.get(index).ok_or_else(invalid)?);
         }
@@ -85,7 +86,7 @@ impl<'a> Node<'a> {
         })
     }
 
-    fn field(self, key: &str) -> Result<Self, String> {
+    fn field(self, key: &str) -> Result<Self, ValueError> {
         let layout = |value: &'a Option<WidgetLayout>| value.as_ref().map_or(Self::Null, Self::Layout);
         Ok(match (self, key) {
             (Self::Mutation(mutation), "mutation") => Self::Text(kind(mutation)), (Self::Mutation(mutation), "payload") => Self::Payload(mutation),
@@ -116,7 +117,7 @@ impl<'a> Node<'a> {
         })
     }
 
-    fn chrome_field(chrome: &'a NodeChrome, key: &str) -> Result<Self, String> {
+    fn chrome_field(chrome: &'a NodeChrome, key: &str) -> Result<Self, ValueError> {
         Ok(match (chrome, key) {
             (NodeChrome::Plain { .. }, "kind") => Self::Text("plain"), (NodeChrome::Slider { .. }, "kind") => Self::Text("slider"), (NodeChrome::Note { .. }, "kind") => Self::Text("note"), (NodeChrome::Image { .. }, "kind") => Self::Text("image"), (NodeChrome::Variable { .. }, "kind") => Self::Text("variable"),
             (NodeChrome::Plain { preview }, "preview") => Self::Bool(*preview),
@@ -127,7 +128,7 @@ impl<'a> Node<'a> {
         })
     }
 
-    fn widget_field(widget: &'a Widget, key: &str) -> Result<Self, String> {
+    fn widget_field(widget: &'a Widget, key: &str) -> Result<Self, ValueError> {
         Ok(match (widget, key) {
             (Widget::Neuron { .. }, "kind") => Self::Text("neuron"), (Widget::InputSlider { .. }, "kind") => Self::Text("inputSlider"), (Widget::InputNote { .. }, "kind") => Self::Text("inputNote"), (Widget::InputImage { .. }, "kind") => Self::Text("inputImage"), (Widget::Variable { .. }, "kind") => Self::Text("variable"),
             (Widget::OutputPreview { .. }, "kind") => Self::Text("outputPreview"), (Widget::OutputAction { .. }, "kind") => Self::Text("outputAction"), (Widget::OutputExport { .. }, "kind") => Self::Text("outputExport"), (Widget::Cluster { .. }, "kind") => Self::Text("cluster"),
@@ -143,7 +144,7 @@ impl<'a> Node<'a> {
         })
     }
 
-    fn walk(mut self, path: &[usize]) -> Result<Self, String> {
+    fn walk(mut self, path: &[usize]) -> Result<Self, ValueError> {
         for &index in path {
             self = self.child(index)?;
         }
@@ -160,15 +161,15 @@ impl<'a> Node<'a> {
 }
 
 impl ArtifactCanonicalJson for FlowMutation {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<N<'_>, String> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<N<'_>, ValueError> {
         Ok(Node::Mutation(self).walk(path)?.node())
     }
 
-    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<T<'_>, String> {
+    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<T<'_>, ValueError> {
         Node::Mutation(self).walk(object_path)?.key(index)
     }
 
-    fn canonical_json_borrowed_root(&self) -> Result<Option<V<'_>>, String> {
+    fn canonical_json_borrowed_root(&self) -> Result<Option<V<'_>>, ValueError> {
         Ok(Some(Node::Mutation(self).borrowed()))
     }
 }

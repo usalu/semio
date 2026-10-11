@@ -1,7 +1,7 @@
 //! 🌞️ Lowpoly play app commands — the world-3d sun toggle/azimuth/elevation/intensity, reusing the
 //! framework's shared `WorldSunConfig`-shaped action logic. Config-only.
 
-use crate::editor::lowpoly::config::{lowpoly_sun_config, LowpolyConfig, LowpolyConfigMutation};
+use crate::editor::lowpoly::config::{lowpoly_sun_config, LowpolyConfig, LowpolyConfigMutation, SetSunEdit};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::LowpolySnapshot;
@@ -19,14 +19,14 @@ fn apply_sun_command(config: &LowpolyConfig, action_id: &str, value: Option<f64>
     let mut sun = lowpoly_sun_config(config);
     let args = value.map(|value| semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::object([("value".to_string(), semio_framework_value::DslValue::float(value))])));
     apply_world3d_sun_action(&mut sun, action_id, args.as_ref());
-    LowpolyConfigMutation::SetSun { enabled: sun.enabled, azimuth: sun.azimuth, elevation: sun.elevation, intensity: sun.intensity, color: sun.color }
+    LowpolyConfigMutation::SetSun(SetSunEdit { enabled: sun.enabled, azimuth: sun.azimuth, elevation: sun.elevation, intensity: sun.intensity, color: sun.color })
 }
 
 //#region 🔖️ToggleSun
 pub mod toggle_sun {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
@@ -41,7 +41,7 @@ pub mod toggle_sun {
 pub mod set_sun_azimuth {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-sun-azimuth")]
     pub struct SetSunAzimuth {
@@ -58,7 +58,7 @@ pub mod set_sun_azimuth {
 pub mod set_sun_elevation {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-sun-elevation")]
     pub struct SetSunElevation {
@@ -75,7 +75,7 @@ pub mod set_sun_elevation {
 pub mod set_sun_intensity {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-sun-intensity")]
     pub struct SetSunIntensity {

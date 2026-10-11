@@ -8,7 +8,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
 /// 🔁️ Whole-value swap of an existing cross-section's payload (structured, no field-by-field editor
 /// gesture exists for this entity — every real caller sets the whole record at once).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-section")]

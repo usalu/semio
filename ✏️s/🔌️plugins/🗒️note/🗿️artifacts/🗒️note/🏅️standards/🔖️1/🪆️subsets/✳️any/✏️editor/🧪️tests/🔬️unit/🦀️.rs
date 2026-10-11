@@ -99,7 +99,9 @@ pub(crate) mod context {
             if !app.has_pending_typed_operations() {
                 return Ok(result);
             }
-            PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
+            let demand = PluginApp::maintenance_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.to_string()))?;
+            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            PluginApp::maintenance_step(app, grant)?;
             app.advance_typed_operation_publication().await?;
             if let Some(page) = app.take_typed_operation_result_page(receiver) {
                 if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
@@ -157,7 +159,9 @@ pub(crate) mod context {
             if app.close_terminal_is_empty() {
                 return;
             }
-            if PluginApp::close_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Note registered app close") == semio_framework_plugin::PluginCloseStep::Complete {
+            let demand = PluginApp::close_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Note registered app close quote");
+            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            if matches!(PluginApp::close_step(app, grant).expect("Note registered app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
                 break;
             }
         }

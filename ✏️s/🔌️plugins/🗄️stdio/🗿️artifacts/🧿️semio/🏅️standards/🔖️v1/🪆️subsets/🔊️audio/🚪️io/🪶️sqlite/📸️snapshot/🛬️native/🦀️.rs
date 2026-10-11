@@ -9,7 +9,7 @@ pub(crate)fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotCon
  let limits=control.limits();crate::standards::v1::subsets::audio::io::sqlite::snapshot::admit_layout(limits)?;
  let size=match payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Audio native input exceeds file limit"))}
  control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-  let native_before=native_control.owned_bytes();let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?,|native_control|{
+  let native_before=native_control.owned_bytes();let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native_control|{
   let result=(||->Result<SemioAudioSnapshot,ValueError>{let result=match payload{
    store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control)?;binary(body,native_control,limits)?},
    store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,native_control,limits)?}
@@ -31,3 +31,5 @@ pub(crate) fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:Sql
  let mut items=native::Items::new(fields[4].unwrap_or("[]"))?;let count=items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut tags=control.allocate_vec::<SemioAudioTag>(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(value)=items.next(control)?{let[key,value]=native::record(value,control)?;let key=native::hex_text(key,control)?;let value=native::hex_text(value,control)?;tags.push(SemioAudioTag{key,value});control.step()?;}Ok::<_,ValueError>(())})?;
  Ok(SemioAudioSnapshot{schema,sample_rate,format,channels,tags})
 }
+/// 🕳️ The empty typed root every native prefix starts from.
+pub(crate) fn empty()->crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot{crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot{schema:String::new(),sample_rate:0,format:Default::default(),channels:Vec::new(),tags:Vec::new()}}

@@ -20,6 +20,6 @@ pub fn diff(payload: &ReplaceElement, base: &Fem3dSnapshot) -> protocol::Mutatio
     if let Some(refusal) = resolve_element(base, &payload.new_element) {
         return refusal;
     }
-    protocol::MutationOutcome::new(Fem3dDiff { elements: Some(Fem3dElementsDelta { modified: vec![Fem3dElementsModification { id: payload.id.clone(), patch: (*payload.new_element).clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { elements: Some(Fem3dElementsDelta { modified: vec![Fem3dElementsModification { id: payload.id.clone(), patch: payload.new_element.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

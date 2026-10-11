@@ -170,6 +170,37 @@ impl BvhNode {
 }
 //#endregion 🔖️Bvh
 
+//#region 🔖️TriMeshParts
+/// ♻️ The owned buffers of a disassembled [`TriMesh`]: its vertex and triangle arrays and the root of its BVH.
+pub struct TriMeshParts {
+    pub vertices: Vec<Point3>,
+    pub triangles: Vec<[u32; 3]>,
+    pub bvh: Option<BvhTree>,
+}
+
+/// 🌳️ One owned BVH node, opaque outside this module; [`BvhTree::into_step`] peels exactly one node, so a tree retires without recursion.
+pub struct BvhTree(BvhNode);
+
+/// 🌿️ What peeling one [`BvhTree`] node leaves behind.
+pub enum BvhTreeStep {
+    Leaf,
+    Branch(BvhTree, BvhTree),
+}
+
+impl BvhTree {
+    /// 📏️ The inline extent one node occupies — what releasing its box returns.
+    pub const NODE_BYTES: usize = size_of::<BvhNode>();
+
+    /// 🍃️ Consumes this node and answers its children, each moved out of its box, or that it was a leaf.
+    pub fn into_step(self) -> BvhTreeStep {
+        match self.0 {
+            BvhNode::Leaf { .. } => BvhTreeStep::Leaf,
+            BvhNode::Branch { left, right, .. } => BvhTreeStep::Branch(BvhTree(*left), BvhTree(*right)),
+        }
+    }
+}
+//#endregion 🔖️TriMeshParts
+
 //#region 🔖️TriMesh
 /// 🔺️ An immutable indexed triangle mesh plus its precomputed BVH — the framework replacement
 /// for `parry3d::shape::TriMesh` wrapped in `parry3d::shape::SharedShape`.
@@ -240,6 +271,11 @@ impl TriMesh {
             a.dot(b.cross(c))
         }).sum();
         Self { vertices, triangles, bvh, inward: signed_volume < 0.0 }
+    }
+
+    /// ♻️ Disassembles the mesh into its three owned buffers so an owner can retire them one bounded step at a time.
+    pub fn into_parts(self) -> TriMeshParts {
+        TriMeshParts { vertices: self.vertices, triangles: self.triangles, bvh: self.bvh.map(BvhTree) }
     }
 
     fn triangle_at(&self, index: u32) -> [Point3; 3] {

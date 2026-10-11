@@ -8,7 +8,7 @@ pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotCo
  let limits=control.limits();crate::standards::v1::subsets::flow::io::sqlite::snapshot::admit_layout(limits)?;
  let size=match payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Flow native input exceeds file limit"))}
  control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-  let native_before=native_control.owned_bytes();let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?,|native_control|{
+  let native_before=native_control.owned_bytes();let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native_control|{
   let result=(||->Result<SemioFlowSnapshot,ValueError>{let result=match payload{
    store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control)?;binary(body,native_control,limits)?},
    store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,native_control,limits)?}
@@ -38,4 +38,5 @@ pub(crate) fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:Sql
  let mut items=native::Items::new(fields[2].unwrap_or("[]"))?;let count=items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut edges=control.allocate_vec::<FlowEdge>(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(value)=items.next(control)?{let[id,from,to,kind]=native::record(value,control)?;let id=native::hex_text(id,control)?;let from=port(from,control)?;let to=port(to,control)?;let kind=native::hex_text(kind,control)?;edges.push(FlowEdge{id,from,to,kind});control.step()?;}Ok::<_,ValueError>(())})?;
  Ok(SemioFlowSnapshot{schema,nodes,edges})
 }
-
+/// 🕳️ The empty typed root every native prefix starts from.
+pub(crate) fn empty()->crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot{crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot{schema:String::new(),nodes:Vec::new(),edges:Vec::new()}}

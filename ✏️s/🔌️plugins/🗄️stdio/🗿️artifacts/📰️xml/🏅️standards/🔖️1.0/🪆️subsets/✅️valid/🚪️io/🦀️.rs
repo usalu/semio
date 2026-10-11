@@ -138,7 +138,7 @@ use semio_framework_diagnostic::Severity;
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = apply_mutation(&mut self.snapshot, &mutation);
+            let outcome = crate::apply_mutation(&mut self.snapshot, &mutation);
             (self, outcome)
         }
 

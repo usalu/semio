@@ -6,7 +6,11 @@
 //! Source of record: `✏️editor/🧵️simulation-session/🔣️.json`.
 
 use crate::{EnergyAdmissionRejected, EnergyJob, EnergyJobCursor, EnergyJobStage, EnergyModelCloseCursor, EnergyModelSnapshot, EnergyNumericalBounds, EnergyQualityTier, Model, SimulationConfig};
-use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, OperationId, RetainedJobPayload, StepBudget, StepContext, StepOutcome};
+use semio_framework_job::{
+    Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, JobPublicationKind, OperationId, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload,
+    RetainedJobPublication, StepBudget, StepContext,
+};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunSettingsReads, ToolRunStepRing,
@@ -1000,11 +1004,98 @@ enum EnergyRunPhase {
     Settled,
 }
 
+/// 🏁️ How the run ended; the lent outcome carries only empty marker payloads because the tool-run driver reads the ticks.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EnergyRunSettled {
+    Complete,
+    Fault,
+    Cancelled,
+}
+
 /// 🎟️ What one bounded grant of the run produced.
 enum EnergyRunGrant {
     Continue,
     Timestep,
-    Settled(StepOutcome),
+    Settled(EnergyRunSettled),
+}
+
+/// 🧭️ What one internal step decided before any outcome is lent to the caller.
+enum EnergyRunAction {
+    Yield,
+    Cancelled,
+    Publish,
+    Settled(EnergyRunSettled),
+}
+
+/// 🏷️ Empty marker payloads lent as the settled outcome's payloads.
+struct EnergyRunMarkers {
+    state: RetainedJobPayload,
+    output: RetainedJobPayload,
+    fault: RetainedJobPayload,
+}
+
+impl EnergyRunMarkers {
+    fn new() -> Self {
+        Self { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput), fault: RetainedJobPayload::empty(JobPayloadStream::Fault) }
+    }
+}
+
+/// 📮️ One encoded tick lent as a preview: the publication binds the source bytes until they are paid back.
+struct EnergyTickPublication {
+    single: RetainedJobPublication,
+    bytes: Vec<u8>,
+    delivered: bool,
+}
+
+impl EnergyTickPublication {
+    fn new(bytes: Vec<u8>) -> Box<Self> {
+        Box::new(Self { single: RetainedJobPublication::new(), bytes, delivered: false })
+    }
+
+    fn poll<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        let result = self.single.advance_from_source(JobPublicationKind::Preview, &self.bytes, cx)?;
+        if result.is_some() {
+            self.delivered = true;
+        }
+        Ok(result)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        self.single.borrow_outcome(descriptor)
+    }
+
+    fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if !self.single.terminal_is_empty() {
+            return self.single.retirement_demands();
+        }
+        Ok(RetirementDemand { release_bytes: self.bytes.capacity(), depth: usize::from(self.bytes.capacity() != 0), ..Default::default() })
+    }
+
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let demand = match self.retirement_demands() {
+            Ok(demand) => demand,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        }
+        if !self.single.terminal_is_empty() {
+            return match self.single.close_step(grant) {
+                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            };
+        }
+        if self.bytes.capacity() != 0 {
+            let released_bytes = self.bytes.capacity();
+            self.bytes = Vec::new();
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } };
+        }
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.single.terminal_is_empty() && self.bytes.capacity() == 0
+    }
 }
 
 /// 🧭️ The run's projection of the numerical cursor: timestep units, tier publications and the live meter.
@@ -1082,16 +1173,6 @@ impl EnergyRunCursor {
     }
 }
 
-fn close_payload(payload: &mut RetainedJobPayload) {
-    while !payload.terminal_is_empty() {
-        let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
-}
-
-fn fault_outcome() -> StepOutcome {
-    StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
-}
-
 /// ⏯️ The simulation `runJob`: captures the run's base model in bounded grants, admits the numerical
 /// `EnergyJob` and steps it inline under the caller's deadline. It consumes one unit of fuel per computed
 /// timestep and flushes one tick whenever at least one timestep was computed or the run settled; the
@@ -1113,7 +1194,9 @@ pub struct EnergySimulationRunJob {
     cursor: EnergyRunCursor,
     /// 🧱️ Computed timesteps since the per-surface map was last published into a tick.
     ticks_since_surface_payload: u64,
-    settled: Option<StepOutcome>,
+    settled: Option<EnergyRunSettled>,
+    publication: Option<Box<EnergyTickPublication>>,
+    markers: EnergyRunMarkers,
     closing: bool,
 }
 
@@ -1136,6 +1219,8 @@ impl EnergySimulationRunJob {
             cursor: EnergyRunCursor::new(),
             ticks_since_surface_payload: 0,
             settled: None,
+            publication: None,
+            markers: EnergyRunMarkers::new(),
             closing: false,
         }
     }
@@ -1151,7 +1236,7 @@ impl EnergySimulationRunJob {
     fn refuse(&mut self, reason: EnergySimulationRunReason, args: &[ToolRunStepArg]) -> EnergyRunGrant {
         let _ = self.writer.step(ToolRunStepKind::Danger, self.stage().index(), reason.code(), None, args);
         self.phase = EnergyRunPhase::Settled;
-        EnergyRunGrant::Settled(fault_outcome())
+        EnergyRunGrant::Settled(EnergyRunSettled::Fault)
     }
 
     fn census_one(&mut self) -> EnergyRunGrant {
@@ -1197,36 +1282,42 @@ impl EnergySimulationRunJob {
     }
 
     /// 🦶️ Steps the numerical job until one timestep is computed, the run settles or the caller must yield. Each
-/// numerical step gets its own context, because a step context grants at most one payload page.
-    fn simulate(&mut self, cx: &StepContext<'_>) -> EnergyRunGrant {
+    /// numerical step gets its own context, because a step context grants at most one payload page.
+    fn simulate(&mut self, cx: &mut StepContext<'_>) -> EnergyRunGrant {
         let Self { numerical, numerical_sequence, operation, generation, cursor, writer, phase, .. } = self;
-        let Some(job) = numerical.as_mut() else { return EnergyRunGrant::Settled(fault_outcome()) };
+        let Some(job) = numerical.as_mut() else { return EnergyRunGrant::Settled(EnergyRunSettled::Fault) };
         loop {
             if cx.should_yield() {
                 return EnergyRunGrant::Continue;
             }
-            let mut inner = StepContext::new(*operation, *generation, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, cx.deadline_us()), cx.cancel_token(), semio_framework_job::default_now_us, numerical_sequence);
-            let settled = match job.step(&mut inner) {
-                StepOutcome::Yield => None,
-                StepOutcome::PreviewReady(mut payload) => {
-                    close_payload(&mut payload);
-                    None
-                }
-                StepOutcome::CheckpointReady(mut checkpoint) => {
-                    close_payload(&mut checkpoint.state);
-                    (!acknowledge_checkpoint(job, *generation)).then(fault_outcome)
-                }
-                StepOutcome::Complete(candidate) => {
+            let mut receipt = RetainedCloneProgress::default();
+            let mut inner = StepContext::new(*operation, *generation, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, cx.deadline_us(), cx.retained_grant()), cx.cancel_token(), semio_framework_job::default_now_us, numerical_sequence, &mut receipt);
+            let seen = match InteractiveJob::step(job, &mut inner) {
+                Ok(None | Some(JobOutcomeBorrow::Yield { .. })) => EnergyChildSeen::Yield,
+                Ok(Some(JobOutcomeBorrow::PreviewReady { .. })) => EnergyChildSeen::Preview,
+                Ok(Some(JobOutcomeBorrow::CheckpointReady { .. })) => EnergyChildSeen::Checkpoint,
+                Ok(Some(JobOutcomeBorrow::Complete { .. })) => EnergyChildSeen::Complete,
+                Ok(Some(JobOutcomeBorrow::Fault { .. })) | Err(_) => EnergyChildSeen::Fault,
+                Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => EnergyChildSeen::Cancelled,
+            };
+            drop(inner);
+            if cx.consume_retained(receipt).is_err() {
+                *phase = EnergyRunPhase::Settled;
+                return EnergyRunGrant::Settled(EnergyRunSettled::Fault);
+            }
+            let settled = match seen {
+                EnergyChildSeen::Yield | EnergyChildSeen::Preview => None,
+                EnergyChildSeen::Checkpoint => (!acknowledge_checkpoint(job, *generation, cx)).then_some(EnergyRunSettled::Fault),
+                EnergyChildSeen::Complete => {
                     cursor.observe(job.cursor(), writer);
                     cursor.publish_tier(writer);
-                    Some(StepOutcome::Complete(candidate))
+                    Some(EnergyRunSettled::Complete)
                 }
-                StepOutcome::Fault(mut fault) => {
-                    close_payload(&mut fault.detail);
+                EnergyChildSeen::Fault => {
                     let _ = writer.step(ToolRunStepKind::Danger, EnergySimulationRunStage::of(cursor.stage).index(), EnergySimulationRunReason::SimulationFaulted.code(), None, &[ToolRunStepArg::Unsigned(cursor.completed())]);
-                    Some(fault_outcome())
+                    Some(EnergyRunSettled::Fault)
                 }
-                StepOutcome::Cancelled => Some(StepOutcome::Cancelled),
+                EnergyChildSeen::Cancelled => Some(EnergyRunSettled::Cancelled),
             };
             if let Some(outcome) = settled {
                 *phase = EnergyRunPhase::Settled;
@@ -1237,28 +1328,17 @@ impl EnergySimulationRunJob {
             }
         }
     }
-}
 
-/// 📮️ Retires the numerical job's retained restore checkpoint: a run restarts rather than restores.
-fn acknowledge_checkpoint(job: &mut EnergyJob, generation: Generation) -> bool {
-    let mut lease = match job.take_checkpoint_packet(generation) {
-        Ok(Some(lease)) => lease,
-        Ok(None) => return true,
-        Err(_) => return false,
-    };
-    while !lease.packet().terminal_is_empty() {
-        let _ = lease.packet_mut().ack_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
-    job.ack_checkpoint_packet(lease).is_ok()
-}
-
-impl InteractiveJob for EnergySimulationRunJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+    /// 🧭️ Decides this call: pay back nothing, keep delivering a staged tick, lend a settled outcome, or compute and stage the next tick.
+    fn next_action(&mut self, cx: &mut StepContext<'_>) -> EnergyRunAction {
         if self.closing || cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return EnergyRunAction::Cancelled;
         }
-        if let Some(outcome) = self.settled.take() {
-            return outcome;
+        if self.publication.is_some() {
+            return EnergyRunAction::Publish;
+        }
+        if let Some(settled) = self.settled {
+            return EnergyRunAction::Settled(settled);
         }
         let mut computed = false;
         let settled = loop {
@@ -1281,22 +1361,14 @@ impl InteractiveJob for EnergySimulationRunJob {
             }
         };
         if !computed && settled.is_none() {
-            return StepOutcome::Yield;
+            return EnergyRunAction::Yield;
         }
-        let state = if matches!(settled, Some(StepOutcome::Complete(_))) { ToolRunState::Complete } else { ToolRunState::Running };
-        // 🧱️ Republish the per-surface map on a tier boundary, at completion, and every
-        // `ENERGY_SURFACE_PAYLOAD_TICK_INTERVAL` computed timesteps in between, so the 3d model window
-        // recolours WHILE the run advances rather than freezing on the all-zero map the first tier
-        // boundary carries. The numerical job still owns its `SimulationModel` here — it is only
-        // released by the job's own bounded `close_step` retirement.
-        let complete = matches!(settled, Some(StepOutcome::Complete(_)));
+        let state = if settled == Some(EnergyRunSettled::Complete) { ToolRunState::Complete } else { ToolRunState::Running };
+        let complete = settled == Some(EnergyRunSettled::Complete);
         self.ticks_since_surface_payload = self.ticks_since_surface_payload.saturating_add(u64::from(computed));
         let interval_due = self.ticks_since_surface_payload >= ENERGY_SURFACE_PAYLOAD_TICK_INTERVAL;
         if std::mem::take(&mut self.cursor.surface_payload_due) || interval_due || complete {
             if let Some(table) = self.numerical.as_ref().and_then(|job| job.per_surface_energy()) {
-                // 🎨️ An all-zero table is the pre-run state: publishing it would paint every surface the
-                // same band and a window cannot tell that from a real, uniform result. Hold the payload
-                // back until the run period has actually integrated something.
                 if table.has_energy() {
                     self.writer.payload(encode_surface_energy_payload(table.summaries()));
                     self.ticks_since_surface_payload = 0;
@@ -1304,18 +1376,133 @@ impl InteractiveJob for EnergySimulationRunJob {
             }
         }
         self.writer.progress(self.cursor.progress(self.identity, state, self.stage()));
-        let payload = self.writer.finish().and_then(|tick| tick.encode().ok()).and_then(|bytes| cx.payload_from_bytes(JobPayloadStream::Preview, &bytes).map_err(|rejected| drop(rejected.into_source())).ok());
-        match payload {
-            Some(payload) => {
-                self.settled = settled;
-                StepOutcome::PreviewReady(payload)
+        self.settled = settled;
+        match self.writer.finish().and_then(|tick| tick.encode().ok()) {
+            Some(bytes) => {
+                self.publication = Some(EnergyTickPublication::new(bytes));
+                EnergyRunAction::Publish
             }
             None => {
-                if let Some(mut outcome) = settled {
-                    while !matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
-                }
-                fault_outcome()
+                self.settled = Some(EnergyRunSettled::Fault);
+                EnergyRunAction::Settled(EnergyRunSettled::Fault)
             }
+        }
+    }
+
+    /// 🤝️ Pays back the delivered tick turn by turn from the next call's own wallet before the run resumes.
+    fn retire_delivered<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        let publication = self.publication.as_mut().expect("a delivered tick publication is staged");
+        let step = publication.close_step(cx.retained_grant());
+        cx.consume_retained(step.progress())?;
+        if let InteractiveJobCloseStep::Refused { kind, progress } = step {
+            return Err(ValueError::literal(kind, "energy tick publication close was refused").with_retained_progress(progress));
+        }
+        if publication.terminal_is_empty() {
+            self.publication = None;
+        }
+        Ok(None)
+    }
+
+    /// 📏️ Quotes the next close frontier of this run.
+    fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if let Some(publication) = self.publication.as_ref() {
+            return publication.retirement_demands();
+        }
+        if let Some(job) = self.numerical.as_ref() {
+            return Ok(RetirementDemand {
+                copy_bytes: job.next_close_copy_byte_demand()?,
+                capacity_bytes: job.next_close_capacity_byte_demand(usize::MAX)?,
+                release_bytes: job.next_close_release_byte_demand()?,
+                depth: job.next_close_depth_demand()?,
+            });
+        }
+        if let Some(rejected) = self.rejected.as_ref() {
+            return Ok(rejected.close_demands());
+        }
+        if let Some(close) = self.capture_close.as_ref() {
+            return Ok(close.close_demands());
+        }
+        Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
+    }
+}
+
+/// 🧭️ How one numerical step ended, decided before the lent outcome borrow is released.
+enum EnergyChildSeen {
+    Yield,
+    Preview,
+    Checkpoint,
+    Complete,
+    Fault,
+    Cancelled,
+}
+
+/// 📮️ Retires the numerical job's retained restore checkpoint from the run's wallet: a run restarts rather than restores.
+fn acknowledge_checkpoint(job: &mut EnergyJob, generation: Generation, cx: &mut StepContext<'_>) -> bool {
+    let mut lease = match job.take_checkpoint_packet(generation) {
+        Ok(Some(lease)) => lease,
+        Ok(None) => return true,
+        Err(_) => return false,
+    };
+    for _ in 0..64 {
+        if lease.packet().terminal_is_empty() {
+            return job.ack_checkpoint_packet(lease).is_ok();
+        }
+        match lease.packet_mut().close_step(cx.retained_grant()) {
+            Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => {
+                if cx.consume_retained(progress).is_err() {
+                    return false;
+                }
+            }
+            Err(_) => return false,
+        }
+    }
+    false
+}
+
+impl InteractiveJob for EnergySimulationRunJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if self.publication.as_ref().is_some_and(|publication| publication.delivered) {
+            return self.retire_delivered(cx);
+        }
+        match self.next_action(cx) {
+            EnergyRunAction::Yield => Ok(None),
+            EnergyRunAction::Cancelled => JobOutcomeBorrow::admit_cancelled(cx),
+            EnergyRunAction::Publish => self.publication.as_mut().expect("a staged tick publication").poll(cx),
+            EnergyRunAction::Settled(EnergyRunSettled::Complete) => {
+                let admitted = JobOutcomeBorrow::admit_complete(cx, Some(&self.markers.state), Some(&self.markers.output))?;
+                if admitted.is_some() {
+                    self.settled = None;
+                }
+                Ok(admitted)
+            }
+            EnergyRunAction::Settled(EnergyRunSettled::Fault) => {
+                let admitted = JobOutcomeBorrow::admit_fault(cx, &self.markers.fault)?;
+                if admitted.is_some() {
+                    self.settled = None;
+                }
+                Ok(admitted)
+            }
+            EnergyRunAction::Settled(EnergyRunSettled::Cancelled) => {
+                let admitted = JobOutcomeBorrow::admit_cancelled(cx)?;
+                if admitted.is_some() {
+                    self.settled = None;
+                }
+                Ok(admitted)
+            }
+        }
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Complete => descriptor.complete(Some(&self.markers.state), Some(&self.markers.output)),
+            JobOutcomeKind::Fault => descriptor.fault(&self.markers.fault),
+            JobOutcomeKind::PreviewReady | JobOutcomeKind::CheckpointReady { .. } => self
+                .publication
+                .as_ref()
+                .ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "energy run outcome has no staged tick publication"))?
+                .borrow_outcome(descriptor),
         }
     }
 
@@ -1326,57 +1513,82 @@ impl InteractiveJob for EnergySimulationRunJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.begin_close();
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        let idle = InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        if let Some(outcome) = self.settled.as_mut() {
-            if matches!(outcome.close_step(1, maximum_bytes), semio_framework_job::JobPayloadCloseStep::Complete) {
-                self.settled = None;
+        if let Some(publication) = self.publication.as_mut() {
+            let step = publication.close_step(grant);
+            if publication.terminal_is_empty() {
+                self.publication = None;
             }
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return match step {
+                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                step => step,
+            };
         }
         if let Some(job) = self.numerical.as_mut() {
-            return match InteractiveJob::close_step(job, maximum_items, maximum_bytes) {
-                InteractiveJobCloseStep::Complete => {
+            return match InteractiveJob::close_step(job, grant) {
+                InteractiveJobCloseStep::Complete { progress } => {
                     self.numerical = None;
-                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } }
                 }
                 pending => pending,
             };
         }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return idle;
+        }
         if let Some(rejected) = self.rejected.as_mut() {
-            return match rejected.close_step(maximum_items, maximum_bytes) {
-                InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
+            return match rejected.close_step(grant) {
+                InteractiveJobCloseStep::Complete { .. } if rejected.terminal_is_empty() => {
                     self.rejected = None;
-                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                    InteractiveJobCloseStep::Pending { progress: one }
                 }
-                InteractiveJobCloseStep::Complete => InteractiveJobCloseStep::Blocked,
+                InteractiveJobCloseStep::Complete { .. } => InteractiveJobCloseStep::Blocked,
                 pending => pending,
             };
         }
         if let Some(capture) = self.capture.take() {
             self.capture_close = Some(EnergyModelCloseCursor::new(capture.finish()));
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return InteractiveJobCloseStep::Pending { progress: one };
         }
         if let Some(close) = self.capture_close.as_mut() {
-            return match close.close_step(maximum_bytes) {
-                InteractiveJobCloseStep::Complete => {
+            return match close.close_step(grant) {
+                InteractiveJobCloseStep::Complete { .. } => {
                     self.capture_close = None;
-                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                    InteractiveJobCloseStep::Pending { progress: one }
                 }
                 pending => pending,
             };
         }
         if self.snapshot.take().is_some() {
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return InteractiveJobCloseStep::Pending { progress: one };
         }
-        InteractiveJobCloseStep::Complete
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.settled.is_none() && self.numerical.is_none() && self.rejected.is_none() && self.capture.is_none() && self.capture_close.is_none() && self.snapshot.is_none()
+        self.closing && self.publication.is_none() && self.numerical.is_none() && self.rejected.is_none() && self.capture.is_none() && self.capture_close.is_none() && self.snapshot.is_none()
     }
 }
 //#endregion 🧵️RunJob

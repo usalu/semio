@@ -47,10 +47,27 @@ macro_rules! bim_window_config {
             }
         }
 
-        #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+        /// 📦️ Payload of `Replace`: the window's whole configuration under the wire field `config`.
+        #[derive(semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+        #[canonical_json(owner = semio_framework_pack_json)]
+        #[value(rename_all = "camelCase")]
+        pub struct Replace {
+            pub config: $config,
+        }
+
+        #[derive(semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+        #[canonical_json(owner = semio_framework_pack_json)]
         #[value(tag = "kind", rename_all = "kebab-case")]
         pub enum $mutation {
-            Replace { config: $config },
+            Replace(Replace),
+        }
+
+        impl store::snapshot_clone_preparation::ConfigApplyMutation<$config> for $mutation {
+            fn exchange(self, post: &mut $config) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+                Ok(match self {
+                    Self::Replace(Replace { config }) => Self::Replace(Replace { config: std::mem::replace(post, config) }),
+                })
+            }
         }
 
         impl protocol::Mutation<$config> for $mutation {
@@ -75,11 +92,11 @@ macro_rules! bim_window_config {
                 &Self::DESCRIPTORS[0]
             }
             fn diff(&self, base: &$config) -> protocol::MutationOutcome<Self::Diff> {
-                let Self::Replace { config } = self;
+                let Self::Replace(Replace { config }) = self;
                 protocol::MutationOutcome::new(<$diff>::changing(base, config))
             }
             fn inverse(&self, base: &$config) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-                Ok(vec![Self::Replace { config: base.clone() }])
+                Ok(vec![Self::Replace(Replace { config: base.clone() })])
             }
         }
 
@@ -110,6 +127,11 @@ macro_rules! bim_window_config {
             const MAXIMUM_PUBLICATION_BYTES: usize = $bytes;
             type State = $config;
             type Mutation = $mutation;
+            type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
+            const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+            fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+                std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new())
+            }
             fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
                 semio_framework_plugin::bounded_window_config_store_owners::<Self>()
             }
@@ -138,7 +160,7 @@ macro_rules! bim_window_config {
             if kind != $window {
                 return Err(semio_framework_plugin::Fault::from("bim-window-kind-mismatch"));
             }
-            Ok(semio_framework_plugin::WindowConfigMutation::of::<$owner>(id, $mutation::Replace { config }))
+            Ok(semio_framework_plugin::WindowConfigMutation::of::<$owner>(id, $mutation::Replace(Replace { config })))
         }
     };
 }

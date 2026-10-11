@@ -107,7 +107,7 @@ fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sq
 
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{crate::standards::v1::subsets::value::io::sqlite::snapshot::native_encoding::encode(self,encoding,control,native_owner)}
 
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::value::io::sqlite::snapshot::native_decoding::decode(payload,control,native_control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{crate::standards::v1::subsets::value::io::sqlite::snapshot::native_decoding::decode(payload,control,native_control.native())}
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
 
 fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{let result=(||->Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
@@ -124,20 +124,7 @@ control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)?;Ok(semio_framework
 
 impl SemioValueSnapshot {
     /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
-    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{
- use semio_framework_os_kernel::sqlite_snapshot::{artifact::RowIndex,transfer::reserve};
- control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
- let document=database.table("semio_value_document")?.single_row()?;identity(document,3)?;if document.rowid!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio value document requires identifier 1"))}
- let nodes=RowIndex::new(database,"semio_value_node",5,&[],control,"invalid Semio value graph node")?;let order=nodes.ordered(2,control,"Semio value node ordinals must be contiguous")?;nodes.unique_text(nodes.indices(),3,control,"invalid Semio value graph node")?;
- let mut names=reserve(nodes.len(),control)?;for(count,&index)in nodes.indices().iter().enumerate(){let row=nodes.row(index)?;if row.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio value graph node"))}names.push((row.rowid,row.text(3)?));control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count+1,nodes.len())?;}
- let count=order.len().checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio value root count overflow"))?;let mut roots=reserve(count,control)?;roots.push(document.integer(2)?);for(count,&index)in order.iter().enumerate(){roots.push(nodes.row(index)?.integer(4)?);control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count+1,order.len())?;}
- let mut snapshot=Owned::new(Self{schema:String::new(),root:SemioValue::Null,nodes:Vec::new()});snapshot.get_mut().nodes=reserve(order.len(),control)?;
- let mut restored=Owned::new(reconstruct_value_forest(database,VALUE_TABLES,&roots,Some(&names),control)?);let count=restored.get_mut().len();for index in 0..count/2{restored.get_mut().swap(index,count-1-index);control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index+1,count/2)?;}
- snapshot.get_mut().root=restored.get_mut().pop().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio value document root"))?;
- for(count,index)in order.into_iter().enumerate(){let row=nodes.row(index)?;let mut node=Owned::new(SemioValueNode{id:ValueId{value:String::new()},value:SemioValue::Null});node.get_mut().id.value=reconstruct_text(control,row.text(3)?)?;node.get_mut().value=restored.get_mut().pop().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio graph node value"))?;snapshot.get_mut().nodes.push(node.take());control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count+1,nodes.len())?;}
- if !restored.get_mut().is_empty(){return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"unclaimed Semio value reconstructed root"))}
- snapshot.get_mut().schema=reconstruct_text(control,document.text(1)?)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,nodes.len()+1,nodes.len()+1)?;Ok(snapshot.take())
-}
+    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 
 /// 🌱️ Bounds the actual typed SemioValue variants without resolving graph references.
@@ -170,6 +157,9 @@ pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Re
 #[path = "🧪️tests/🦀️.rs"]
 pub(crate) mod tests;
 
+
+#[path = "💰️reconstruction/🦀️.rs"]
+mod reconstruction;
 
 #[path = "🛫️native/🦀️.rs"]
 pub(crate) mod native_encoding;

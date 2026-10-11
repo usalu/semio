@@ -7,13 +7,15 @@ use crate::schema::modules::mutation_support::top_level::GltfTopLevelMutationRej
 use crate::schema::snapshot::*;
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.change-node-extension-data.v1";
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "state", rename_all = "camelCase")]
 pub enum GltfDataPresence {
     Absent,
     Present { value: GltfJson },
 }
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct GltfChangeNodeExtensionDataPayload {
     pub node: usize,
@@ -57,7 +59,8 @@ pub fn inverse(p: &GltfChangeNodeExtensionDataPayload, base: &GltfSnapshot) -> V
 }
 
 //#region 🧬️DirectMutation
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol, payload = Apply)]
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeNodeExtensionDataMutation {

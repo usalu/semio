@@ -15,14 +15,16 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub const BITMAP_STROKE_MAXIMUM_POINTS: usize = 4_096;
 
 /// 📍️ One sampled cell of a stroke, in input-bitmap cells.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapStrokePoint {
     pub x: u32,
     pub y: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct PaintInputStroke {

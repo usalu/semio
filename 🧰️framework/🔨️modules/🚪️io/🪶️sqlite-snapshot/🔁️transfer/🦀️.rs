@@ -235,3 +235,7 @@ pub(super) fn schema_controlled(sql:&str,phase:SqliteSnapshotPhase,control:&mut 
  }
  control.checkpoint(phase,tokens.len(),tokens.len())?;Ok(SqliteDatabase{tables})
 }
+
+#[path="🏛️validation/🦀️.rs"]
+mod validation;
+pub use validation::{SchemaValidationStorage,construct_database_into,validate_component_into,validate_database_into,validate_table_into};

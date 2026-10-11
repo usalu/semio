@@ -77,6 +77,11 @@ impl FixtureDispatchObservation {
 }
 impl Drop for FixtureDispatchObservation {fn drop(&mut self){FIXTURE_DISPATCH_OBSERVER.with(|observer|*observer.borrow_mut()=(None,None));}}
 impl neural::Operator for FixtureOperator {
+    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural::OperatorPlanAdmission::immediate(input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
     fn evaluate(&self,input:&Dictionary)->Result<Dictionary,EvalError> {
         FIXTURE_DISPATCH_OBSERVER.with(|observer|{let observer=observer.borrow();if let Some(counter)=&observer.0{counter.fetch_add(1,std::sync::atomic::Ordering::Relaxed);}if let Some(calls)=&observer.1{calls.lock().unwrap().push(self.kind.into());}});
         match self.family {FixtureOperatorFamily::Math=>test_math_bridge(self.kind,input),FixtureOperatorFamily::Merge=>test_dictionary_merge_bridge(self.kind,input),FixtureOperatorFamily::Extension=>test_extension_bridge(self.kind,input)}
@@ -397,7 +402,7 @@ fn flow_eval_session_seeds_its_retained_neural_cache() {
 /// `preview`) on top of the default fixture, for tests that need more than one node to step
 /// through with a budgeted `evaluate_step`.
 #[cfg(not(target_arch = "wasm32"))]
-fn host_with_two_node_chain() -> (FlowHost, String) {
+fn host_with_two_node_chain() -> (FixtureRegistryHost, String) {
     let mut host = host_with_test_bridge();
     let pass_id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 240.0, 0.0).unwrap();
     host.connect_ports("add", "sum", &pass_id, "number").unwrap();
@@ -421,11 +426,11 @@ fn evaluate_step_budget_one_converges_over_multiple_calls() {
     // ⏱️ Tick 1: budget for one cache-missed node — computes "add" for free-riding boundary nodes
     // plus that one dispatch, then stops right before the next miss ("pass"). `remaining[0]` is
     // the blocking node; anything after it (here, "preview") is just downstream-and-untouched.
-    let remaining_after_tick1 = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true);
+    let remaining_after_tick1 = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true).unwrap();
     assert_eq!(remaining_after_tick1.first(), Some(&"pass".to_string()), "pass is the next node blocking completion");
     assert_eq!(host.preview_text(), "3", "the chain hasn't reached \"pass\" (and thus \"preview\") yet");
     // ⏱️ Tick 2: "add" is now cached, so this reaches and computes "pass".
-    let remaining_after_tick2 = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true);
+    let remaining_after_tick2 = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true).unwrap();
     assert!(remaining_after_tick2.is_empty(), "the walk reached the end of the topo order");
     assert_eq!(host.preview_text(), "6", "converged to the dragged value after both ticks");
     host.retire_cold();
@@ -561,7 +566,7 @@ fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generatio
         if session.terminal_is_empty() {
             break;
         }
-        let _ = session.close_step(usize::MAX, usize::MAX);
+        let _ = session.close_step(FIXTURE_SESSION_GRANT);
     }
     assert!(session.terminal_is_empty(), "an invalidated session still reaches terminal-empty through its own close ladder");
     host.retire_cold();
@@ -571,7 +576,7 @@ fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generatio
 /// 🧵️ Rebuilds the ephemeral host a durable driver would hand a session's baseline to — the same
 /// three lines `flow_host_with_session` runs in production, over the test bridge.
 #[cfg(not(target_arch = "wasm32"))]
-fn replay_host_of(host: &FlowHost) -> FlowHost {
+fn replay_host_of(host: &FlowHost) -> FixtureRegistryHost {
     let mut replay = FlowHost::default();
     let mut replay=FixtureRegistryHost::new(replay,FixtureOperatorFamily::Math);
     replay.set_neuron_kind_infos_json(&test_kind_infos_json());
@@ -608,7 +613,7 @@ fn an_invalidated_session_hands_an_ephemeral_host_a_re_dispatching_baseline() {
     session.begin_close();
     for _ in 0..1_000_000 {
         if session.terminal_is_empty() { break; }
-        let _ = session.close_step(usize::MAX, usize::MAX);
+        let _ = session.close_step(FIXTURE_SESSION_GRANT);
     }
     assert!(session.terminal_is_empty());
     settled.retire_cold();
@@ -658,7 +663,7 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
 
     let mut settled = counting_replay_host_of(&source, &dispatches);
     let (snapshot, channels) = source.eval_baseline();
-    settled.install_eval_baseline(snapshot, channels, generation);
+    settled.install_eval_baseline(snapshot, channels, generation, FIXTURE_SESSION_GRANT).map_err(|(error, _, _)| error).unwrap();
     settled.evaluate_internal();
     assert_eq!(dispatches.load(std::sync::atomic::Ordering::Relaxed), 0, "control: a current baseline over an unchanged tree dispatches nothing");
     assert!(settled.pending_eval_widget_ids().is_empty(), "control: and owes no further work");
@@ -667,7 +672,7 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
     assert_ne!(crate::flow_extension_registry_generation(), generation, "installing a manifest replaces the registry");
     let mut rearmed = counting_replay_host_of(&source, &dispatches);
     let (snapshot, channels) = source.eval_baseline();
-    rearmed.install_eval_baseline(snapshot, channels, generation);
+    rearmed.install_eval_baseline(snapshot, channels, generation, FIXTURE_SESSION_GRANT).map_err(|(error, _, _)| error).unwrap();
     assert!(!rearmed.pending_eval_widget_ids().is_empty(), "a superseded baseline owes the whole tree again");
     rearmed.evaluate_internal();
     assert!(dispatches.load(std::sync::atomic::Ordering::Relaxed) > 0, "a superseded registry generation must re-dispatch the unchanged tree");
@@ -1958,7 +1963,7 @@ fn variadic_merge_evaluates_port_routed_inputs() {
         ..Default::default()
     }]));
     host.previous_snapshot = None;
-    if let Some(channels)=host.current_channels.take(){neural::ColdOwner::new(channels);}
+    if let Some(channels)=host.current_channels.take().and_then(std::sync::Arc::into_inner){neural::ColdOwner::new(channels);}
     host.evaluate_internal();
     let preview = host
         .host_snapshot
@@ -2911,11 +2916,11 @@ fn the_node_census_advances_as_a_chain_walks_and_never_calls_a_recomputed_node_s
     let armed = build_flow_status_json(&host, &host.pending_eval_widget_ids());
     assert_eq!(census_entries(&armed), [("add".to_string(), "computing".to_string()), ("pass".to_string(), "queued".to_string()), ("preview".to_string(), "ok".to_string()), ("slider".to_string(), "ok".to_string())]);
 
-    let after_first = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true);
+    let after_first = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true).unwrap();
     let hop1 = build_flow_status_json(&host, &after_first);
     assert_eq!(census_entries(&hop1), [("add".to_string(), "ok".to_string()), ("pass".to_string(), "computing".to_string()), ("preview".to_string(), "ok".to_string()), ("slider".to_string(), "ok".to_string())], "the node this hop recomputed has SETTLED, whatever the frozen baseline still calls dirty");
 
-    let after_second = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true);
+    let after_second = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true).unwrap();
     assert!(after_second.is_empty(), "two budget-one hops converge this chain");
     let hop2 = build_flow_status_json(&host, &after_second);
     let census = [census_nodes_done(&armed), census_nodes_done(&hop1), census_nodes_done(&hop2)];
@@ -2929,7 +2934,7 @@ fn the_node_census_advances_as_a_chain_walks_and_never_calls_a_recomputed_node_s
 #[cfg(not(target_arch = "wasm32"))]
 fn a_coalesced_tick_parks_a_whole_wave_and_paints_every_member_computing() {
     let mut host = host_with_two_extension_siblings();
-    let remaining = host.evaluate_cold_step(flow_eval_tick_budget(None),&|_|true);
+    let remaining = host.evaluate_cold_step(flow_eval_tick_budget(None),&|_|true).unwrap();
     let parked: Vec<&str> = host.pending_extension_evals.iter().map(|pending| pending.neuron_id.as_str()).collect();
     assert_eq!(parked, ["left", "right"], "both ready contributed nodes park on the SAME hop");
     let census = census_entries(&build_flow_status_json(&host, &remaining));

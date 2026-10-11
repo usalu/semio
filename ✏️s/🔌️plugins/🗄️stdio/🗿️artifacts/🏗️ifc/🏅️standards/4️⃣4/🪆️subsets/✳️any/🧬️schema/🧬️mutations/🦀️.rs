@@ -25,7 +25,7 @@ use crate::schema::diff::{self, IfcDiff};
 
 
 
-use crate::schema::snapshot::{IfcEntity, IfcHeader, IfcValue};
+use crate::schema::snapshot::{IfcEntity, IfcHeader, IfcTypedValue, IfcValue};
 use crate::IfcSnapshot;
 
 use protocol::{Mutation};
@@ -73,7 +73,8 @@ pub mod set_file_schema;
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = IfcSnapshot, diff = IfcDiff, schema = "IfcMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum IfcMutation {
@@ -170,7 +171,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
                     IfcValue::Enum("EDGE".into()),
                     IfcValue::Reference(42),
                     IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)]),
-                    IfcValue::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] },
+                    IfcValue::TypedValue(IfcTypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] }),
                 ],
             ),
         }),

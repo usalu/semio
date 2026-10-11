@@ -50,7 +50,7 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
             semio_s_artifact_gis_gismap::artifact_kind(),
             semio_s_artifact_gis_gismap::GIS_MAP_SCHEMA,
             "gis2d",
-            semio_s_artifact_gis_gismap::schema::gis2d_document_json_to_svg,
+            semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::snapshot::gis2d_document_json_to_svg,
         )?)
         .editor::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>(semio_s_artifact_gis_gismap::editor::gis2d::create_gis2d_app())
         .editor_mutation_roster::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>()

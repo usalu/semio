@@ -9,7 +9,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 //#region 🔖️Artifact
 /// 🧬️ curation document artifact state. `catalog`/
 /// `stock_extra` mirror `CurationSnapshot`'s own composed-child split (see that struct's doc comment).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curation")]
 pub struct CurationArtifact {

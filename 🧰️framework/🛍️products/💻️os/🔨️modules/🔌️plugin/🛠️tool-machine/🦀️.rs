@@ -752,7 +752,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let step = self
             .tool_machines
             .presses
-            .send(&tag.window, &tag.tool, &ActorId(actor.to_string()), &base, tag.phase.clone().input(leaves), semio_framework_tool_machine::authoring_clock(0))
+            .send(&tag.window, &tag.tool, &ActorId(actor.into()), &base, tag.phase.clone().input(leaves), semio_framework_tool_machine::authoring_clock(0))
             .map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), format!("continuous control {:?} refused its press", tag.tool)))?;
         let ToolStep::Committed(transaction, leaves) = step else { return Ok(false) };
         for leaf in leaves {

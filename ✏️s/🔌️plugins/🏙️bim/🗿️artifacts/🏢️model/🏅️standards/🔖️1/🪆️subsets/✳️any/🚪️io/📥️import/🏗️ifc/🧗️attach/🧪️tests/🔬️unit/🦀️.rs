@@ -1,7 +1,7 @@
 use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{attic, house};
 use crate::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::{Axis, Ceiling, CeilingType, Layer, LayerFunction, LocationLine, ModelSnapshot, Opening, OpeningKind, Phase, Point2, Profile, Slab, Slope, TopConstraint, Vertex, Wall, WallSide, WallSweep};
 
 fn vertex(x: f64, y: f64) -> Vertex {
@@ -84,7 +84,7 @@ fn a_wall_under_a_roof_follows_the_imported_roof_and_a_base_slab_that_is_not_imp
         assert_eq!(back.walls[id].top, model.walls[id].top, "{id}");
     }
     assert!(notes.iter().all(|note| !note.contains("Roof target")), "{notes:?}");
-    let layout = registry::try_with_inference(None, &model, |inferred| inferred.wall_layout["w-hip"].clone()).expect("the attic infers");
+    let layout = inference::try_with_inference(None, &model, |inferred| inferred.wall_layout["w-hip"].clone()).expect("the attic infers");
     assert!(layout.height > 0.0);
     if back.slabs.contains_key("sl-slope") {
         assert_eq!(back.walls["w-base"].base_slab.as_deref(), Some("sl-slope"));

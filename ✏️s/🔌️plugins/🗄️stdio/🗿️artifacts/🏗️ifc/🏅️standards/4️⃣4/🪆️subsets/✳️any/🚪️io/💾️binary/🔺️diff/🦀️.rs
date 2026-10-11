@@ -8,7 +8,7 @@ mod diff_codec {
 use super::*;
 use crate::standards::v4::subsets::any::schema::diff::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
+use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcTypedValue, IfcValue};
 use crate::IfcSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -98,7 +98,7 @@ pub(crate) fn enc_ifc_value_bin(v: &IfcValue, out: &mut Vec<u8>) {
             out.push(7);
             enc_ifc_value_list_bin(items, out);
         }
-        IfcValue::TypedValue { name, items } => {
+        IfcValue::TypedValue(IfcTypedValue { name, items }) => {
             out.push(8);
             write_str_bin(out, name);
             enc_ifc_value_list_bin(items, out);
@@ -121,7 +121,7 @@ pub(crate) fn dec_ifc_value_bin(reader: &mut store::ByteReader<'_>) -> Result<If
         8 => {
             let name = read_str_bin(reader)?;
             let items = dec_ifc_value_list_bin(reader)?;
-            Ok(IfcValue::TypedValue { name, items })
+            Ok(IfcValue::TypedValue(IfcTypedValue { name, items }))
         }
         other => Err(format!("ifc value binary: unknown tag {other}")),
     }
@@ -346,7 +346,7 @@ mod diff_wire_codec {
 use super::*;
 use crate::standards::v4::subsets::any::schema::diff::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
+use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcTypedValue, IfcValue};
 use crate::IfcSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;

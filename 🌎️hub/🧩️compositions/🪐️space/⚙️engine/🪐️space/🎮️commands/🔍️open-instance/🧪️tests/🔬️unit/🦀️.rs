@@ -37,9 +37,9 @@ async fn open_and_close_focused_instance() {
     let config = SpaceConfig::default();
     let node_id = projection.graph.nodes.first().expect("node").id.clone();
     let open_emit = studio_emit(&projection, &config, &SpaceCommand::OpenInstance(OpenInstance { node_id: Some(node_id.clone()) })).await.expect("handle");
-    assert!(open_emit.config_mutations.contains(&SpaceConfigMutation::SetFocusedNode { node_id: Some(node_id.clone()) }));
+    assert!(open_emit.config_mutations.contains(&SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: Some(node_id.clone()) })));
     let config_after_open = apply_config(&config, &open_emit.config_mutations).await;
     assert_eq!(config_after_open.focused_node_id.as_deref(), Some(node_id.as_str()));
     let close_emit = studio_emit(&projection, &config_after_open, &SpaceCommand::CloseFocusedInstance(crate::engine::space::commands::close_focused_instance::CloseFocusedInstance {})).await.expect("handle");
-    assert_eq!(close_emit.config_mutations, vec![SpaceConfigMutation::SetFocusedNode { node_id: None }]);
+    assert_eq!(close_emit.config_mutations, vec![SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: None })]);
 }

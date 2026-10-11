@@ -34,8 +34,8 @@ impl Puzzle2dDeleteNodePreparationCursor {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, DeleteNode>, grant: RetainedCloneGrant) -> Result<Puzzle2dDeleteNodePreparationStep, ValueError> {
         if self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "delete preparation is closing")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Puzzle2dDeleteNodePreparationStep::Pending(Default::default())); }
-        source.bind(&mut self.source)?;
-        mutation.bind(&mut self.mutation)?;
+        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(Puzzle2dDeleteNodePreparationStep::Pending(progress))}
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(Puzzle2dDeleteNodePreparationStep::Pending(progress))}
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         match self.phase {
             0 => match self.lookup.advance(source, mutation.project(1, |payload| &payload.id), grant)? {
@@ -60,7 +60,8 @@ impl Puzzle2dDeleteNodePreparationCursor {
                 let (edge, handle, endpoint) = (self.edge, self.handle, self.endpoint);
                 let left = source.project(1, |snapshot| { let edge = snapshot.edges.get(edge).expect("immutable deletion edge"); if endpoint { &edge.target } else { &edge.source } });
                 let right = source.project(1, |snapshot| &snapshot.nodes.get(node).expect("immutable deletion node").handles.get(handle).expect("immutable deletion handle").id);
-                match self.comparison.compare(left, right, BoundedOrdGrant { maximum_items:grant.maximum_items,maximum_bytes:grant.maximum_copy_bytes })? {
+                match self.comparison.compare(left, right, BoundedOrdGrant { maximum_items:grant.maximum_items,maximum_bytes:grant.maximum_copy_bytes }, grant)? {
+                    BoundedOrdStep::Authority(progress) => Ok(Puzzle2dDeleteNodePreparationStep::Pending(progress)),
                     BoundedOrdStep::Progress(progress) => Ok(Puzzle2dDeleteNodePreparationStep::Pending(RetainedCloneProgress{copied_items:progress.compared_items,copied_bytes:progress.compared_bytes,..Default::default()})),
                     BoundedOrdStep::Complete { ordering, progress } => { self.matched = ordering == std::cmp::Ordering::Equal; self.comparison.begin_close(); self.phase = 5; Ok(Puzzle2dDeleteNodePreparationStep::Pending(RetainedCloneProgress{copied_items:progress.compared_items,copied_bytes:progress.compared_bytes,..Default::default()})) },
                 }

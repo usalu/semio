@@ -11,8 +11,8 @@ use crate::editor::bim::modes::edit::windows::sheet::title_labels;
 use crate::editor::bim::terminology::BimLabels;
 use crate::editor::bim::{BimCommand, BimDispatchCtx, BimModelApp};
 use crate::standards::v1::subsets::any::io::export::sheets::{self, pdf::SheetsPdf, TitleLabels};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry as inference;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::Analysis;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
 use crate::{ModelMutation, ModelSnapshot};
 use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
@@ -82,12 +82,12 @@ pub struct SheetsJob {
 
 impl SheetsJob {
     /// 🏗️ A job writing `format` of the sheet `only` (else the first for an SVG, all for a PDF) of the document that instance `instance` shows, headed in `locale`.
-    pub fn new(format: &str, only: Option<&str>, locale: Option<&str>, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::Instance<'_>) -> Self {
+    pub fn new(format: &str, only: Option<&str>, locale: Option<&str>, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>) -> Self {
         Self::with_steps(format, only, locale, instance, NODES_PER_STEP)
     }
 
     /// 🏗️ A job that finishes at most `nodes` graph nodes per analysis step (at least one).
-    pub fn with_steps(format: &str, only: Option<&str>, locale: Option<&str>, instance: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>, nodes: usize) -> Self {
+    pub fn with_steps(format: &str, only: Option<&str>, locale: Option<&str>, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, nodes: usize) -> Self {
         Self { format: format.to_string(), only: only.map(str::to_string), instance: instance.cloned(), labels: title_labels(labels_of(locale)), analysis: Analysis::new(instance, nodes), writer: None, written: 0 }
     }
 

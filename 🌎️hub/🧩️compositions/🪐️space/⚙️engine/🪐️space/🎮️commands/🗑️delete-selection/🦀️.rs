@@ -1,12 +1,12 @@
 //! 🧩️ 🧩️ S Studio app command — `delete-selection`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting, FocusedNodeSetting};
 use semio_framework_os::workflow::RemoveNode;
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 
@@ -17,10 +17,10 @@ pub(crate) async fn delete_selected(config: &SpaceConfig, selected: &[String]) -
     let artifact_mutations = selected.iter().cloned().map(|node_id| WorkflowMutation::RemoveNode(RemoveNode { node_id })).collect();
     let mut config_mutations = Vec::new();
     if config.active_node_id.as_ref().is_some_and(|id| selected.contains(id)) {
-        config_mutations.push(SpaceConfigMutation::SetActiveNode { node_id: None });
+        config_mutations.push(SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: None }));
     }
     if config.focused_node_id.as_ref().is_some_and(|id| selected.contains(id)) {
-        config_mutations.push(SpaceConfigMutation::SetFocusedNode { node_id: None });
+        config_mutations.push(SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: None }));
     }
     Emit { artifact_mutations, config_mutations, ..Default::default() }
 }

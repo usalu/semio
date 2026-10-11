@@ -28,7 +28,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// exactly one inert, `Default`-derived variant — real per-command payload modules the way
 /// `✏️editor/🎮️commands/*` carries them would be pure ceremony for a surface that never dispatches
 /// anything through `handle`. `Default` is required by `artifact_app_laws::assert_viewer_never_mutates`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum ShootingViewCommand {
     #[default]
     Noop,

@@ -10,7 +10,8 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 //#region 🔖️Payload
 /// 📝️ Extractable-text conformance fixture used by the independent PDF/A-1 oracle.
 pub const CONFORMANT_TEXT: &str = "Reuse of load-bearing timber components in Swiss building stock";
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SetPageText {

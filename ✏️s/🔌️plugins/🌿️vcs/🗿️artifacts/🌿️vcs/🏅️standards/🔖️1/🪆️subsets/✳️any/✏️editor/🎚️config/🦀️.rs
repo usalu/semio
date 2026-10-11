@@ -18,7 +18,7 @@ use protocol::Mutation;
 #[artifact(extension = "vcscfg")]
 #[artifact(id = "vcs.config")]
 #[dsl(layout = "lines")]
-#[derive(Default)]
+#[derive(Default, semio_framework_value::RetireOwned)]
 pub struct VcsDemoConfig {}
 
 //#region 🔖️ArtifactCodec
@@ -96,7 +96,7 @@ impl protocol::DiffAlgebra<VcsDemoConfig> for VcsDemoConfigDiff {
 /// `VcsPlayApp` field writes), plus a generic `Snapshot` every variant's
 /// `backwards()` returns (see `shooting_op::ShootingConfigMutation`'s identical doc for why this
 /// whole-config-snapshot-undo shape is correct and sufficient here).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum VcsDemoConfigMutation {
     #[dsl(key = "noop")]

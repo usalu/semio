@@ -1,6 +1,6 @@
 use super::*;
 use semio_s_artifact_stdio_docx::schema::snapshot::{DocxDocument, DocxStyle, DocxTableCell, DocxTableRow};
-use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_docx;
+use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn sample_docx() -> DocxSnapshot {

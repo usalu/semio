@@ -18,7 +18,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod translate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "translate-selection")]
     pub struct TranslateSelection {
         pub object_ids: Vec<String>,
@@ -41,7 +41,7 @@ pub mod translate_selection {
 pub mod rotate_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "rotate-selection")]
     pub struct RotateSelection {
         pub object_ids: Vec<String>,
@@ -65,7 +65,7 @@ pub mod rotate_selection {
 pub mod scale_selection {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "scale-selection")]
     pub struct ScaleSelection {
         pub object_ids: Vec<String>,
@@ -88,7 +88,7 @@ pub mod scale_selection {
 pub mod apply_transformation {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "apply-transformation")]
     pub struct ApplyTransformation {
         pub qid: String,

@@ -64,7 +64,8 @@ const STOREY: &str = "IFCBUILDINGSTOREY";
 const TYPE_ASSIGNMENT: &str = "IFCRELDEFINESBYTYPE";
 
 /// 🏠️ One COBie Space sheet row.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CobieSpaceRow {
     pub global_id: String,
@@ -76,7 +77,8 @@ pub struct CobieSpaceRow {
 
 /// 🔗️ One COBie Type sheet linkage: an `IfcRelDefinesByType` relating maintainable products to a
 /// real `IFC*TYPE`.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CobieTypeAssignment {
     pub global_id: String,
@@ -101,7 +103,8 @@ pub mod set_view_definition;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Ifc2x3Snapshot, diff = Ifc2x3Diff, schema = "Ifc2x3CobieMutation")]
 pub enum Ifc2x3CobieMutation {
     SetViewDefinition(set_view_definition::SetViewDefinition),

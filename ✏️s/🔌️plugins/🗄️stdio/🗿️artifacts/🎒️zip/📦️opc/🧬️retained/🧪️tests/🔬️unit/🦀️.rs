@@ -1,6 +1,5 @@
 use super::*;
-use semio_framework_value::{NativeEncodeControl, SnapshotRetirementStep, ValueRefusalKind, native_encoding::NativeEncodeProgress, retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep}, retirement::owned_retirement};
-use std::sync::Arc;
+use semio_framework_value::{NativeEncodeControl, ValueRefusalKind, native_encoding::NativeEncodeProgress, retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep}, retirement::admit_owned_retirement};
 
 fn package(fixture: &serde_json::Value) -> OpcPackage {
     let payload = &fixture["payload"];
@@ -35,19 +34,29 @@ fn package(fixture: &serde_json::Value) -> OpcPackage {
     }
 }
 
+fn unbounded() -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }
+}
+
+fn project(value: &RetainedOpcPackage) -> &RetainedOpcPackage {
+    value
+}
+
 fn close_cursor(cursor: &mut <RetainedOpcPackage as RetainedClone>::Cursor, grant: RetainedCloneGrant) -> usize {
     assert!(cursor.begin_close());
     let mut turns = 0usize;
     loop {
         turns += 1;
         assert!(turns < 100_000, "retained OPC cursor close must terminate");
-        match cursor.close_step(grant.maximum_items, grant.maximum_capacity_bytes).expect("retained OPC cursor close") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= grant.maximum_items);
-                assert!(released_bytes <= grant.maximum_capacity_bytes);
+        match cursor.close_step(grant).expect("retained OPC cursor close") {
+            RetainedCloneStep::Progress(progress) => {
+                assert!(progress.fits(grant));
+                assert_ne!(progress, Default::default(), "exact retained OPC cursor close grant blocked");
             }
-            SnapshotRetirementStep::Blocked => panic!("exact retained OPC cursor close grant blocked"),
-            SnapshotRetirementStep::Complete => break,
+            RetainedCloneStep::Complete(progress) => {
+                assert!(progress.fits(grant));
+                break;
+            }
         }
     }
     assert!(cursor.terminal_is_empty());
@@ -89,7 +98,8 @@ fn retained_opc_copy_and_materialization_preserve_package_authority() {
         maximum_copy_bytes: grant_fixture["maximumCopyBytes"].as_u64().expect("maximum copy bytes") as usize,
         maximum_capacity_bytes: grant_fixture["maximumCapacityBytes"].as_u64().expect("maximum capacity bytes") as usize,
         maximum_depth: grant_fixture["maximumDepth"].as_u64().expect("maximum depth") as usize, maximum_release_bytes: grant_fixture["maximumReleaseBytes"].as_u64().expect("maximum capacity bytes") as usize };
-    let source = RetainedCloneSource::from_authority(Arc::new(retained), ());
+    let (mut source, receipt) = RetainedCloneSource::admit_borrowed(retained, project, unbounded()).map_err(|(error, _)| error).expect("retained OPC source");
+    assert!(receipt.fits(unbounded()));
     let mut cursor = RetainedOpcPackage::retained_clone_cursor();
     let mut turns = 0usize;
     loop {
@@ -109,17 +119,23 @@ fn retained_opc_copy_and_materialization_preserve_package_authority() {
     assert!(matches!(interrupted.advance(source.borrow(), grant).expect("partial retained OPC copy"), RetainedCloneStep::Progress(_)));
     assert!(close_cursor(&mut interrupted, RetainedCloneGrant { maximum_items: 1, ..grant }) > 1);
 
-    let mut retirement = owned_retirement(copied);
+    let (mut retirement, receipt) = admit_owned_retirement(copied, unbounded()).map_err(|(error, _)| error).expect("retained OPC retirement owner");
+    assert!(receipt.fits(unbounded()));
     for turn in 0..100_000 {
-        match retirement.close_step(grant.maximum_items, grant.maximum_capacity_bytes).expect("retained OPC retirement") {
-            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= grant.maximum_items);
-                assert!(released_bytes <= grant.maximum_capacity_bytes);
+        match retirement.close_step(grant).expect("retained OPC retirement") {
+            RetainedCloneStep::Progress(progress) => {
+                assert!(progress.fits(grant));
+                assert_ne!(progress, Default::default(), "exact retained OPC retirement grant blocked at turn {turn}");
             }
-            SnapshotRetirementStep::Blocked => panic!("exact retained OPC retirement grant blocked at turn {turn}"),
-            SnapshotRetirementStep::Complete => break,
+            RetainedCloneStep::Complete(progress) => {
+                assert!(progress.fits(grant));
+                break;
+            }
         }
     }
     assert!(retirement.terminal_is_empty());
-    drop(source);
+    while !source.terminal_is_empty() {
+        source.close_step(unbounded()).expect("retained OPC source close");
+    }
+
 }

@@ -89,17 +89,19 @@ fn node_value(part: &Puzzle5dPart) -> Value {
         "text": part.part_2d.text.clone().unwrap_or_default(),
         "handles": handles,
     });
-    if node["shape"] == json!("rectangle") {
-        node["width"] = json!(part.part_2d.width.unwrap_or(48.0));
-        node["height"] = json!(part.part_2d.height.unwrap_or(48.0));
-    } else {
-        node["radius"] = json!(part.part_2d.radius.filter(|radius| *radius > 0.0).unwrap_or(DEFAULT_PART_RADIUS));
-    }
-    if let Some(icon) = part.part_2d.icon_kind.as_ref() {
-        node["iconKind"] = json!(icon);
-    }
-    if let Some(hidden) = part.part_2d.hidden {
-        node["hidden"] = json!(hidden);
+    if let Some(object) = node.as_object_mut() {
+        if object.get("shape") == Some(&json!("rectangle")) {
+            object.insert("width", json!(part.part_2d.width.unwrap_or(48.0)));
+            object.insert("height", json!(part.part_2d.height.unwrap_or(48.0)));
+        } else {
+            object.insert("radius", json!(part.part_2d.radius.filter(|radius| *radius > 0.0).unwrap_or(DEFAULT_PART_RADIUS)));
+        }
+        if let Some(icon) = part.part_2d.icon_kind.as_ref() {
+            object.insert("iconKind", json!(icon));
+        }
+        if let Some(hidden) = part.part_2d.hidden {
+            object.insert("hidden", json!(hidden));
+        }
     }
     node
 }

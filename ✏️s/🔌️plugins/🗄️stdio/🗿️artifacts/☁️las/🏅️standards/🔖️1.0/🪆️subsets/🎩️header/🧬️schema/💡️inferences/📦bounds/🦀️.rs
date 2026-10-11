@@ -9,7 +9,7 @@ use crate::LasSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Las header-declared bounding box and point count.
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LasBounds {
     pub min_x: f64,

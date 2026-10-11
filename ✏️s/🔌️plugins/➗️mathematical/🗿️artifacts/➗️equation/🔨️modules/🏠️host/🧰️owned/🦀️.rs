@@ -13,7 +13,7 @@ pub type EquationStore = store::ArtifactStore<crate::EquationSnapshot, crate::sc
 /// `build_document_store_owners`; every standalone store goes through here instead.
 pub async fn new_equation_store(envelope: EquationEnvelope, actor: protocol::ActorId) -> Result<OwnedEquationStore, store::VcsError> {
     let mut store = EquationStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>());
+    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>().expect("funded document owners")).unwrap_or_else(|(error, _owners)| panic!("{}", error.into_message()));
     Ok(OwnedEquationStore(store))
 }
 
@@ -27,7 +27,9 @@ impl OwnedEquationStore {
     /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
     pub fn close(&mut self) {
         while !self.0.close_owned_terminal_is_empty() {
-            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Equation document store closes through its exact bounded owners");
+            let demand = self.0.close_owned_demands(4_096).expect("the document store quotes its close");
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(4_096), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            self.0.close_owned_step(grant).expect("Equation document store closes through its exact bounded owners");
         }
     }
 }

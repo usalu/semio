@@ -64,7 +64,7 @@ const ENERGY_MODEL_VIEW_WORK_ITEMS: usize = 1;
 /// every gesture (`dropped action "setCamera" … no window kind declares it`).
 ///
 /// 🔒️ Row order is the binary variant ordinal: appending is safe, reordering is a wire break.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum EnergyModelViewCommand {
     /// 🎥️ The orbit pose as the canonical `{position,target,zoom,up?}` JSON the host sends. One text
     /// field because a `dsl::DslOps` variant binds scalars only — and because that string IS what
@@ -304,17 +304,11 @@ impl ArtifactViewer for EnergyModelViewer {
     /// the document store is the bounded pair the editor also uses, and every other lane is `No*`.
     /// Without these the two genesis members can never be retired (`interactive-job.close-owned-
     /// disposer-missing`).
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::no_config_store_disposer())
@@ -395,6 +389,7 @@ impl ArtifactViewer for EnergyModelViewer {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

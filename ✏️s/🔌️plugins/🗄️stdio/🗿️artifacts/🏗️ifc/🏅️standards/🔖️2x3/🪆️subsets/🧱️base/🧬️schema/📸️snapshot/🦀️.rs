@@ -22,7 +22,7 @@ pub const IFC2X3_ARTIFACT_SCHEMA_ID: &str = "s.stdio.ifc.2x3";
 
 //#region 🔖️Snapshot
 /// 🏭️ Logical fields carried by an EXPRESS Data Manager Part-21 production header.
-#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Ifc2x3EdmPreamble {
     pub producer: String,
@@ -44,7 +44,7 @@ pub struct Ifc2x3EdmPreamble {
 }
 
 /// 📸️ Persisted `stdio.ifc.2x3` snapshot — the full, lossless generic Part-21 graph, own type.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc.2x3")]
 pub struct Ifc2x3Snapshot {
@@ -92,5 +92,3 @@ pub fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String>
 
 //#endregion 🔖️Codec
 
-semio_framework_value::artifact_retire_struct!(Ifc2x3EdmPreamble { producer,module,creation_date,host,database,database_version,database_creation_date,schema,model,model_creation_date,header_model,header_model_creation_date,user,group,license,options });
-semio_framework_value::artifact_retire_struct!(Ifc2x3Snapshot { schema,document,edm_preamble });

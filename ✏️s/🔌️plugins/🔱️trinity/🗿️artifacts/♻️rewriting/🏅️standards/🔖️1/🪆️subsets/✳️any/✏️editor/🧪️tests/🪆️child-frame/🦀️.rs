@@ -1,6 +1,6 @@
 //! 🧪️ Full Semio child laws exercise the actual Rewriting editor and registry owner.
 use super::*;
-use semio_framework_plugin::PluginCloseStep;
+use semio_framework_plugin::PluginLifecycleStep;
 use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::{snapshot::SemioGraphSnapshot,mutations::SemioGraphMutation};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::{decode_semio_graph_snapshot_json};
@@ -30,7 +30,7 @@ async fn full_frame_app()->RichFrameApp{
  let mut envelope=store::create_document_envelope::<SemioGraphSnapshot,SemioGraphMutation>("stdio.semio",&target,full_frame_child(&contract,false),None);
  envelope.dialect=Some(dialect.clone());
  let mut child=store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("actual rich member store");
- child.install_document_store_owners_exact(<SemioGraphSnapshot as store::MemberStoreOwner<SemioGraphMutation>>::member_store_owners());
+ store::install_funded_member_store_owners(&mut child).expect("funded member catalog");
  app.register_child("workingGraph",logical,dialect,RichFrameMembers::Graph(Box::new(child))).await.expect("publish complete member");
  app
 }
@@ -61,12 +61,13 @@ async fn sqlite_snapshot_rewriting_full_child_existing_registry_lifetime(){
   assert_eq!(read.edges,old.edges);
   assert_eq!(encode_semio_graph_snapshot_json(&read).expect("complete current typed owner"),encode_semio_graph_snapshot_json(&full_frame_child(&contract,true)).expect("complete declared next owner"));
  }
- assert!(matches!(PluginApp::close_step(&mut app,0,0).expect("zero close grant"),PluginCloseStep::Pending{released_items:0,released_bytes:0}));
+ let policy=semio_s_artifact_trinity_jack::trinity_mounted_owner_policy();
+ assert!(matches!(PluginApp::close_step(&mut app,semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..policy.close}).expect("zero close grant"),PluginLifecycleStep::Progress(progress) if progress==Default::default()));
  assert_eq!(encode_semio_graph_snapshot_json(&old).expect("zero grant retains child"),expected);
  let mut blocked=false;
- for _ in 0..65536{if matches!(PluginApp::close_step(&mut app,1,65536).expect("bounded close"),PluginCloseStep::Blocked{..}){blocked=true;break}}
+ for _ in 0..65536{let demand=PluginApp::close_retirement_demands(&app,policy.close.maximum_copy_bytes).expect("close quote");if matches!(PluginApp::close_step(&mut app,semio_s_artifact_trinity_jack::jack_self_funded_grant(demand)).expect("bounded close"),PluginLifecycleStep::Blocked{..}){blocked=true;break}}
  assert!(blocked,"captured full existing registry owner blocks actual close");
- drop(old);drop(view);artifact_app_laws::close_registered_fixture_app(&mut app);
+ drop(old);drop(view);artifact_app_laws::close_registered_fixture_app(&mut app,semio_s_artifact_trinity_jack::trinity_mounted_owner_policy());
  assert!(PluginApp::close_terminal_is_empty(&app));
 }
 #[semio_framework_async_macros::async_test]
@@ -87,5 +88,5 @@ async fn sqlite_snapshot_rewriting_real_command_reads_exact_declared_full_child(
  assert_eq!(child.nodes[0].ports,expected.nodes[0].ports);
  assert_eq!(child.edges,expected.edges);
  assert_eq!(encode_semio_graph_snapshot_json(&child).expect("complete retained command owner"),encode_semio_graph_snapshot_json(&expected).expect("complete declared command owner"));
- drop(child);drop(view);artifact_app_laws::close_registered_fixture_app(&mut app);
+ drop(child);drop(view);artifact_app_laws::close_registered_fixture_app(&mut app,semio_s_artifact_trinity_jack::trinity_mounted_owner_policy());
 }

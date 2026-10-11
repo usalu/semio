@@ -12,9 +12,9 @@ pub use crate::preview_eval::FlowEvalResolve;
 
 /// ✅️ Folds the answer into the session it is handed; it arms nothing, because the run job schedules
 /// the next hop off the window's latch.
-pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    preview_eval::resolve_eval(payload, session);
-    Ok(Emit::default())
+pub fn handle(payload: &FlowEvalResolve, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
+    let extension_invocations = preview_eval::resolve_eval(payload, session, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
+    Ok(Emit { extension_invocations, ..Default::default() })
 }
 
 //#region 🧪️Tests

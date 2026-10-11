@@ -490,7 +490,7 @@ pub(crate) fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
-            DxfEntity::Line { start, end, layer, unknown_group_codes: unknown }
+            DxfEntity::Line(DxfLine { start, end, layer, unknown_group_codes: unknown })
         }
         "CIRCLE" => {
             let (mut center, mut radius, mut layer, mut unknown) = ([0.0; 3], 0.0, String::new(), Vec::new());
@@ -504,7 +504,7 @@ pub(crate) fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
-            DxfEntity::Circle { center, radius, layer, unknown_group_codes: unknown }
+            DxfEntity::Circle(DxfCircle { center, radius, layer, unknown_group_codes: unknown })
         }
         "ARC" => {
             let (mut center, mut radius, mut sa, mut ea, mut layer, mut unknown) = ([0.0; 3], 0.0, 0.0, 0.0, String::new(), Vec::new());
@@ -520,7 +520,7 @@ pub(crate) fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
-            DxfEntity::Arc { center, radius, start_angle: sa, end_angle: ea, layer, unknown_group_codes: unknown }
+            DxfEntity::Arc(DxfArc { center, radius, start_angle: sa, end_angle: ea, layer, unknown_group_codes: unknown })
         }
         "TEXT" => {
             let (mut position, mut height, mut value, mut layer, mut unknown) = ([0.0; 3], 0.0, String::new(), String::new(), Vec::new());
@@ -535,7 +535,7 @@ pub(crate) fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
-            DxfEntity::Text { position, height, value, layer, unknown_group_codes: unknown }
+            DxfEntity::Text(DxfText { position, height, value, layer, unknown_group_codes: unknown })
         }
         "SOLID" => {
             let (mut points, mut layer, mut unknown) = ([[0.0; 3]; 4], String::new(), Vec::new());
@@ -557,7 +557,7 @@ pub(crate) fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
-            DxfEntity::Solid { points, layer, unknown_group_codes: unknown }
+            DxfEntity::Solid(DxfSolid { points, layer, unknown_group_codes: unknown })
         }
         "INSERT" => {
             let (mut block_name, mut position, mut scale, mut rotation, mut layer, mut unknown) = (String::new(), [0.0; 3], [1.0, 1.0, 1.0], 0.0, String::new(), Vec::new());
@@ -575,9 +575,9 @@ pub(crate) fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
-            DxfEntity::Insert { block_name, position, scale, rotation, layer, unknown_group_codes: unknown }
+            DxfEntity::Insert(DxfInsert { block_name, position, scale, rotation, layer, unknown_group_codes: unknown })
         }
-        _ => DxfEntity::Other { kind: kind.to_string(), group_codes: body.iter().map(|t| (t.code, classify_group_code_value(t.code, &t.value))).collect() },
+        _ => DxfEntity::Other(DxfOther { kind: kind.to_string(), group_codes: body.iter().map(|t| (t.code, classify_group_code_value(t.code, &t.value))).collect() }),
     }
 }
 
@@ -618,7 +618,7 @@ pub(crate) fn parse_polyline(tags: &[DxfTag], mut i: usize) -> (DxfEntity, usize
             i += 1;
         }
     }
-    (DxfEntity::Polyline { vertices, closed, layer, unknown_group_codes: unknown }, i)
+    (DxfEntity::Polyline(DxfPolyline { vertices, closed, layer, unknown_group_codes: unknown }), i)
 }
 
 /// 📥️ Consumes entities from `i` until `(0, stop_kind)` (exclusive) or end of `tags`. Used both
@@ -666,7 +666,7 @@ pub(crate) fn print_unknown(out: &mut String, codes: &[(i32, DxfValue)]) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_entity(e: &DxfEntity, out: &mut String) {
     match e {
-        DxfEntity::Line { start, end, layer, unknown_group_codes } => {
+        DxfEntity::Line(DxfLine { start, end, layer, unknown_group_codes }) => {
             push_tag(out, 0, "LINE");
             push_tag(out, 8, layer);
             push_tag(out, 10, &format_f64(start[0]));
@@ -677,7 +677,7 @@ pub(crate) fn print_entity(e: &DxfEntity, out: &mut String) {
             push_tag(out, 31, &format_f64(end[2]));
             print_unknown(out, unknown_group_codes);
         }
-        DxfEntity::Circle { center, radius, layer, unknown_group_codes } => {
+        DxfEntity::Circle(DxfCircle { center, radius, layer, unknown_group_codes }) => {
             push_tag(out, 0, "CIRCLE");
             push_tag(out, 8, layer);
             push_tag(out, 10, &format_f64(center[0]));
@@ -686,7 +686,7 @@ pub(crate) fn print_entity(e: &DxfEntity, out: &mut String) {
             push_tag(out, 40, &format_f64(*radius));
             print_unknown(out, unknown_group_codes);
         }
-        DxfEntity::Arc { center, radius, start_angle, end_angle, layer, unknown_group_codes } => {
+        DxfEntity::Arc(DxfArc { center, radius, start_angle, end_angle, layer, unknown_group_codes }) => {
             push_tag(out, 0, "ARC");
             push_tag(out, 8, layer);
             push_tag(out, 10, &format_f64(center[0]));
@@ -697,7 +697,7 @@ pub(crate) fn print_entity(e: &DxfEntity, out: &mut String) {
             push_tag(out, 51, &format_f64(*end_angle));
             print_unknown(out, unknown_group_codes);
         }
-        DxfEntity::Polyline { vertices, closed, layer, unknown_group_codes } => {
+        DxfEntity::Polyline(DxfPolyline { vertices, closed, layer, unknown_group_codes }) => {
             push_tag(out, 0, "POLYLINE");
             push_tag(out, 8, layer);
             push_tag(out, 66, "1");
@@ -717,7 +717,7 @@ pub(crate) fn print_entity(e: &DxfEntity, out: &mut String) {
             }
             push_tag(out, 0, "SEQEND");
         }
-        DxfEntity::Text { position, height, value, layer, unknown_group_codes } => {
+        DxfEntity::Text(DxfText { position, height, value, layer, unknown_group_codes }) => {
             push_tag(out, 0, "TEXT");
             push_tag(out, 8, layer);
             push_tag(out, 10, &format_f64(position[0]));
@@ -727,7 +727,7 @@ pub(crate) fn print_entity(e: &DxfEntity, out: &mut String) {
             push_tag(out, 1, value);
             print_unknown(out, unknown_group_codes);
         }
-        DxfEntity::Solid { points, layer, unknown_group_codes } => {
+        DxfEntity::Solid(DxfSolid { points, layer, unknown_group_codes }) => {
             push_tag(out, 0, "SOLID");
             push_tag(out, 8, layer);
             let codes: [(i32, i32, i32); 4] = [(10, 20, 30), (11, 21, 31), (12, 22, 32), (13, 23, 33)];
@@ -738,7 +738,7 @@ pub(crate) fn print_entity(e: &DxfEntity, out: &mut String) {
             }
             print_unknown(out, unknown_group_codes);
         }
-        DxfEntity::Insert { block_name, position, scale, rotation, layer, unknown_group_codes } => {
+        DxfEntity::Insert(DxfInsert { block_name, position, scale, rotation, layer, unknown_group_codes }) => {
             push_tag(out, 0, "INSERT");
             push_tag(out, 8, layer);
             push_tag(out, 2, block_name);
@@ -751,7 +751,7 @@ pub(crate) fn print_entity(e: &DxfEntity, out: &mut String) {
             push_tag(out, 50, &format_f64(*rotation));
             print_unknown(out, unknown_group_codes);
         }
-        DxfEntity::Other { kind, group_codes } => {
+        DxfEntity::Other(DxfOther { kind, group_codes }) => {
             push_tag(out, 0, kind);
             print_unknown(out, group_codes);
         }
@@ -894,7 +894,7 @@ mod diff_codec {
 use super::*;
 use crate::standards::v_r12::subsets::any::schema::diff::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
+use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
 use crate::DxfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;

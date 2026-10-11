@@ -80,7 +80,6 @@ impl ImmediateJob {
         if let Some(payload)=self.published.as_ref(){return payload.retirement_demands()}
         Ok(Default::default())
     }
-    fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.rejected.is_none()}
 }
 fn exact_close_grant(job:&impl InteractiveJob)->semio_framework_job::RetainedCloneGrant{
     let copy=job.next_close_copy_byte_demand().unwrap();let release=job.next_close_release_byte_demand().unwrap();

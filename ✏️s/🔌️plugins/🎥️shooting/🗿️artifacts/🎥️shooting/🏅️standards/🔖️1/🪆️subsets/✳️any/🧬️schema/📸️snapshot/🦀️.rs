@@ -2,7 +2,7 @@
 use crate::{ShootingAsset,ShootingEmblemChild,ShootingSavedCamera,ShootingSceneLighting,ShootingShot,SHOOTING_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 /// 📸️ Complete Shooting document snapshot, with ordered records and optional child reference.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all="camelCase")]
 #[artifact_schema(id="s.shooting.shooting")]
 #[dsl(extension="shooting")]

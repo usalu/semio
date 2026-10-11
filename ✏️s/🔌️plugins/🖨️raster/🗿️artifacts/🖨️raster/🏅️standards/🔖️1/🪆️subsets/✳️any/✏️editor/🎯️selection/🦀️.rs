@@ -1,7 +1,8 @@
 //! 🎯️ Completed selection coverage shared by paint hosts and authoritative commands.
 use semio_framework_plugin::{Fault,FaultCode,FaultOrigin};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, schema::ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, schema::ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all="camelCase")]
 #[dsl(keyword="pixel-selection")]
 #[artifact_schema(id="s.raster.raster.pixelselection")]
@@ -15,7 +16,7 @@ pub struct RasterPixelSelection {
     #[state(config)]
     pub height:u32,
     #[state(config)]
-    pub spans:Vec<crate::RasterSelectionSpan>,
+    pub spans:Vec<crate::mutations::paint_stroke::RasterSelectionSpan>,
 }
 
 impl RasterPixelSelection {
@@ -51,7 +52,7 @@ impl RasterPixelSelection {
 
 fn fault(message:impl Into<String>)->Fault{Fault::new(FaultOrigin::App,FaultCode::new("raster.pixel-selection"),message.into())}
 
-pub fn selection_spans(spans:&[crate::RasterSelectionSpan],count:usize)->Result<Vec<(usize,usize,u8)>,Fault> {
+pub fn selection_spans(spans:&[crate::mutations::paint_stroke::RasterSelectionSpan],count:usize)->Result<Vec<(usize,usize,u8)>,Fault> {
     let mut result=Vec::with_capacity(spans.len());
     let mut previous=0;
     for span in spans {

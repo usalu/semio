@@ -45,23 +45,27 @@ pub struct Block5dDiff {
 //#region 🔖️Patches
 block_patch!(test; /// 🖌️ Field patch over the 2D presentation.
     Block5dPart2dPatch for Block5dPart2d { plain {  } optional { shape: BlockOptionalText, radius: BlockOptionalNumber, width: BlockOptionalNumber, height: BlockOptionalNumber, color: BlockOptionalText, icon_kind: BlockOptionalText } });
+semio_framework_value::artifact_retire_struct!(Block5dPart2dPatch { shape, radius, width, height, color, icon_kind });
 block_patch!(test; /// 🧊️ Field patch over the 3D placement.
     Block5dPart3dPatch for Block5dPart3d { plain {  } optional { orientation: BlockOptionalOrientation, scale: BlockOptionalScale } });
+semio_framework_value::artifact_retire_struct!(Block5dPart3dPatch { orientation, scale });
 block_patch!(test; /// 🔘️ Field patch over a grip kind (its id is the row identity).
     Block5dGripKindPatch for Block5dGripKind { plain { name: String, label: String, color: String, default_rope_kind: String } optional {  } });
+semio_framework_value::artifact_retire_struct!(Block5dGripKindPatch { name, label, color, default_rope_kind });
 block_patch!(test; /// 🌱️ Field patch over a grip template (its id is the row identity).
     Block5dGripTemplatePatch for Block5dGripTemplate { plain { grip_kind: String, angle: f64, radius_2d: f64, position: [f64; 3], direction: [f64; 3], radius_3d: f64 } optional {  } });
+semio_framework_value::artifact_retire_struct!(Block5dGripTemplatePatch { grip_kind, angle, radius_2d, position, direction, radius_3d });
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the grip kinds.
-    pub Block5dGripKindsDelta { removal: Block5dGripKindsRemoval, insertion: Block5dGripKindsInsertion, relocation: Block5dGripKindsRelocation, modification: Block5dGripKindsPatchEntry, row: Block5dGripKind, patch: Block5dGripKindPatch, key: id, values_only }
+    pub Block5dGripKindsDelta { removal: Block5dGripKindsRemoval, insertion: Block5dGripKindsInsertion, relocation: Block5dGripKindsRelocation, modification: Block5dGripKindsPatchEntry, row: Block5dGripKind, patch: Block5dGripKindPatch, key: id }
 }
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📂 Row delta over the grip templates.
-    pub Block5dGripsDelta { removal: Block5dGripsRemoval, insertion: Block5dGripsInsertion, relocation: Block5dGripsRelocation, modification: Block5dGripsPatchEntry, row: Block5dGripTemplate, patch: Block5dGripTemplatePatch, key: id, values_only }
+    pub Block5dGripsDelta { removal: Block5dGripsRemoval, insertion: Block5dGripsInsertion, relocation: Block5dGripsRelocation, modification: Block5dGripsPatchEntry, row: Block5dGripTemplate, patch: Block5dGripTemplatePatch, key: id }
 }
 //#endregion 🔖️Patches
 

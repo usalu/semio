@@ -1,6 +1,6 @@
 //! 🧰️ Lowpoly per-utility parameter writes.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
+use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetUtilityParamsEdit};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::view::utility_params_value;
 use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 pub mod set_utility_param {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "set-utility-param")]
     pub struct SetUtilityParam {
@@ -33,7 +33,7 @@ pub mod set_utility_param {
             None => entries.push((payload.key.clone(), value)),
         }
         let json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object(entries));
-        Ok(Emit::config(vec![LowpolyConfigMutation::SetUtilityParams { json }]))
+        Ok(Emit::config(vec![LowpolyConfigMutation::SetUtilityParams(SetUtilityParamsEdit { json })]))
     }
 }
 //#endregion 🔖️SetUtilityParam

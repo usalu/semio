@@ -60,7 +60,7 @@ pub use structure::*;
 
 //#region 🔖️Snapshot
 /// 📸️ Complete model document: every collection is keyed by a stable element id, in canonical (sorted) order.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]
 #[artifact_schema(id = "s.bim.model")]
 #[dsl(extension = "bim")]
 #[dsl(layout = "lines")]

@@ -20,7 +20,7 @@ pub(super) fn replace_design_operations(current: &FormsSnapshot, next: &FormsSna
     operations
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "spec-json")]
 pub struct SetSpecJson {
     pub json: String,

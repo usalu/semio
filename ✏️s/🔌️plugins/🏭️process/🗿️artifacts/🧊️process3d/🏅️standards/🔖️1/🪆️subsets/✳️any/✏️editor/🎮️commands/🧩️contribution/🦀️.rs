@@ -1,6 +1,6 @@
 //! 🧩️ Process 3d play app commands — host-pushed plugin contributions (machine catalogs).
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation, Process3dConfigSetContributions};
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::{Process3dSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod set_contributions {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "contributions")]
     pub struct SetContributions {
         pub json: String,
@@ -23,7 +23,7 @@ pub mod set_contributions {
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let installable = crate::editor::process3d::installable_contributions(&payload.json, crate::editor::process3d::PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
-        Ok(Emit::config(vec![Process3dConfigMutation::SetContributions { json: installable }]))
+        Ok(Emit::config(vec![Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: installable })]))
     }
 }
 //#endregion 🔖️SetContributions

@@ -9,7 +9,8 @@ use crate::Generation3dSnapshot;
 
 //#region 🔖️ChangeSliderValue
 /// 🎚️ Sets slider `id` to `value`; a value outside the slider's range widens the range the way the canvas knob does.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeSliderValue {
     pub id: String,

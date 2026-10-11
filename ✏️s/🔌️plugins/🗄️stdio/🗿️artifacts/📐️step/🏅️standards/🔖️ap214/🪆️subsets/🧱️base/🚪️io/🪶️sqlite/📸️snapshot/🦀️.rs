@@ -1,6 +1,6 @@
 //! 📐️ STEP exchange headers, typed argument ownership and entity references.
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
-use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot,StepHeader,StepFileDescription,StepFileName,StepFileSchema,StepEntity,StepComplexType,StepValue};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot,StepHeader,StepFileDescription,StepFileName,StepFileSchema,StepEntity,StepComplexType,StepTypedValue, StepValue};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,FloatColumn,read_binary64,ieee754_is_null,validate_ieee754_row},*}};
 #[path = "📏️encoding/💰️backing/🦀️.rs"]
 mod native_backing;
@@ -43,11 +43,11 @@ enum Owner<'a>{Argument(Option<i64>,Option<i64>,usize),Aggregate(i64,usize),Type
 fn project_value<'a>(value:&'a StepValue,owner:Owner<'a>,entities:&[(u64,i64)],projection:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
     let mut pending=projection.allocate_frontier(1)?;pending.push((value,owner));
     while let Some((value,owner))=pending.pop(){projection.checkpoint()?;let mut cells=[Cell::Null;7];let reference;
-        cells[0]=Cell::Text(match value{StepValue::Unset=>"unset",StepValue::Derived=>"derived",StepValue::Integer(_)=>"integer",StepValue::Real(_)=>"real",StepValue::String(_)=>"string",StepValue::Enum(_)=>"enum",StepValue::Reference(_)=>"reference",StepValue::Aggregate(_)=>"aggregate",StepValue::TypedValue{..}=>"typedValue"});
+        cells[0]=Cell::Text(match value{StepValue::Unset=>"unset",StepValue::Derived=>"derived",StepValue::Integer(_)=>"integer",StepValue::Real(_)=>"real",StepValue::String(_)=>"string",StepValue::Enum(_)=>"enum",StepValue::Reference(_)=>"reference",StepValue::Aggregate(_)=>"aggregate",StepValue::TypedValue(StepTypedValue {..})=>"typedValue"});
         match value{StepValue::Integer(v)=>cells[1]=Cell::Integer(*v),StepValue::Real(v)=>cells[2]=Cell::Real(*v),StepValue::String(v)=>cells[3]=Cell::Text(v),StepValue::Enum(v)=>cells[4]=Cell::Text(v),StepValue::Reference(v)=>{reference=UnsignedWord::new(*v);cells[5]=Cell::Text(reference.text());cells[6]=Cell::Integer(entities.binary_search_by_key(v,|entry|entry.0).map(|index|entities[index].1).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"dangling STEP entity reference"))?);},_=>{}}
         let id=projection.insert_float("step_value",&cells,REAL)?;
         match owner{Owner::Argument(entity,complex,ordinal)=>{projection.insert("step_argument",&[entity.map_or(Cell::Null,Cell::Integer),complex.map_or(Cell::Null,Cell::Integer),Cell::Integer(number(ordinal)?),Cell::Integer(id)])?;},Owner::Aggregate(parent,ordinal)=>{projection.insert("step_aggregate_element",&[Cell::Integer(parent),Cell::Integer(number(ordinal)?),Cell::Integer(id)])?;},Owner::Typed(parent,name)=>{projection.insert("step_typed_value",&[Cell::Integer(parent),Cell::Text(name),Cell::Integer(id)])?;}}
-        match value{StepValue::Aggregate(values)=>{projection.check_rows(pending.len().checked_add(values.len()).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "STEP pending value count overflow"))?)?;for(ordinal,value)in values.iter().enumerate().rev(){projection.push_frontier(&mut pending,(value,Owner::Aggregate(id,ordinal)))?;if ordinal%256==0{projection.checkpoint()?;}}},StepValue::TypedValue{type_name,value}=>projection.push_frontier(&mut pending,(value,Owner::Typed(id,type_name)))?,_=>{}}
+        match value{StepValue::Aggregate(values)=>{projection.check_rows(pending.len().checked_add(values.len()).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "STEP pending value count overflow"))?)?;for(ordinal,value)in values.iter().enumerate().rev(){projection.push_frontier(&mut pending,(value,Owner::Aggregate(id,ordinal)))?;if ordinal%256==0{projection.checkpoint()?;}}},StepValue::TypedValue(StepTypedValue {type_name,value})=>projection.push_frontier(&mut pending,(value,Owner::Typed(id,type_name)))?,_=>{}}
     }Ok(())
 }
 fn visit_rows(snapshot:&StepSnapshot,projection:&mut RowWriter<'_,'_>)->Result<(),ValueError>{

@@ -62,7 +62,7 @@ pub(crate) fn relation_slot(direction: WfcDirection2d) -> usize {
 
 /// 🏁 The solve's committed answer: one `[x, y, tileId]` row per unmasked cell, the satisfiability
 /// verdict, and the PRE-propagation Shannon entropy of every unmasked cell's tile distribution.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Grid2dInferenceCommit {
     pub assignments: Vec<(u32, u32, String)>,
@@ -100,7 +100,7 @@ pub struct Grid2dInferenceCommit {
 //#region 🔖️Solve
 /// 🏁 The solved assignment, or `Unsolved` for every non-solved outcome (contradiction, budget,
 /// cancellation) — see `Grid2dContradiction` for the dedicated satisfiability verdict.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum Grid2dSolveResult {
     #[default]

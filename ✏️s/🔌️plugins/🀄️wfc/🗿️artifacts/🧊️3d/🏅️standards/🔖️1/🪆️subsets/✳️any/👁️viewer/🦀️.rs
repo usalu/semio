@@ -36,7 +36,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Command
 /// 👁️ The viewer's command channel — deliberately inert.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum Wfc3dViewCommand {
     #[dsl(key = "noop")]
     Noop,
@@ -74,13 +74,7 @@ impl ArtifactViewer for Wfc3dViewer {
     /// store lane per stage and faults the whole close with `interactive-job.close-owned-disposer-missing`
     /// (or, one layer down, `artifact store has no owner-supplied bounded disposer`) the moment a lane
     /// answers `None`. A viewer never edits these stores, but it still owns and must release them.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())

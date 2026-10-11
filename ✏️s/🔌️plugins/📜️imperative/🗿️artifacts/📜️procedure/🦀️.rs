@@ -211,7 +211,9 @@ pub struct ProcedureScene {
 /// 🧊️ The scene is the cold boundary of its seed's neural values (a step already retires its own params on drop).
 impl Drop for ProcedureScene {
     fn drop(&mut self) {
-        neural_engine::ColdRetire::retire_cold(std::mem::take(&mut self.seed));
+        for (_, value) in std::mem::take(&mut self.seed) {
+            neural_engine::ColdRetire::retire_cold(value);
+        }
     }
 }
 

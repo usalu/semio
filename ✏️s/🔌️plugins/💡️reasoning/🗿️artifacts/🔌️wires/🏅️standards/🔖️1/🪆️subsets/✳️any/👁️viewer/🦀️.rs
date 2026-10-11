@@ -31,7 +31,7 @@ use semio_framework_2d::compute::EngineHandles;
 /// exactly one inert variant — real per-command payload modules the way the sibling editor module's
 /// `🎮️commands/*` carries them would be pure ceremony for a surface that never dispatches anything
 /// through `handle`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum WiresViewCommand {
     #[default]
     Noop,
@@ -80,10 +80,6 @@ impl ArtifactViewer for WiresViewer {
 
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::schema::retirement::document_store_owners())
-    }
-
     fn initial_snapshot() -> WiresSnapshot {
         crate::empty_wires_snapshot()
     }

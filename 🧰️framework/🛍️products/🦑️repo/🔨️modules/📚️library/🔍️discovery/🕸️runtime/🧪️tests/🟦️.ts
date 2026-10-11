@@ -7,7 +7,9 @@ import {cargoDirectoryEntriesV1 as readDirectoryMetadata} from "../../../../../.
 import Graph from "graphology";
 import Ajv from "ajv";
 import { createHash } from "node:crypto";
+import { createScriptProcessEnvelope, scriptProcessEnvironment, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { inspectRuntimeGraphV1, runtimeEcmaReferencesV1, runtimeFixturePathV1 } from "../🟦️.ts";
+import { cargoDepInfoChecksumsV1, cargoDepInfoResolvedChecksumsV1, cargoDepInfoSourcesV1, encodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 const owner = resolve(import.meta.dir, "..");
 const examples = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")).examples;
 const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
@@ -28,11 +30,13 @@ test("actual build-resource observations bind original bytes and refuse fixture 
     expect(evidence.findings.some(finding=>finding.code==="runtime-input-mismatch")).toBe(row.inputMismatch);
   }
   const row = examples[0], text = row.rows.map(JSON.stringify).join("\n"), hash = (value:string)=>createHash("sha256").update(value).digest("hex");
-  const resource = {package_id:"owner",out_dir:"/workspace/out",path:"/workspace/out/semio-runtime-resource-inputs.jsonl",text,sha256:hash(text),observedAtMs:2,resources:row.rows.map((input:any)=>({input,sha256:input.kind==="directory"?hash(JSON.stringify(input.entries.map((entry:any)=>[entry.path.slice(entry.path.lastIndexOf("/")+1),entry.kind,entry.symlinkTarget]))):hash(row.files[input.path]),...(input.kind==="copy"?{outputSha256:hash(row.files[input.output])}:{}),...(input.kind==="directory"?{observedEntries:input.entries}:{})}))};
+  const files:Record<string,string> = {...row.files,"out/semio-runtime-resource-inputs.jsonl":text}, resource = {package_id:"owner",out_dir:"/workspace/out",path:"/workspace/out/semio-runtime-resource-inputs.jsonl",sha256:hash(text),observedAtMs:2,resources:row.rows.map((input:any)=>({input,sha256:input.kind==="directory"?hash(JSON.stringify(input.entries.map((entry:any)=>[entry.path.slice(entry.path.lastIndexOf("/")+1),entry.kind,entry.symlinkTarget]))):hash(row.files[input.path]),...(input.kind==="copy"?{outputSha256:hash(row.files[input.output])}:{}),...(input.kind==="directory"?{observedEntries:input.entries}:{})}))};
   const observation = {version:1 as const,manifest:"/workspace/Cargo.toml",cwd:"/workspace",command:"cargo" as const,args:["build"],builtAtMs:1,observedAtMs:2,status:0,cancelled:false,units:[],buildScripts:[{reason:"build-script-executed" as const,package_id:"owner",cfgs:[],env:[],out_dir:"/workspace/out"}]};
-  const context = {root:"/workspace",cwd:"/workspace",outDirectory:"/workspace/out",read:(path:string)=>row.files[path],directoryEntries:()=>[{path:"assets/logo.svg",kind:"file" as const,symlinkTarget:null}]};
+  const context = {root:"/workspace",cwd:"/workspace",outDirectory:"/workspace/out",read:(path:string)=>files[path],directoryEntries:()=>[{path:"assets/logo.svg",kind:"file" as const,symlinkTarget:null}]};
   expect(runtimeRetainedBuildResourceInputsV1(observation,resource,context).verified).toBe(true);
-  expect(runtimeRetainedBuildResourceInputsV1(observation,resource,{...context,read:(path:string)=>path.endsWith("logo.svg")?"both were changed":row.files[path]}).verified).toBe(false);
+  expect(runtimeRetainedBuildResourceInputsV1(observation,resource,{...context,read:(path:string)=>path.endsWith("logo.svg")?"both were changed":files[path]}).verified).toBe(false);
+  expect(runtimeRetainedBuildResourceInputsV1(observation,resource,{...context,read:(path:string)=>path.endsWith(".jsonl")?text+"\n":files[path]}).verified).toBe(false);
+  expect(runtimeRetainedBuildResourceInputsV1(observation,resource,{...context,read:(path:string)=>path.endsWith(".jsonl")?undefined:files[path]}).verified).toBe(false);
   expect(runtimeRetainedBuildResourceInputsV1({...observation,buildScripts:[]},resource,context).verified).toBe(false);
   expect(runtimeRetainedBuildResourceInputsV1(observation,{...resource,sha256:"0".repeat(64)},context).verified).toBe(false);
   expect(runtimeRetainedBuildResourceInputsV1(observation,{...resource,resources:[]},context).verified).toBe(false);
@@ -69,9 +73,10 @@ test("retained Cargo observations bind current inputs and staging after capture 
   const files = { "src/lib.rs": "pub const VALUE:u8=1;", "generated/value.txt": "1", "published/lib.rlib": "compiled" };
   const digest = (path: string): string | undefined => path in files ? createHash("sha256").update(files[path as keyof typeof files]).digest("hex") : undefined;
   const message = { reason: "compiler-artifact", package_id: "owner", features: ["live"], profile: {test:false}, target: {name:"owner",src_path:"/workspace/src/lib.rs",kind:["lib"]}, filenames:["/removed/lib.rlib"] };
-  const unit = { message, observedAtMs:2, depInfo:[{path:"/removed/lib.d",baseDirectory:"/workspace",text:"/removed/lib.rlib: src/lib.rs generated/value.txt\n"}], inputs:[{path:"/workspace/src/lib.rs",kind:"file",sha256:digest("src/lib.rs")},{path:"/workspace/generated/value.txt",kind:"file",sha256:digest("generated/value.txt")}], artifacts:[{path:"/removed/lib.rlib",sha256:digest("published/lib.rlib"),stagedPath:"/workspace/published/lib.rlib",stagedSha256:digest("published/lib.rlib")}] };
-  const receipt = {version:1,manifest:"/workspace/Cargo.toml",cwd:"/workspace",command:"cargo",args:["build","--lib"],builtAtMs:1,observedAtMs:2,status:0,cancelled:false,compilerResourceRoot:null,compilerResources:[],units:[unit],buildScripts:[{reason:"build-script-executed",package_id:"owner",cfgs:["owned_cfg"],env:[["OWNED","yes"]],out_dir:"/workspace/generated"}]};
-  const [observation] = runtimeCargoProvenanceV1(JSON.stringify(receipt));
+  const depText = "/removed/lib.rlib: src/lib.rs generated/value.txt\n", dep = { path:"/removed/lib.d", sha256:createHash("sha256").update(depText).digest("hex"), baseDirectory:"/workspace", sources:cargoDepInfoSourcesV1(depText), checksums:cargoDepInfoChecksumsV1(depText) };
+  const unit = { message, observedAtMs:2, depInfo:[dep], inputs:[{path:"/workspace/src/lib.rs",kind:"file",sha256:digest("src/lib.rs")},{path:"/workspace/generated/value.txt",kind:"file",sha256:digest("generated/value.txt")}], artifacts:[{path:"/removed/lib.rlib",sha256:digest("published/lib.rlib"),stagedPath:"/workspace/published/lib.rlib",stagedSha256:digest("published/lib.rlib")}] };
+  const receipt = {version:1 as const,manifest:"/workspace/Cargo.toml",cwd:"/workspace",command:"cargo",args:["build","--lib"],buildDirectory:null,builtAtMs:1,observedAtMs:2,status:0,cancelled:false,compilerResourceRoot:null,compilerResources:[],buildResources:[],invocationInputs:[],units:[unit],buildScripts:[{reason:"build-script-executed",package_id:"owner",cfgs:["owned_cfg"],env:[["OWNED","yes"]],out_dir:"/workspace/generated"}]};
+  const [observation] = runtimeCargoProvenanceV1(await encodeCargoProvenanceV1(receipt as any));
   const observed = observation!.units[0]!;
   expect(runtimeCargoUnitInputsV1(observation!,observed,"/workspace",digest)).toEqual({inputs:["generated/value.txt","src/lib.rs"],findings:[],verified:true});
   const ajv = new Ajv({strict:true}).addSchema(schema), admitInput = ajv.getSchema(`${schema.$id}#/$defs/RuntimeCargoInputDigestV1`)!, admitBuild = ajv.getSchema(`${schema.$id}#/$defs/RuntimeCargoBuildScriptV1`)!;
@@ -79,11 +84,13 @@ test("retained Cargo observations bind current inputs and staging after capture 
   expect(admitBuild(observation!.buildScripts[0]),JSON.stringify(admitBuild.errors)).toBe(true);
   expect(runtimeCargoUnitInputsV1(observation!,observed,"/workspace",path=>path==="src/lib.rs"?"0".repeat(64):digest(path)).verified).toBe(false);
   expect(runtimeCargoUnitInputsV1(observation!,{...observed,inputs:observed.inputs.slice(1)},"/workspace",digest).verified).toBe(false);
-  expect(()=>runtimeCargoProvenanceV1(JSON.stringify({...receipt,units:[{...unit,depInfo:[{path:"/removed/lib.d",text:"/removed/lib.rlib: src/lib.rs"}]}]}))).toThrow("dep-info content");
+  const lostBase = await encodeCargoProvenanceV1({...receipt,units:[{...unit,depInfo:[{...dep,baseDirectory:null}]}]} as any), lostStatus = await encodeCargoProvenanceV1({...receipt,status:1} as any), lostBinding = await encodeCargoProvenanceV1({...receipt,units:[{...unit,artifacts:[{...unit.artifacts[0],stagedSha256:"0".repeat(64)}]}]} as any);
+  expect(()=>runtimeCargoProvenanceV1(lostBase)).toThrow("dep-info content");
   expect(runtimeCargoUnitInputsV1(observation!,{...observed,depInfo:[]},"/workspace",digest).verified).toBe(false);
   expect(runtimeCargoUnitInputsV1(observation!,{...observed,message:{...observed.message,profile:{test:true}}},"/workspace",digest).verified).toBe(false);
-  expect(()=>runtimeCargoProvenanceV1(JSON.stringify({...receipt,status:1}))).toThrow("completed invocation");
-  expect(()=>runtimeCargoProvenanceV1(JSON.stringify({...receipt,units:[{...unit,artifacts:[{...unit.artifacts[0],stagedSha256:"0".repeat(64)}]}]}))).toThrow("artifact binding");
+  expect(()=>runtimeCargoProvenanceV1(lostStatus)).toThrow("completed invocation");
+  expect(()=>runtimeCargoProvenanceV1(lostBinding)).toThrow("artifact binding");
+  expect(()=>runtimeCargoProvenanceV1(JSON.stringify(receipt))).toThrow("Cargo provenance receipt");
 });
 
 for (const row of examples) test(`runtime graph ${row.id}`, () => {
@@ -259,6 +266,31 @@ test("durable Cargo discovery selects only current exact invocation observations
   }
 });
 
+test("a large completed invocation is published as an interned receipt that the reader accepts and re-verifies against current bytes", async () => {
+  const { runtimeCargoProvenanceV1, runtimeCargoObservationCurrentV1 } = await import("../🔎️verification/🟦️.ts");
+  const { writeCompletedCargoInvocationProvenanceV1, cargoProvenancePhysicalControlV1 } = await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts");
+  const { CurrentPhysicalOwnerV1 } = await import("../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts");
+  const { blake3 } = await import("@noble/hashes/blake3.js");
+  const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR; if (!artifacts) throw Error("Caller-owned artifacts are required");
+  const root = mkdtempSync(join(artifacts, "g-")), source = join(root, "src"), build = join(root, "build"), cargoHome = join(root, "cargo-home"), manifest = join(root, "Cargo.toml");
+  mkdirSync(source, { recursive: true }); mkdirSync(build, { recursive: true }); writeFileSync(manifest, '[workspace]\n[package]\nname="large"\nversion="0.0.0"\n');
+  const files = Array.from({ length: 300 }, (_, index) => ({ path: join(source, `m${index}.rs`), bytes: Buffer.from(`pub const V${index}: u32 = ${index};\n`) }));
+  for (const file of files) writeFileSync(file.path, file.bytes);
+  const units = Array.from({ length: 6 }, (_, unit) => {
+    const artifact = join(build, `libunit${unit}.rmeta`); writeFileSync(artifact, `artifact ${unit}`);
+    writeFileSync(join(build, `libunit${unit}.d`), `${artifact}: ${files.map(file => file.path).join(" ")}\n${files.map(file => `# checksum:blake3=${Buffer.from(blake3(file.bytes)).toString("hex")} file_len:${file.bytes.length} ${file.path}`).join("\n")}\n`);
+    return { message: { reason: "compiler-artifact", package_id: `path+file:///large#unit${unit}@0.0.0`, manifest_path: manifest, features: [], profile: { test: false }, target: { name: `unit${unit}`, kind: ["lib"], src_path: files[0]!.path }, filenames: [artifact] }, evidence: { version: 1, kind: "discovery", paths: [], producer: null } };
+  });
+  const control = () => cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined }), receipt = join(root, "cargo-unit-provenance-large.json");
+  await writeCompletedCargoInvocationProvenanceV1(receipt, { manifest, cwd: root, command: "cargo", args: ["build", "--manifest-path", manifest], buildDirectory: build, builtAtMs: Date.now() - 1000, status: 0, cancelled: false, units, buildScripts: [] }, new Map(), cargoHome, new CurrentPhysicalOwnerV1(root, control()));
+  const text = readFileSync(receipt, "utf8"), [observation] = runtimeCargoProvenanceV1(text), context = { root, cwd: root, outDirectory: "", buildDirectory: build, cargoHome };
+  expect(observation!.units.length).toBe(6); expect(observation!.units[5]!.inputs.length).toBe(300); expect(text.length).toBeLessThan(1_000_000);
+  expect(await runtimeCargoObservationCurrentV1(observation!, { ...context, physical: new CurrentPhysicalOwnerV1(root, control()) })).toBe(true);
+  writeFileSync(files[150]!.path, files[150]!.bytes.toString("utf8").replace("V150", "W150"));
+  expect(await runtimeCargoObservationCurrentV1(observation!, { ...context, physical: new CurrentPhysicalOwnerV1(root, control()) })).toBe(false);
+  console.log(`[DEBUG] 6 units x 300 inputs accepted from a ${text.length} byte receipt and refused after one same-size source edit`);
+}, 120_000);
+
 test("actual durable Cargo producer acquires current features and refuses stale configuration/artifacts",async()=>{
   const {cargoStreamingStatus}=await import("../../../🏃️process/🟦️.ts"), {runtimeCargoProvenanceV1,runtimeCargoObservationCurrentV1}=await import("../🔎️verification/🟦️.ts");
   const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR; if(!artifacts) throw Error("Caller-owned artifacts are required");
@@ -305,7 +337,7 @@ test("actual Trunk compiled transformation retains current mounted bytes after t
  const bindgenVersion=(Bun.TOML.parse(readFileSync(join(process.cwd(),"Cargo.lock"),"utf8")) as {package:{name:string;version:string}[]}).package.find(row=>row.name==="wasm-bindgen")!.version;
  writeFileSync(join(packageRoot,"Cargo.toml"),'[package]\nname="runtime-trunk-neutral"\nversion="0.1.0"\nedition="2021"\n[workspace]\n[lib]\ncrate-type=["cdylib"]\n[dependencies]\nwasm-bindgen="='+bindgenVersion+'"\n');
  writeFileSync(join(packageRoot,"src/lib.rs"),'#[wasm_bindgen::prelude::wasm_bindgen] pub fn value()->u32{7}\n');
- const root=process.cwd(),environment={...process.env,CARGO_BUILD_BUILD_DIR:build,CARGO_TARGET_DIR:join(directory,"target")},nativeOwner=join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts");
+ const root=process.cwd(),environment=scriptProcessEnvironment(createScriptProcessEnvelope({version:1,owner:"runtime-trunk-compiled-transformation",maximumElapsedMilliseconds:0},{},Date.now()),{...process.env,CARGO_BUILD_BUILD_DIR:build,CARGO_TARGET_DIR:join(directory,"target")}),nativeOwner=join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts");
  const {cargoStreamingStatus}=await import("../../../🏃️process/🟦️.ts");expect(await cargoStreamingStatus(["generate-lockfile","--manifest-path",join(packageRoot,"Cargo.toml"),"--offline"],packageRoot,environment,30000)).toBe(0);
  const {buildTrunkRenderer}=await import(nativeOwner);await buildTrunkRenderer({rustPackageRoot:packageRoot,workspace:root,profile:"dev",toolWorkspace:root,stateRoot:join(directory,"trunk-state"),environment});
  const ledger=join(build,"semio-trunk-provenance"),path=readdirSync(ledger).map(name=>join(ledger,name,"trunk.json")).filter(path=>{try{return resolve(JSON.parse(readFileSync(path,"utf8")).manifest)===resolve(join(packageRoot,"Cargo.toml"))}catch{return false}}).sort((a,b)=>JSON.parse(readFileSync(b,"utf8")).observedAtMs-JSON.parse(readFileSync(a,"utf8")).observedAtMs)[0]!,receipt=JSON.parse(readFileSync(path,"utf8"));
@@ -321,12 +353,12 @@ test("actual Trunk compiled transformation retains current mounted bytes after t
 },120000);
 
  test("actual rustc consumed-byte checksums refuse edits before completed receipt observation",async()=>{
- const {blake3}=await import("@noble/hashes/blake3.js"),{runtimeCargoConsumedInputsV1,runtimeDepInfoChecksumsV1}=await import("../🔎️verification/🟦️.ts");
- const row=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).compilerChecksums,bytes=Buffer.from(row.source),hash=Buffer.from(blake3(bytes)).toString("hex"),text=`owner.rlib: ${row.path}\n# checksum:blake3=${hash} file_len:${bytes.length} ${row.path}\n`,unit={depInfo:[{text,baseDirectory:row.baseDirectory}],inputs:[{path:resolve(row.baseDirectory,row.path),kind:"file"}]};
- const admit=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeCompilerChecksumV1`)!;for(const value of runtimeDepInfoChecksumsV1(text,row.baseDirectory))expect(admit(value),JSON.stringify(admit.errors)).toBe(true);
- expect(runtimeCargoConsumedInputsV1(unit,()=>bytes)).toEqual([]);expect(runtimeCargoConsumedInputsV1(unit,()=>Buffer.from(row.changed))).toHaveLength(1);expect(runtimeCargoConsumedInputsV1({...unit,depInfo:[{...unit.depInfo[0],text:`owner.rlib: ${row.path}\n`}]},()=>bytes)).toHaveLength(1);
+ const {blake3}=await import("@noble/hashes/blake3.js"),{runtimeCargoConsumedInputsV1}=await import("../🔎️verification/🟦️.ts");
+ const row=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).compilerChecksums,bytes=Buffer.from(row.source),hash=Buffer.from(blake3(bytes)).toString("hex"),text=`owner.rlib: ${row.path}\n# checksum:blake3=${hash} file_len:${bytes.length} ${row.path}\n`,parsed=(depText:string,baseDirectory:string)=>({path:"/owner.d",sha256:createHash("sha256").update(depText).digest("hex"),baseDirectory,sources:cargoDepInfoSourcesV1(depText),checksums:cargoDepInfoChecksumsV1(depText)}),unit={depInfo:[parsed(text,row.baseDirectory)],inputs:[{path:resolve(row.baseDirectory,row.path),kind:"file"}]};
+ const admit=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeCompilerChecksumV1`)!;for(const value of cargoDepInfoResolvedChecksumsV1(parsed(text,row.baseDirectory)))expect(admit(value),JSON.stringify(admit.errors)).toBe(true);
+ expect(runtimeCargoConsumedInputsV1(unit,()=>bytes)).toEqual([]);expect(runtimeCargoConsumedInputsV1(unit,()=>Buffer.from(row.changed))).toHaveLength(1);expect(runtimeCargoConsumedInputsV1({...unit,depInfo:[parsed(`owner.rlib: ${row.path}\n`,row.baseDirectory)]},()=>bytes)).toHaveLength(1);
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR!;const source=join(artifacts,"compiler-consumed-owner.rs"),dep=join(artifacts,"compiler-consumed-owner.d");writeFileSync(source,row.source);const child=Bun.spawn(["rustc","-Z","checksum-hash-algorithm=blake3","--crate-name","compiler_consumed_owner","--crate-type","lib","--emit",`dep-info=${dep}`,source],{stdout:"pipe",stderr:"pipe"});expect(await child.exited,await new Response(child.stderr).text()).toBe(0);
- const actual={depInfo:[{text:readFileSync(dep,"utf8"),baseDirectory:artifacts}],inputs:[{path:source,kind:"file"}]};expect(runtimeCargoConsumedInputsV1(actual,path=>readFileSync(path))).toEqual([]);writeFileSync(source,row.changed);expect(runtimeCargoConsumedInputsV1(actual,path=>readFileSync(path))).toHaveLength(1);console.log("[DEBUG] actual rustc BLAKE3 consumed-byte checksums and independent noble agree; pre-observation source edits refused");
+ const actual={depInfo:[parsed(readFileSync(dep,"utf8"),artifacts)],inputs:[{path:source,kind:"file"}]};expect(runtimeCargoConsumedInputsV1(actual,path=>readFileSync(path))).toEqual([]);writeFileSync(source,row.changed);expect(runtimeCargoConsumedInputsV1(actual,path=>readFileSync(path))).toHaveLength(1);console.log("[DEBUG] actual rustc BLAKE3 consumed-byte checksums and independent noble agree; pre-observation source edits refused");
  });
 
 test("actual proc-macro reads retain in-place byte witnesses and tracked directory inputs",async()=>{
@@ -378,7 +410,7 @@ test("actual guest Cargo build reads bind exact host operations and original met
 
 test("original browser actor producer inputs require complete current owned policy and compiler bytes",async()=>{
  const factory=await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts"),directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"a-"));mkdirSync(directory,{recursive:true});
- const program=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).actorProducerProgram,parse=Bun.spawn(["node","--input-type=module","--eval",'import {parse} from "@bytecodealliance/jco";process.stdout.write(Buffer.from(await parse(process.argv[1])).toString("hex"));',program.component],{stdout:"pipe",stderr:"pipe"});const [component,error,status]=await Promise.all([new Response(parse.stdout).text(),new Response(parse.stderr).text(),parse.exited]);expect(status,error).toBe(0);const actor=await factory.buildClosedBrowserActorArtifactV1(Buffer.from(component,"hex")),compiler=join(directory,"compiler.mjs");writeFileSync(compiler,actor.producer.compiler.bytes);
+ const program=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).actorProducerProgram,parse=Bun.spawn(["node","--input-type=module","--eval",'import {parse} from "@bytecodealliance/jco";process.stdout.write(Buffer.from(await parse(process.argv[1])).toString("hex"));',program.component],{stdout:"pipe",stderr:"pipe"});const [component,error,status]=await Promise.all([new Response(parse.stdout).text(),new Response(parse.stderr).text(),parse.exited]);expect(status,error).toBe(0);const actor=await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"actor-producer-inputs",maximumElapsedMilliseconds:0},{},Date.now()),invocation=>factory.buildClosedBrowserActorArtifactV1(Buffer.from(component,"hex"),invocation)),compiler=join(directory,"compiler.mjs");writeFileSync(compiler,actor.producer.compiler.bytes);
  const observation={policyCanonical:actor.policyCanonical,policySha256:actor.policySha256,runtime:actor.producer.runtime,compiler:{path:compiler,sha256:actor.producer.compiler.sha256,byteLength:actor.producer.compiler.byteLength},inputs:actor.producer.inputs};
  const document=JSON.parse(readFileSync(resolve(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json"),"utf8")),admit=new Ajv({strict:true}).addSchema(document).getSchema(`${document.$id}#/$defs/BrowserActorProducerInputsV1`)!;expect(admit(observation),JSON.stringify(admit.errors)).toBe(true);
  for(const row of JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).actorProducerChanges){let value=structuredClone(observation);if(row.name==="missing-input")value.inputs=value.inputs.slice(1);if(row.name==="foreign-input")value.inputs[0]={...value.inputs[0],path:compiler};if(row.name==="changed-policy")value.policySha256="0".repeat(64);if(row.name==="noncanonical-policy")value.policyCanonical=JSON.stringify(JSON.parse(value.policyCanonical),null,2);if(row.name==="changed-compiler")value.compiler.sha256="0".repeat(64);if(row.name==="changed-runtime")value.runtime.sha256="0".repeat(64);
@@ -478,6 +510,6 @@ test("runtime malformed ECMA source cannot return partial definitive references"
 
 for(const vector of JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).resourceReads)test(`runtime in-place read witness: ${vector.id}`,async()=>{
  const {runtimeBuildResourceInputsV1,runtimeRetainedBuildResourceInputsV1}=await import("../🔎️verification/🟦️.ts"),consumed=Buffer.from(vector.hex,"hex"),current=Buffer.from(vector.currentHex,"hex"),sha256=Buffer.from(await crypto.subtle.digest("SHA-256",consumed)).toString("hex"),input={kind:"read",path:"/workspace/resource",bytes:consumed.length,sha256,operation:{source:"/workspace/helper.rs",line:1,name:"read"}},text=JSON.stringify(input),resource={package_id:"owner",out_dir:"/workspace/out",path:"/workspace/out/semio-runtime-resource-inputs.jsonl",text,sha256:createHash("sha256").update(text).digest("hex"),observedAtMs:2,resources:[{input,bytes:current.length,sha256:createHash("sha256").update(current).digest("hex"),sourceExact:vector.exact,schemaErrors:[]}]},observation={version:1,manifest:"/workspace/Cargo.toml",cwd:"/workspace",command:"cargo",args:["build"],builtAtMs:1,observedAtMs:2,status:0,cancelled:false,units:[],buildScripts:[{reason:"build-script-executed",package_id:"owner",cfgs:[],env:[],out_dir:"/workspace/out"}]};
- const context={root:"/workspace",cwd:"/workspace",outDirectory:"/workspace/out",read:()=>current,directoryEntries:()=>undefined},admit=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeBuildResourceObservationV1`)!;expect(admit(input),JSON.stringify(admit.errors)).toBe(true);expect(admit({...input,output:"/workspace/out/copied"})).toBe(false);
+ const context={root:"/workspace",cwd:"/workspace",outDirectory:"/workspace/out",read:(path:string)=>path.endsWith(".jsonl")?text:current,directoryEntries:()=>undefined},admit=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeBuildResourceObservationV1`)!;expect(admit(input),JSON.stringify(admit.errors)).toBe(true);expect(admit({...input,output:"/workspace/out/copied"})).toBe(false);
  const evidence=runtimeBuildResourceInputsV1(text,context);expect(evidence.inputs).toEqual(["resource"]);expect(evidence.findings.length===0).toBe(vector.exact);expect(runtimeRetainedBuildResourceInputsV1(observation,resource,context).verified).toBe(vector.exact);
 });

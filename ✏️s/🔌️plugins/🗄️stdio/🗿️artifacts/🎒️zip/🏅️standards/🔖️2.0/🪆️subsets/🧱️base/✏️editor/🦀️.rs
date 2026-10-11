@@ -40,7 +40,7 @@ pub const ZIP_ANY_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zi
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — exactly the one edit the `🪟️main` window's
 /// `editable_window_kind()` action (`set-node`, contract §2.6) can trigger.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum ZipEditorCommand {
     #[dsl(key = "set-zip-node")]
     SetNode { node_id: String, value: String, revision: String },

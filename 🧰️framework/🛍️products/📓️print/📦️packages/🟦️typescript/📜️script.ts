@@ -11,7 +11,7 @@ import {runArtifactTypeScriptPackageMain} from "../../../../🛍️products/🦑
 //#region 🖨️RouterAdapters
 class FontsScript extends BundleScript {
   async run(): Promise<void> {
-    await new PrintFontProvisioningCommand(this.root, this.repoRoot).run();
+    await new PrintFontProvisioningCommand(this.root, this.repoRoot, this.invocation).run();
   }
 }
 
@@ -46,7 +46,7 @@ class TestScript extends BundleScript {
       return;
     }
     const { PrintPipelineVerificationCommand } = await import("../../🎮️commands/🧪️print-pipeline-verification/🟦️.ts");
-    await new PrintPipelineVerificationCommand(this.root, this.repoRoot).run(segments);
+    await new PrintPipelineVerificationCommand(this.root, this.repoRoot, this.invocation).run(segments);
   }
 }
 class CheckScript extends BundleScript{

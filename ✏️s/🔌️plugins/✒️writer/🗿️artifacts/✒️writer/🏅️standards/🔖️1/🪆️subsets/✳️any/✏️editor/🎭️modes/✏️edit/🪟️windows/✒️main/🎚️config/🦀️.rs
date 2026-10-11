@@ -54,6 +54,12 @@ impl semio_framework_plugin::WindowConfigOwner for WriterMainWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 4096;
     type State = WriterMainWindowConfig;
     type Mutation = WriterMainWindowConfigMutation;
+    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+        std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new())
+    }
 
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()

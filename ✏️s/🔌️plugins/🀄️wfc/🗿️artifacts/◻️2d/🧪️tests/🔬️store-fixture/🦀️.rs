@@ -4,6 +4,25 @@
 use crate::mutations::{change_seed, pin_slot, Wfc2dMutation};
 use crate::Wfc2dSnapshot;
 
+/// 🎟️ The exact frame capacity one displaced snapshot's retirement is born with.
+fn admission() -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<Wfc2dSnapshot>(), maximum_depth: 1, ..Default::default() }
+}
+
+/// ♻️ Drains a retirement with grants quoted from its own next demand and returns the step count.
+fn retire_all(retirement: &mut Box<dyn store::ErasedSnapshotRetirement>) -> usize {
+    let mut steps = 0;
+    while !retirement.terminal_is_empty() {
+        let demand = retirement.next_demand(1 << 16).expect("a retained snapshot quotes its next demand");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let step = retirement.close_step(grant).expect("a funded step makes progress");
+        assert!(step.progress().fits(grant));
+        steps += 1;
+        assert!(steps < 100_000, "the retirement ladder must terminate");
+    }
+    steps
+}
+
 /// 🏪️ A snapshot survives the native pack envelope AND the DSL envelope, in both directions.
 #[test]
 fn a_mounted_document_round_trips_through_both_envelopes() {
@@ -22,11 +41,10 @@ fn a_mounted_document_round_trips_through_both_envelopes() {
 fn decode_in_place_retires_the_displaced_document() {
     let mut live = crate::examples::two_room_corridor::document();
     let bytes = <Wfc2dSnapshot as store::ArtifactPack>::encode_pack(&crate::examples::hex_ring::document());
-    let mut retirement = crate::standards::v1::subsets::any::io::binary::snapshot::decode_into(&mut live, &bytes).expect("decode in place");
+    let (mut retirement, birth) = crate::standards::v1::subsets::any::io::binary::snapshot::decode_into(&mut live, &bytes, admission()).expect("decode in place");
+    assert!(birth.fits(admission()));
     assert_eq!(live, crate::examples::hex_ring::document());
-    while !retirement.terminal_is_empty() {
-        retirement.close_step(8, 1 << 16).expect("retirement steps");
-    }
+    retire_all(&mut retirement);
 }
 
 /// 🧬️ A short edit ladder applies and inverts against a mounted projection.

@@ -8,7 +8,7 @@ use crate::editor::bitmap::transient::SetSolve;
 use crate::schema::snapshot::{BitmapSnapshot};
 use crate::standards::v1::subsets::any::io::text::snapshot::{decode_base64};
 use crate::standards::v1::subsets::any::io::text::snapshot::{encode_base64};
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobPayloadStream, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, StepContext};
 use semio_framework_plugin::Effect;
 use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::Fault;
@@ -355,6 +355,14 @@ enum PrepStage {
     Done,
 }
 
+/// 🚦️ What one bounded fill run decided before any outcome is lent.
+enum FillRun {
+    Yield,
+    Cancelled,
+    Staged,
+    Complete,
+}
+
 /// ⏯️ Interactive fill run: one prep unit, then one `WfcJob::step` per framework step.
 pub struct BitmapFillRunJob {
     operation: semio_framework_job::Operation,
@@ -369,6 +377,7 @@ pub struct BitmapFillRunJob {
     committed_solve: Option<SetSolve>,
     pending_tick: bool,
     pending_finish: Option<(bool, BitmapFillPayload)>,
+    publication: Option<Box<engine::job::Publication>>,
     closing: bool,
     trace: Vec<BitmapFillTraceEvent>,
 }
@@ -394,6 +403,7 @@ impl BitmapFillRunJob {
             committed_solve: None,
             pending_tick: false,
             pending_finish: None,
+            publication: None,
             closing: false,
             trace: Vec::new(),
         }
@@ -417,7 +427,7 @@ impl BitmapFillRunJob {
         self.committed_solve.as_ref()
     }
 
-    fn publish_tick(&mut self, context: &mut StepContext<'_>, payload: BitmapFillPayload, stage: FillStage, reason: FillReason, state: ToolRunState) -> StepOutcome {
+    fn publish_tick(&mut self, context: &mut StepContext<'_>, payload: BitmapFillPayload, stage: FillStage, reason: FillReason, state: ToolRunState) -> FillRun {
         let decided = payload.decided_count() as u64;
         let observations = self.child.as_ref().map(|job| job.preview(0).observations).unwrap_or(0);
         let backtracks = self.child.as_ref().map(|job| job.preview(0).backtracks).unwrap_or(0);
@@ -444,18 +454,13 @@ impl BitmapFillRunJob {
         self.writer.payload(payload.encode_json().into_bytes());
         self.last_payload = Some(payload);
         let Some(tick) = self.writer.finish() else {
-            return StepOutcome::Yield;
+            return FillRun::Yield;
         };
         let Ok(bytes) = tick.encode() else {
-            return StepOutcome::Yield;
+            return FillRun::Yield;
         };
-        match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
-            Ok(retained) => StepOutcome::PreviewReady(retained),
-            Err(rejected) => {
-                drop(rejected.into_source());
-                StepOutcome::Yield
-            }
-        }
+        self.publication = Some(engine::job::Publication::new(engine::job::PublicationKind::Preview, bytes, Vec::new()));
+        FillRun::Staged
     }
 
     fn color_of(&self, pattern: u32) -> Option<u32> {
@@ -502,9 +507,9 @@ impl BitmapFillRunJob {
         self.port.dispatch(Effect::DispatchAction { req: RequestId(COMMIT_SOLVE_REQUEST), action: COMMIT_SOLVE_ACTION_ID.into(), args: Some(args), delay_ms: 0 });
     }
 
-    fn drain_child(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+    fn drain_child(&mut self, context: &mut StepContext<'_>) -> FillRun {
         if self.child.is_none() {
-            return self.fault(context, "bitmap-fill-child-missing");
+            return self.fault("bitmap-fill-child-missing");
         }
         let cells = (self.snapshot.output.width as usize).saturating_mul(self.snapshot.output.height as usize);
         let mut flips = Vec::new();
@@ -514,7 +519,7 @@ impl BitmapFillRunJob {
         loop {
             if context.is_cancelled() {
                 self.committed_solve = None;
-                return StepOutcome::Cancelled;
+                return FillRun::Cancelled;
             }
             if context.fuel_exhausted() || context.deadline_exceeded() {
                 break;
@@ -576,7 +581,7 @@ impl BitmapFillRunJob {
             return self.publish_tick(context, payload, FillStage::Complete, reason, ToolRunState::Complete);
         }
         if trace == 0 {
-            return StepOutcome::Yield;
+            return FillRun::Yield;
         }
         let width = self.snapshot.output.width;
         let height = self.snapshot.output.height;
@@ -586,27 +591,13 @@ impl BitmapFillRunJob {
         self.publish_tick(context, payload, stage, FillReason::Collapsed, ToolRunState::Running)
     }
 
-    fn fault(&mut self, context: &mut StepContext<'_>, message: &str) -> StepOutcome {
-        let detail = match context.payload_from_bytes(JobPayloadStream::Fault, message.as_bytes()) {
-            Ok(payload) => payload,
-            Err(rejected) => {
-                drop(rejected.into_source());
-                semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::Fault)
-            }
-        };
-        StepOutcome::Fault(semio_framework_job::JobFault { detail })
+    fn fault(&mut self, message: &str) -> FillRun {
+        self.publication = Some(engine::job::Publication::new(engine::job::PublicationKind::Fault, message.as_bytes().to_vec(), Vec::new()));
+        FillRun::Staged
     }
-}
 
-impl InteractiveJob for BitmapFillRunJob {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        if self.closing || context.is_cancelled() {
-            self.committed_solve = None;
-            self.pending_tick = false;
-            self.pending_finish = None;
-            let _ = self.writer.step(ToolRunStepKind::Warning, FillStage::Complete.index(), FillReason::Cancelled.code(), None, &[]);
-            return StepOutcome::Cancelled;
-        }
+    /// ⏭️ Runs one bounded preparation unit or child span; payloads are staged, never lent from here.
+    fn run(&mut self, context: &mut StepContext<'_>) -> FillRun {
         if let Some((contradiction, payload)) = self.pending_finish.take() {
             let reason = if contradiction { FillReason::Contradiction } else { FillReason::Collapsed };
             self.commit_solve(&payload);
@@ -620,27 +611,79 @@ impl InteractiveJob for BitmapFillRunJob {
             return self.publish_tick(context, payload, stage, FillReason::Collapsed, ToolRunState::Running);
         }
         match self.prep {
-            PrepStage::Compile => {
-                match crate::inferences::compile_bitmap_collapse(self.snapshot.as_ref()) {
-                    Ok(parts) => {
-                        let model = parts.model.clone();
-                        let topology = parts.topology.clone();
-                        let fixed = parts.fixed.clone();
-                        self.parts = Some(parts);
-                        let operation = semio_framework_job::Operation::new(context.operation(), semio_framework_job::RevisionId(0), context.generation(), self.snapshot.seed);
-                        self.operation = operation;
-                        self.child = Some(engine::job::WfcJob::new(operation, model, topology, engine::job::WfcJobConfig::default(), None, fixed));
-                        self.prep = PrepStage::Child;
-                        StepOutcome::Yield
-                    }
-                    Err(error) => self.fault(context, &error),
+            PrepStage::Compile => match crate::inferences::compile_bitmap_collapse(self.snapshot.as_ref()) {
+                Ok(parts) => {
+                    let model = parts.model.clone();
+                    let topology = parts.topology.clone();
+                    let fixed = parts.fixed.clone();
+                    self.parts = Some(parts);
+                    let operation = semio_framework_job::Operation::new(context.operation(), semio_framework_job::RevisionId(0), context.generation(), self.snapshot.seed);
+                    self.operation = operation;
+                    self.child = Some(engine::job::WfcJob::new(operation, model, topology, engine::job::WfcJobConfig::default(), None, fixed));
+                    self.prep = PrepStage::Child;
+                    FillRun::Yield
                 }
-            }
+                Err(error) => self.fault(&error),
+            },
             PrepStage::Child => self.drain_child(context),
-            PrepStage::Done => StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                state: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitState),
-                output: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitOutput),
-            }),
+            PrepStage::Done => FillRun::Complete,
+        }
+    }
+
+    /// 🤝️ Closes the lent tick turn by turn from the next step's own wallet.
+    fn retire_delivered<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        let publication = self.publication.as_mut().expect("a delivered fill publication is staged");
+        let step = publication.close_step(context.retained_grant());
+        context.consume_retained(step.progress())?;
+        if let InteractiveJobCloseStep::Refused { kind, progress } = step {
+            return Err(semio_framework_value::ValueError::literal(kind, "fill publication close was refused").with_retained_progress(progress));
+        }
+        if publication.terminal_is_empty() {
+            self.publication = None;
+        }
+        Ok(None)
+    }
+
+    /// 📏️ Quotes the next close turn: the staged publication, then the child's own frontier.
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if let Some(publication) = self.publication.as_ref() {
+            return publication.retirement_demands();
+        }
+        if let Some(child) = self.child.as_ref() {
+            return Ok(semio_framework_value::RetirementDemand { copy_bytes: child.next_close_copy_byte_demand()?, capacity_bytes: child.next_close_capacity_byte_demand(0)?, release_bytes: child.next_close_release_byte_demand()?, depth: child.next_close_depth_demand()?.saturating_add(1) });
+        }
+        Ok(semio_framework_value::RetirementDemand::default())
+    }
+}
+
+impl InteractiveJob for BitmapFillRunJob {
+    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {
+            return self.retire_delivered(context);
+        }
+        if self.closing || context.is_cancelled() {
+            self.committed_solve = None;
+            self.pending_tick = false;
+            self.pending_finish = None;
+            let _ = self.writer.step(ToolRunStepKind::Warning, FillStage::Complete.index(), FillReason::Cancelled.code(), None, &[]);
+            return JobOutcomeBorrow::admit_cancelled(context);
+        }
+        if self.publication.is_some() {
+            return self.publication.as_mut().expect("a staged fill publication").poll(context);
+        }
+        match self.run(context) {
+            FillRun::Yield | FillRun::Staged => Ok(None),
+            FillRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
+            FillRun::Complete => JobOutcomeBorrow::admit_complete(context, None, None),
+        }
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Complete => descriptor.complete(None, None),
+            _ => self.publication.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "fill outcome has no staged publication"))?.borrow_outcome(descriptor),
         }
     }
 
@@ -653,15 +696,60 @@ impl InteractiveJob for BitmapFillRunJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if let Some(child) = &mut self.child {
-            return InteractiveJob::close_step(child, maximum_items, maximum_bytes);
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let demand = match self.close_demands() {
+            Ok(demand) => demand,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        InteractiveJobCloseStep::Complete
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        }
+        if let Some(publication) = self.publication.as_mut() {
+            let step = publication.close_step(grant);
+            if publication.terminal_is_empty() {
+                self.publication = None;
+            }
+            return match step {
+                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                step => step,
+            };
+        }
+        if let Some(child) = &mut self.child {
+            let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+            let step = InteractiveJob::close_step(child, child_grant);
+            if InteractiveJob::terminal_is_empty(child) {
+                self.child = None;
+                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } };
+            }
+            return match step {
+                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                step => step,
+            };
+        }
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands()?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.child.as_ref().map_or(true, InteractiveJob::terminal_is_empty)
+        self.publication.is_none() && self.child.as_ref().map_or(true, InteractiveJob::terminal_is_empty)
     }
 }
 //#endregion 🧵️Job

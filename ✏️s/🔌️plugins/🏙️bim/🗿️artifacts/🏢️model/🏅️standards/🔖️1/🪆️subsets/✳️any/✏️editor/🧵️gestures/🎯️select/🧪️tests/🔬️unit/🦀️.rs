@@ -132,7 +132,7 @@ async fn the_storey_height_handle_of_the_section_sets_the_storey_height() {
     assert_eq!(set.id, "st-ground");
     assert!((set.height - 3.6).abs() < 1e-9, "snapped to 5 cm: {}", set.height);
     assert!((rig.snapshot.storeys["st-ground"].height - 3.6).abs() < 1e-9);
-    let marks = section_marks(&crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &rig.snapshot, |inference| inference.clone()), [0.0, 0.0], [8.0, 0.0]);
+    let marks = section_marks(&crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, |inference| inference.clone()), [0.0, 0.0], [8.0, 0.0]);
     assert_eq!(marks.len(), 4, "a guide and a handle for each of the two storeys");
 }
 

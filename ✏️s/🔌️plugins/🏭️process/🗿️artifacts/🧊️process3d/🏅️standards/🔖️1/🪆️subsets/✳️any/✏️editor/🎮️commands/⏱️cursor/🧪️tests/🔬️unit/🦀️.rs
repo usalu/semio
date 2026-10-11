@@ -32,11 +32,11 @@ async fn every_cursor_verb_is_one_config_write_and_no_document_edit() {
     let config = Process3dConfig::default();
     let back = moved(&snapshot, &config, |doc, cfg, ctx| step_cursor_back::handle(&step_cursor_back::StepCursorBack {}, doc, cfg, ctx));
     assert!(back.artifact_mutations.is_empty(), "the cursor is never a document mutation");
-    assert_eq!(back.config_mutations, vec![Process3dConfigMutation::SetCursor { value: Some(3) }], "back from every step resolves one fewer");
+    assert_eq!(back.config_mutations, vec![Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: Some(3) })], "back from every step resolves one fewer");
     let forward = moved(&snapshot, &Process3dConfig { resolved_up_to: Some(4), ..Process3dConfig::default() }, |doc, cfg, ctx| step_cursor_forward::handle(&step_cursor_forward::StepCursorForward {}, doc, cfg, ctx));
     assert!(forward.config_mutations.is_empty(), "forward past the timeline end clamps to where it already is");
     let set = moved(&snapshot, &config, |doc, cfg, ctx| set_cursor::handle(&set_cursor::SetCursor { value: Some(99) }, doc, cfg, ctx));
-    assert_eq!(set.config_mutations, vec![Process3dConfigMutation::SetCursor { value: Some(4) }]);
+    assert_eq!(set.config_mutations, vec![Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: Some(4) })]);
     let step = moved(&snapshot, &Process3dConfig { resolved_up_to: Some(1), ..Process3dConfig::default() }, |doc, cfg, ctx| step_cursor::handle(&step_cursor::StepCursor { delta: -5 }, doc, cfg, ctx));
-    assert_eq!(step.config_mutations, vec![Process3dConfigMutation::SetCursor { value: Some(0) }], "a step below zero clamps to the bare stock");
+    assert_eq!(step.config_mutations, vec![Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: Some(0) })], "a step below zero clamps to the bare stock");
 }

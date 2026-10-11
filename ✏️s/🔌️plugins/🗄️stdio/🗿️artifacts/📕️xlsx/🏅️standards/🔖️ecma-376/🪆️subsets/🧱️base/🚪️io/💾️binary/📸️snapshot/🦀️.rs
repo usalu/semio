@@ -1,7 +1,7 @@
 //! 💾️ XLSX snapshot pack facet over complete literal native fields.
 
 use crate::XlsxSnapshot;
-use native::{encode, decode_binary, pack_limits};
+use native::{encode_standalone, decode_binary, pack_limits};
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
@@ -14,7 +14,7 @@ impl store::ArtifactPack for XlsxSnapshot {
         Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
     }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        match encode(self, semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary, &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, pack_limits(&options.limits)))
+        match encode_standalone(self, semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary, &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, pack_limits(&options.limits)))
             .map_err(store::PackError::from)?
         {
             semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => Ok(bytes),

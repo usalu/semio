@@ -612,20 +612,14 @@ fn brush_run_never() -> Option<u64> {
 /// 🚦️ One job step with `fuel` units and no deadline, its retained tick page decoded and returned to its ledger.
 fn brush_run_step(job: &mut BrushSuggestionsRunJob<Puzzle3dInstanceOperationOwner>, fuel: u64) -> Option<ToolRunTick> {
     let mut sequence = 0;
-    let mut context = StepContext::new(OperationId(91), Generation(1), StepBudget::new(fuel, u64::MAX), root_cancel_token(), brush_run_never, &mut sequence);
-    brush_run_settle(job.step(&mut context))
+    let mut context = StepContext::new(OperationId(91), Generation(1), StepBudget::new(fuel, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), brush_run_never, &mut sequence, crate::puzzle_job::testing::test_progress());
+    brush_run_settle(job.turn(&mut context))
 }
 
-fn brush_run_settle(outcome: StepOutcome) -> Option<ToolRunTick> {
-    match outcome {
-        StepOutcome::PreviewReady(mut payload) => {
-            let page = payload.single_page().expect("a tick is one payload page").to_vec();
-            while !payload.terminal_is_empty() {
-                payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            }
-            Some(ToolRunTick::decode(&page).expect("tick decodes"))
-        }
-        StepOutcome::Yield => None,
+fn brush_run_settle(turn: JobTurn) -> Option<ToolRunTick> {
+    match turn {
+        JobTurn::Preview(page) => Some(ToolRunTick::decode(&page).expect("tick decodes")),
+        JobTurn::Yield => None,
         other => panic!("a brush suggestions run only yields ticks: {other:?}"),
     }
 }
@@ -814,12 +808,9 @@ fn a_closing_brush_suggestions_job_retires_only_its_own_result() {
     port.wake();
     let mut second = brush_run_job(&owner, &port, brush_search_scene(false), brush_search_lane(), brush_search_meshes, 1);
     BrushRunMirror::new(1).drive(&mut second, &port, u64::MAX);
-    first.begin_close();
-    assert_eq!(first.close_step(64, 1 << 16), InteractiveJobCloseStep::Complete);
-    assert!(first.terminal_is_empty());
+    crate::puzzle_job::testing::close_job(&mut first);
     assert_eq!(brush_run_link(&owner, |link| link.found(BRUSH_SEARCH_TARGET).map(|found| found.writer)), Some((1, 1)), "the successor's result survives");
-    second.begin_close();
-    assert_eq!(second.close_step(64, 1 << 16), InteractiveJobCloseStep::Complete);
+    crate::puzzle_job::testing::close_job(&mut second);
     assert!(brush_run_link(&owner, |link| link.found(BRUSH_SEARCH_TARGET).is_none()), "the last writer's close retires its result");
 }
 
@@ -921,9 +912,9 @@ fn brush_suggestions_run_step_stays_below_the_interactive_ceiling_for_nakagin() 
         while !port.is_waiting() {
             let mut sequence = 0;
             let start = precompute_work_done();
-            let step_budget = StepBudget::from_duration(semio_framework_job::INTERACTIVE_LANE_FUEL, start, budget).expect("budget");
-            let mut context = StepContext::new(OperationId(92), Generation(1), step_budget, root_cancel_token(), precompute_work_clock, &mut sequence);
-            let outcome = job.step(&mut context);
+            let step_budget = StepBudget::from_duration(semio_framework_job::INTERACTIVE_LANE_FUEL, start, budget, crate::puzzle_job::testing::unbounded_grant()).expect("budget");
+            let mut context = StepContext::new(OperationId(92), Generation(1), step_budget, root_cancel_token(), precompute_work_clock, &mut sequence, crate::puzzle_job::testing::test_progress());
+            let outcome = job.turn(&mut context);
             worst = worst.max(precompute_work_done() - start);
             drop(brush_run_settle(outcome));
             steps += 1;

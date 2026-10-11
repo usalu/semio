@@ -103,8 +103,8 @@ fn retained_inline_symbols_native_canonical_utf8_paged_indices_and_exact_granted
     let mut original = admitted_source(vec![1, 1, b'x']);
     let mut changed = admitted_source(vec![1, 1, b'y']);
     let mut bound = RetainedInlineSymbols::new(0, 2048, 262144);
-    observed(&mut bound, &original, RetainedCloneGrant::one_payload_turn(1, 64), false).unwrap();
-    assert_eq!(observed(&mut bound, &changed, RetainedCloneGrant::one_payload_turn(1, 64), false), Err(InlineSymbolRefusal::Source));
+    observed(&mut bound, &original, RetainedCloneGrant::one_payload_turn(RetainedCloneBinding::alias_copy_bytes(), 64), false).unwrap();
+    assert_eq!(observed(&mut bound, &changed, RetainedCloneGrant::one_payload_turn(RetainedCloneBinding::alias_copy_bytes(), 64), false), Err(InlineSymbolRefusal::Source));
     close(&mut bound, &original);
     close_source(&mut changed);
     close_source(&mut original);

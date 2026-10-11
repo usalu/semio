@@ -1,5 +1,5 @@
 //! 🔗️ Complete internal Part-21 graph admission for typed STEP snapshots.
-use super::{StepSnapshot,StepValue};
+use super::{StepSnapshot,StepTypedValue, StepValue};
 use protocol::{MutationApplyError,MutationApplyResult};
 use std::collections::BTreeSet;
 
@@ -30,7 +30,7 @@ fn validate_value<'a>(value:&'a StepValue,identities:&BTreeSet<u64>,path:Vec<Str
         match value {
             StepValue::Reference(id) if !identities.contains(id)=>return Err(MutationApplyError::new("mutation.apply.dangling-reference","STEP internal reference must resolve to a retained entity").at(path)),
             StepValue::Aggregate(items)=>for (index,item) in items.iter().enumerate().rev() {let mut target=path.clone();target.push(index.to_string());pending.push((item,target));},
-            StepValue::TypedValue{value,..}=>{let mut target=path;target.push("value".into());pending.push((value.as_ref(),target));},
+            StepValue::TypedValue(StepTypedValue {value,..})=>{let mut target=path;target.push("value".into());pending.push((value.as_ref(),target));},
             _=>{},
         }
     }

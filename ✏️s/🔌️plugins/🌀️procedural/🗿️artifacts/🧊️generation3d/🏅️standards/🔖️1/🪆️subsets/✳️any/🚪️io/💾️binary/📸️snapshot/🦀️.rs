@@ -170,7 +170,6 @@ enum Generation3dMountedDslFrame {
 /// and cannot invoke a batch pack decoder.
 pub struct Generation3dMountedTypedSnapshotOwner {
     candidate: std::mem::ManuallyDrop<Option<Generation3dSnapshot>>,
-    retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     stack: Vec<Generation3dMountedContainerOwner>,
     string: Option<Generation3dMountedStringOwner>,
     pending_table_rows: Option<u64>,
@@ -202,7 +201,6 @@ impl Generation3dMountedTypedSnapshotOwner {
         };
         Ok(Self {
             candidate: std::mem::ManuallyDrop::new(Some(candidate)),
-            retirement: std::mem::ManuallyDrop::new(None),
             stack,
             string: None,
             pending_table_rows: None,
@@ -1016,15 +1014,8 @@ impl mounted::RetainedTypedPackOwner for Generation3dMountedTypedSnapshotOwner {
         if self.stack.pop().is_some() {
             return false;
         }
-        if let Some(retirement) = self.retirement.as_mut() {
-            if !matches!(retirement.close_step(1, 4096), Ok(store::SnapshotRetirementStep::Complete)) {
-                return false;
-            }
-            self.retirement.take();
-            return false;
-        }
         if let Some(candidate) = self.candidate.take() {
-            *self.retirement = Some(crate::host::generation3d_retire_owned_snapshot(candidate));
+            candidate.retire_cold();
             return false;
         }
         self.handed_back = true;
@@ -1034,7 +1025,6 @@ impl mounted::RetainedTypedPackOwner for Generation3dMountedTypedSnapshotOwner {
     fn terminal_is_empty(&self) -> bool {
         self.handed_back
             && self.candidate.is_none()
-            && self.retirement.is_none()
             && self.stack.is_empty()
             && self.string.is_none()
             && self.json_stack.is_empty()

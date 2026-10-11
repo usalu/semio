@@ -27,6 +27,24 @@ async fn editor_registers_every_natural_audio_action_as_retained_work() {
     }
 }
 
+fn quoted_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+}
+
+fn drain_publication(publication: &mut store::ArtifactStoreBatchPublication<WavSnapshot, WavMutation>) {
+    for _ in 0..4_096 {
+        if publication.terminal_is_empty() {
+            return;
+        }
+        let demand = publication.retirement_demands(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("WAV publication close demand");
+        let step = publication.close_step(quoted_grant(demand)).expect("WAV publication closes");
+        if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+            return;
+        }
+    }
+    panic!("WAV publication did not retire");
+}
+
 fn published(event: &editing::SnapshotEditEvent, base: &WavSnapshot) -> WavSnapshot {
     let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, base).expect("the edit resolves to a kind");
     let mut next = base.clone();
@@ -133,14 +151,14 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
 
     let envelope = store::create_document_envelope(STDIO_WAV_DOCUMENT_SCHEMA, "wav-large-sample-publication", snapshot, None);
     let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("WAV store opens");
-    store.install_document_store_owners_exact(store::bounded_artifact_store_owners::<WavSnapshot, WavMutation>());
+    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<WavSnapshot, WavMutation>().expect("funded WAV owners")).map_err(|(error, _)| error).expect("WAV owners install");
     let factory = <WavEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("WAV retained factory");
     let generation = store.generation_now();
     let root = store.snapshot_root();
     let mut cancelled = store
         .begin_apply_batch(semio_framework_job::OperationId(1), generation, store.content_revision_now(), "wav-large-sample-cancel".into(), vec![mutation.clone()], store::HistoryLane::Document, Some(&factory), None)
         .expect("bounded patch cancellation candidate admits");
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES };
+    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_capacity_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_release_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_depth: 64 };
     for _ in 0..64 {
         match store.advance_apply_batch(&mut cancelled, grant).expect("cancel candidate advances") {
             store::ArtifactStoreOneItemAdvance::Published(_) => panic!("candidate published before its cancellation point"),
@@ -150,11 +168,7 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
         }
     }
     assert!(store.cancel_apply_batch(&mut cancelled));
-    for _ in 0..64 {
-        if matches!(cancelled.close_step(grant).expect("cancelled publication closes"), store::SnapshotRetirementStep::Complete) {
-            break;
-        }
-    }
+    drain_publication(&mut cancelled);
     assert!(cancelled.terminal_is_empty());
     drop(cancelled);
     assert_eq!(store.generation_now(), generation);
@@ -188,11 +202,7 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     assert_eq!(samples.len(), sample_count);
     assert_eq!(samples[edit_index], 9);
     assert!(publication.acknowledge());
-    for _ in 0..64 {
-        if matches!(publication.close_step(grant).expect("publication closes"), store::SnapshotRetirementStep::Complete) {
-            break;
-        }
-    }
+    drain_publication(&mut publication);
     assert!(publication.terminal_is_empty());
     drop(publication);
 
@@ -238,11 +248,7 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     assert_eq!(samples.len(), sample_count);
     assert_eq!(samples[edit_index], 9);
     assert!(metadata_publication.acknowledge());
-    for _ in 0..64 {
-        if matches!(metadata_publication.close_step(grant).expect("metadata publication closes"), store::SnapshotRetirementStep::Complete) {
-            break;
-        }
-    }
+    drain_publication(&mut metadata_publication);
     assert!(metadata_publication.terminal_is_empty());
     drop(metadata_publication);
     store.dispatch(store::ArtifactCommand::Undo).await.expect("metadata undo");
@@ -256,7 +262,10 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
 
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<WavSnapshot, WavMutation>::new();
     for _ in 0..100_000 {
-        if matches!(semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("WAV store closes"), semio_framework_plugin::PluginCloseStep::Complete) {
+        let demand = semio_framework_plugin::ArtifactOwnedDisposer::retirement_demands(&disposer, &store, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("WAV store close demand");
+        let funded = quoted_grant(demand);
+        let step = semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, funded).expect("WAV store closes");
+        if matches!(step, semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
     }

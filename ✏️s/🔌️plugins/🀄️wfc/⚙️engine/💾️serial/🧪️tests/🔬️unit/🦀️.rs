@@ -30,8 +30,8 @@ fn from_model_compile_round_trip_preserves_fingerprint() {
 fn source_model_doc_json_round_trips() {
     let (model, _topo) = checkerboard();
     let doc = SourceModelDoc::from_model(&model);
-    let json = semio_framework_os_kernel::json::to_json_string(&doc);
-    let back: SourceModelDoc = semio_framework_os_kernel::json::from_json_str(&json).unwrap();
+    let json = semio_framework_pack_json::to_json_string(&doc);
+    let back: SourceModelDoc = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(back, doc);
     assert_eq!(back.compile().unwrap().fingerprint(), model.fingerprint());
 }
@@ -70,8 +70,8 @@ fn checkpoint_doc_round_trips_and_resumes() {
     let checkpoint = Checkpoint::new(domains, fingerprint, 5);
 
     let doc = CheckpointDoc::from_checkpoint(&checkpoint);
-    let json = semio_framework_os_kernel::json::to_json_string(&doc);
-    let back: CheckpointDoc = semio_framework_os_kernel::json::from_json_str(&json).unwrap();
+    let json = semio_framework_pack_json::to_json_string(&doc);
+    let back: CheckpointDoc = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let restored = back.into_checkpoint(&model, topo.node_count()).unwrap();
     assert_eq!(restored.model_fingerprint, fingerprint);
     assert_eq!(restored.seed, 5);
@@ -115,6 +115,6 @@ fn checkpoint_doc_rejects_tampered_bitset_from_raw_json() {
     // its declared `len` in the `words` array — must be caught by `is_well_formed`, not panic.
     let (model, topo) = checkerboard();
     let json = format!(r#"{{"version":1,"domains":[{{"words":[999999],"len":2}}{}],"model_fingerprint":{},"seed":0}}"#, ",{\"words\":[3],\"len\":2}".repeat(topo.node_count() - 1), model.fingerprint());
-    let doc: CheckpointDoc = semio_framework_os_kernel::json::from_json_str(&json).unwrap();
+    let doc: CheckpointDoc = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(doc.into_checkpoint(&model, topo.node_count()).unwrap_err(), SolveError::CorruptCheckpoint { reason: "domain bitset failed structural well-formedness check" });
 }

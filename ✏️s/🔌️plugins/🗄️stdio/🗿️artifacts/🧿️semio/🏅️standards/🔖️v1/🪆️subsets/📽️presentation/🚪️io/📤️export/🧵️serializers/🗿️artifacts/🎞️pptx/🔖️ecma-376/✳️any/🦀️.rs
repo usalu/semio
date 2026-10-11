@@ -89,7 +89,7 @@ impl ArtifactSerializer for SemioPresentationToPptx {
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let slides = from.slides.iter().map(|slide| PptxSlide { shapes: slide.shapes.iter().filter_map(map_shape).collect() }).collect();
-        Ok(semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx(PptxPresentation { slides }))
+        Ok(semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation { slides }))
     }
 }
 //#endregion 🔖️Serializer

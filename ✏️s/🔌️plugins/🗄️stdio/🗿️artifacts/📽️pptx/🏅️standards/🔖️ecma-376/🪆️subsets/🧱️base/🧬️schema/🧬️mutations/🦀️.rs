@@ -50,7 +50,8 @@ pub mod replace_xml_node;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = PptxSnapshot, diff = PptxDiff, schema = "PptxMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum PptxMutation {
@@ -102,6 +103,10 @@ pub fn kind_of(mutation: &PptxMutation) -> &'static str {
         PptxMutation::SetShapeText(_) => "set-shape-text",
         PptxMutation::SetShapePosition(_) => "set-shape-position",
         PptxMutation::ReplaceXmlNode(_) => "replace-xml-node",
+        PptxMutation::SetRelationship(_) => "set-relationship",
+        PptxMutation::RemoveRelationship(_) => "remove-relationship",
+        PptxMutation::SetContentType(_) => "set-content-type",
+        PptxMutation::RemoveContentType(_) => "remove-content-type",
     }
 }
 //#endregion 🔖️Kinds

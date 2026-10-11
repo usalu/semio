@@ -80,6 +80,9 @@ impl Dictionary {
         self.pairs.get(key)
     }
 
+    /// 🔗️ Retains only the exact immutable value of one ranked entry.
+    pub fn value_shared_at_rank(&self,index:usize)->Option<semio_framework_value::ordered::SharedOwner<Value>> {self.pairs.value_shared_at_rank(index)}
+
     /// 📍️ Borrows an original ranked entry from the existing ordered dictionary owner.
     pub fn entry_at_rank(&self,index:usize)->Option<(&String,&Value)> {self.pairs.entry_at_rank(index)}
 
@@ -395,6 +398,40 @@ impl FromValue for Atom {
         }
     }
 }
+
+/// 🌲️ Canonical projection follows the `ToValue` wire shape: dictionaries are rank-ordered objects, atoms are JSON scalars.
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for Atom {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> {
+        use semio_framework_pack_json::ArtifactCanonicalJsonNode as Node;
+        Ok(match self { Atom::Null => Node::Null, Atom::Boolean(value) => Node::Bool(*value), Atom::Integer(value) => Node::I64(*value), Atom::Decimal(value) => Node::F64(*value), Atom::String(value) => Node::String(value) })
+    }
+}
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for Dictionary {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> { Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(self.len())) }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, ValueError> {
+        self.entry_at_rank(ordinal).map(|(_, value)| value as &dyn semio_framework_pack_json::ArtifactCanonicalJsonTree).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical neural dictionary ordinal is absent"))
+    }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, ValueError> {
+        self.entry_at_rank(ordinal).map(|(key, _)| key.as_str().into()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical neural dictionary key is absent"))
+    }
+}
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for Value {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> {
+        use semio_framework_pack_json::ArtifactCanonicalJsonTree as CanonicalTree;
+        match self { Value::Atom(value) => CanonicalTree::canonical_tree_node(value), Value::Dictionary(value) => CanonicalTree::canonical_tree_node(value) }
+    }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, ValueError> {
+        use semio_framework_pack_json::ArtifactCanonicalJsonTree as CanonicalTree;
+        match self { Value::Atom(value) => CanonicalTree::canonical_tree_child(value, ordinal), Value::Dictionary(value) => CanonicalTree::canonical_tree_child(value, ordinal) }
+    }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, ValueError> {
+        use semio_framework_pack_json::ArtifactCanonicalJsonTree as CanonicalTree;
+        match self { Value::Atom(value) => CanonicalTree::canonical_tree_key(value, ordinal), Value::Dictionary(value) => CanonicalTree::canonical_tree_key(value, ordinal) }
+    }
+}
+
 // #endregion 🔖️Dictionary
 
 // #region 🔖️Schema
@@ -926,7 +963,8 @@ impl Operator for SchemaComponent {
 /// 🌳️ Directed acyclic graph of neurons and synapses. `serde` is TEST-ONLY — see `Dictionary`'s
 /// docstring; mutually recursive with `Neuron` via `Neuron.tree: Option<Box<Tree>>`, so both moved
 /// off serde together.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct Tree {
     pub neurons: Vec<Neuron>,
@@ -934,7 +972,8 @@ pub struct Tree {
 }
 
 /// 🔵️ Neuron instance bound to a kind. `serde` is TEST-ONLY — see `Tree`'s docstring above.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 pub struct Neuron {
     pub id: String,
@@ -977,7 +1016,9 @@ fn default_to_port() -> String {
 }
 
 /// 🔗️ Directed connection between two port endpoints.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Synapse {
@@ -2841,4 +2882,8 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🚦️owned-controls/🦀️.rs"]
 mod owned_value_controls;
+
+#[cfg(test)]
+#[path = "🧪️tests/🌲️canonical/🦀️.rs"]
+mod canonical_projection;
 // #endregion 🔖️Tests

@@ -1,13 +1,15 @@
 //! 🗺️ Complete ordered map objects, independent of rendering projections and JSON media.
 use semio_framework_value::{DslValue,Number,ToValue,FromValue};
 /// 🧾️ Literal root property occurrence.
-#[derive(Clone,Debug,PartialEq,ToValue,FromValue,semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone,Debug,PartialEq,ToValue,FromValue,semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
 #[cfg_attr(test,serde(rename_all="camelCase"))]
 #[value(rename_all="camelCase",deny_unknown_fields)]
 pub struct ImportedProperty{pub name:String,pub value:DslValue}
 /// 🗺️ Imported map ownership retains all records and every intrinsic domain.
-#[derive(Clone,Debug,Default,PartialEq,ToValue,semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone,Debug,Default,PartialEq,ToValue,semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test,derive(serde::Serialize,serde::Deserialize))]
 #[cfg_attr(test,serde(rename_all="camelCase"))]
 #[value(rename_all="camelCase",deny_unknown_fields)]

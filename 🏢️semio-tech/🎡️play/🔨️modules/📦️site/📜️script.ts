@@ -5,7 +5,7 @@ import { mkdir, mkdtemp } from "node:fs/promises";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { NxScript } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts";
+import { runOwnedNxInvocationV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts";
 import { prefetchPlayMapTiles } from "./🗺️map-tiles/🟦️.ts";
 import { PLAY_HOST } from "../🧩️runtime/🟦️.ts";
 import { publishPlayPages } from "./📄pages/🟦️.ts";
@@ -21,7 +21,7 @@ class FreshBuildScript extends BundleScript {
     for (const key of Object.keys(process.env)) if (!(key in environment)) delete process.env[key];
     Object.assign(process.env, environment);
     console.log(`Fresh play release cache: ${generation}`);
-    await new NxScript(this.repoRoot, this.repoRoot).run([...PLAY_FRESH_BUILD_ARGS]);
+    await runOwnedNxInvocationV1(this.repoRoot, PLAY_FRESH_BUILD_ARGS, this.invocation);
   }
 }
 
@@ -31,7 +31,7 @@ class CatalogScript extends BundleScript {
     if (args.length) throw new Error("The play release catalog accepts no arguments");
     const { GenerateScript, renderCatalogFiles } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts");
     renderCatalogFiles(this.repoRoot, undefined, "refuse");
-    new GenerateScript(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry"), this.repoRoot).run([]);
+    new GenerateScript(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry"), this.repoRoot, this.invocation).run([]);
   }
 }
 

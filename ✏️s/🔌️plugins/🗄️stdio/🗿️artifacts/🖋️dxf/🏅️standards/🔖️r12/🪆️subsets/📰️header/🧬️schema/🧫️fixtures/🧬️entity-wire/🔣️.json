@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "id": "line", "wire": "{\"line\":{\"start\":[1.0,2.0,3.0],\"end\":[4.0,5.0,6.0],\"layer\":\"0\"}}" },
+    { "id": "circle", "wire": "{\"circle\":{\"center\":[1.0,2.0,0.0],\"radius\":3.5,\"layer\":\"A\"}}" },
+    { "id": "arc", "wire": "{\"arc\":{\"center\":[0.0,0.0,0.0],\"radius\":2.0,\"startAngle\":10.0,\"endAngle\":90.0,\"layer\":\"0\"}}" },
+    { "id": "polyline", "wire": "{\"polyline\":{\"vertices\":[{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"bulge\":0.0}],\"closed\":true,\"layer\":\"0\"}}" },
+    { "id": "text", "wire": "{\"text\":{\"position\":[1.0,1.0,0.0],\"height\":2.5,\"value\":\"semio\",\"layer\":\"0\"}}" },
+    { "id": "solid", "wire": "{\"solid\":{\"points\":[[0.0,0.0,0.0],[1.0,0.0,0.0],[1.0,1.0,0.0],[0.0,1.0,0.0]],\"layer\":\"0\"}}" },
+    { "id": "insert", "wire": "{\"insert\":{\"blockName\":\"B\",\"position\":[0.0,0.0,0.0],\"scale\":[1.0,1.0,1.0],\"rotation\":0.0,\"layer\":\"0\"}}" },
+    { "id": "other", "wire": "{\"other\":{\"kind\":\"3DFACE\"}}" }
+  ]
+}

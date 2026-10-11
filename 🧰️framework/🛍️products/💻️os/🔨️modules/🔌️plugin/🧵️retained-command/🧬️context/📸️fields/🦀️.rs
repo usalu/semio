@@ -7,7 +7,7 @@ use std::{mem::ManuallyDrop,sync::Arc};
 
 #[derive(semio_framework_value::RetireOwned)]
 pub(crate) struct ContextToolRunMetadata{pub tool_id:String,pub identity:semio_framework_tool_run::ToolRunIdentity,pub state:semio_framework_tool_run::ToolRunState,pub progress:semio_framework_tool_run::ToolRunProgress}
-pub(crate) struct ContextToolRunSources{pub entities:Arc<std::collections::BTreeSet<u64>>,pub payload:Option<Arc<[u8]>>}
+pub(crate) struct ContextToolRunSources{pub entities:Arc<std::collections::BTreeSet<u64>>,pub payload:Option<Arc<Vec<u8>>>}
 #[derive(semio_framework_value::RetireOwned)]
 pub(crate) struct ContextOwnedFields<D:Send+Sync+'static,T:Send+Sync+'static,M:Send+'static>{
  pub gesture:GestureCapture<M>,pub view_state:Option<ViewModel>,pub tool_run:Option<ContextToolRunMetadata>,pub draft:ArtifactContextRoot<D>,pub transient:ArtifactContextRoot<T>,pub presence:Option<store::ErasedSnapshotRead>,pub window_config:Option<WindowConfigSnapshot>,pub window_transient:Option<WindowTransientSnapshot>,pub provisional:Vec<DslValue>,pub refused_reads:[Option<store::ErasedSnapshotRead>;2],pub transient_source_fault:Option<String>,

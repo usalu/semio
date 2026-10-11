@@ -76,7 +76,7 @@ impl<T: Clone + PartialEq + Debug> FieldPatch for Option<T> {
 //#region 🔖️OptionChange
 /// 🎯️ A patch over an `Option<T>` field: absent leaves it, `Cleared` empties it, `Assigned` fills it. A typed
 /// three-state, because `Option<Option<T>>` collapses "unchanged" and "now empty" onto one JSON `null`.
-#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum OptionChange<T> {
     #[default]
@@ -125,7 +125,7 @@ impl<T: Clone + PartialEq + Debug> FieldPatch for OptionChange<T> {
 
 //#region 🔖️Slots
 /// 🔢️ One assigned array slot.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct Slot<T> {
     pub index: usize,
     pub value: T,
@@ -134,6 +134,18 @@ pub struct Slot<T> {
 /// 🔢️ A patch over a fixed-size array of `N` entries: the assigned slots, ascending by index.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Slots<T, const N: usize>(pub Vec<Slot<T>>);
+
+impl<T: semio_framework_value::retirement::RetireOwned, const N: usize> semio_framework_value::retirement::RetireOwned for Slots<T, N> {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::RetireOwned::retirement(self.0)
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)
+    }
+    fn controlled_retirement_supported() -> bool {
+        <Vec<Slot<T>> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()
+    }
+}
 
 impl<T, const N: usize> Default for Slots<T, N> {
     fn default() -> Self {
@@ -231,6 +243,18 @@ fn splice_of<K, T>(cuts: Vec<CutWire<K>>, puts: Vec<PutWire<T>>) -> Splice<K, T>
 /// 📋️ A patch over an ordered list: removals by base index and insertions by after index.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ListEdit<T>(Splice<T, T>);
+
+impl<T: semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for ListEdit<T> {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::RetireOwned::retirement(self.0)
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)
+    }
+    fn controlled_retirement_supported() -> bool {
+        <Splice<T, T> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()
+    }
+}
 
 impl<T> Default for ListEdit<T> {
     fn default() -> Self {
@@ -331,6 +355,22 @@ impl<T: FromValue> FromValue for ListEdit<T> {
 pub struct Rows<P: RowPatch> {
     edit: Splice<<P::Target as Row>::Key, P::Target>,
     modified: Vec<P>,
+}
+
+impl<P: RowPatch + semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for Rows<P>
+where
+    P::Target: semio_framework_value::retirement::RetireOwned,
+    <P::Target as Row>::Key: semio_framework_value::retirement::RetireOwned,
+{
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::RetireOwned::retirement((self.edit, self.modified))
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&(Splice::<<P::Target as Row>::Key, P::Target>::default(), Vec::<P>::new()))
+    }
+    fn controlled_retirement_supported() -> bool {
+        <(Splice<<P::Target as Row>::Key, P::Target>, Vec<P>) as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()
+    }
 }
 
 impl<P: RowPatch> Default for Rows<P> {
@@ -533,7 +573,7 @@ impl<P: FieldPatch + Default> Field<P> for Rec {
 macro_rules! patch {
     (@ $(#[$meta:meta])* $patch:ident for $row:ty; [$($key:ident: $key_ty:ty)?]; $($kind:ident $field:ident: $ty:ty),*) => {
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
+        #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
         pub struct $patch {
             $(pub $key: $key_ty,)?
             $(#[value(default, skip_serializing_if = "Unchanged::unchanged")] pub $field: <$kind as Field<$ty>>::Patch,)*

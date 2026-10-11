@@ -716,6 +716,8 @@ impl std::ops::Mul<f32> for Vec3d {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Point3d(rigid::Point3);
 
+semio_framework_value::artifact_retire_leaf!(Point3d);
+
 impl Point3d {
     pub(crate) fn new(x: f32, y: f32, z: f32) -> Self {
         Self(rigid::Point3::new(x, y, z))
@@ -778,6 +780,8 @@ impl Rotation3d {
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Pose3d(rigid::Isometry3);
 
+semio_framework_value::artifact_retire_leaf!(Pose3d);
+
 impl Pose3d {
     pub(crate) fn identity() -> Self {
         Self(rigid::Isometry3::identity())
@@ -796,15 +800,148 @@ impl Pose3d {
     }
 }
 
+/// 🔺️ The shared triangle mesh of one collision shape. Its retirement releases a last share buffer by buffer: the vertex array, the
+/// triangle array, then the BVH one node per turn; a share that is not the last releases only its handle.
 #[derive(Clone)]
+pub(crate) struct CollisionMesh(std::sync::Arc<collision::TriMesh>);
+
+impl std::ops::Deref for CollisionMesh {
+    type Target = collision::TriMesh;
+
+    fn deref(&self) -> &collision::TriMesh {
+        &self.0
+    }
+}
+
+const COLLISION_MESH_TREE_STACK: usize = 64;
+
+struct CollisionMeshRetirement {
+    shared: std::mem::ManuallyDrop<Option<std::sync::Arc<collision::TriMesh>>>,
+    vertices: std::mem::ManuallyDrop<Vec<rigid::Point3>>,
+    triangles: std::mem::ManuallyDrop<Vec<[u32; 3]>>,
+    tree: std::mem::ManuallyDrop<Vec<collision::BvhTree>>,
+}
+
+impl CollisionMeshRetirement {
+    fn birth_bytes() -> usize {
+        size_of::<Self>() + COLLISION_MESH_TREE_STACK * size_of::<collision::BvhTree>()
+    }
+}
+
+impl semio_framework_value::retirement::RetirementCursor for CollisionMeshRetirement {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
+        use semio_framework_value::retirement::RetirementStep;
+        if self.terminal_is_empty() {
+            return RetirementStep::Complete;
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return RetirementStep::BudgetExhausted;
+        }
+        if let Some(shared) = self.shared.take() {
+            match std::sync::Arc::try_unwrap(shared) {
+                Ok(mesh) => {
+                    let parts = mesh.into_parts();
+                    *self.vertices = parts.vertices;
+                    *self.triangles = parts.triangles;
+                    self.tree.extend(parts.bvh);
+                }
+                Err(handle) => drop(handle),
+            }
+            return RetirementStep::Advanced;
+        }
+        let demand = self.next_close_byte_demand().unwrap_or(0);
+        if demand > grant.maximum_release_bytes {
+            return RetirementStep::BudgetExhausted;
+        }
+        if self.vertices.capacity() != 0 {
+            drop(std::mem::take(&mut *self.vertices));
+            return RetirementStep::Bytes(demand);
+        }
+        if self.triangles.capacity() != 0 {
+            drop(std::mem::take(&mut *self.triangles));
+            return RetirementStep::Bytes(demand);
+        }
+        let Some(node) = self.tree.pop() else { return RetirementStep::Complete };
+        match node.into_step() {
+            collision::BvhTreeStep::Leaf => {}
+            collision::BvhTreeStep::Branch(left, right) => {
+                if self.tree.len() + 2 > self.tree.capacity() {
+                    return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "collision mesh tree exceeds its retirement stack"));
+                }
+                self.tree.push(right);
+                self.tree.push(left);
+            }
+        }
+        RetirementStep::Bytes(demand)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.shared.is_none() && self.vertices.capacity() == 0 && self.triangles.capacity() == 0 && self.tree.is_empty()
+    }
+
+    fn next_close_byte_demand(&self) -> Option<usize> {
+        Some(if self.shared.is_some() {
+            0
+        } else if self.vertices.capacity() != 0 {
+            self.vertices.capacity() * size_of::<rigid::Point3>()
+        } else if self.triangles.capacity() != 0 {
+            self.triangles.capacity() * size_of::<[u32; 3]>()
+        } else if self.tree.is_empty() {
+            0
+        } else {
+            collision::BvhTree::NODE_BYTES
+        })
+    }
+
+    fn next_birth_bytes(&self, _: usize) -> Option<usize> {
+        Some(0)
+    }
+
+    fn terminal_release_bytes(&self) -> Option<usize> {
+        Some(Self::birth_bytes())
+    }
+}
+
+impl Drop for CollisionMeshRetirement {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || semio_framework_value::retirement::RetirementCursor::terminal_is_empty(self), "a collision mesh must retire before it drops");
+        unsafe {
+            std::mem::ManuallyDrop::drop(&mut self.shared);
+            std::mem::ManuallyDrop::drop(&mut self.vertices);
+            std::mem::ManuallyDrop::drop(&mut self.triangles);
+            std::mem::ManuallyDrop::drop(&mut self.tree);
+        }
+    }
+}
+
+impl semio_framework_value::retirement::RetireOwned for CollisionMesh {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        Box::new(CollisionMeshRetirement {
+            shared: std::mem::ManuallyDrop::new(Some(self.0)),
+            vertices: std::mem::ManuallyDrop::new(Vec::new()),
+            triangles: std::mem::ManuallyDrop::new(Vec::new()),
+            tree: std::mem::ManuallyDrop::new(Vec::with_capacity(COLLISION_MESH_TREE_STACK)),
+        })
+    }
+
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        Some(CollisionMeshRetirement::birth_bytes())
+    }
+
+    fn controlled_retirement_supported() -> bool {
+        true
+    }
+}
+
+#[derive(Clone, semio_framework_value::RetireOwned)]
 pub(crate) struct CollisionShape {
-    shape: std::sync::Arc<collision::TriMesh>,
+    shape: CollisionMesh,
 }
 
 impl CollisionShape {
     pub(crate) fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
         let verts: Vec<rigid::Point3> = vertices.iter().map(|p| p.0).collect();
-        Self { shape: std::sync::Arc::new(collision::TriMesh::new(verts, indices)) }
+        Self { shape: CollisionMesh(std::sync::Arc::new(collision::TriMesh::new(verts, indices))) }
     }
     pub(crate) fn contains_point(&self, pose: &Pose3d, point: &Point3d) -> bool {
         collision::contains_point(pose.0, &self.shape, point.0)
@@ -978,13 +1115,13 @@ pub(crate) fn precompute_work_clock() -> Option<u64> {
 //#endregion 🧮️WorkMeter
 
 //#region 🔖️Collision
-#[derive(Clone)]
+#[derive(Clone, semio_framework_value::RetireOwned)]
 pub(crate) struct CollisionMeshPart {
     pub(crate) shape: CollisionShape,
     pub(crate) local_pose: Pose3d,
 }
 
-#[derive(Clone)]
+#[derive(Clone, semio_framework_value::RetireOwned)]
 pub(crate) struct CollisionBody {
     pub(crate) parts: Vec<CollisionMeshPart>,
     pub(crate) local_bounds_min: Point3d,
@@ -1122,7 +1259,7 @@ pub(crate) fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &Collisio
 }
 
 //#region 🗺️BroadPhase
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub(crate) struct CollisionAabb {
     pub(crate) min: [f32; 3],
     pub(crate) max: [f32; 3],
@@ -1871,7 +2008,7 @@ impl CollisionStepContext for semio_framework_job::StepContext<'_> {
 
 /// 🕳️ Where a [`CollisionPenetrationState`] stands. `A`/`B` name the two bodies; `Vertices*` probe one body's vertices
 /// against the other solid, `Faces*` probe the parts of one body's triangles that pass behind the other body's faces.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub(crate) enum CollisionPenetrationStage {
     BroadPhase,
     VerticesA,
@@ -1908,7 +2045,7 @@ pub(crate) enum CollisionStepResult {
 /// accepted a slab 5.5 cm deep inside its neighbour and, because the docking host was skipped, a placement 1 m deep inside
 /// its host (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS, dev directive: only tiny collisions on the touching
 /// surfaces).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub(crate) struct CollisionPenetrationState {
     pub(crate) stage: CollisionPenetrationStage,
     part_a: usize,

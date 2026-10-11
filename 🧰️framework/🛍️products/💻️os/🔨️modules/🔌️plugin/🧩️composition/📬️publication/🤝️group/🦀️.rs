@@ -40,10 +40,11 @@ mod private_publication_group {
             if grant.maximum_items == 0 { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
             match self.phase {
                 PrivateOwnedPublicationPhase::Admission => {
+                    let birth_bytes = member.owned_publication_birth_bytes(self.request.as_ref().expect("private admission retains its original request"))?;
                     let Some(publication) = member.begin_one_item_owned_publication(self.request.as_mut().expect("private source retained until admission"), grant)? else { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); };
                     *self.publication = Some(publication);
                     self.phase = PrivateOwnedPublicationPhase::Preparation;
-                    Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.progress()))
+                    Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.progress(), semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: birth_bytes, ..Default::default() }))
                 }
                 PrivateOwnedPublicationPhase::Preparation => {
                     let step = member.prepare_one_item_publication(self.publication_mut().unwrap(), grant)?;

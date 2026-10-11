@@ -81,8 +81,8 @@ pub fn value_codec(input: TokenStream) -> TokenStream {
     expanded.unwrap_or_else(|error| error.to_compile_error()).into()
 }
 
-/// 🧬️ Implements bounded native-owner cloning for a struct or enum.
-#[proc_macro_derive(RetainedClone)]
+/// 🧬️ Implements bounded native-owner cloning for a struct or enum; `#[retained_clone(bitwise)]` on a `Copy` struct of bitwise fields makes vectors and arrays of it clone in bulk pages.
+#[proc_macro_derive(RetainedClone, attributes(retained_clone))]
 pub fn derive_retained_clone(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     retained_clone::expand_retained_clone(&derive_input).unwrap_or_else(|error| error.to_compile_error()).into()

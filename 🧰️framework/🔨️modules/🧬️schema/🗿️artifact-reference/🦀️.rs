@@ -1,6 +1,6 @@
 //! 🗿️ Pure artifact identities and exact first-party value admission.
 
-use semio_framework_value::{FromValue,ToValue};
+use semio_framework_value::{FromValue,ToValue,ValueError,ValueRefusalKind};
 use semio_framework_value::serde::{Deserialize,Serialize};
 
 #[path="♻️retirement/🦀️.rs"]
@@ -20,7 +20,7 @@ impl SubsetId { pub const ANY:Self=Self("*"); }
 pub struct Dialect { pub artifact_kind:&'static str,pub standard:StandardId,pub subset:SubsetId }
 
 /// 🧭️ An owned artifact dialect with three exact identity fields.
-#[derive(Clone,Debug,PartialEq,Eq,PartialOrd,Ord,Hash,Serialize,Deserialize,ToValue,FromValue)]
+#[derive(Clone,Debug,PartialEq,Eq,PartialOrd,Ord,Hash,Serialize,Deserialize,ToValue,FromValue,semio_framework_value::RetainedClone)]
 #[serde(crate="semio_framework_value::serde",rename_all="camelCase")]
 #[value(rename_all="camelCase",deny_unknown_fields)]
 pub struct ArtifactDialect { pub artifact_kind:String,pub standard:String,pub subset:String }
@@ -94,6 +94,19 @@ fn is_kebab_segment(segment: &str) -> bool {
 
 
 /// 🔗️ One artifact identity and its owned dialect.
-#[derive(Clone,Debug,PartialEq,Eq,Hash,ToValue,FromValue)]
+#[derive(Clone,Debug,PartialEq,Eq,Hash,ToValue,FromValue,semio_framework_value::RetainedClone)]
 #[value(rename_all="camelCase",deny_unknown_fields)]
-pub struct ArtifactRef {pub artifact_id:String,pub dialect:ArtifactDialect}
+pub struct ArtifactRef{pub artifact_id:String,pub dialect:ArtifactDialect}
+
+/// 🌲️ Canonical wire of an artifact reference and its dialect, in `ToValue` field order.
+fn tree_refusal(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ArtifactDialect {
+ fn canonical_tree_node(&self)->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,ValueError>{Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(3))}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree,ValueError>{match ordinal{0=>Ok(&self.artifact_kind),1=>Ok(&self.standard),2=>Ok(&self.subset),_=>Err(tree_refusal("canonical dialect ordinal is absent"))}}
+ fn canonical_tree_key(&self,ordinal:usize)->Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>,ValueError>{match ordinal{0=>Ok("artifactKind".into()),1=>Ok("standard".into()),2=>Ok("subset".into()),_=>Err(tree_refusal("canonical dialect key is absent"))}}
+}
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ArtifactRef {
+ fn canonical_tree_node(&self)->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,ValueError>{Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(2))}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree,ValueError>{match ordinal{0=>Ok(&self.artifact_id),1=>Ok(&self.dialect),_=>Err(tree_refusal("canonical artifact reference ordinal is absent"))}}
+ fn canonical_tree_key(&self,ordinal:usize)->Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>,ValueError>{match ordinal{0=>Ok("artifactId".into()),1=>Ok("dialect".into()),_=>Err(tree_refusal("canonical artifact reference key is absent"))}}
+}

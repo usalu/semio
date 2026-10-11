@@ -1,4 +1,6 @@
 import {captureOwnedProcess} from "../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import {SCRIPT_PROCESS_INVOCATION_ENV,createScriptProcessEnvelope,receiveScriptProcessInvocation,withScriptProcessEnvelope} from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { exactExecutableFingerprint } from "../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 /** 🌐️ Build-time closure and isolation laws for browser component factories. */
 import assert from "node:assert/strict";
@@ -415,16 +417,16 @@ export async function verifyBrowserActorProducerInputsV1(observation:BrowserActo
 }
 
 /** 🏗️ Derives closed actor bytes without caller-selected paths or compiler authority. */
-export async function buildClosedBrowserActorArtifactV1(component: Uint8Array, control: BrowserActorBuildControl = {}): Promise<ClosedBrowserActorArtifactV1> {
+export async function buildClosedBrowserActorArtifactV1(component: Uint8Array, invocation: ScriptInvocation, control: BrowserActorBuildControl = {}): Promise<ClosedBrowserActorArtifactV1> {
   if (!control || typeof control !== "object" || Array.isArray(control) || ![Object.prototype, null].includes(Object.getPrototypeOf(control)) || !Reflect.ownKeys(control).every(key => {
     const field = Object.getOwnPropertyDescriptor(control, key)!;
     return (key === "cancelled" || key === "progress") && "value" in field && (field.value === undefined || typeof field.value === "function");
   })) throw new Error("browser actor artifact: invalid build control");
-  return buildClosedBrowserActorArtifactOwned(component, Object.freeze({ cancelled: control.cancelled, progress: control.progress }));
+  return buildClosedBrowserActorArtifactOwned(component, invocation, Object.freeze({ cancelled: control.cancelled, progress: control.progress }));
 }
 
 /** 🗝️ Retains the one build owner; only in-module laws may retain diagnostic scratch. */
-async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, control: BrowserActorBuildControl, evidenceRoot?: string): Promise<ClosedBrowserActorArtifactV1> {
+async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invocation: ScriptInvocation, control: BrowserActorBuildControl, evidenceRoot?: string): Promise<ClosedBrowserActorArtifactV1> {
   const check = () => { if (control.cancelled?.()) throw new Error("browser actor artifact: cancelled"); };
   check();
   if (browserActorBuildOccupied) throw new Error("browser actor artifact: build capacity");
@@ -496,7 +498,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
         writeFileSync(join(outputRoot, name), bytes, { mode: 0o600 });
       }
       process.stdout.write(JSON.stringify({ version, runtime: "bun@" + Bun.version, importInterfaces: result.imports.sort(), files: files.map(([name]) => name).sort() }));
-    `, componentPath, evidence, JSON.stringify(browserActorInterfaces), JSON.stringify(browserActorAsyncImports), String(browserActorMaximumBytes), compiler.path, compiler.sha256, String(compiler.byteLength), componentSha256, String(snapshot.byteLength)], { cwd: browserActorRepoRoot, env: environment, budgetMs: 600_000, maxOutputBytes: 64 * 1024, stdoutPath: join(evidence, "codegen.stdout.json"), stderrPath: join(evidence, "codegen.stderr"), cancelled: () => control.cancelled?.() ?? false });
+    `, componentPath, evidence, JSON.stringify(browserActorInterfaces), JSON.stringify(browserActorAsyncImports), String(browserActorMaximumBytes), compiler.path, compiler.sha256, String(compiler.byteLength), componentSha256, String(snapshot.byteLength)], { invocation, cwd: browserActorRepoRoot, env: environment, budgetMs: 600_000, maxOutputBytes: 64 * 1024, stdoutPath: join(evidence, "codegen.stdout.json"), stderrPath: join(evidence, "codegen.stderr") });
     check();
     if (canonicalJson(exactExecutableFingerprint(executable.path, { cancelled: control.cancelled })) !== canonicalJson(executable)) throw new Error("browser actor artifact: build runtime changed");
     if (generated.status !== 0) throw new Error(`browser actor artifact: codegen ${generated.reason}: ${generated.stderr.slice(0, 4096)}`);
@@ -918,9 +920,9 @@ async function browserBundleTestOwners() {
 }
 
 /** 🧪️ Executes existing component isolation laws through their explicit test owner. */
-export async function testClosedBrowserComponentFactory(repoRoot:string):Promise<void> {await (await browserBundleTestOwners()).testClosedBrowserComponentFactory(repoRoot);}
+export async function testClosedBrowserComponentFactory(repoRoot:string,invocation:ScriptInvocation):Promise<void> {await (await browserBundleTestOwners()).testClosedBrowserComponentFactory(repoRoot,invocation);}
 /** 🧾️ Executes actual closed actor producer observations and independent JCO byte oracles. */
-export async function testClosedBrowserActorProducerV1(repoRoot:string):Promise<void> {await (await browserBundleTestOwners()).testClosedBrowserActorBundle(repoRoot);}
+export async function testClosedBrowserActorProducerV1(repoRoot:string,invocation:ScriptInvocation):Promise<void> {await (await browserBundleTestOwners()).testClosedBrowserActorBundle(repoRoot,invocation);}
 
 if (import.meta.main) {
   if (process.argv[2] === "test" && process.argv[3] === "descriptor-contract") {
@@ -930,5 +932,7 @@ if (import.meta.main) {
   const command = process.argv[2] ?? "runtime-check";
   assert(["runtime-check", "pending-host-close-check"].includes(command), `actor import test: unknown command ${command}`);
   const { testCanonicalActorAsyncImport } = await import("./🧪️tests/🌊️actor-import/🟦️.ts");
-  await testCanonicalActorAsyncImport(browserActorRepoRoot, join(import.meta.dir, "dist", command), undefined, closedBrowserActorBundle, true);
+  const run = (invocation: ScriptInvocation) => testCanonicalActorAsyncImport(browserActorRepoRoot, invocation, join(import.meta.dir, "dist", command), undefined, closedBrowserActorBundle, true);
+  if (process.env[SCRIPT_PROCESS_INVOCATION_ENV] !== undefined) await receiveScriptProcessInvocation(process.env, run);
+  else await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "browser-bundle", maximumElapsedMilliseconds: 0 }, {}, Date.now()), run);
 }

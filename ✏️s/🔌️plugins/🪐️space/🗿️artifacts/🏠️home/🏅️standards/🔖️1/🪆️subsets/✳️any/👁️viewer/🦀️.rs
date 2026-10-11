@@ -51,7 +51,7 @@ const HOME_VIEW_RETAINED_PAYLOAD_SCHEMA: &str = "space.home.view-tool-command.v1
 /// s13 §6 #16). A transient item is not a document mutation — the artifact lane stays unreachable by construction.
 ///
 /// 🔒️ Row order is the binary variant ordinal: appending is safe, reordering is a wire break.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum HomeViewCommand {
     /// 📄️ Canonical `DirectoryEventPageV1` JSON the authenticated hub returned, sealed by its receipt.
     #[dsl(key = "apply-directory-event-page")]
@@ -233,6 +233,7 @@ impl ArtifactViewer for HomeViewer {
         let tool_id = request.command.action_id();
         let work = Box::new(HomeDirectoryPageWork::<ViewerApp<Self>>::new(tool_id, home_view_page_json));
         let operation = AppOperationContext {
+            retained: request.retained,
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,

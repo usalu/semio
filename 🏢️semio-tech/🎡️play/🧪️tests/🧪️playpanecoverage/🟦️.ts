@@ -57,7 +57,7 @@ function descriptorAppsByDirectory(repoRoot: string): ReadonlyMap<string, { read
  * pin (`appRole`, a role-bearing `appId` lock), a chrome suppression or a filter that hides the pane's
  * own plugin would each make `…#viewer` unreachable while every other law here stays green. A new prop
  * therefore has to be added here deliberately, with the viewer law below re-run. */
-const PLAY_PANE_SHELL_PROPS: readonly string[] = ["appId", "brand", "defaults", "locks", "pluginFilter", "plugins", "shellId", "storageNamespace", "suppressAutoIntroduction", "surfaceSessionFactories"];
+const PLAY_PANE_SHELL_PROPS: readonly string[] = ["appId", "brand", "catalog", "defaults", "locks", "pluginFilter", "plugins", "shellId", "storageNamespace", "suppressAutoIntroduction", "surfaceSessionFactories"];
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, repoRoot: string): Promise<void> {
   const { PLAYGROUND_BUILD_TARGETS, PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_HOST_VARIANT, playExpectedVariants, playRuntimeComponentIds, isIconName } = dependencies;
@@ -141,7 +141,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         else reachable.add(viewer.id);
       }
       expect(deadEnds).toEqual([]);
-      const declared = PLAY_RUNTIME_TARGETS.flatMap((row: any) => (appsByOwner.get(paneOwner(row.pluginId))?.apps ?? []).filter((app: any) => app.role === "viewer").map((app: any) => app.id as string));
+      const declared: string[] = PLAY_RUNTIME_TARGETS.flatMap((row: any): string[] => (appsByOwner.get(paneOwner(row.pluginId))?.apps ?? []).filter((app: any) => app.role === "viewer").map((app: any) => app.id as string));
       expect([...new Set(declared)].filter(id => !reachable.has(id)).sort()).toEqual([]);
     });
 
@@ -189,6 +189,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("satisfies its own schema under an independent validator", () => {
       const runtime = join(repoRoot, "🏢️semio-tech/🎡️play/🔨️modules/🧩️runtime");
+      const Ajv = createRequire(import.meta.url)("ajv");
+      const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(runtime, "🧬️schema/🔣️.json"), "utf8")));
       const valid = validate(JSON.parse(readFileSync(join(runtime, "🔣️.json"), "utf8")));
       expect(validate.errors ?? []).toEqual([]);
       expect(valid).toBe(true);

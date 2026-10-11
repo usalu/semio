@@ -31,7 +31,8 @@ pub const STDIO_HTML_DOCUMENT_SCHEMA: &str = "stdio.html";
 //#region 🔖️Model
 /// 🏷️ One element attribute. `value: None` is a valueless boolean attribute (`<p disabled>`),
 /// distinct from an attribute that isn't present at all.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct HtmlAttr {
     pub name: String,
@@ -54,7 +55,8 @@ impl HtmlAttr {
 /// `<style>` are the only two RAWTEXT-content-model elements this subset models (HTML5 also gives
 /// `<textarea>`/`<title>` a related-but-distinct RCDATA content model, out of scope here: their
 /// content is parsed as plain `Text`, entity-decoded like everywhere else).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum RawTextKind {
     Script,
@@ -89,7 +91,8 @@ impl RawTextKind {
 // `stdio.json`'s `JsonValue` (see that file's identical NOTE) -- `Text`/`Comment` are therefore
 // `{ text: String }` struct variants, not the bare-tuple `Text(String)`/`Comment(String)` shorthand
 // used in the ticket brief's conceptual shape.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum HtmlNode {
     Element {
@@ -125,7 +128,7 @@ pub type NodePath = Vec<usize>;
 /// 📸️ Persisted `stdio.html` snapshot: `doctype` (raw content between `<!` and `>`, e.g.
 /// `"DOCTYPE html"`, `None` if the document has no doctype declaration) + the recursive `root`
 /// element tree.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.html")]
 pub struct HtmlSnapshot {

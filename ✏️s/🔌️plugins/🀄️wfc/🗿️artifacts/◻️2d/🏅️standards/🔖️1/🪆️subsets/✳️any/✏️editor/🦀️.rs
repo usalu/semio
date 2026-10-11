@@ -68,7 +68,7 @@ use semio_framework_2d::compute::EngineHandles;
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — one variant per real `Wfc2dMutation` kind a UI can
 /// trigger, plus the three non-document verbs (camera, armed tile, solve result).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum Wfc2dEditorCommand {
     #[dsl(key = "change-seed")]
     ChangeSeed { seed: u64 },
@@ -793,17 +793,8 @@ impl ArtifactEditor for Wfc2dEditor {
     /// 🗃️ The bounded retirement catalog every store lane is released THROUGH: a store built without
     /// owners answers `artifact store has no owner-supplied bounded disposer` the moment the close
     /// ladder reaches it, so the owners and the disposer below are one declaration in two halves.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
 
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
-    }
 
     /// ♻️ The instance close ladder walks one owned store lane per stage and faults the whole close
     /// with `interactive-job.close-owned-disposer-missing` the moment a lane answers `None`, so an
@@ -834,12 +825,12 @@ impl ArtifactEditor for Wfc2dEditor {
     /// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract
     /// and stays dispatch-dead however it is classified.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("wfc2d-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     /// 📬️ The same, for the pane config the camera and armed-tile verbs publish into.
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("wfc2d-config", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
     }
 
     /// 🫧️ The transient lane's own preparation and root retirement — `solve` declares
@@ -967,6 +958,7 @@ impl ArtifactEditor for Wfc2dEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(Wfc2dCommandWork::new(tool_id));

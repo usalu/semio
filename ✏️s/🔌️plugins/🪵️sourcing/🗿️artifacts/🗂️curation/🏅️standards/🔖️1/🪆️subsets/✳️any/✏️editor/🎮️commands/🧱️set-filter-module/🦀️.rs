@@ -2,11 +2,11 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::CurationSnapshot;
-use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
+use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation, SetFilterModulesEdit};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "filter-module")]
 pub struct SetFilterModule {
     pub module_id: String,
@@ -22,5 +22,5 @@ pub fn handle(payload: &SetFilterModule, _doc: &ArtifactView<'_, CurationSnapsho
     } else {
         module_ids.retain(|id| id != &payload.module_id);
     }
-    Ok(Emit::config(vec![SourcingCurationConfigMutation::SetFilterModules { module_ids }]))
+    Ok(Emit::config(vec![SourcingCurationConfigMutation::SetFilterModules(SetFilterModulesEdit { module_ids })]))
 }

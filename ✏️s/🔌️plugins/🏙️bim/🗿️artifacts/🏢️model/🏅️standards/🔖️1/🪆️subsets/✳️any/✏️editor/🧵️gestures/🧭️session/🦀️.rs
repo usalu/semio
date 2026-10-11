@@ -103,7 +103,7 @@ pub struct ToolContext<'a> {
     pub library: &'a [String],
     pub labels: Option<&'static BimLabels>,
     pub mint: IdMint,
-    pub instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::Instance<'a>,
+    pub instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'a>,
 }
 
 impl<'a> ToolContext<'a> {

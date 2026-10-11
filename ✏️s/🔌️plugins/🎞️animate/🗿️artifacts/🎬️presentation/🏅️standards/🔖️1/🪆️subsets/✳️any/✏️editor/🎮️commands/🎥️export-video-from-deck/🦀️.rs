@@ -17,7 +17,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// contiguous-request ceiling (64 KiB).
 pub const ANIMATE_VIDEO_PROGRAM_MAXIMUM_BYTES: usize = 49_152;
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "export-video-from-deck")]
 pub struct ExportVideoFromDeck {
     pub scene_json: String,

@@ -39,7 +39,7 @@ protocol::list_delta! {
 }
 
 /// 🩹 How one widget changes: replaced wholesale, or only the numeric fields of an input slider.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Generation2dWidgetPatch {
     Replace { widget: Widget },
@@ -74,7 +74,7 @@ protocol::list_delta! {
 }
 
 /// 🩹 Owned-field patch of one generation: its name and keyed answer rows.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Generation2dGenerationPatch {
     pub name: Option<String>,
@@ -82,7 +82,7 @@ pub struct Generation2dGenerationPatch {
 }
 
 /// 🧾️ One answer row of a generation.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Generation2dValueRow {
     pub question_id: String,
@@ -90,7 +90,7 @@ pub struct Generation2dValueRow {
 }
 
 /// 🧩 Question-keyed rows of the answers of one generation.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Generation2dValuesDelta {
     pub added: Vec<Generation2dValueRow>,
@@ -216,7 +216,7 @@ impl protocol::list_delta::KeyOf<FormGeneration> for Generation2dGenerationKeys 
 }
 
 /// 🩹 A synapse is patched by replacing it wholesale; the wire form is the synapse itself.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(transparent)]
 pub struct Generation2dSynapsePatch(pub SynapseSpec);
 
@@ -377,7 +377,7 @@ fn rejection(code: &str, message: &str, at: [String; 2]) -> MutationApplyError {
 }
 
 fn is_empty_delta<D: Delta>(delta: &D) -> bool {
-    delta.added().is_empty() && delta.removed().is_empty() && delta.modified().is_empty()
+    delta.added().is_empty() && delta.removed().is_empty() && delta.patched().is_empty()
 }
 
 enum Net<T, P> {
@@ -527,8 +527,8 @@ fn apply_values(generation: &mut FormGeneration, delta: &Generation2dValuesDelta
     Ok(())
 }
 
-fn retire_displaced(value: Option<std::sync::Arc<DslValue>>) {
-    if let Some(value) = value.and_then(std::sync::Arc::into_inner) {
+fn retire_displaced(value: Option<DslValue>) {
+    if let Some(value) = value {
         <DslValue as semio_framework_value::FromValue>::retire_decoded(value);
     }
 }

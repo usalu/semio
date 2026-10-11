@@ -5,7 +5,6 @@ mod mutations_codec {
 use super::*;
 use crate::editor::shooting::presence::component::mutations::*;
 use crate::editor::shooting::presence::component::*;
-use replace_presence::ReplacePresence;
 
 impl protocol::OpText for ShootingPresenceMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -32,7 +31,6 @@ mod mutations_wire_codec {
 use super::*;
 use crate::editor::shooting::presence::component::mutations::*;
 use crate::editor::shooting::presence::component::*;
-use replace_presence::ReplacePresence;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `ShootingPresence`.

@@ -9,9 +9,10 @@ use crate::{Fem2dSnapshot, FemElement, FemLoad};
 use semio_framework::kernel::{Effect, JobPlacement};
 #[cfg(test)]
 use semio_framework_job::CommitValidation;
-use semio_framework_job::{InteractiveJob, Operation, OperationId, RetainedJobPayload, StepBudget, StepContext, StepOutcome};
-use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
-use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, Operation, OperationId, RetainedJobPayload, StepContext};
+use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, IoRunControl, JobBudget, JobStep, SqliteSnapshotControl};
+use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginLifecycleStep};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -948,16 +949,9 @@ struct MountedState {
     fault: Option<Vec<u8>>,
 }
 
-fn close_retained_payload(payload: &mut RetainedJobPayload) {
-    while !payload.terminal_is_empty() {
-        let _ = payload.close_step(1, usize::MAX);
-    }
-}
-
-fn take_retained_payload(mut payload: RetainedJobPayload, maximum_bytes: usize) -> Option<Vec<u8>> {
-    let bytes = (payload.len() <= maximum_bytes).then(|| (0..payload.page_count()).map(|page| payload.page(page)).collect::<Option<Vec<&[u8]>>>().map(|pages| pages.concat())).flatten();
-    close_retained_payload(&mut payload);
-    bytes
+/// 📋️ Copies a lent payload's pages when it fits the bound; the child job keeps owning the payload.
+fn lent_bytes(payload: &RetainedJobPayload, maximum_bytes: usize) -> Option<Vec<u8>> {
+    (payload.len() <= maximum_bytes).then(|| (0..payload.page_count()).map(|page| payload.page(page)).collect::<Option<Vec<&[u8]>>>().map(|pages| pages.concat())).flatten()
 }
 
 fn retained_payload_byte(payload: &RetainedJobPayload, index: usize) -> Option<u8> {
@@ -971,6 +965,77 @@ fn retained_payload_byte(payload: &RetainedJobPayload, index: usize) -> Option<u
     }
     None
 }
+
+/// 🧭️ How one child job step ended, copied out before the lent outcome borrow is released.
+enum ChildEnd {
+    Yield,
+    Preview { bytes: Option<Vec<u8>>, quality: Option<u8> },
+    Checkpoint(Option<Vec<u8>>),
+    Complete(Option<Vec<u8>>),
+    Fault(Option<Vec<u8>>),
+    Cancelled,
+}
+
+fn child_end(result: Result<Option<JobOutcomeBorrow<'_>>, ValueError>) -> ChildEnd {
+    match result {
+        Ok(None | Some(JobOutcomeBorrow::Yield { .. })) => ChildEnd::Yield,
+        Ok(Some(JobOutcomeBorrow::PreviewReady { payload, .. })) => ChildEnd::Preview { bytes: lent_bytes(payload, SESSION_MAXIMUM_OUTPUT_BYTES), quality: retained_payload_byte(payload, 8) },
+        Ok(Some(JobOutcomeBorrow::CheckpointReady { state, .. })) => ChildEnd::Checkpoint(lent_bytes(state, SESSION_MAXIMUM_OUTPUT_BYTES)),
+        Ok(Some(JobOutcomeBorrow::Complete { output, .. })) => ChildEnd::Complete(output.and_then(|payload| lent_bytes(payload, SESSION_MAXIMUM_OUTPUT_BYTES))),
+        Ok(Some(JobOutcomeBorrow::Fault { detail, .. })) => ChildEnd::Fault(lent_bytes(detail, SESSION_MAXIMUM_FAULT_BYTES)),
+        Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => ChildEnd::Cancelled,
+        Err(_) => ChildEnd::Fault(None),
+    }
+}
+
+/// 🎟️ One close unit's receipt: `items` released owners and `bytes` of released backing.
+fn session_child_failure(step: InteractiveJobCloseStep) -> Option<PluginLifecycleStep> {
+    match step {
+        InteractiveJobCloseStep::Blocked => Some(PluginLifecycleStep::Blocked { reason: "mounted FEM child close is blocked" }),
+        InteractiveJobCloseStep::Refused { .. } => Some(PluginLifecycleStep::Blocked { reason: "mounted FEM child close was refused" }),
+        InteractiveJobCloseStep::Pending { .. } | InteractiveJobCloseStep::Complete { .. } => None,
+    }
+}
+
+fn session_pending(items: usize, bytes: usize) -> PluginLifecycleStep {
+    PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: items, released_bytes: bytes, ..Default::default() })
+}
+
+const fn largest(sizes: &[usize]) -> usize {
+    let mut index = 0;
+    let mut largest = 0;
+    while index < sizes.len() {
+        if sizes[index] > largest {
+            largest = sizes[index];
+        }
+        index += 1;
+    }
+    largest
+}
+
+/// 📏️ The largest logical element one close unit retires; every quote of the next close turn is bounded by it.
+const SESSION_CLOSE_COPY_BYTES: usize = 4_096;
+
+/// 🪜️ The deepest retained frontier one close unit reaches: session owner, job, writer and payload.
+const SESSION_CLOSE_DEPTH: usize = 3;
+
+/// 📏️ The largest single owner release one close unit performs; every quote of the next close turn is bounded by it.
+const SESSION_CLOSE_RELEASE_BYTES: usize = largest(&[
+    SESSION_OWNER_PAGE_BYTES,
+    INPUT_BYTES,
+    size_of::<FemJobGraph>(),
+    size_of::<MeshJob>(),
+    size_of::<MountedModelBuild>(),
+    size_of::<AssemblyJobConstruction>(),
+    size_of::<AssemblyJob<'static>>(),
+    size_of::<AssemblyCsrBuild>(),
+    size_of::<PcgJobConstruction>(),
+    size_of::<PcgJob>(),
+    size_of::<store::SnapshotRead<Fem2dSnapshot>>(),
+    size_of::<store::SnapshotReadReturn>(),
+    size_of::<PendingSnapshotAdmission>(),
+    size_of::<PendingSnapshotFault>(),
+]);
 
 impl MountedState {
     fn new(identity: MountedIdentity, snapshot: store::SnapshotRead<Fem2dSnapshot>, admitted_items: usize) -> Self {
@@ -1149,7 +1214,7 @@ impl MountedState {
         }
     }
 
-    fn step(&mut self, budget: JobBudget) -> JobStep {
+    fn step(&mut self, budget: JobBudget, cx: &mut StepContext<'_>) -> JobStep {
         if self.cancel.is_cancelled_now() {
             self.stage = MountedStage::Closing;
             return self.fail(b"fem2d.session-cancelled".to_vec());
@@ -1157,15 +1222,11 @@ impl MountedState {
         if budget.fuel == 0 || budget.deadline_ms == 0 {
             return JobStep::Running(None);
         }
-        let Some(now) = semio_framework_job::default_now_us() else { return JobStep::Running(None) };
-        let deadline = now.saturating_add(u64::from(budget.deadline_ms).min(SESSION_STEP_CEILING_MS).saturating_mul(1_000));
-        let mut preview_sequence = self.preview_sequence;
-        let result = (|| {
-            let mut cx = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.max(1), deadline), self.cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
+        (|| {
             if cx.should_yield() {
                 return JobStep::Running(None);
             }
-            if let Some(step) = self.drive_visual_one(&mut cx) {
+            if let Some(step) = self.drive_visual_one(cx) {
                 return step;
             }
             match self.stage {
@@ -1193,23 +1254,21 @@ impl MountedState {
                     cx.consume_fuel(1);
                     self.progress(b"fem2d.graph-admitted")
                 }
-                MountedStage::Graph => match self.graph.as_mut().expect("graph stage owns graph").step(&mut cx) {
-                    StepOutcome::Complete(candidate) => {
+                MountedStage::Graph => match child_end(self.graph.as_mut().expect("graph stage owns graph").step(cx)) {
+                    ChildEnd::Complete(output) => {
                         self.stage = MountedStage::PrepareDomain;
-                        let semio_framework_job::CommitCandidate { mut state, output } = candidate;
-                        close_retained_payload(&mut state);
-                        match take_retained_payload(output, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                        match output {
                             Some(bytes) => JobStep::Running(Some(bytes)),
                             None => self.fail(b"fem2d.graph-output-capacity".to_vec()),
                         }
                     }
-                    StepOutcome::PreviewReady(payload) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: payload, .. }) => match take_retained_payload(payload, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                    ChildEnd::Preview { bytes: payload, .. } | ChildEnd::Checkpoint(payload) => match payload {
                         Some(bytes) => JobStep::Running(Some(bytes)),
                         None => self.fail(b"fem2d.graph-output-capacity".to_vec()),
                     },
-                    StepOutcome::Yield => self.progress(b"fem2d.graph-yield"),
-                    StepOutcome::Cancelled => self.fail(b"fem2d.graph-cancelled".to_vec()),
-                    StepOutcome::Fault(fault) => self.fail(take_retained_payload(fault.detail, SESSION_MAXIMUM_FAULT_BYTES).unwrap_or_else(|| b"fem2d.graph-fault-capacity".to_vec())),
+                    ChildEnd::Yield => self.progress(b"fem2d.graph-yield"),
+                    ChildEnd::Cancelled => self.fail(b"fem2d.graph-cancelled".to_vec()),
+                    ChildEnd::Fault(detail) => self.fail(detail.unwrap_or_else(|| b"fem2d.graph-fault-capacity".to_vec())),
                 },
                 MountedStage::PrepareDomain => match self.prepare_domain_one() {
                     Ok(false) => {
@@ -1234,8 +1293,8 @@ impl MountedState {
                     }
                     Err(detail) => self.fail(detail.to_vec()),
                 },
-                MountedStage::Mesh => match self.mesh.as_mut().expect("mesh stage owns mesh").step(&mut cx) {
-                    StepOutcome::Complete(candidate) => {
+                MountedStage::Mesh => match child_end(self.mesh.as_mut().expect("mesh stage owns mesh").step(cx)) {
+                    ChildEnd::Complete(output) => {
                         if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.first()) {
                             if !self.visual.region_quality.update(&region.id, RegionVisualQuality::Final) {
                                 return self.fail(b"fem2d.visual-region-capacity".to_vec());
@@ -1245,16 +1304,14 @@ impl MountedState {
                         }
                         self.model_build = Some(MountedModelBuild::new(self.mesh.as_mut().and_then(MeshJob::take_completed_mesh)));
                         self.stage = MountedStage::BuildModel;
-                        let semio_framework_job::CommitCandidate { mut state, output } = candidate;
-                        close_retained_payload(&mut state);
-                        match take_retained_payload(output, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                        match output {
                             Some(bytes) => JobStep::Running(Some(bytes)),
                             None => self.progress(b"fem2d.mesh-complete"),
                         }
                     }
-                    StepOutcome::PreviewReady(payload) => {
+                    ChildEnd::Preview { bytes: payload, quality } => {
                         if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.first()) {
-                            let quality = match retained_payload_byte(&payload, 8) {
+                            let quality = match quality {
                                 Some(0) => RegionVisualQuality::Coarse,
                                 Some(1) => RegionVisualQuality::Refined,
                                 Some(2) => RegionVisualQuality::Final,
@@ -1270,18 +1327,18 @@ impl MountedState {
                             };
                             self.visual_dirty = true;
                         }
-                        match take_retained_payload(payload, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                        match payload {
                             Some(bytes) => JobStep::Running(Some(bytes)),
                             None => self.progress(b"fem2d.mesh-preview"),
                         }
                     }
-                    StepOutcome::CheckpointReady(checkpoint) => match take_retained_payload(checkpoint.state, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                    ChildEnd::Checkpoint(payload) => match payload {
                         Some(bytes) => JobStep::Running(Some(bytes)),
                         None => self.progress(b"fem2d.mesh-yield"),
                     },
-                    StepOutcome::Yield => self.progress(b"fem2d.mesh-yield"),
-                    StepOutcome::Cancelled => self.fail(b"fem2d.mesh-cancelled".to_vec()),
-                    StepOutcome::Fault(fault) => self.fail(take_retained_payload(fault.detail, SESSION_MAXIMUM_FAULT_BYTES).unwrap_or_else(|| b"fem2d.mesh-fault-capacity".to_vec())),
+                    ChildEnd::Yield => self.progress(b"fem2d.mesh-yield"),
+                    ChildEnd::Cancelled => self.fail(b"fem2d.mesh-cancelled".to_vec()),
+                    ChildEnd::Fault(detail) => self.fail(detail.unwrap_or_else(|| b"fem2d.mesh-fault-capacity".to_vec())),
                 },
                 MountedStage::BuildModel => {
                     let snapshot = self.snapshot.as_ref().expect("preflight retains snapshot");
@@ -1322,8 +1379,8 @@ impl MountedState {
                     }
                     Err(error) => self.fail(error.to_string().into_bytes()),
                 },
-                MountedStage::Assembly => match self.assembly.as_mut().expect("assembly stage owns assembly").step(&mut cx) {
-                    StepOutcome::Complete(candidate) => {
+                MountedStage::Assembly => match child_end(self.assembly.as_mut().expect("assembly stage owns assembly").step(cx)) {
+                    ChildEnd::Complete(output) => {
                         let assembly = self.assembly.take().expect("assembly owner retained");
                         let csr_build = match AssemblyCsrBuild::new(assembly) {
                             Ok(builder) => builder,
@@ -1334,20 +1391,18 @@ impl MountedState {
                         };
                         self.csr_build = Some(csr_build);
                         self.stage = MountedStage::BuildCsr;
-                        let semio_framework_job::CommitCandidate { mut state, output } = candidate;
-                        close_retained_payload(&mut state);
-                        match take_retained_payload(output, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                        match output {
                             Some(bytes) => JobStep::Running(Some(bytes)),
                             None => self.progress(b"fem2d.assembly-complete"),
                         }
                     }
-                    StepOutcome::PreviewReady(payload) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: payload, .. }) => match take_retained_payload(payload, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                    ChildEnd::Preview { bytes: payload, .. } | ChildEnd::Checkpoint(payload) => match payload {
                         Some(bytes) => JobStep::Running(Some(bytes)),
                         None => self.progress(b"fem2d.assembly-yield"),
                     },
-                    StepOutcome::Yield => self.progress(b"fem2d.assembly-yield"),
-                    StepOutcome::Cancelled => self.fail(b"fem2d.assembly-cancelled".to_vec()),
-                    StepOutcome::Fault(fault) => self.fail(take_retained_payload(fault.detail, SESSION_MAXIMUM_FAULT_BYTES).unwrap_or_else(|| b"fem2d.assembly-fault-capacity".to_vec())),
+                    ChildEnd::Yield => self.progress(b"fem2d.assembly-yield"),
+                    ChildEnd::Cancelled => self.fail(b"fem2d.assembly-cancelled".to_vec()),
+                    ChildEnd::Fault(detail) => self.fail(detail.unwrap_or_else(|| b"fem2d.assembly-fault-capacity".to_vec())),
                 },
                 MountedStage::BuildCsr => match self.csr_build.as_mut().expect("CSR builder retained").step_one() {
                     Ok(false) => {
@@ -1379,8 +1434,8 @@ impl MountedState {
                     }
                     Err(detail) => self.fail(detail.to_vec()),
                 },
-                MountedStage::Pcg => match self.pcg.as_mut().expect("pcg stage owns pcg").step(&mut cx) {
-                    StepOutcome::Complete(candidate) => {
+                MountedStage::Pcg => match child_end(self.pcg.as_mut().expect("pcg stage owns pcg").step(cx)) {
+                    ChildEnd::Complete(output) => {
                         if let Some(job) = self.pcg.as_ref() {
                             let (completed, total, residual, tolerance, converged) = job.visual_progress();
                             self.visual.progress_completed = completed;
@@ -1393,14 +1448,12 @@ impl MountedState {
                         self.visual_field_cursor = 0;
                         self.visual_pcg_complete = true;
                         self.stage = MountedStage::SyncPcgVisual;
-                        let semio_framework_job::CommitCandidate { mut state, output } = candidate;
-                        close_retained_payload(&mut state);
-                        match take_retained_payload(output, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                        match output {
                             Some(bytes) => JobStep::Running(Some(bytes)),
                             None => self.progress(b"fem2d.pcg-complete"),
                         }
                     }
-                    StepOutcome::PreviewReady(payload) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: payload, .. }) => {
+                    ChildEnd::Preview { bytes: payload, .. } | ChildEnd::Checkpoint(payload) => {
                         if let Some(job) = self.pcg.as_ref() {
                             let (completed, total, residual, tolerance, converged) = job.visual_progress();
                             self.visual.progress_completed = completed;
@@ -1413,14 +1466,14 @@ impl MountedState {
                         self.visual_field_cursor = 0;
                         self.visual_pcg_complete = false;
                         self.stage = MountedStage::SyncPcgVisual;
-                        match take_retained_payload(payload, SESSION_MAXIMUM_OUTPUT_BYTES) {
+                        match payload {
                             Some(bytes) => JobStep::Running(Some(bytes)),
                             None => self.progress(b"fem2d.pcg-output-capacity"),
                         }
                     }
-                    StepOutcome::Yield => self.progress(b"fem2d.pcg-yield"),
-                    StepOutcome::Cancelled => self.fail(b"fem2d.pcg-cancelled".to_vec()),
-                    StepOutcome::Fault(fault) => self.fail(take_retained_payload(fault.detail, SESSION_MAXIMUM_FAULT_BYTES).unwrap_or_else(|| b"fem2d.pcg-fault-capacity".to_vec())),
+                    ChildEnd::Yield => self.progress(b"fem2d.pcg-yield"),
+                    ChildEnd::Cancelled => self.fail(b"fem2d.pcg-cancelled".to_vec()),
+                    ChildEnd::Fault(detail) => self.fail(detail.unwrap_or_else(|| b"fem2d.pcg-fault-capacity".to_vec())),
                 },
                 MountedStage::SyncPcgVisual => {
                     let Some(snapshot) = self.snapshot.as_ref() else { return self.fail(b"fem2d.visual-snapshot-owner".to_vec()) };
@@ -1482,14 +1535,14 @@ impl MountedState {
                 MountedStage::Fault => JobStep::Failed(self.fault.clone().unwrap_or_else(|| b"fem2d.session-fault".to_vec())),
                 MountedStage::Closing | MountedStage::Empty => JobStep::Failed(b"fem2d.session-closed".to_vec()),
             }
-        })();
-        self.preview_sequence = preview_sequence;
-        result
+        })()
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+        let (maximum_items, maximum_bytes) = (grant.maximum_items.min(1), grant.maximum_release_bytes);
+        let child = RetainedCloneGrant { maximum_items, ..grant };
         if maximum_items == 0 {
-            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            return session_pending(0, 0);
         }
         self.cancel.cancel_now();
         self.stage = MountedStage::Closing;
@@ -1497,34 +1550,40 @@ impl MountedState {
             match self.close_cursor {
                 0 => {
                     if self.graph_plans.pop().is_some() {
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                        return session_pending(1, 0);
                     }
                     let plan_bytes = self.graph_plans.capacity() * size_of::<FemStagePlan>();
                     if plan_bytes != 0 {
                         if plan_bytes > maximum_bytes {
-                            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                            return session_pending(0, 0);
                         }
                         self.graph_plans = Vec::new();
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: plan_bytes };
+                        return session_pending(1, plan_bytes);
                     }
                     if let Some(graph) = self.graph.as_mut() {
-                        let (terminal, released_items, released_bytes) = graph.close_step(maximum_bytes);
-                        if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                        let step = InteractiveJob::close_step(graph, child);
+                        if let Some(blocked) = session_child_failure(step) {
+                            return blocked;
+                        }
+                        if !InteractiveJob::terminal_is_empty(graph) {
+                            return PluginLifecycleStep::Progress(step.progress());
                         }
                         self.graph = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<FemJobGraph>() };
+                        return session_pending(1, size_of::<FemJobGraph>());
                     }
                     self.close_cursor += 1;
                 }
                 1 => {
                     if let Some(mesh) = self.mesh.as_mut() {
-                        let (terminal, released_items, released_bytes) = mesh.close_step(maximum_bytes);
-                        if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                        let step = InteractiveJob::close_step(mesh, child);
+                        if let Some(blocked) = session_child_failure(step) {
+                            return blocked;
+                        }
+                        if !InteractiveJob::terminal_is_empty(mesh) {
+                            return PluginLifecycleStep::Progress(step.progress());
                         }
                         self.mesh = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<MeshJob>() };
+                        return session_pending(1, size_of::<MeshJob>());
                     }
                     self.close_cursor += 1;
                 }
@@ -1532,10 +1591,10 @@ impl MountedState {
                     if let Some(model_build) = self.model_build.as_mut() {
                         let (terminal, released_items, released_bytes) = model_build.close_step(maximum_bytes);
                         if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                            return session_pending(released_items, released_bytes);
                         }
                         self.model_build = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<MountedModelBuild>() };
+                        return session_pending(1, size_of::<MountedModelBuild>());
                     }
                     self.close_cursor += 1;
                 }
@@ -1543,21 +1602,21 @@ impl MountedState {
                     if let Some(assembly_build) = self.assembly_build.as_mut() {
                         let (terminal, released_items, released_bytes) = assembly_build.close_step(maximum_bytes);
                         if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                            return session_pending(released_items, released_bytes);
                         }
                         self.assembly_build = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<AssemblyJobConstruction>() };
+                        return session_pending(1, size_of::<AssemblyJobConstruction>());
                     }
                     self.close_cursor += 1;
                 }
                 4 => {
                     if let Some(assembly) = self.assembly.as_mut() {
-                        let (terminal, released_items, released_bytes) = assembly.close_step(maximum_bytes);
+                        let (terminal, released_items, released_bytes) = assembly.close_retained_step(maximum_bytes);
                         if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                            return session_pending(released_items, released_bytes);
                         }
                         self.assembly = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<AssemblyJob<'static>>() };
+                        return session_pending(1, size_of::<AssemblyJob<'static>>());
                     }
                     self.close_cursor += 1;
                 }
@@ -1565,60 +1624,66 @@ impl MountedState {
                     if let Some(csr_build) = self.csr_build.as_mut() {
                         let (terminal, released_items, released_bytes) = csr_build.close_step(maximum_bytes);
                         if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                            return session_pending(released_items, released_bytes);
                         }
                         self.csr_build = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<AssemblyCsrBuild>() };
+                        return session_pending(1, size_of::<AssemblyCsrBuild>());
                     }
                     self.close_cursor += 1;
                 }
                 6 => {
                     if let Some(pcg_build) = self.pcg_build.as_mut() {
-                        let (terminal, released_items, released_bytes) = pcg_build.close_step(maximum_bytes);
-                        if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                        let step = pcg_build.close_step(child);
+                        if let Some(blocked) = session_child_failure(step) {
+                            return blocked;
+                        }
+                        if !matches!(step, InteractiveJobCloseStep::Complete { .. }) {
+                            return PluginLifecycleStep::Progress(step.progress());
                         }
                         self.pcg_build = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<PcgJobConstruction>() };
+                        return session_pending(1, size_of::<PcgJobConstruction>());
                     }
                     self.close_cursor += 1;
                 }
                 7 => {
                     if let Some(pcg) = self.pcg.as_mut() {
-                        let (terminal, released_items, released_bytes) = pcg.close_step(maximum_bytes);
-                        if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                        let step = InteractiveJob::close_step(pcg, child);
+                        if let Some(blocked) = session_child_failure(step) {
+                            return blocked;
+                        }
+                        if !InteractiveJob::terminal_is_empty(pcg) {
+                            return PluginLifecycleStep::Progress(step.progress());
                         }
                         self.pcg = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<PcgJob>() };
+                        return session_pending(1, size_of::<PcgJob>());
                     }
                     self.close_cursor += 1;
                 }
                 8 => {
                     if let Some(domain) = self.domain.as_mut() {
                         match self.domain_close_lane {
-                            0 if domain.outer.pop().is_some() => return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                            0 if domain.outer.pop().is_some() => return session_pending(1, 0),
                             0 => {
                                 let bytes = domain.outer.capacity() * size_of::<[f64; 2]>();
                                 if bytes > maximum_bytes {
-                                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                                    return session_pending(0, 0);
                                 }
                                 domain.outer = Vec::new();
                                 self.domain_close_lane = 1;
-                                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                                return session_pending(1, bytes);
                             }
                             1 => {
                                 if let Some(hole) = domain.holes.last_mut() {
                                     if hole.pop().is_some() {
-                                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                                        return session_pending(1, 0);
                                     }
                                     let bytes = hole.capacity() * size_of::<[f64; 2]>();
                                     if bytes > maximum_bytes {
-                                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                                        return session_pending(0, 0);
                                     }
                                     *hole = Vec::new();
                                     domain.holes.pop();
-                                    return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                                    return session_pending(1, bytes);
                                 }
                                 self.domain_close_lane = 2;
                                 continue;
@@ -1626,15 +1691,15 @@ impl MountedState {
                             2 => {
                                 let bytes = domain.holes.capacity() * size_of::<Vec<[f64; 2]>>();
                                 if bytes > maximum_bytes {
-                                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                                    return session_pending(0, 0);
                                 }
                                 domain.holes = Vec::new();
                                 self.domain_close_lane = 3;
-                                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                                return session_pending(1, bytes);
                             }
                             _ => {
                                 self.domain = None;
-                                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                                return session_pending(1, 0);
                             }
                         }
                     }
@@ -1645,21 +1710,21 @@ impl MountedState {
                         if field.node_id.capacity() != 0 {
                             let bytes = field.node_id.capacity();
                             if bytes > maximum_bytes {
-                                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                                return session_pending(0, 0);
                             }
                             field.node_id = String::new();
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                            return session_pending(1, bytes);
                         }
                         self.visual.fields.pop();
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                        return session_pending(1, 0);
                     }
                     let bytes = self.visual.fields.capacity() * size_of::<crate::editor::fem2d::modes::edit::windows::model::NodeLiveField>();
                     if bytes != 0 {
                         if bytes > maximum_bytes {
-                            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                            return session_pending(0, 0);
                         }
                         self.visual.fields = Vec::new();
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                        return session_pending(1, bytes);
                     }
                     self.close_cursor += 1;
                 }
@@ -1668,21 +1733,21 @@ impl MountedState {
                         if owner.capacity() != 0 {
                             let bytes = owner.capacity();
                             if bytes > maximum_bytes {
-                                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                                return session_pending(0, 0);
                             }
                             *owner = String::new();
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                            return session_pending(1, bytes);
                         }
                         self.visual.assembling_element_ids.pop();
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                        return session_pending(1, 0);
                     }
                     let bytes = self.visual.assembling_element_ids.capacity() * size_of::<String>();
                     if bytes != 0 {
                         if bytes > maximum_bytes {
-                            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                            return session_pending(0, 0);
                         }
                         self.visual.assembling_element_ids = Vec::new();
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                        return session_pending(1, bytes);
                     }
                     self.close_cursor += 1;
                 }
@@ -1690,20 +1755,20 @@ impl MountedState {
                     if self.visual_region_owner.is_none() {
                         if let Some(owner) = self.visual.region_quality.take_one() {
                             self.visual_region_owner = Some(owner);
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                            return session_pending(1, 0);
                         }
                     }
                     if let Some((id, _)) = self.visual_region_owner.as_mut() {
                         if id.capacity() != 0 {
                             let bytes = id.capacity();
                             if bytes > maximum_bytes {
-                                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                                return session_pending(0, 0);
                             }
                             *id = String::new();
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                            return session_pending(1, bytes);
                         }
                         self.visual_region_owner = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                        return session_pending(1, 0);
                     }
                     self.close_cursor += 1;
                 }
@@ -1711,24 +1776,24 @@ impl MountedState {
                     if let Some(candidate) = self.visual_rejected.as_mut() {
                         let (terminal, released_items, released_bytes) = candidate.close_step(maximum_bytes);
                         if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                            return session_pending(released_items, released_bytes);
                         }
                         if !candidate.terminal_is_empty() {
-                            return PluginCloseStep::Blocked { reason: "mounted FEM rejected visual reported false terminal" };
+                            return PluginLifecycleStep::Blocked { reason: "mounted FEM rejected visual reported false terminal" };
                         }
                         self.visual_rejected = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                        return session_pending(1, 0);
                     }
                     if let Some(candidate) = self.visual_job_candidate.as_mut() {
                         let (terminal, released_items, released_bytes) = candidate.close_step(maximum_bytes);
                         if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                            return session_pending(released_items, released_bytes);
                         }
                         if !candidate.terminal_is_empty() {
-                            return PluginCloseStep::Blocked { reason: "mounted FEM live visual candidate reported false terminal" };
+                            return PluginLifecycleStep::Blocked { reason: "mounted FEM live visual candidate reported false terminal" };
                         }
                         self.visual_job_candidate = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                        return session_pending(1, 0);
                     }
                     self.close_cursor += 1;
                 }
@@ -1736,13 +1801,13 @@ impl MountedState {
                     if let Some(displaced) = self.visual_displaced.as_mut() {
                         let (terminal, released_items, released_bytes) = displaced.close_step(maximum_bytes);
                         if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                            return session_pending(released_items, released_bytes);
                         }
                         if !displaced.terminal_is_empty() {
-                            return PluginCloseStep::Blocked { reason: "mounted FEM displaced visual reported false terminal" };
+                            return PluginLifecycleStep::Blocked { reason: "mounted FEM displaced visual reported false terminal" };
                         }
                         self.visual_displaced = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                        return session_pending(1, 0);
                     }
                     self.close_cursor += 1;
                 }
@@ -1750,50 +1815,50 @@ impl MountedState {
                     if let Some(current) = self.visual_current.as_mut() {
                         let (terminal, released_items, released_bytes) = current.close_step(maximum_bytes);
                         if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
+                            return session_pending(released_items, released_bytes);
                         }
                         if !current.terminal_is_empty() {
-                            return PluginCloseStep::Blocked { reason: "mounted FEM current visual reported false terminal" };
+                            return PluginLifecycleStep::Blocked { reason: "mounted FEM current visual reported false terminal" };
                         }
                         self.visual_current = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                        return session_pending(1, 0);
                     }
                     self.close_cursor += 1;
                 }
                 15 => {
                     if let Some(snapshot) = self.snapshot.take() {
                         let Some(witness) = snapshot.return_to_registry_witness() else {
-                            return PluginCloseStep::Blocked { reason: "mounted FEM snapshot lease was already returned" };
+                            return PluginLifecycleStep::Blocked { reason: "mounted FEM snapshot lease was already returned" };
                         };
                         self.snapshot_return = Some(witness);
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<store::SnapshotRead<Fem2dSnapshot>>() };
+                        return session_pending(1, size_of::<store::SnapshotRead<Fem2dSnapshot>>());
                     }
                     if self.snapshot_return.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
-                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                        return session_pending(0, 0);
                     }
                     if self.snapshot_return.take().is_some() {
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<store::SnapshotReadReturn>() };
+                        return session_pending(1, size_of::<store::SnapshotReadReturn>());
                     }
                     self.close_cursor += 1;
                 }
                 16 => {
                     if let Some(fault) = self.fault.as_mut() {
                         if fault.pop().is_some() {
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                            return session_pending(1, 0);
                         }
                         let bytes = fault.capacity();
                         if bytes > maximum_bytes {
-                            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                            return session_pending(0, 0);
                         }
                         *fault = Vec::new();
                         self.fault = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                        return session_pending(1, bytes);
                     }
                     self.close_cursor += 1;
                 }
                 _ => {
                     self.stage = MountedStage::Empty;
-                    return PluginCloseStep::Complete;
+                    return PluginLifecycleStep::Complete(RetainedCloneProgress::default());
                 }
             }
         }
@@ -2175,36 +2240,61 @@ thread_local! {
 struct MountedBoundedJob {
     shell: Rc<RefCell<Option<MountedState>>>,
     identity: MountedIdentity,
+    input: Option<Vec<u8>>,
+    restored: Option<Vec<u8>>,
 }
 
 impl BoundedJob for MountedBoundedJob {
     /// ⏱️ Drives exact session units back to back until the host's step ceiling elapses, a unit
     /// publishes output, or the session leaves `Running` — the host owes the job one round trip per
     /// ceiling, never one per unit.
-    fn step(&mut self, budget: JobBudget) -> JobStep {
-        let Ok(mut shell) = self.shell.try_borrow_mut() else { return JobStep::Running(None) };
-        let Some(state) = shell.as_mut() else { return JobStep::Failed(b"fem2d.session-owner-missing".to_vec()) };
+    fn step(&mut self, budget: JobBudget, _original: &mut IoRunControl<'_, '_>, _snapshot: &mut SqliteSnapshotControl<'_>, cx: &mut StepContext<'_>) -> Result<JobStep, ValueError> {
+        let Ok(mut shell) = self.shell.try_borrow_mut() else { return Ok(JobStep::Running(None)) };
+        let Some(state) = shell.as_mut() else { return Ok(JobStep::Failed(b"fem2d.session-owner-missing".to_vec())) };
         if state.identity != self.identity {
-            return JobStep::Failed(b"fem2d.session-aba".to_vec());
+            return Ok(JobStep::Failed(b"fem2d.session-aba".to_vec()));
         }
-        let Some(started) = semio_framework_job::default_now_us() else { return state.step(budget) };
+        let Some(started) = semio_framework_job::default_now_us() else { return Ok(state.step(budget, cx)) };
         let ceiling_ms = u64::from(budget.deadline_ms).min(SESSION_STEP_CEILING_MS);
         let deadline = started.saturating_add(ceiling_ms.saturating_mul(1_000));
         let mut fuel = budget.fuel;
         let mut step = JobStep::Running(None);
         for _ in 0..SESSION_UNITS_PER_STEP {
             let now = semio_framework_job::default_now_us().unwrap_or(deadline);
-            if fuel == 0 || now >= deadline {
+            if fuel == 0 || now >= deadline || cx.should_yield() {
                 break;
             }
             let remaining_ms = u32::try_from(deadline.saturating_sub(now).div_ceil(1_000)).unwrap_or(u32::MAX).max(1);
-            step = state.step(JobBudget { fuel, deadline_ms: remaining_ms });
+            step = state.step(JobBudget { fuel, deadline_ms: remaining_ms }, cx);
             fuel = fuel.saturating_sub(1);
             if !matches!(step, JobStep::Running(None)) {
                 break;
             }
         }
-        step
+        Ok(step)
+    }
+
+    /// 🧹️ The heavy session owner is retired by the registry's own close ladder; this handle releases its two original input buffers and itself.
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, ValueError> {
+        let grant = cx.retained_grant();
+        let demand = self.retirement_demands(0)?;
+        if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(false);
+        }
+        if let Some(input) = self.input.take() {
+            cx.consume_retained(RetainedCloneProgress { copied_items: 1, released_bytes: input.capacity(), ..Default::default() })?;
+            return Ok(false);
+        }
+        if let Some(restored) = self.restored.take() {
+            cx.consume_retained(RetainedCloneProgress { copied_items: 1, released_bytes: restored.capacity(), ..Default::default() })?;
+            return Ok(false);
+        }
+        cx.consume_retained(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+        Ok(true)
+    }
+
+    fn retirement_demands(&self, _copy: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand { release_bytes: self.input.as_ref().map_or_else(|| self.restored.as_ref().map_or(0, Vec::capacity), Vec::capacity), depth: 1, ..Default::default() })
     }
 
     fn cancel(&mut self) {
@@ -2226,7 +2316,7 @@ impl BoundedJob for MountedBoundedJob {
     }
 
     fn terminal_drop_is_shallow(&self) -> bool {
-        true
+        self.input.is_none() && self.restored.is_none()
     }
 }
 
@@ -2258,17 +2348,24 @@ fn decode_input(job: u64, input: &[u8]) -> Option<(u16, MountedIdentity)> {
     Some((shell, MountedIdentity { app_instance_id, base_revision, generation, canonical_base_revision, operation, job }))
 }
 
-fn mounted_job_factory(job: u64, input: &[u8], _restored: Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
-    let (shell, identity) = decode_input(job, input).ok_or_else(|| b"fem2d.session-input".to_vec())?;
-    MOUNTED.with(|registry| {
+/// 📐️ The original request transfers its two handles into the boxed job under the framework's own original-job admission quote.
+fn mounted_job_demands(_job: u64, input: &Option<Vec<u8>>, restored: &Option<Vec<u8>>, _cx: &StepContext<'_>) -> Result<RetainedCloneGrant, ValueError> {
+    semio_framework_plugin::reactor::jobs::original_job_admission_demands::<MountedBoundedJob>(input, restored)
+}
+
+fn mounted_job_admit(job: u64, input: &mut Option<Vec<u8>>, restored: &mut Option<Vec<u8>>, cx: &mut StepContext<'_>) -> Result<Option<Box<dyn BoundedJob>>, ValueError> {
+    let bytes = input.as_deref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "fem2d.session-input"))?;
+    let (shell, identity) = decode_input(job, bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "fem2d.session-input"))?;
+    let shell_owner = MOUNTED.with(|registry| {
         let registry = registry.borrow();
-        let shell_owner = registry.shells.get(shell as usize).ok_or_else(|| b"fem2d.session-shell".to_vec())?.clone();
+        let shell_owner = registry.shells.get(shell as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "fem2d.session-shell"))?.clone();
         let matches = shell_owner.try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(|state| state.identity == identity));
         if !matches {
-            return Err(b"fem2d.session-stale-factory".to_vec());
+            return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "fem2d.session-stale-factory"));
         }
-        Ok(Box::new(MountedBoundedJob { shell: shell_owner, identity }) as Box<dyn BoundedJob>)
-    })
+        Ok(shell_owner)
+    })?;
+    semio_framework_plugin::reactor::jobs::admit_original_job(input, restored, cx, move |input, restored| MountedBoundedJob { shell: shell_owner, identity, input: Some(input), restored })
 }
 
 /// 🏭️ Preallocates the fixed arena at plugin installation and registers the explicit job factory.
@@ -2276,7 +2373,7 @@ pub fn initialize() {
     MOUNTED.with(|registry| {
         let _ = registry.borrow().free_len;
     });
-    semio_framework_plugin::reactor::jobs::register_bounded_job_kind(FEM2D_MOUNTED_JOB_KIND, mounted_job_factory as BoundedJobFactory);
+    semio_framework_plugin::reactor::jobs::register_bounded_job_kind(FEM2D_MOUNTED_JOB_KIND, BoundedJobFactory { admit: mounted_job_admit, demands: mounted_job_demands });
 }
 //#endregion 💼️JobBridge
 
@@ -2459,62 +2556,71 @@ pub fn with_live_visual<R>(render: Option<AppRenderOperationContext>, build: imp
     build(owner.as_ref().and_then(|state| state.visual_current.as_ref()).filter(|lease| lease.matches(render.app_instance_id, render.base_revision.0, render.generation.0)))
 }
 
-fn retire_one(app_instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+fn retire_one(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let Some(index) = registry.retiring.iter().position(|shell| shell.is_some_and(|shell| registry.shells[shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(|state| state.identity.app_instance_id == app_instance_id))))
         else {
-            return PluginCloseStep::Complete;
+            return PluginLifecycleStep::Complete(RetainedCloneProgress::default());
         };
         let shell = registry.retiring[index].expect("matched retirement shell");
         let step = {
             let mut owner = match registry.shells[shell as usize].try_borrow_mut() {
                 Ok(owner) => owner,
-                Err(_) => return PluginCloseStep::Blocked { reason: "mounted FEM job owner is checked out by its worker turn" },
+                Err(_) => return PluginLifecycleStep::Blocked { reason: "mounted FEM job owner is checked out by its worker turn" },
             };
-            let Some(state) = owner.as_mut() else { return PluginCloseStep::Complete };
-            state.close_step(maximum_items.min(1), maximum_bytes)
+            let Some(state) = owner.as_mut() else { return PluginLifecycleStep::Complete(RetainedCloneProgress::default()) };
+            state.close_step(grant)
         };
-        if step == PluginCloseStep::Complete {
+        if matches!(step, PluginLifecycleStep::Complete(_)) {
             let terminal = registry.shells[shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(MountedState::terminal_is_empty));
             if !terminal {
-                return PluginCloseStep::Blocked { reason: "mounted FEM job reported a false terminal shell" };
+                return PluginLifecycleStep::Blocked { reason: "mounted FEM job reported a false terminal shell" };
             }
             *registry.shells[shell as usize].borrow_mut() = None;
             registry.retiring[index] = None;
             registry.release_credit(shell);
             registry.release(shell);
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return session_pending(1, 0);
         }
         step
     })
 }
 
-pub fn maintenance_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
-    retire_one(app_instance_id, maximum_items, maximum_bytes)
+pub fn maintenance_step(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+    retire_one(app_instance_id, grant)
 }
 
-pub fn close_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+/// 📏️ Quotes the next close or maintenance turn: one owner release bounded by the largest session owner.
+pub fn close_demands(app_instance_id: u32) -> RetirementDemand {
+    if terminal_is_empty(app_instance_id) {
+        RetirementDemand::default()
+    } else {
+        RetirementDemand { copy_bytes: SESSION_CLOSE_COPY_BYTES, release_bytes: SESSION_CLOSE_RELEASE_BYTES, depth: SESSION_CLOSE_DEPTH, ..Default::default() }
+    }
+}
+
+pub fn close_step(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let slot = app_instance_id as usize % SESSION_ACTIVE_CAPACITY;
         if registry.preflight_fault[slot].is_some_and(|fault| fault.app_instance_id == app_instance_id) {
             registry.preflight_fault[slot] = None;
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<PendingSnapshotFault>() };
+            return session_pending(1, size_of::<PendingSnapshotFault>());
         }
         if registry.preflight[slot].is_some_and(|preflight| preflight.app_instance_id == app_instance_id) {
             registry.preflight[slot] = None;
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: size_of::<PendingSnapshotAdmission>() };
+            return session_pending(1, size_of::<PendingSnapshotAdmission>());
         }
         if let Some(pending) = registry.pending[slot].filter(|pending| pending.app_instance_id == app_instance_id) {
             registry.pending[slot] = None;
             registry.release_credit(pending.shell);
             registry.release(pending.shell);
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: INPUT_BYTES };
+            return session_pending(1, INPUT_BYTES);
         }
         if let Some(current) = registry.current[slot].filter(|current| current.app_instance_id == app_instance_id) {
             if !registry.retain_retirement(current.shell) {
-                return PluginCloseStep::Blocked { reason: "mounted FEM retirement arena is saturated" };
+                return PluginLifecycleStep::Blocked { reason: "mounted FEM retirement arena is saturated" };
             }
             if let Ok(owner) = registry.shells[current.shell as usize].try_borrow() {
                 if let Some(state) = owner.as_ref() {
@@ -2522,10 +2628,10 @@ pub fn close_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usi
                 }
             }
             registry.current[slot] = None;
-            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return session_pending(1, 0);
         }
         drop(registry);
-        retire_one(app_instance_id, maximum_items, maximum_bytes)
+        retire_one(app_instance_id, grant)
     })
 }
 

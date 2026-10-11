@@ -46,7 +46,7 @@ pub const READS: &[&str] = &["components", "component_overrides", "mep_elements"
 
 //#region 🔖️Values
 /// 🗂️ Which kind of element a quantity row measures.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum QuantityKind {
     #[default]
     Wall,
@@ -94,7 +94,7 @@ impl QuantityKind {
 }
 
 /// 🍰️ One material row of an element: a layer of a layered type, or a material run of a solid. `thickness` is 0 for solid runs.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct LayerQuantity {
     pub material: String,
     pub thickness: f64,
@@ -104,7 +104,7 @@ pub struct LayerQuantity {
 }
 
 /// 🪟️ The panels of one kind of a curtain wall: how many cells hold one and the clear area they cover (`glass`, `solid`, `door`, `window`, `empty`).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct PanelQuantity {
     pub kind: String,
     pub count: u32,
@@ -112,7 +112,7 @@ pub struct PanelQuantity {
 }
 
 /// 🪛️ The mullion pieces of one section of a curtain wall: how many pieces and their total length (`interior` and `border`).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct MullionQuantity {
     pub kind: String,
     pub count: u32,
@@ -120,7 +120,7 @@ pub struct MullionQuantity {
 }
 
 /// 🧮️ The quantities of one element; measures that do not apply to its kind are 0.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ElementQuantity {
     pub kind: QuantityKind,
     pub storey: String,
@@ -168,7 +168,7 @@ impl ElementQuantity {
 }
 
 /// ➕️ Sums of element quantities: `area` is [`ElementQuantity::area`], `volume` the net volume; material totals sum the layer rows.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct Totals {
     pub count: u32,
     pub length: f64,
@@ -178,7 +178,7 @@ pub struct Totals {
 }
 
 /// ➕️ Totals per kind (`wall`, `slab`, …), per type (`wall:wt-300`), per material id, per finish (`wall:m-paint`: the area of one surface finished with one material) and per construction phase (`new`; `phase_kinds` splits each phase by kind, `demolished:wall`).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct QuantityTotals {
     pub kinds: BTreeMap<String, Totals>,
     pub types: BTreeMap<String, Totals>,

@@ -12,7 +12,7 @@ use crate::editor::puzzle3d::precompute::{brush_mesh_digest, shared_brush_mesh};
 use crate::editor::puzzle3d::terminology::{puzzle3d_fill_run_counters, puzzle3d_fill_run_reasons, puzzle3d_fill_run_stages, puzzle3d_fill_run_unit, Puzzle3dLabels};
 use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_distribution_group, puzzle3d_fallback_mesh_buffers, puzzle3d_scene_snapshot_from_document, scene_config, Puzzle3dPlayApp, Puzzle3dScene, PUZZLE3D_FALLBACK_MESH_KIND};
 use crate::standards::v1::subsets::any::schema::{FillRunCheckpoint, SceneConfig};
-use semio_framework_job::{allocate_operation_id, Generation, InteractiveJob, InteractiveJobCloseStep, Operation, RevisionId, StepContext, StepOutcome};
+use semio_framework_job::{allocate_operation_id, Generation, InteractiveJob, InteractiveJobCloseStep, Operation, RevisionId, StepContext};
 use semio_framework_plugin::ActionDescriptor;
 use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
@@ -267,26 +267,36 @@ impl ToolRunRetargetableJob<Puzzle3dConfig> for Puzzle3dFillToolRunJob {
 }
 
 impl InteractiveJob for Puzzle3dFillToolRunJob {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        loop {
-            match &mut self.phase {
-                FillToolRunPhase::Preparing(preparation) => {
-                    if context.is_cancelled() {
-                        return StepOutcome::Cancelled;
-                    }
-                    if context.deadline_exceeded() {
-                        return StepOutcome::Yield;
-                    }
-                    if !Self::prepare_one(preparation) {
-                        continue;
-                    }
-                    let FillToolRunPhase::Preparing(preparation) = std::mem::replace(&mut self.phase, FillToolRunPhase::Closed) else { unreachable!("preparing phase") };
-                    self.phase = Self::start(*preparation);
-                }
-                FillToolRunPhase::Run(job) => return job.step(context),
-                FillToolRunPhase::Revalidate(job) => return job.step(context),
-                FillToolRunPhase::Closed => return StepOutcome::Cancelled,
+    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        while let FillToolRunPhase::Preparing(preparation) = &mut self.phase {
+            if context.is_cancelled() {
+                return semio_framework_job::JobOutcomeBorrow::admit_cancelled(context);
             }
+            if context.deadline_exceeded() {
+                return semio_framework_job::JobOutcomeBorrow::admit_yield(context);
+            }
+            if !Self::prepare_one(preparation) {
+                continue;
+            }
+            let FillToolRunPhase::Preparing(preparation) = std::mem::replace(&mut self.phase, FillToolRunPhase::Closed) else { unreachable!("preparing phase") };
+            self.phase = Self::start(*preparation);
+        }
+        match &mut self.phase {
+            FillToolRunPhase::Run(job) => job.step(context),
+            FillToolRunPhase::Revalidate(job) => job.step(context),
+            FillToolRunPhase::Preparing(_) | FillToolRunPhase::Closed => semio_framework_job::JobOutcomeBorrow::admit_cancelled(context),
+        }
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match &self.phase {
+            FillToolRunPhase::Run(job) => job.borrow_outcome(descriptor),
+            FillToolRunPhase::Revalidate(job) => job.borrow_outcome(descriptor),
+            FillToolRunPhase::Preparing(_) | FillToolRunPhase::Closed => match descriptor.kind() {
+                semio_framework_job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
+                semio_framework_job::JobOutcomeKind::Yield => descriptor.yielded(),
+                _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "fill tool outcome has no live producer")),
+            },
         }
     }
 
@@ -299,15 +309,48 @@ impl InteractiveJob for Puzzle3dFillToolRunJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         match &mut self.phase {
-            FillToolRunPhase::Run(job) => job.close_step(maximum_items, maximum_bytes),
-            FillToolRunPhase::Revalidate(job) => job.close_step(maximum_items, maximum_bytes),
+            FillToolRunPhase::Run(job) => job.close_step(grant),
+            FillToolRunPhase::Revalidate(job) => job.close_step(grant),
             FillToolRunPhase::Preparing(_) => {
                 self.phase = FillToolRunPhase::Closed;
-                InteractiveJobCloseStep::Complete
+                InteractiveJobCloseStep::Complete { progress: Default::default() }
             }
-            FillToolRunPhase::Closed => InteractiveJobCloseStep::Complete,
+            FillToolRunPhase::Closed => InteractiveJobCloseStep::Complete { progress: Default::default() },
+        }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        match &self.phase {
+            FillToolRunPhase::Run(job) => job.next_close_copy_byte_demand(),
+            FillToolRunPhase::Revalidate(job) => job.next_close_copy_byte_demand(),
+            FillToolRunPhase::Preparing(_) | FillToolRunPhase::Closed => Ok(0),
+        }
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        match &self.phase {
+            FillToolRunPhase::Run(job) => job.next_close_capacity_byte_demand(maximum_copy_bytes),
+            FillToolRunPhase::Revalidate(job) => job.next_close_capacity_byte_demand(maximum_copy_bytes),
+            FillToolRunPhase::Preparing(_) | FillToolRunPhase::Closed => Ok(0),
+        }
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        match &self.phase {
+            FillToolRunPhase::Run(job) => job.next_close_release_byte_demand(),
+            FillToolRunPhase::Revalidate(job) => job.next_close_release_byte_demand(),
+            FillToolRunPhase::Preparing(_) | FillToolRunPhase::Closed => Ok(0),
+        }
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        match &self.phase {
+            FillToolRunPhase::Run(job) => job.next_close_depth_demand(),
+            FillToolRunPhase::Revalidate(job) => job.next_close_depth_demand(),
+            FillToolRunPhase::Preparing(_) => Ok(1),
+            FillToolRunPhase::Closed => Ok(0),
         }
     }
 
@@ -320,6 +363,7 @@ impl InteractiveJob for Puzzle3dFillToolRunJob {
         }
     }
 }
+
 //#endregion 🔖️Jobs
 
 #[cfg(test)]

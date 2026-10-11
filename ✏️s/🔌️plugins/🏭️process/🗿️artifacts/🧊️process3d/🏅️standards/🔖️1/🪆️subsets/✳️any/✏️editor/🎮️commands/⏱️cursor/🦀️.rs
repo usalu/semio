@@ -4,7 +4,7 @@
 //! that ends at once (a stepper press, a typed step): ONE plain config edit, never an amend (design §20.1). Every move
 //! clamps to the timeline: `0` shows the bare stock, the step count (or `None`) every step.
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation, Process3dConfigSetCursor};
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::{Process3dSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -22,7 +22,7 @@ pub fn process3d_cursor_moves(snapshot: &Process3dSnapshot, config: &Process3dCo
     if next == config.resolved_up_to {
         return Vec::new();
     }
-    vec![Process3dConfigMutation::SetCursor { value: next }]
+    vec![Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: next })]
 }
 
 /// ⏩️ The view emit of one cursor move: one config edit, nothing on the document.
@@ -34,7 +34,7 @@ fn cursor_emit(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, P
 pub mod set_cursor {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "cursor")]
     pub struct SetCursor {
         pub value: Option<u64>,
@@ -50,7 +50,7 @@ pub mod set_cursor {
 pub mod step_cursor {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "step-cursor")]
     pub struct StepCursor {
         pub delta: i64,
@@ -67,7 +67,7 @@ pub mod step_cursor {
 pub mod step_cursor_back {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "step-cursor-back")]
     pub struct StepCursorBack {}
 
@@ -86,7 +86,7 @@ pub mod step_cursor_back {
 pub mod step_cursor_forward {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "step-cursor-forward")]
     pub struct StepCursorForward {}
 

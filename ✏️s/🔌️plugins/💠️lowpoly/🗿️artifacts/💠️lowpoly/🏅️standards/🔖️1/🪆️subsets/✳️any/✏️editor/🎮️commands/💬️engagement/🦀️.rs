@@ -2,7 +2,7 @@
 //! resolution into a real mesh-edit command (`engagementSubmit`).
 
 use crate::editor::lowpoly::commands::mesh_edit::{bevel, decimate, dissolve, extrude, flip_faces, inset, loop_cut, merge, mirror, snap, subdivide, triangulate};
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
+use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetEngagementInputEdit};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::LowpolySnapshot;
@@ -51,7 +51,7 @@ fn engagement_token_matches(raw: &str, command: &str) -> bool {
 pub mod engagement_input {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "engagement-input")]
     pub struct EngagementInput {
@@ -59,7 +59,7 @@ pub mod engagement_input {
     }
 
     pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(Emit::config(vec![LowpolyConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
+        Ok(Emit::config(vec![LowpolyConfigMutation::SetEngagementInput(SetEngagementInputEdit { value: payload.value.clone() })]))
     }
 }
 //#endregion 🔖️EngagementInput
@@ -68,7 +68,7 @@ pub mod engagement_input {
 pub mod engagement_submit {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "engagement-submit")]
     pub struct EngagementSubmit {

@@ -18,7 +18,7 @@ use semio_framework_value::ValueError;
 /// a new forward `ArtifactLink` slot. `#[child(...)]`/`#[link_slot(...)]` drive
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Text and pack both encode
 /// the derived `EnergyModelPackRecord` below.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[artifact_schema(id = "s.energy.model")]
 pub struct EnergyModelSnapshot {
     #[state(artifact)]

@@ -21,7 +21,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[artifact(extension = "testkit-dummy")]
 pub(crate) struct DummySnapshot {
     count: i32,
@@ -168,25 +168,26 @@ struct DummyFixtureJob {
 }
 
 impl semio_framework_job::InteractiveJob for DummyFixtureJob {
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         if cx.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
         }
         if cx.should_yield() {
-            return semio_framework_job::StepOutcome::Yield;
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
         }
         if self.owners.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
             self.page += 1;
-            return semio_framework_job::StepOutcome::Yield;
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
         }
         let Some(DummyCommand::Increment) = self.owners.command.as_deref() else {
-            return semio_framework_job::StepOutcome::Cancelled;
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
         };
         self.owners.completion.as_ref().expect("dummy fixture completion").complete(Ok(Emit::mutations(vec![SetDummyCount { value: self.count + 1 }.into()])), crate::app::EphemeralEmit::default()).expect("one exact dummy completion");
-        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-        })
+        semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        crate::app::artifact_app_laws::fixture_job_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -333,8 +334,9 @@ impl ArtifactApp for DummyApp {
         Some(crate::app::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained"))
     }
 
-    fn build_document_store_owners() -> Option<Result<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::ValueError>> {
-        Some(crate::app::mutation_fixture::wire::funded_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained"))
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { crate::app::mutation_fixture::wire::document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>() }
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::app::mutation_fixture::wire::admit_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained", grant))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -406,17 +408,17 @@ fn dummy_fixture_caller() -> (crate::MountedOwnerPolicyV1, usize) {
 async fn set_active_example_loads_the_registered_catalogue_without_a_declared_action() {
     let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
     let mut observer = |_| true;
-    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let mut app = new_app::<DummyApp>(protocol::ActorId("actor".into()), mounted_policy, &mut identity).await;
     let args = semio_framework_value::DslValue::object([("exampleId".to_string(), semio_framework_value::DslValue::String("four".to_string()))]);
-    let result = app.dispatch_action("setActiveExample", Some(&args), &meta("actor")).await.expect("catalogue load");
+    let result = app.dispatch_action("setActiveExample", Some(&args), &meta("actor"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("catalogue load");
     let semio_framework::kernel::Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("load effect") else {
         panic!("expected LoadDocument");
     };
     let loaded = <DummySnapshot as store::ArtifactPack>::decode_pack(pack).expect("pack");
     assert_eq!(loaded, DummySnapshot { count: 4 });
     let missing = semio_framework_value::DslValue::object([("exampleId".to_string(), semio_framework_value::DslValue::String("missing".to_string()))]);
-    let refused = app.dispatch_action("setActiveExample", Some(&missing), &meta("actor")).await.expect_err("unknown example");
+    let refused = app.dispatch_action("setActiveExample", Some(&missing), &meta("actor"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("unknown example");
     assert_eq!(refused.code.0, "app.example.unknown");
     close_registered_fixture_app(&mut app, mounted_policy);
 }
@@ -424,7 +426,7 @@ async fn set_active_example_loads_the_registered_catalogue_without_a_declared_ac
 #[semio_framework_async_macros::async_test]
 async fn meta_carries_actor_and_local_instance_id() {
     let m = meta("actor-x");
-    assert_eq!(m.actor, "actor-x");
+    assert_eq!(m.actor.as_str(), "actor-x");
     assert_eq!(m.instance_id, 1);
 }
 
@@ -432,9 +434,9 @@ async fn meta_carries_actor_and_local_instance_id() {
 async fn new_app_constructs_a_registry_less_wrapper() {
     let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
     let mut observer = |_| true;
-    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let mut app = new_app::<DummyApp>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-    let error = app.dispatch_typed(DummyCommand::Increment, &meta("local")).await.expect_err("registry-less wrapper must fail closed");
+    let error = app.dispatch_typed(DummyCommand::Increment, &meta("local"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("registry-less wrapper must fail closed");
     assert_eq!(error.code.0, "interactive-job.unknown-key");
     assert!(error.message.contains("no exact manifest declaration"), "the registry-less wrapper fails on the missing declaration, not on a missing factory: {}", error.message);
     assert_eq!(app.snapshot().unwrap().count, 0, "a fail-closed dispatch never reaches the reducer");
@@ -445,9 +447,9 @@ async fn new_app_constructs_a_registry_less_wrapper() {
 async fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
     let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
     let mut observer = |_| true;
-    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let mut app = new_registered_app::<DummyApp, _>(dummy_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-    assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1, mounted_policy).await;
+    assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1, mounted_policy, &mut crate::app::artifact_app_laws::fixture_identity()).await;
     close_registered_fixture_app(&mut app, mounted_policy);
 }
 
@@ -455,7 +457,7 @@ async fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
 async fn assert_two_instances_converge_on_disjoint_edits() {
     let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
     let mut observer = |_| true;
-    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     assert_two_registered_instances_converge::<DummyApp, i32, _, _>("mem://testkit-converge", dummy_manifest, DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count, mounted_policy, &mut identity).await;
 }
 
@@ -463,7 +465,7 @@ async fn assert_two_instances_converge_on_disjoint_edits() {
 async fn assert_ingest_idempotent_does_not_double_apply() {
     let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
     let mut observer = |_| true;
-    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     assert_registered_ingest_idempotent::<DummyApp, i32, _, _>(dummy_manifest, DummyCommand::Increment, |app| app.snapshot().unwrap().count, mounted_policy, &mut identity).await;
 }
 
@@ -508,7 +510,7 @@ impl store::MemberStoreOwner<DummyMutation> for DummySnapshot {
 async fn registered_laws_accept_an_explicit_member_roster() {
     let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
     let mut observer = |_| true;
-    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer).unwrap();
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     assert_two_registered_instances_converge_with_members::<DummyApp, DummyMembers, i32, _, _>("mem://testkit-converge-members", dummy_manifest, DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count, mounted_policy, &mut identity).await;
     assert_registered_ingest_idempotent_with_members::<DummyApp, DummyMembers, i32, _, _>(dummy_manifest, DummyCommand::Increment, |app| app.snapshot().unwrap().count, mounted_policy, &mut identity).await;
 }

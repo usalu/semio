@@ -1081,7 +1081,7 @@ pub mod board_host {
         }
 
         pub fn into_closing_job(mut self) -> BoardFillJob {
-            BoardFillJob { operation: self.operation, state: self.state.take(), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, fault: None, closing: true }
+            BoardFillJob { operation: self.operation, state: self.state.take(), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, lent: None, commit_output: None, offer: std::cell::Cell::new(None), admitted: std::cell::Cell::new(false), fault: None, closing: true }
         }
     }
 
@@ -1444,9 +1444,9 @@ pub mod board_host {
             value.is_finite().then_some(value)
         }
 
-        pub fn from_commit_candidate(candidate: &semio_framework_job::CommitCandidate) -> Option<Self> {
-            let payload = BoardFillCommitPayload::new(&candidate.output)?;
-            if !candidate.state.is_empty() || payload.read::<4>(0)? != BOARD_FILL_COMMIT_MAGIC || payload.byte(4)? != BOARD_FILL_COMMIT_VERSION {
+        pub fn from_complete(state: Option<&semio_framework_job::RetainedJobPayload>, output: Option<&semio_framework_job::RetainedJobPayload>) -> Option<Self> {
+            let payload = BoardFillCommitPayload::new(output?)?;
+            if state.is_some_and(|state| !state.is_empty()) || payload.read::<4>(0)? != BOARD_FILL_COMMIT_MAGIC || payload.byte(4)? != BOARD_FILL_COMMIT_VERSION {
                 return None;
             }
             let result = BoardFillResult {
@@ -1533,9 +1533,17 @@ pub mod board_host {
         preview: Option<BoardFillPreview>,
         commit_encoder: Option<BoardFillCommitEncoder>,
         commit_writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
+        lent: Option<semio_framework_job::RetainedJobPayload>,
+        commit_output: Option<semio_framework_job::RetainedJobPayload>,
+        offer: std::cell::Cell<Option<BoardFillOffer>>,
+        admitted: std::cell::Cell<bool>,
         fault: Option<&'static str>,
         closing: bool,
     }
+
+    /// 🎟️ The one outcome a fill turn owes its driver; it stays offered until admission succeeds.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum BoardFillOffer { Yield, Preview, Checkpoint(u64), Complete, Fault, Cancelled }
 
     /// 🔄️ One live rotate-ring gesture. The node centres and handle angles captured at grab time are
     /// the base every frame re-derives from, so the preview never accumulates float drift and a
@@ -6576,6 +6584,10 @@ pub mod board_host {
                 preview: None,
                 commit_encoder: None,
                 commit_writer: None,
+                lent: None,
+                commit_output: None,
+                offer: std::cell::Cell::new(None),
+                admitted: std::cell::Cell::new(false),
                 fault: None,
                 closing: false,
             }
@@ -6590,7 +6602,7 @@ pub mod board_host {
                 return Err(checkpoint);
             }
             let Some(state) = checkpoint.state.take() else { return Err(checkpoint) };
-            Ok(Self { operation, state: Some(state), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, fault: None, closing: false })
+            Ok(Self { operation, state: Some(state), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, lent: None, commit_output: None, offer: std::cell::Cell::new(None), admitted: std::cell::Cell::new(false), fault: None, closing: false })
         }
 
         pub fn operation(&self) -> semio_framework_job::Operation {
@@ -7171,19 +7183,16 @@ pub mod board_host {
             Ok(())
         }
 
-        fn publish_prefix(&mut self) -> Result<semio_framework_job::StepOutcome, &'static str> {
+        fn publish_prefix(&mut self) -> Result<BoardFillOffer, &'static str> {
             let state = self.state.as_mut().ok_or("missing-fill-state")?;
             if state.accepted_count >= state.max_count {
                 state.stage = BoardFillStage::Complete;
-                return Ok(semio_framework_job::StepOutcome::Yield);
+                return Ok(BoardFillOffer::Yield);
             }
             state.stage = BoardFillStage::ResetSources;
             let state = self.state.take().ok_or("missing-fill-state")?;
             self.checkpoint = Some(BoardFillCheckpoint { operation: self.operation, state: Some(state) });
-            Ok(semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
-                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState),
-                applied_progress: self.checkpoint.as_ref().map_or(0, |checkpoint| u64::from(checkpoint.accepted_count())),
-            }))
+            Ok(BoardFillOffer::Checkpoint(self.checkpoint.as_ref().map_or(0, |checkpoint| u64::from(checkpoint.accepted_count()))))
         }
 
         fn reject_candidate(state: &mut BoardFillJobState, reason: &'static str) -> Result<(), &'static str> {
@@ -7240,12 +7249,12 @@ pub mod board_host {
             }
         }
 
-        fn complete(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        fn complete(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> BoardFillOffer {
             let Some(state) = self.state.as_ref() else { return self.fault_outcome("missing-fill-state") };
             if self.commit_encoder.is_none() {
                 self.commit_encoder = Some(BoardFillCommitEncoder::new());
                 context.consume_fuel(1);
-                return semio_framework_job::StepOutcome::Yield;
+                return BoardFillOffer::Yield;
             }
             let encoder_complete = self.commit_encoder.as_ref().is_some_and(|encoder| encoder.stage == BoardFillCommitEncodeStage::Complete);
             if !encoder_complete {
@@ -7253,12 +7262,12 @@ pub mod board_host {
                     return self.fault_outcome(code);
                 }
                 context.consume_fuel(1);
-                return semio_framework_job::StepOutcome::Yield;
+                return BoardFillOffer::Yield;
             }
             if self.commit_writer.is_none() {
                 self.commit_writer = Some(semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput));
                 context.consume_fuel(1);
-                return semio_framework_job::StepOutcome::Yield;
+                return BoardFillOffer::Yield;
             }
             let Some(encoder) = self.commit_encoder.as_ref() else { return self.fault_outcome("fill-commit-encoder") };
             let start = encoder.output_cursor;
@@ -7266,7 +7275,7 @@ pub mod board_host {
                 let Some(writer) = self.commit_writer.as_mut() else { return self.fault_outcome("fill-commit-writer") };
                 let mut page = match writer.admit_page(context) {
                     Ok(page) => page,
-                    Err(_) => return semio_framework_job::StepOutcome::Yield,
+                    Err(_) => return BoardFillOffer::Yield,
                 };
                 let end = start.saturating_add(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).min(BOARD_FILL_COMMIT_BYTES);
                 if page.write(&encoder.bytes[start..end]).is_err() {
@@ -7278,7 +7287,7 @@ pub mod board_host {
                 encoder.output_cursor = end;
                 if end < BOARD_FILL_COMMIT_BYTES {
                     context.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
+                    return BoardFillOffer::Yield;
                 }
             }
             let Some(writer) = self.commit_writer.take() else { return self.fault_outcome("fill-commit-writer") };
@@ -7286,29 +7295,30 @@ pub mod board_host {
                 Ok(output) => output,
                 Err(writer) => {
                     self.commit_writer = Some(writer);
-                    return semio_framework_job::StepOutcome::Yield;
+                    return BoardFillOffer::Yield;
                 }
             };
             self.commit_encoder = None;
-            semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output })
+            self.commit_output = Some(output);
+            BoardFillOffer::Complete
         }
 
-        fn fault_outcome(&mut self, code: &'static str) -> semio_framework_job::StepOutcome {
+        fn fault_outcome(&mut self, code: &'static str) -> BoardFillOffer {
             self.fault = Some(code);
-            semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) })
+            BoardFillOffer::Fault
         }
     }
 
-    impl semio_framework_job::InteractiveJob for BoardFillJob {
-        fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    impl BoardFillJob {
+        fn next_offer(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> BoardFillOffer {
             if context.is_cancelled() {
-                return semio_framework_job::StepOutcome::Cancelled;
+                return BoardFillOffer::Cancelled;
             }
             if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
                 return self.fault_outcome("stale-puzzle2d-fill-operation");
             }
             if context.should_yield() {
-                return semio_framework_job::StepOutcome::Yield;
+                return BoardFillOffer::Yield;
             }
             context.set_stage(self.stage_label());
             let Some(stage) = self.state.as_ref().map(|state| state.stage) else {
@@ -7379,18 +7389,63 @@ pub mod board_host {
             }
             context.consume_fuel(1);
             if context.is_cancelled() {
-                return semio_framework_job::StepOutcome::Cancelled;
+                return BoardFillOffer::Cancelled;
             }
             let preview_sequence = match context.next_preview_sequence() {
                 Ok(sequence) => sequence,
-                Err(_) => return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
+                Err(_) => return BoardFillOffer::Fault,
             };
             let Some(next_preview) = preview_sequence.checked_add(1) else { return self.fault_outcome("preview-sequence-exhausted") };
             self.operation.preview_sequence = next_preview;
             let Some(state) = self.state.as_mut() else { return self.fault_outcome("missing-fill-state") };
             state.preview_sequence = next_preview;
             self.preview = Some(Self::preview(state, self.operation, preview_sequence));
-            semio_framework_job::StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview))
+            BoardFillOffer::Preview
+        }
+
+        fn present<'a>(&'a self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+            use semio_framework_job::JobOutcomeBorrow as Borrow;
+            let absent = || semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "fill outcome payload is absent");
+            let admitted = match self.offer.get().ok_or_else(absent)? {
+                BoardFillOffer::Yield => Borrow::admit_yield(context)?,
+                BoardFillOffer::Cancelled => Borrow::admit_cancelled(context)?,
+                BoardFillOffer::Preview => Borrow::admit_preview(context, self.lent.as_ref().ok_or_else(absent)?)?,
+                BoardFillOffer::Checkpoint(progress) => Borrow::admit_checkpoint(context, self.lent.as_ref().ok_or_else(absent)?, progress)?,
+                BoardFillOffer::Fault => Borrow::admit_fault(context, self.lent.as_ref().ok_or_else(absent)?)?,
+                BoardFillOffer::Complete => Borrow::admit_complete(context, None, self.commit_output.as_ref())?,
+            };
+            self.admitted.set(admitted.is_some());
+            Ok(admitted)
+        }
+    }
+
+    impl semio_framework_job::InteractiveJob for BoardFillJob {
+        fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+            if self.admitted.get() || self.offer.get().is_none() {
+                self.admitted.set(false);
+                let offer = self.next_offer(context);
+                self.lent = match offer {
+                    BoardFillOffer::Preview => Some(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview)),
+                    BoardFillOffer::Checkpoint(_) => Some(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState)),
+                    BoardFillOffer::Fault => Some(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault)),
+                    BoardFillOffer::Yield | BoardFillOffer::Complete | BoardFillOffer::Cancelled => None,
+                };
+                self.offer.set(Some(offer));
+            }
+            self.present(context)
+        }
+
+        fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+            use semio_framework_job::JobOutcomeKind as Kind;
+            let lent = || self.lent.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "fill outcome payload is absent"));
+            match descriptor.kind() {
+                Kind::Yield => descriptor.yielded(),
+                Kind::Cancelled => descriptor.cancelled(),
+                Kind::PreviewReady => descriptor.preview(lent()?),
+                Kind::CheckpointReady { .. } => descriptor.checkpoint(lent()?),
+                Kind::Fault => descriptor.fault(lent()?),
+                Kind::Complete => descriptor.complete(None, self.commit_output.as_ref()),
+            }
         }
 
         fn begin_close(&mut self) {
@@ -7422,6 +7477,18 @@ pub mod board_host {
                     Ok(step)=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()},
                     Err(error)=>semio_framework_job::InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()},
                 };
+            }
+            for slot in [&mut self.lent, &mut self.commit_output] {
+                if let Some(payload) = slot.as_mut() {
+                    if payload.terminal_is_empty() {
+                        *slot = None;
+                        return semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::RetainedCloneProgress {copied_items:1,..Default::default()} };
+                    }
+                    return match payload.close_step(grant) {
+                        Ok(step) => semio_framework_job::InteractiveJobCloseStep::Pending { progress: step.progress() },
+                        Err(error) => semio_framework_job::InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+                    };
+                }
             }
             if self.preview.take().is_some() || self.fault.take().is_some() {
                 return semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::RetainedCloneProgress {copied_items:1,..Default::default()} };
@@ -7511,6 +7578,7 @@ pub mod board_host {
 
         fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{
             if self.state.is_none()&&self.checkpoint.is_some()||self.commit_encoder.is_some(){return Ok(0);}
+            if let Some(payload)=self.lent.as_ref().or(self.commit_output.as_ref()).filter(|_|self.commit_writer.is_none()){return payload.retirement_demands().map(|demand|demand.copy_bytes);}
             self.commit_writer.as_ref().map_or(Ok(0),|writer|writer.retirement_demands().map(|demand|demand.copy_bytes))
         }
 
@@ -7519,12 +7587,14 @@ pub mod board_host {
         fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{
             if self.terminal_is_empty(){return Ok(0);}
             if self.state.is_none()&&self.checkpoint.is_some()||self.commit_encoder.is_some(){return Ok(1);}
+            if let Some(payload)=self.lent.as_ref().or(self.commit_output.as_ref()).filter(|_|self.commit_writer.is_none()){return payload.retirement_demands().map(|demand|demand.depth);}
             self.commit_writer.as_ref().map_or(Ok(1),|writer|writer.retirement_demands().map(|demand|demand.depth))
         }
 
         fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{
             if self.state.is_none()&&self.checkpoint.is_some()||self.commit_encoder.is_some(){return Ok(0);}
             if let Some(writer)=self.commit_writer.as_ref(){return writer.retirement_demands().map(|demand|demand.release_bytes);}
+            if let Some(payload)=self.lent.as_ref().or(self.commit_output.as_ref()){return payload.retirement_demands().map(|demand|demand.release_bytes);}
             if self.preview.is_some()||self.fault.is_some(){return Ok(0);}
             let Some(state)=self.state.as_ref()else{return Ok(0)};
             if let Some(placement)=state.pending_placement.as_ref(){return Ok(placement.handles.next_release_bytes());}
@@ -7536,7 +7606,7 @@ pub mod board_host {
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.closing && self.state.is_none() && self.checkpoint.is_none() && self.preview.is_none() && self.commit_encoder.is_none() && self.commit_writer.is_none() && self.fault.is_none()
+            self.closing && self.state.is_none() && self.checkpoint.is_none() && self.preview.is_none() && self.commit_encoder.is_none() && self.commit_writer.is_none() && self.lent.is_none() && self.commit_output.is_none() && self.fault.is_none()
         }
     }
 

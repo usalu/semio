@@ -102,7 +102,7 @@ fn registered_owned_serializer_rejections_preserve_exact_read_and_options(){
  const NATIVE:Dialect=Dialect{artifact_kind:"test.owned-source",standard:StandardId("1"),subset:SubsetId::ANY};
  fn demand(_: &OwnedSerializerRequest)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,ValueError>{Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand{capacity_bytes:128,depth:1})}
  fn refuse(request:OwnedSerializerRequest,_:RetainedCloneGrant)->Result<OwnedSerializerAdmission,OwnedSerializerRefusal>{CALLS.fetch_add(1,std::sync::atomic::Ordering::Relaxed);Err(OwnedSerializerRefusal{error:ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"fixture refuses original request after valid generic admission"),request,progress:Default::default()})}
- fn transport(_: &IoPayload)->IoResult<IoPayload>{Ok(IoOutcome::clean(IoPayload::Binary(Vec::new())))}
+ fn transport(_: &IoPayload,_: &mut crate::io::io_mechanism::IoRunControl<'_,'_>)->IoResult<IoPayload>{Ok(IoOutcome::clean(IoPayload::Binary(Vec::new())))}
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🚪️io/📤️serialization/📦️owned/🧫️fixtures/🔣️.json")).unwrap();
  let source=Arc::new(73u32);let registry=crate::os_store::SnapshotReadRegistryHandle::new();let revision=[7u8;32];assert!(registry.publish_authority(9,revision));
  for row in corpus["cases"].as_array().unwrap(){

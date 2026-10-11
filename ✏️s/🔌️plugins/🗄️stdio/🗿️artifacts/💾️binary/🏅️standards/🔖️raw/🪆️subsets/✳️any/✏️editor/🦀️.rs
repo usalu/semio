@@ -57,7 +57,7 @@ pub const BINARY_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bin
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — exactly the one edit the `🪟️main` window's
 /// `editable_window_kind()` action (`replace-text`, contract §2.6) can trigger.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum BinaryEditorCommand {
     #[dsl(key = "splice-binary-text")]
     SpliceText { splices: String },
@@ -308,6 +308,7 @@ fn build_binary_text_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Bin
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
         authoring_seed: request.authoring_seed.clone(),
+        retained: semio_s_artifact_stdio_contract::editing::ample_close_grant(),
     };
     let payload = ArtifactRetainedCommandPayload::new(
         ArtifactRetainedCommandInputs {

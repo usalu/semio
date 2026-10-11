@@ -25,7 +25,7 @@ pub mod windows;
 
 //#region 🔖️Values
 /// ▭️ A rectangle on the paper in millimetres from the top left corner of the sheet, x to the right and y downward.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct PaperRect {
     pub x: f64,
     pub y: f64,
@@ -59,7 +59,7 @@ impl PaperRect {
 
 /// 🧭️ The map from the coordinates of a view (metres, y up: north in a plan, the elevation above the datum in a section or elevation) to the window of its viewport: the point `(min_x, max_y)` lands on the top left corner of the
 /// window, `mm` paper millimetres per metre, y flips.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ViewMap {
     pub min_x: f64,
     pub max_y: f64,
@@ -74,7 +74,7 @@ impl ViewMap {
 }
 
 /// 🖼️ One viewport placed on the paper.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct PlacedViewport {
     pub viewport: String,
     pub view: String,
@@ -88,7 +88,7 @@ pub struct PlacedViewport {
 }
 
 /// 🏷️ What a cell of the title block holds.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum TitleField {
     Project,
     Number,
@@ -120,7 +120,7 @@ impl TitleField {
 }
 
 /// 🧾️ One cell of the title block: the field, its rectangle and the text to print.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct TitleCell {
     pub field: TitleField,
     pub rect: PaperRect,
@@ -128,14 +128,14 @@ pub struct TitleCell {
 }
 
 /// 🧾️ The title block: its rectangle and its cells.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct TitleBlock {
     pub rect: PaperRect,
     pub cells: Vec<TitleCell>,
 }
 
 /// 🧾️ One row of the revision table.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct RevisionRow {
     pub revision: String,
     pub mark: String,
@@ -146,14 +146,14 @@ pub struct RevisionRow {
 }
 
 /// 🧾️ The revision table: its rectangle (header row included, no height without rows) and its rows.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct RevisionTable {
     pub rect: PaperRect,
     pub rows: Vec<RevisionRow>,
 }
 
 /// ⚠️ What the layout of a sheet found wrong.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum SheetIssue {
     ViewportOutside,
     ViewportsOverlap,
@@ -190,7 +190,7 @@ impl SheetIssue {
 }
 
 /// ⚠️ One finding of a sheet: what it is and the viewports it names.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct SheetFinding {
     pub issue: SheetIssue,
     pub viewports: Vec<String>,
@@ -204,7 +204,7 @@ impl SheetFinding {
 }
 
 /// 📄️ The layout of one sheet: its identity, its paper (the name, and the width and height as it lies), the frame, the placed viewports in id order, the title block, the revision table and the findings.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct SheetLayout {
     pub sheet: String,
     pub number: String,

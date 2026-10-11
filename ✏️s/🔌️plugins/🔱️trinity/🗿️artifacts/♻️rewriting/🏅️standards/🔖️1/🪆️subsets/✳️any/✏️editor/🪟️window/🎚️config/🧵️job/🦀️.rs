@@ -114,6 +114,7 @@ pub fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<Option<s
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        retained: request.retained,
         authoring_seed: request.authoring_seed.clone(),
     };
     let payload = ArtifactRetainedCommandPayload::new(

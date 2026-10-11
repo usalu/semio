@@ -31,7 +31,11 @@ pub(crate) mod context {
                 if self.0.close_terminal_is_empty() {
                     return;
                 }
-                if self.0.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).is_err() {
+                let Ok(demand) = self.0.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) else {
+                    break;
+                };
+                let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+                if self.0.close_step(grant).is_err() {
                     break;
                 }
             }
@@ -358,18 +362,20 @@ async fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry
 /// every later typed-operation refresh, never as the original fault.
 #[semio_framework_async_macros::async_test]
 async fn example_announcements_keep_live_maintenance_within_its_contract() {
-    use semio_framework_plugin::PluginCloseStep;
+    use semio_framework_plugin::PluginLifecycleStep;
     const RUNTIME_LIVE_CLEANUP_BYTES: usize = 32 * 1_024;
     fn drain(app: &mut Block2dApp, phase: &str) -> usize {
         for turn in 0..100_000 {
-            match PluginApp::maintenance_step(app, 1, RUNTIME_LIVE_CLEANUP_BYTES) {
-                Ok(PluginCloseStep::Pending { released_items, released_bytes }) => {
-                    assert!(released_items <= 1 && released_bytes <= RUNTIME_LIVE_CLEANUP_BYTES, "{phase}: maintenance turn {turn} exceeded its contract: {released_items} items / {released_bytes} bytes");
-                    if released_items == 0 && released_bytes == 0 {
+            let demand = PluginApp::maintenance_retirement_demands(app, RUNTIME_LIVE_CLEANUP_BYTES).unwrap_or_else(|error| panic!("{phase}: maintenance turn {turn} refused its quote: {error:?}"));
+            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RUNTIME_LIVE_CLEANUP_BYTES.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            match PluginApp::maintenance_step(app, grant) {
+                Ok(PluginLifecycleStep::Progress(progress)) => {
+                    assert!(progress.fits(grant), "{phase}: maintenance turn {turn} exceeded its supplied grant: {progress:?}");
+                    if progress == Default::default() {
                         return turn;
                     }
                 }
-                Ok(PluginCloseStep::Complete) => return turn,
+                Ok(PluginLifecycleStep::Complete(_)) => return turn,
                 Ok(other) => panic!("{phase}: maintenance turn {turn} stalled: {other:?}"),
                 Err(fault) => panic!("{phase}: maintenance turn {turn} faulted: {fault:?}"),
             }

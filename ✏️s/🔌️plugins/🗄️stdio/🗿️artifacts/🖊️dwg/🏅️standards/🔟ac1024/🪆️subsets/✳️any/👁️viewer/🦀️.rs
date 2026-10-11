@@ -37,7 +37,7 @@ pub const DWG_AC1024_DOCUMENT_SCHEMA: &str = "stdio.dwg";
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions, so its typed command channel has exactly one inert variant.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum DwgAc1024ViewCommand {
     #[default]
     Noop,

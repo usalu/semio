@@ -139,7 +139,7 @@ pub(crate) mod context {
                 drain_settled(app, &mut result, &mut fault)?;
                 return fault.map_or(Ok(result), Err);
             }
-            PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
+            crate::puzzle_job::testing::maintain(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
             block_on(app.advance_typed_operation_publication())?;
             // 📄️ EVERY presented page and EVERY completion per turn, never one: `has_pending_typed_operations`
             // counts the outboxes and the mounted operations but NOT a page already presented and waiting
@@ -299,7 +299,9 @@ pub(crate) mod context {
             if app.close_terminal_is_empty() {
                 return;
             }
-            if PluginApp::close_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Puzzle 2D registered app close") == semio_framework_plugin::PluginCloseStep::Complete {
+            let demand = PluginApp::close_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Puzzle 2D registered app close quote");
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            if matches!(PluginApp::close_step(app, grant).expect("Puzzle 2D registered app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
                 break;
             }
         }

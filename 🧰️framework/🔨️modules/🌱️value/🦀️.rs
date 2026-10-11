@@ -66,6 +66,8 @@ pub enum Number {
     Float(f64),
 }
 
+crate::artifact_retire_leaf!(Number);
+
 impl Number {
     /// 🔎️ Widens to `f64` regardless of variant — lossy for `u64`/`i64` magnitudes beyond 2^53.
     pub fn as_f64(&self) -> f64 {

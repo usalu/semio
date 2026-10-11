@@ -38,3 +38,10 @@ impl protocol::OpBinary for TestConfigMutation {
         Ok(ChangeTestConfigSelection::decode_op(bytes)?.into())
     }
 }
+impl store::snapshot_clone_preparation::ConfigApplyMutation<super::TestConfig> for TestConfigMutation {
+    fn exchange(self, post: &mut super::TestConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        let Self::ChangeTestConfigSelection(change) = self;
+        let previous = std::mem::replace(&mut post.selected, change.selected);
+        Ok(Self::ChangeTestConfigSelection(ChangeTestConfigSelection { selected: previous }))
+    }
+}

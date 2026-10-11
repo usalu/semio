@@ -1,153 +1,180 @@
 //! 📤️ Resumable publication of bounded WFC state, output, and diagnostic bytes.
 
 use semio_framework_job::{
-    Checkpoint, CommitCandidate, InteractiveJobCloseStep, JobFault, JobPayloadAdmissionFault, JobPayloadCloseStep, JobPayloadStream, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES,
+    InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, JobPayloadStream, JobPublicationKind, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload, RetainedJobPublication, RetainedPayloadBuilder, StepContext,
 };
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 
 #[derive(Clone, Copy)]
-pub(super) enum Kind {
+pub enum Kind {
     Preview,
     Checkpoint(u64),
     Commit,
     Fault,
 }
 
-struct Payload {
-    bytes: Vec<u8>,
-    cursor: usize,
-    writer: Option<RetainedJobPayloadWriter>,
-    ready: Option<RetainedJobPayload>,
-}
-
-impl Payload {
-    fn new(stream: JobPayloadStream, bytes: Vec<u8>) -> Self {
-        Self { bytes, cursor: 0, writer: Some(RetainedJobPayloadWriter::new(stream)), ready: None }
-    }
-
-    fn advance(&mut self, context: &mut StepContext<'_>) -> Result<(), JobPayloadAdmissionFault> {
-        let before = self.cursor;
-        let complete = self.writer.as_mut().expect("pending publication writer").write_slice_page(context, &self.bytes, &mut self.cursor)?;
-        if self.cursor != before {
-            context.consume_fuel(1);
-        }
-        if complete {
-            match self.writer.take().expect("completed publication writer").finish() {
-                Ok(payload) => self.ready = Some(payload),
-                Err(writer) => self.writer = Some(writer),
-            }
-        }
-        Ok(())
-    }
-
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if let Some(writer) = self.writer.as_mut() {
-            let step = writer.close_step(maximum_items, maximum_bytes);
-            if writer.terminal_is_empty() {
-                self.writer = None;
-            }
-            return close_result(step);
-        }
-        if let Some(payload) = self.ready.as_mut() {
-            let step = payload.close_step(maximum_items, maximum_bytes);
-            if payload.terminal_is_empty() {
-                self.ready = None;
-            }
-            return close_result(step);
-        }
-        if !self.bytes.is_empty() {
-            let released_bytes = maximum_bytes.min(self.bytes.len());
-            if maximum_items == 0 || released_bytes == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.bytes.truncate(self.bytes.len() - released_bytes);
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-        }
-        InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.writer.is_none() && self.ready.is_none() && self.bytes.is_empty()
+/// 🧯️ Maps one child close turn onto the parent job's close vocabulary; a child never completes its parent.
+pub fn close_result(result: Result<RetainedCloneStep, ValueError>) -> InteractiveJobCloseStep {
+    match result {
+        Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+        Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
     }
 }
 
-fn close_result(step: JobPayloadCloseStep) -> InteractiveJobCloseStep {
-    match step {
-        JobPayloadCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
-        JobPayloadCloseStep::Complete => InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
-    }
-}
-
-pub(super) struct Publication {
+/// 🧳️ One publication owns its source bytes and the original payload headers it lends to the consumer.
+pub struct Publication {
     kind: Kind,
-    primary: Payload,
-    secondary: Option<Payload>,
-    failed: bool,
+    single: RetainedJobPublication,
+    state: RetainedPayloadBuilder,
+    output: RetainedPayloadBuilder,
+    primary: Vec<u8>,
+    secondary: Vec<u8>,
+    state_cursor: usize,
+    output_cursor: usize,
+    delivered: bool,
 }
 
 impl Publication {
-    pub(super) fn new(kind: Kind, primary: Vec<u8>, secondary: Vec<u8>) -> Box<Self> {
-        let stream = match kind {
-            Kind::Preview => JobPayloadStream::Preview,
-            Kind::Checkpoint(_) => JobPayloadStream::CheckpointState,
-            Kind::Commit => JobPayloadStream::CommitState,
-            Kind::Fault => JobPayloadStream::Fault,
+    pub fn new(kind: Kind, primary: Vec<u8>, secondary: Vec<u8>) -> Box<Self> {
+        Box::new(Self {
+            kind,
+            single: RetainedJobPublication::new(),
+            state: RetainedPayloadBuilder::new(JobPayloadStream::CommitState),
+            output: RetainedPayloadBuilder::new(JobPayloadStream::CommitOutput),
+            primary,
+            secondary,
+            state_cursor: 0,
+            output_cursor: 0,
+            delivered: false,
+        })
+    }
+
+    pub fn is_delivered(&self) -> bool {
+        self.delivered
+    }
+
+    /// 🚨️ Whether this publication already carries the operation's fault.
+    pub fn is_fault(&self) -> bool {
+        matches!(self.kind, Kind::Fault)
+    }
+
+    /// 🤝️ The sealed commit state payload, lent only after the whole commit was delivered.
+    pub fn commit_state(&self) -> Option<&RetainedJobPayload> {
+        if self.delivered && matches!(self.kind, Kind::Commit) { self.state.published() } else { None }
+    }
+
+    /// ✍️ Advances one paid unit toward the lent outcome and reports it once the payload can be borrowed.
+    pub fn poll<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        let kind = match self.kind {
+            Kind::Preview => JobPublicationKind::Preview,
+            Kind::Checkpoint(applied_progress) => JobPublicationKind::Checkpoint { applied_progress },
+            Kind::Fault => JobPublicationKind::Fault,
+            Kind::Commit => return self.poll_commit(cx),
         };
-        let secondary = matches!(kind, Kind::Commit).then(|| Payload::new(JobPayloadStream::CommitOutput, secondary));
-        Box::new(Self { kind, primary: Payload::new(stream, primary), secondary, failed: false })
+        let result = self.single.advance_from_source(kind, &self.primary, cx)?;
+        if result.is_some() {
+            self.delivered = true;
+        }
+        Ok(result)
     }
 
-    pub(super) fn poll(slot: &mut Option<Box<Self>>, context: &mut StepContext<'_>) -> StepOutcome {
-        let pending = slot.as_mut().expect("retained publication");
-        if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+    fn poll_commit<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if !self.state.is_initialized() {
+            self.state.advance_initialization(cx)?;
+            return Ok(None);
         }
-        if context.should_yield() {
-            return StepOutcome::Yield;
+        if self.state_cursor < self.primary.len() {
+            self.state.append_original(cx, &self.primary, &mut self.state_cursor)?;
+            return Ok(None);
         }
-        if pending.failed {
-            let _ = pending.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
-            context.consume_fuel(1);
-            if pending.terminal_is_empty() {
-                *slot = None;
-                return StepOutcome::Fault(super::empty_job_fault());
-            }
-            return StepOutcome::Yield;
+        if self.state.published().is_none() {
+            self.state.seal(cx)?;
+            return Ok(None);
         }
-        let payload = if pending.primary.ready.is_none() { Some(&mut pending.primary) } else { pending.secondary.as_mut().filter(|payload| payload.ready.is_none()) };
-        if let Some(payload) = payload {
-            match payload.advance(context) {
-                Ok(()) => {}
-                Err(JobPayloadAdmissionFault::WriterFull | JobPayloadAdmissionFault::WriterSealed | JobPayloadAdmissionFault::RejectedSourcePending) => pending.failed = true,
-                Err(_) => {}
-            }
+        if !self.output.is_initialized() {
+            self.output.advance_initialization(cx)?;
+            return Ok(None);
         }
-        if pending.failed || pending.primary.ready.is_none() || pending.secondary.as_ref().is_some_and(|payload| payload.ready.is_none()) {
-            return StepOutcome::Yield;
+        if self.output_cursor < self.secondary.len() {
+            self.output.append_original(cx, &self.secondary, &mut self.output_cursor)?;
+            return Ok(None);
         }
-        let mut finished = slot.take().expect("finished publication");
-        let state = finished.primary.ready.take().expect("published primary payload");
-        match finished.kind {
-            Kind::Preview => StepOutcome::PreviewReady(state),
-            Kind::Checkpoint(applied_progress) => StepOutcome::CheckpointReady(Checkpoint { state, applied_progress }),
-            Kind::Commit => StepOutcome::Complete(CommitCandidate { state, output: finished.secondary.as_mut().and_then(|payload| payload.ready.take()).expect("published commit output") }),
-            Kind::Fault => StepOutcome::Fault(JobFault { detail: state }),
+        if self.output.published().is_none() {
+            self.output.seal(cx)?;
+            return Ok(None);
+        }
+        let result = JobOutcomeBorrow::admit_complete(cx, self.state.published(), self.output.published())?;
+        if result.is_some() {
+            self.delivered = true;
+        }
+        Ok(result)
+    }
+
+    /// 🤝️ Resolves the immutable descriptor against these same original payload headers.
+    pub fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        match self.kind {
+            Kind::Commit if self.delivered => descriptor.complete(self.state.published(), self.output.published()),
+            Kind::Commit => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "wfc commit publication has not lent its payloads")),
+            _ => self.single.borrow_outcome(descriptor),
         }
     }
 
-    pub(super) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if !self.primary.terminal_is_empty() {
-            return self.primary.close_step(maximum_items, maximum_bytes);
+    /// 📏️ Quotes the next close frontier: pages and headers first, then the source bytes.
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if !self.single.terminal_is_empty() {
+            return self.single.retirement_demands();
         }
-        if let Some(secondary) = self.secondary.as_mut() {
-            if !secondary.terminal_is_empty() {
-                return secondary.close_step(maximum_items, maximum_bytes);
-            }
+        if !self.state.terminal_is_empty() {
+            return self.state.retirement_demands();
         }
-        InteractiveJobCloseStep::Complete
+        if !self.output.terminal_is_empty() {
+            return self.output.retirement_demands();
+        }
+        if self.primary.capacity() != 0 {
+            return Ok(RetirementDemand { release_bytes: self.primary.capacity(), depth: 1, ..Default::default() });
+        }
+        if self.secondary.capacity() != 0 {
+            return Ok(RetirementDemand { release_bytes: self.secondary.capacity(), depth: 1, ..Default::default() });
+        }
+        Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
-        self.primary.terminal_is_empty() && self.secondary.as_ref().is_none_or(Payload::terminal_is_empty)
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let demand = match self.retirement_demands() {
+            Ok(demand) => demand,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        }
+        if !self.single.terminal_is_empty() {
+            return close_result(self.single.close_step(grant));
+        }
+        if !self.state.terminal_is_empty() {
+            return close_result(self.state.close_step_granted(grant));
+        }
+        if !self.output.terminal_is_empty() {
+            return close_result(self.output.close_step_granted(grant));
+        }
+        if self.primary.capacity() != 0 {
+            let released_bytes = self.primary.capacity();
+            self.primary = Vec::new();
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } };
+        }
+        if self.secondary.capacity() != 0 {
+            let released_bytes = self.secondary.capacity();
+            self.secondary = Vec::new();
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } };
+        }
+        if self.delivered {
+            self.delivered = false;
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } };
+        }
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.single.terminal_is_empty() && self.state.terminal_is_empty() && self.output.terminal_is_empty() && self.primary.capacity() == 0 && self.secondary.capacity() == 0 && !self.delivered
     }
 }
 

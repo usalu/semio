@@ -100,8 +100,7 @@ pub fn node_graph_edit_result(doc: &ArtifactView<'_, FlowSnapshot>, config: &Flo
     let content = doc.children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
     let (widgets, synapses, layout) = crate::working_from_flow_content_snapshot(&content);
     let live = semio_framework_artifact_flow_flow::FlowHostSnapshot { schema: "flow.host_snapshot".into(), camera: config.camera.clone(), widgets, synapses, layout };
-    let mut host = flow::flow_host_with_session(&live, session);
-    live.retire_cold();
+    let mut host = crate::editor::flow::host_with_session(live, session);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     apply_canvas_options(&mut host, config);
     let drags = node_graph_edit_drags(operations);

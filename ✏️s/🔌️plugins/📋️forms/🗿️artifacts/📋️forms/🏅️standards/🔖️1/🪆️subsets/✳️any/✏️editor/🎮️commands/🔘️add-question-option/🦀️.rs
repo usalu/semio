@@ -17,7 +17,7 @@ fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &str) -> 
 }
 //#endregion 🔖️Shell
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "add-question-option")]
 pub struct AddQuestionOption {
     pub question_id: String,

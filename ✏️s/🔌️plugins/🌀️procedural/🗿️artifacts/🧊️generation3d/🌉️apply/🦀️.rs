@@ -3,6 +3,7 @@
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::{widget_id, Generation3dSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 
 /// 🧊️ A uniform 3d hash grid of points carrying a small copyable payload.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct Puzzle5dPointGrid<T> {
     cell: f64,
     cells: HashMap<[i64; 3], Vec<([f64; 3], T)>>,

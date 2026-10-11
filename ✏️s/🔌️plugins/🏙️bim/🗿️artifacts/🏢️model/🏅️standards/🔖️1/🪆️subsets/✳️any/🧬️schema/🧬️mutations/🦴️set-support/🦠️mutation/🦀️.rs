@@ -2,7 +2,8 @@
 use crate::{StructuralSupport, StructuralSupportPatch, ModelDiff, ModelMutation, ModelSnapshot};
 use crate::{StructuralLocation, Restraints, Point3};
 use protocol::{MutationKind, SemanticDescriptor};
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSupport { pub id: String, #[value(default, skip_serializing_if = "Option::is_none")] pub name: Option<String>, #[value(default, skip_serializing_if = "Option::is_none")] pub member: Option<String>, #[value(default, skip_serializing_if = "Option::is_none")] pub location: Option<StructuralLocation>, #[value(default, skip_serializing_if = "Option::is_none")] pub offset: Option<Point3>, #[value(default, skip_serializing_if = "Option::is_none")] pub restraints: Option<Restraints>, }
 impl SetSupport { pub fn patch(&self) -> StructuralSupportPatch { StructuralSupportPatch { name: self.name.clone(), member: self.member.clone(), location: self.location.clone(), offset: self.offset.clone(), restraints: self.restraints.clone() } } pub fn from_patch(id: String, patch: StructuralSupportPatch) -> Self { Self { id, name: patch.name, member: patch.member, location: patch.location, offset: patch.offset, restraints: patch.restraints } } }

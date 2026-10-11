@@ -56,3 +56,7 @@ semio-s-artifact-stdio-txt-test-oracle = { path = "../../🔮️oracles/📦️p
 
 [package.metadata.semio.composition]
 manifest = "../../🧩️composition/🔣️.json"
+
+[[test]]
+name = "preparation_law"
+path = "../../🧪️tests/⚙️preparation/🦀️.rs"

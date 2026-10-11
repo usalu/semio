@@ -1,11 +1,12 @@
 //! 🧾️ Configured form values own their question identities and complete intrinsic state.
 use semio_framework_value::{DslValue,FromValue,ToValue,ValueError,ValueRefusalKind,NativeDecodeControl,NativeEncodeControl};
 #[path="🪪️native-json/🦀️.rs"]mod literal;
+#[path="🌳️canonical/🦀️.rs"]mod canonical;
 /// 🪪️ One literal question identity and its actual first-party value.
-#[derive(Clone,Debug,semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone,Debug,semio_framework_dsl_record_derive::DslRecord,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone)]
 pub struct FormDictionaryEntry{pub question_id:String,pub value:DslValue}
 /// 🧾️ An ordered dictionary distinguishes absent ownership, empty entries and member null.
-#[derive(Clone,Debug,Default,PartialEq,semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone,Debug,Default,PartialEq,semio_framework_dsl_record_derive::DslRecord,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone)]
 pub struct FormDictionary{pub entries:Vec<FormDictionaryEntry>}
 impl FormDictionary{
  /// 🛂️ Each question owns exactly one entry; intrinsic object members retain their literal order.

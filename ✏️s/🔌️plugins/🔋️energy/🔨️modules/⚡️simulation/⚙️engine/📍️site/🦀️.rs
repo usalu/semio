@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️WeatherRecord
 /// 🌡️ One timestep of outdoor weather.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct WeatherRecord {
     pub year: u16,
     pub month: u8,
@@ -41,7 +41,7 @@ impl WeatherRecord {
 
 // #region 🔖️WeatherData
 /// 📄️ Site metadata and typed weather records consumed by the simulation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct WeatherData {
     pub location: String,
     pub latitude_deg: f64,
@@ -60,14 +60,14 @@ impl WeatherData {
 
 // #region 🔖️DesignDay
 /// 🌡️ Sizing design day specification.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum DesignDayKind {
     Heating,
     Cooling,
     Custom,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct DesignDay {
     pub name: String,
     pub kind: DesignDayKind,
@@ -80,7 +80,7 @@ pub struct DesignDay {
     pub solar_model: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum DesignDayHumidity {
     Wetbulb { wetbulb_at_max_c: f64 },
     Dewpoint { dewpoint_c: f64 },
@@ -103,7 +103,7 @@ impl DesignDay {
 
 // #region 🔖️Solar
 /// ☀️ Solar position for a site and datetime.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SolarPosition {
     pub altitude_deg: f64,
     pub azimuth_deg: f64,
@@ -159,7 +159,7 @@ pub fn sky_temperature_c(horizontal_infrared_w_m2: f64) -> f64 {
 /// 🌦️ Weather at the end of one zone timestep inside an hour, interpolated the way EnergyPlus
 /// reads an hourly weather file: state variables linearly from the previous hour's record to the
 /// current one, solar irradiance centred on the half hour and interpolated towards the next hour.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct TimestepWeather {
     pub dry_bulb_c: f64,
     pub dew_point_c: f64,
@@ -221,7 +221,7 @@ impl TimestepWeather {
 
 // #region 🔖️Ground
 /// 🌍️ Ground temperature model.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum GroundTemperatureModel {
     Monthly { temperatures_c: [f64; 12] },
     Shallow { annual_amplitude_k: f64, phase_shift_days: f64, mean_c: f64 },
@@ -245,7 +245,7 @@ impl GroundTemperatureModel {
 }
 
 /// 🚰️ Water mains temperature model.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum WaterMainsModel {
     Constant { temperature_c: f64 },
     Monthly { temperatures_c: [f64; 12] },

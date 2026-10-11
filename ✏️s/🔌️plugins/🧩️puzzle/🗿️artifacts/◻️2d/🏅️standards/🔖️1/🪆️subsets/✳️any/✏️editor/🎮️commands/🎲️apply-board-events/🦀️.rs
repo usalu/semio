@@ -241,7 +241,7 @@ pub fn replay_board_events(events_json: &str, recorder: &mut Puzzle2dRecorder, r
 /// 🖌️ The brush's candidate page a `brushCandidates` row carries — window-transient runtime state, never the document.
 fn fold_brush_candidates(runtime: &mut Puzzle2dPlayRuntime, payload: &Value) {
     if let Some(candidates) = payload.get("candidates").and_then(Value::as_array) {
-        runtime.brush_candidates = candidates.iter().map(semio_framework_value::DslValue::from).collect();
+        runtime.brush_candidates = candidates.iter().map(semio_framework_pack_json::to_dsl_value).collect();
     }
     if let Some(source) = payload.get("sourceHandleId").and_then(Value::as_str) {
         runtime.brush_candidate_source_handle_id = source.to_string();

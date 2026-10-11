@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Grid2dArtifact
 /// 🧬️ Grid2dArtifact facet — the persisted problem spec IS the artifact; the solved assignment is
 /// an inference over it, never a field.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.wfc.grid2d")]
 pub struct Grid2dArtifact {

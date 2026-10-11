@@ -705,7 +705,8 @@ pub mod part_1_1 {
 pub mod part_1_2 {
     use super::*;
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
     pub enum FireRating { R30, R60, R90, R120 }
 
     pub fn parse_fire_rating(value: &str) -> Option<FireRating> {

@@ -11,7 +11,11 @@ use crate::results::{Results, RunMetadata, SizingResult, SizingTables, SummaryRo
 use crate::site::WeatherRecord;
 use crate::sizing::{SizingBuilder, SizingConfig};
 use crate::units::Unit;
-use semio_framework_job::{allocate_operation_id, default_now_us, CancelToken, Checkpoint, CommitCandidate, Generation, InteractiveJob, JobFault, Operation, RevisionId, StepContext, StepOutcome};
+use semio_framework_job::{
+    allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload, RevisionId,
+    StepBudget, StepContext,
+};
+use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
@@ -27,6 +31,94 @@ const ENERGY_WIRE_QUEUE_SLOTS: usize = 4;
 const ENERGY_WIRE_LEASE_SLOTS: usize = 64;
 const ENERGY_WIRE_HEADER_BYTES: usize = 80;
 const ENERGY_CHECKPOINT_BYTES: usize = 164;
+
+/// 🪜️ Upper bound of one ladder rung: a single popped owner or one UTF-8 character of a string.
+const ENERGY_RUNG_DEMAND: RetirementDemand = RetirementDemand { copy_bytes: 0, capacity_bytes: 0, release_bytes: 4, depth: 1 };
+
+/// 🎟️ Whether one grant covers one quoted demand with at least one item.
+fn energy_grant_covers(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
+    grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
+}
+
+/// 🛡️ Closes one owner frontier only when the grant covers its own quote, otherwise reports an idle turn.
+fn energy_guarded(grant: RetainedCloneGrant, demand: Result<RetirementDemand, ValueError>, close: impl FnOnce() -> Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, ValueError> {
+    if !energy_grant_covers(grant, demand?) {
+        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+    }
+    close()
+}
+
+/// 🧯️ Maps one owner close turn onto the job close vocabulary and reports whether that owner finished.
+fn energy_turn(step: Result<RetainedCloneStep, ValueError>) -> (InteractiveJobCloseStep, bool) {
+    match step {
+        Ok(RetainedCloneStep::Progress(progress)) => (InteractiveJobCloseStep::Pending { progress }, false),
+        Ok(RetainedCloneStep::Complete(progress)) => (InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } }, true),
+        Err(error) => (InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() }, false),
+    }
+}
+
+/// 💸️ Charges one owner close turn to the running step's own wallet and reports whether that owner finished.
+fn energy_spend(context: &mut StepContext<'_>, step: Result<RetainedCloneStep, ValueError>) -> Result<bool, EnergyWireRejection> {
+    let (progress, done) = match step {
+        Ok(RetainedCloneStep::Progress(progress)) => (progress, false),
+        Ok(RetainedCloneStep::Complete(progress)) => (progress, true),
+        Err(_) => return Err(EnergyWireRejection::Backing),
+    };
+    context.consume_retained(progress).map_err(|_| EnergyWireRejection::Backing)?;
+    Ok(done)
+}
+
+/// 🪜️ One popped ladder owner releasing `released_bytes` of character backing.
+fn energy_rung(released: (usize, usize)) -> InteractiveJobCloseStep {
+    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes: released.1, ..Default::default() } }
+}
+
+/// 🪜️ One popped ladder owner without backing bytes.
+fn energy_one() -> InteractiveJobCloseStep {
+    energy_rung((1, 0))
+}
+
+/// 💤️ A turn the grant could not fund.
+fn energy_idle() -> InteractiveJobCloseStep {
+    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }
+}
+
+/// 🏁️ A close ladder with nothing left.
+fn energy_done() -> InteractiveJobCloseStep {
+    InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+}
+
+/// 🧭️ What one internal step decided before any outcome is lent to the caller.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EnergyRun {
+    Yield,
+    Cancelled,
+    Preview,
+    Checkpoint(u64),
+    Fault,
+    Complete,
+}
+
+/// 🏷️ Empty marker payloads lent as outcome payloads; the real packets travel through the wire queues.
+struct EnergyOutcomeMarkers {
+    preview: RetainedJobPayload,
+    checkpoint: RetainedJobPayload,
+    fault: RetainedJobPayload,
+    commit_state: RetainedJobPayload,
+    commit_output: RetainedJobPayload,
+}
+
+impl Default for EnergyOutcomeMarkers {
+    fn default() -> Self {
+        Self {
+            preview: RetainedJobPayload::empty(JobPayloadStream::Preview),
+            checkpoint: RetainedJobPayload::empty(JobPayloadStream::CheckpointState),
+            fault: RetainedJobPayload::empty(JobPayloadStream::Fault),
+            commit_state: RetainedJobPayload::empty(JobPayloadStream::CommitState),
+            commit_output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput),
+        }
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
@@ -128,8 +220,18 @@ impl EnergyWirePacket {
         self.preview.as_ref()
     }
 
-    pub fn ack_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::JobPayloadCloseStep {
-        self.payload.close_step(maximum_items, maximum_bytes)
+    /// 📏️ Quotes the next original payload page or ledger this packet would release.
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+        self.payload.retirement_demands()
+    }
+
+    /// 🎟️ Releases one payload frontier only when the caller's grant covers its quote.
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let demand = self.payload.retirement_demands()?;
+        if !energy_grant_covers(grant, demand) {
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+        }
+        self.payload.close_step(grant)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -297,25 +399,36 @@ impl EnergyWireQueue {
         None
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
-        self.recover_lost();
+    fn retirement_demands(&self) -> Option<Result<RetirementDemand, ValueError>> {
         if self.in_flight.is_some() {
-            return Some((0, 0));
+            return Some(Ok(RetirementDemand::default()));
         }
         if self.len == 0 && self.reserved_push {
+            return Some(Ok(RetirementDemand { depth: 1, ..Default::default() }));
+        }
+        self.slots[self.head].as_ref().map(EnergyWirePacket::retirement_demands)
+    }
+
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Option<InteractiveJobCloseStep> {
+        self.recover_lost();
+        if self.in_flight.is_some() {
+            return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+        }
+        if self.len == 0 && self.reserved_push {
+            if !energy_grant_covers(grant, RetirementDemand { depth: 1, ..Default::default() }) {
+                return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+            }
             self.reserved_push = false;
-            return Some((1, 0));
+            return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
         }
         let packet = self.slots[self.head].as_mut()?;
-        match packet.payload.close_step(maximum_items, maximum_bytes) {
-            semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => Some((released_items, released_bytes)),
-            semio_framework_job::JobPayloadCloseStep::Complete => {
-                self.slots[self.head] = None;
-                self.head = (self.head + 1) % ENERGY_WIRE_QUEUE_SLOTS;
-                self.len -= 1;
-                Some((1, 0))
-            }
+        let (step, done) = energy_turn(packet.close_step(grant));
+        if done {
+            self.slots[self.head] = None;
+            self.head = (self.head + 1) % ENERGY_WIRE_QUEUE_SLOTS;
+            self.len -= 1;
         }
+        Some(step)
     }
 }
 
@@ -363,7 +476,7 @@ fn energy_wire_header(kind: EnergyWireKind, identity: EnergyWireIdentity, census
 // #region 🔖️EnergyJob
 /// ⚡️ Fidelity label carried by every preview so provisional fields cannot be mistaken for a
 /// validated final simulation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum EnergyQualityTier {
     SteadyStateEstimate,
     DesignDay,
@@ -372,7 +485,7 @@ pub enum EnergyQualityTier {
 }
 
 /// 🧭️ Persistent stage of [`EnergyJob`].
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum EnergyJobStage {
     Validate,
     ResolveWeather,
@@ -399,7 +512,7 @@ pub enum EnergyJobStage {
 }
 
 /// 📸️ Typed view of the latest replaceable energy preview.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct EnergyJobPreview {
     pub sequence: u64,
     pub tier: EnergyQualityTier,
@@ -425,7 +538,7 @@ pub struct EnergyJobCursor {
 
 // #region 🔖️NumericalAdmission
 /// 📏️ Schema-first simultaneous working-set census for an Energy numerical job.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct EnergyNumericalCensus {
     pub zones: usize,
     pub surfaces: usize,
@@ -567,17 +680,25 @@ impl EnergyAdmissionRejected {
         EnergyJob::admit(self.operation, self.model, self.config, bounds)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    /// 📏️ Quotes the next popped model or config owner.
+    pub fn close_demands(&self) -> RetirementDemand {
+        if self.terminal_is_empty() { RetirementDemand::default() } else { ENERGY_RUNG_DEMAND }
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if self.terminal_is_empty() {
+            return energy_done();
         }
-        if let Some((released_items, released_bytes)) = close_model_step(&mut self.model, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
+            return energy_idle();
         }
-        if let Some((released_items, released_bytes)) = close_config_step(&mut self.config, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        if let Some(released) = close_model_step(&mut self.model, grant.maximum_release_bytes) {
+            return energy_rung(released);
         }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        if let Some(released) = close_config_step(&mut self.config, grant.maximum_release_bytes) {
+            return energy_rung(released);
+        }
+        energy_done()
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -611,23 +732,31 @@ impl EnergyCheckpointRejected {
         EnergyRestoreJob::admit(self.operation, self.model, self.config, self.packet, bounds)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
+    /// 📏️ Quotes the retained packet page first, then one popped model or config owner.
+    pub fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
         if !self.packet.terminal_is_empty() {
-            return match self.packet.ack_step(1, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-            };
+            return self.packet.retirement_demands();
         }
-        if let Some((released_items, released_bytes)) = close_model_step(&mut self.model, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        Ok(if self.terminal_is_empty() { RetirementDemand::default() } else { ENERGY_RUNG_DEMAND })
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if !self.packet.terminal_is_empty() {
+            return energy_turn(self.packet.close_step(grant)).0;
         }
-        if let Some((released_items, released_bytes)) = close_config_step(&mut self.config, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        if self.terminal_is_empty() {
+            return energy_done();
         }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
+            return energy_idle();
+        }
+        if let Some(released) = close_model_step(&mut self.model, grant.maximum_release_bytes) {
+            return energy_rung(released);
+        }
+        if let Some(released) = close_config_step(&mut self.config, grant.maximum_release_bytes) {
+            return energy_rung(released);
+        }
+        energy_done()
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -664,7 +793,6 @@ pub struct EnergyRestoreJob {
     rebuild: Option<EnergyJob>,
     replay_retiring: Option<EnergyWirePacket>,
     replay_checkpoint_lease: Option<EnergyWireLease>,
-    replay_checkpoint_pending: bool,
     replay_failed: Option<EnergyWireRejection>,
     ready: bool,
     abandonment_slot: usize,
@@ -703,7 +831,6 @@ struct EnergyRestoreAbandoned {
     rebuild: Option<EnergyJob>,
     replay_retiring: Option<EnergyWirePacket>,
     replay_checkpoint_lease: Option<EnergyWireLease>,
-    replay_checkpoint_pending: bool,
     replay_failed: Option<EnergyWireRejection>,
     ready: bool,
 }
@@ -787,7 +914,6 @@ impl EnergyRestoreJob {
             rebuild: None,
             replay_retiring: None,
             replay_checkpoint_lease: None,
-            replay_checkpoint_pending: false,
             replay_failed: None,
             ready: false,
             abandonment_slot,
@@ -826,7 +952,6 @@ impl EnergyRestoreJob {
             rebuild: authority.rebuild,
             replay_retiring: authority.replay_retiring,
             replay_checkpoint_lease: authority.replay_checkpoint_lease,
-            replay_checkpoint_pending: authority.replay_checkpoint_pending,
             replay_failed: authority.replay_failed,
             ready: authority.ready,
             abandonment_slot: index,
@@ -885,13 +1010,15 @@ impl EnergyRestoreJob {
             if packet.terminal_is_empty() {
                 self.replay_retiring = None;
             } else {
-                let _ = packet.ack_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let step = packet.close_step(context.retained_grant());
+                energy_spend(context, step)?;
             }
             return Ok(false);
         }
         if let Some(lease) = self.replay_checkpoint_lease.as_mut() {
             if !lease.packet().terminal_is_empty() {
-                let _ = lease.packet_mut().ack_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let step = lease.packet_mut().close_step(context.retained_grant());
+                energy_spend(context, step)?;
                 return Ok(false);
             }
             let lease = self.replay_checkpoint_lease.take().expect("empty replay checkpoint lease remains owned");
@@ -899,11 +1026,6 @@ impl EnergyRestoreJob {
                 self.replay_checkpoint_lease = Some(lease);
                 return Err(EnergyWireRejection::Backing);
             }
-            return Ok(false);
-        }
-        if self.replay_checkpoint_pending {
-            self.replay_checkpoint_lease = self.rebuild.as_mut().ok_or(EnergyWireRejection::Backing)?.take_checkpoint_packet(self.operation.generation).map_err(|_| EnergyWireRejection::Identity)?;
-            self.replay_checkpoint_pending = false;
             return Ok(false);
         }
         if let Some(failure) = self.replay_failed {
@@ -970,46 +1092,25 @@ impl EnergyRestoreJob {
             self.ready = true;
             return Ok(true);
         }
-        match rebuild.step(context) {
-            StepOutcome::Yield => {}
-            StepOutcome::PreviewReady(notice) => {
-                if !notice.terminal_is_empty() {
-                    self.replay_retiring = Some(EnergyWirePacket { kind: EnergyWireKind::Preview, identity: self.packet.as_ref().expect("restore packet").identity, payload: notice, preview: None, reservation: None });
-                    return Ok(false);
-                }
+        match rebuild.run(context) {
+            EnergyRun::Yield | EnergyRun::Cancelled => {}
+            EnergyRun::Preview => {
                 self.replay_retiring = rebuild.take_preview_packet(self.operation.generation).map_err(|_| EnergyWireRejection::Identity)?;
             }
-            StepOutcome::CheckpointReady(checkpoint) => {
-                if !checkpoint.state.terminal_is_empty() {
-                    self.replay_retiring = Some(EnergyWirePacket { kind: EnergyWireKind::Checkpoint, identity: self.packet.as_ref().expect("restore packet").identity, payload: checkpoint.state, preview: None, reservation: None });
-                    self.replay_checkpoint_pending = true;
-                    return Ok(false);
-                }
+            EnergyRun::Checkpoint(_) => {
                 if let Some(lease) = rebuild.take_checkpoint_packet(self.operation.generation).map_err(|_| EnergyWireRejection::Identity)? {
                     self.replay_checkpoint_lease = Some(lease);
                 }
             }
-            StepOutcome::Fault(fault) => {
+            EnergyRun::Fault => {
                 self.replay_failed = Some(EnergyWireRejection::Backing);
-                if !fault.detail.terminal_is_empty() {
-                    self.replay_retiring = Some(EnergyWirePacket { kind: EnergyWireKind::Fault, identity: self.packet.as_ref().expect("restore packet").identity, payload: fault.detail, preview: None, reservation: None });
-                    return Ok(false);
-                }
-                return Err(self.replay_failed.expect("replay failure retained"));
+                return Err(EnergyWireRejection::Backing);
             }
-            StepOutcome::Complete(candidate) => {
+            EnergyRun::Complete => {
                 self.replay_failed = Some(EnergyWireRejection::Items);
-                if !candidate.state.terminal_is_empty() {
-                    self.replay_retiring = Some(EnergyWirePacket { kind: EnergyWireKind::Commit, identity: self.packet.as_ref().expect("restore packet").identity, payload: candidate.state, preview: None, reservation: None });
-                    return Ok(false);
-                }
-                if !candidate.output.terminal_is_empty() {
-                    self.replay_retiring = Some(EnergyWirePacket { kind: EnergyWireKind::Commit, identity: self.packet.as_ref().expect("restore packet").identity, payload: candidate.output, preview: None, reservation: None });
-                    return Ok(false);
-                }
-                return Err(self.replay_failed.expect("replay completion before target retained"));
+                self.replay_retiring = rebuild.commit_output.take();
+                return Err(EnergyWireRejection::Items);
             }
-            StepOutcome::Cancelled => return Ok(false),
         }
         Ok(false)
     }
@@ -1040,78 +1141,93 @@ impl EnergyRestoreJob {
         Ok(job)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    /// 📏️ Quotes the next close frontier: replay packets, the restore input, the rebuild job, then one popped owner.
+    pub fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if let Some(packet) = self.replay_retiring.as_ref() {
+            return packet.retirement_demands();
         }
+        if let Some(lease) = self.replay_checkpoint_lease.as_ref() {
+            return if lease.packet().terminal_is_empty() { Ok(RetirementDemand { depth: 1, ..Default::default() }) } else { lease.packet().retirement_demands() };
+        }
+        if let Some(packet) = self.packet.as_ref() {
+            return packet.retirement_demands();
+        }
+        if let Some(rebuild) = self.rebuild.as_ref() {
+            return rebuild.close_demands();
+        }
+        Ok(if self.model.is_some() || self.config.is_some() { ENERGY_RUNG_DEMAND } else { RetirementDemand::default() })
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         if let Some(packet) = self.replay_retiring.as_mut() {
-            let step = packet.ack_step(1, maximum_bytes);
+            let (step, _) = energy_turn(packet.close_step(grant));
             if packet.terminal_is_empty() {
                 self.replay_retiring = None;
             }
-            return match step {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-            };
+            return step;
         }
         if let Some(mut lease) = self.replay_checkpoint_lease.take() {
             if !lease.packet().terminal_is_empty() {
-                let step = lease.packet_mut().ack_step(1, maximum_bytes);
+                let (step, _) = energy_turn(lease.packet_mut().close_step(grant));
                 self.replay_checkpoint_lease = Some(lease);
-                return match step {
-                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-                };
+                return step;
+            }
+            if !energy_grant_covers(grant, RetirementDemand { depth: 1, ..Default::default() }) {
+                self.replay_checkpoint_lease = Some(lease);
+                return energy_idle();
             }
             let Some(rebuild) = self.rebuild.as_mut() else {
                 self.replay_checkpoint_lease = Some(lease);
-                return semio_framework_job::InteractiveJobCloseStep::Blocked;
+                return InteractiveJobCloseStep::Blocked;
             };
             if let Err(lease) = rebuild.ack_checkpoint_packet(lease) {
                 self.replay_checkpoint_lease = Some(lease);
-                return semio_framework_job::InteractiveJobCloseStep::Blocked;
+                return InteractiveJobCloseStep::Blocked;
             }
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some(packet) = self.packet.as_mut() {
-            let step = packet.ack_step(1, maximum_bytes);
+            let (step, _) = energy_turn(packet.close_step(grant));
             if packet.terminal_is_empty() {
                 self.packet = None;
             }
-            return match step {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-            };
+            return step;
         }
         if let Some(rebuild) = self.rebuild.as_mut() {
             rebuild.begin_close();
-            return match rebuild.close_step(1, maximum_bytes) {
-                semio_framework_job::InteractiveJobCloseStep::Complete => {
+            return match rebuild.close_step(grant) {
+                InteractiveJobCloseStep::Complete { progress } => {
                     self.rebuild = None;
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } }
                 }
                 step => step,
             };
         }
+        if self.model.is_none() && self.config.is_none() {
+            return energy_done();
+        }
+        if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
+            return energy_idle();
+        }
         if let Some(model) = self.model.as_mut() {
-            if let Some((released_items, released_bytes)) = close_model_step(model, maximum_bytes) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            if let Some(released) = close_model_step(model, grant.maximum_release_bytes) {
+                return energy_rung(released);
             }
             self.model = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some(config) = self.config.as_mut() {
-            if let Some((released_items, released_bytes)) = close_config_step(config, maximum_bytes) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            if let Some(released) = close_config_step(config, grant.maximum_release_bytes) {
+                return energy_rung(released);
             }
             self.config = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        energy_done()
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.packet.is_none() && self.model.is_none() && self.config.is_none() && self.rebuild.is_none() && self.replay_retiring.is_none() && self.replay_checkpoint_lease.is_none() && !self.replay_checkpoint_pending
+        self.packet.is_none() && self.model.is_none() && self.config.is_none() && self.rebuild.is_none() && self.replay_retiring.is_none() && self.replay_checkpoint_lease.is_none()
     }
 }
 
@@ -1145,7 +1261,6 @@ impl Drop for EnergyRestoreJob {
             rebuild: self.rebuild.take(),
             replay_retiring: self.replay_retiring.take(),
             replay_checkpoint_lease: self.replay_checkpoint_lease.take(),
-            replay_checkpoint_pending: self.replay_checkpoint_pending,
             replay_failed: self.replay_failed.take(),
             ready: self.ready,
         };
@@ -1459,7 +1574,7 @@ fn observed_vector_bytes<T>(owners: &Vec<T>) -> Option<usize> {
 }
 // #endregion 🔖️NumericalAdmission
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 enum WarmupConvergenceStage {
     TemperatureCheck,
     LoadCheck,
@@ -1472,7 +1587,7 @@ enum WarmupConvergenceStage {
 const P7C1_WARMUP_CONVERGENCE_STAGES: [WarmupConvergenceStage; 5] =
     [WarmupConvergenceStage::TemperatureCheck, WarmupConvergenceStage::LoadCheck, WarmupConvergenceStage::TemperatureHistory, WarmupConvergenceStage::LoadHistory, WarmupConvergenceStage::Complete];
 
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct WarmupConvergenceWork {
     stage: WarmupConvergenceStage,
     cursor: usize,
@@ -1481,7 +1596,7 @@ struct WarmupConvergenceWork {
     evaluate: bool,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 enum ValidationStage {
     ReserveZones,
     ReserveMaterials,
@@ -1521,7 +1636,7 @@ const P7C1_VALIDATION_STAGES: [ValidationStage; 16] = [
     ValidationStage::Complete,
 ];
 
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct ValidationWork {
     stage: ValidationStage,
     cursor: usize,
@@ -1534,7 +1649,7 @@ struct ValidationWork {
     fatal_code: u8,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 enum FinalizationStage {
     MeterTotals,
     FloorArea,
@@ -1568,7 +1683,7 @@ const P7C1_FINALIZATION_STAGES: [FinalizationStage; 13] = [
     FinalizationStage::Complete,
 ];
 
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct FinalizationWork {
     stage: FinalizationStage,
     cursor: usize,
@@ -1607,7 +1722,7 @@ impl Default for FinalizationWork {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 enum ResultBuildStage {
     ModelName,
     ModelVersion,
@@ -1619,7 +1734,7 @@ enum ResultBuildStage {
 #[cfg(test)]
 const P7C1_RESULT_BUILD_STAGES: [ResultBuildStage; 5] = [ResultBuildStage::ModelName, ResultBuildStage::ModelVersion, ResultBuildStage::WeatherLocation, ResultBuildStage::Assemble, ResultBuildStage::Complete];
 
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct ResultBuildWork {
     stage: ResultBuildStage,
     cursor: usize,
@@ -1635,7 +1750,7 @@ impl Default for ResultBuildWork {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 enum AggregateZoneStage {
     Temperature,
     Heating,
@@ -1647,7 +1762,7 @@ enum AggregateZoneStage {
 #[cfg(test)]
 const P7C1_AGGREGATE_STAGES: [AggregateZoneStage; 5] = [AggregateZoneStage::Temperature, AggregateZoneStage::Heating, AggregateZoneStage::Cooling, AggregateZoneStage::Fan, AggregateZoneStage::Complete];
 
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct AggregateZoneWork {
     stage: AggregateZoneStage,
     phase: u8,
@@ -1680,7 +1795,7 @@ impl AggregateZoneWork {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct EnergyAdmittedResultBacking {
     series_slots: usize,
     meter_slots: usize,
@@ -1689,7 +1804,7 @@ struct EnergyAdmittedResultBacking {
     summary_slots: usize,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 enum OutputFault {
     MissingResult,
     BackingRejected,
@@ -1760,14 +1875,17 @@ impl EnergyCommitReservation {
         self.sources[index] = Some(source);
     }
 
-    fn close_source_step(&mut self) -> bool {
-        let Some(source) = self.sources.iter_mut().find(|source| source.is_some()) else { return false };
-        source.take();
-        true
+    fn close_source_demand(&self) -> Option<RetirementDemand> {
+        self.sources.iter().flatten().next().map(|source| RetirementDemand { release_bytes: source.allocated_capacity_bytes(), depth: 1, ..Default::default() })
+    }
+
+    fn close_source_step(&mut self) -> Option<usize> {
+        let source = self.sources.iter_mut().find(|source| source.is_some())?;
+        source.take().map(|source| source.allocated_capacity_bytes())
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 enum WeatherFault {
     SlotRejected,
 }
@@ -1847,6 +1965,9 @@ pub struct EnergyJobAuthority {
     commit_census: Option<CommitCensusWork>,
     commit_reservation: Option<EnergyCommitReservation>,
     commit_acknowledged: bool,
+    commit_output: Option<EnergyWirePacket>,
+    markers: EnergyOutcomeMarkers,
+    pending_outcome: Option<EnergyRun>,
     commit_pages_mounted: usize,
     commit_items_encoded: usize,
     encode_section: u8,
@@ -2002,6 +2123,9 @@ impl EnergyJob {
                 commit_census: None,
                 commit_reservation: None,
                 commit_acknowledged: false,
+                commit_output: None,
+                markers: EnergyOutcomeMarkers::default(),
+                pending_outcome: None,
                 commit_pages_mounted: 0,
                 commit_items_encoded: 0,
                 encode_section: 0,
@@ -2272,29 +2396,31 @@ impl EnergyJobAuthority {
         Ok(false)
     }
 
-    fn begin_preview(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+    fn begin_preview(&mut self, context: &mut StepContext<'_>) -> EnergyRun {
         let sequence = match context.next_preview_sequence() {
             Ok(sequence) => sequence,
-            Err(_) => return StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
+            Err(_) => return EnergyRun::Fault,
         };
         if self.start_wire(EnergyWireKind::Preview, sequence, semio_framework_job::JobPayloadStream::Preview).is_err() {
-            return StepOutcome::Yield;
+            return EnergyRun::Yield;
         }
-        StepOutcome::Yield
+        EnergyRun::Yield
     }
 
-    fn drive_wire_publication(&mut self, context: &mut StepContext<'_>) -> Option<StepOutcome> {
+    fn drive_wire_publication(&mut self, context: &mut StepContext<'_>) -> Option<EnergyRun> {
         if let Some(retiring) = self.publication.retiring_preview.as_mut() {
-            match retiring.payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-                semio_framework_job::JobPayloadCloseStep::Complete => self.publication.retiring_preview = None,
-                semio_framework_job::JobPayloadCloseStep::Pending { .. } => return Some(StepOutcome::Yield),
+            let step = retiring.close_step(context.retained_grant());
+            match energy_spend(context, step) {
+                Ok(true) => self.publication.retiring_preview = None,
+                Ok(false) => return Some(EnergyRun::Yield),
+                Err(_) => return Some(Self::fault()),
             }
         }
         if self.wire_build.is_some() {
             if self.step_wire_build(context).is_err() {
                 return Some(Self::fault());
             }
-            return Some(StepOutcome::Yield);
+            return Some(EnergyRun::Yield);
         }
         let mut packet = self.wire_ready.take()?;
         match packet.kind {
@@ -2302,7 +2428,7 @@ impl EnergyJobAuthority {
                 if self.publication.preview.is_some() {
                     self.publication.retiring_preview = self.publication.preview.take();
                     self.wire_ready = Some(packet);
-                    return Some(StepOutcome::Yield);
+                    return Some(EnergyRun::Yield);
                 }
                 let Some(preview) = decode_preview_packet(&packet) else {
                     self.wire_ready = Some(packet);
@@ -2310,30 +2436,30 @@ impl EnergyJobAuthority {
                 };
                 packet.preview = Some(preview);
                 self.publication.preview = Some(packet);
-                Some(StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview)))
+                Some(EnergyRun::Preview)
             }
             EnergyWireKind::Checkpoint => match self.publication.checkpoints.push(packet) {
-                Ok(()) => Some(StepOutcome::CheckpointReady(Checkpoint { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), applied_progress: self.hour_index as u64 })),
+                Ok(()) => Some(EnergyRun::Checkpoint(self.hour_index as u64)),
                 Err(packet) => {
                     self.wire_ready = Some(packet);
-                    Some(StepOutcome::Yield)
+                    Some(EnergyRun::Yield)
                 }
             },
             EnergyWireKind::Commit => match self.publication.commits.push(packet) {
                 Ok(()) => {
                     self.stage = EnergyJobStage::Complete;
-                    Some(StepOutcome::Yield)
+                    Some(EnergyRun::Yield)
                 }
                 Err(packet) => {
                     self.wire_ready = Some(packet);
-                    Some(StepOutcome::Yield)
+                    Some(EnergyRun::Yield)
                 }
             },
             EnergyWireKind::Fault => match self.publication.faults.push(packet) {
                 Ok(()) => Some(Self::fault()),
                 Err(packet) => {
                     self.wire_ready = Some(packet);
-                    Some(StepOutcome::Yield)
+                    Some(EnergyRun::Yield)
                 }
             },
         }
@@ -2421,13 +2547,13 @@ impl EnergyJobAuthority {
         digest
     }
 
-    fn fault() -> StepOutcome {
-        StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) })
+    fn fault() -> EnergyRun {
+        EnergyRun::Fault
     }
 
-    fn begin_fault(&mut self) -> StepOutcome {
+    fn begin_fault(&mut self) -> EnergyRun {
         if self.start_wire(EnergyWireKind::Fault, 0, semio_framework_job::JobPayloadStream::Fault).is_ok() {
-            StepOutcome::Yield
+            EnergyRun::Yield
         } else {
             Self::fault()
         }
@@ -3255,15 +3381,15 @@ impl EnergyJobAuthority {
         Ok(false)
     }
 
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+    fn run(&mut self, context: &mut StepContext<'_>) -> EnergyRun {
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             return Self::fault();
         }
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return EnergyRun::Cancelled;
         }
         if context.should_yield() {
-            return StepOutcome::Yield;
+            return EnergyRun::Yield;
         }
         context.consume_fuel(1);
         if let Some(outcome) = self.drive_wire_publication(context) {
@@ -3276,11 +3402,11 @@ impl EnergyJobAuthority {
                     { return self.begin_fault(); }
                 }
                 if !complete {
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 self.weather_target = weather_copy_target(&self.config);
                 self.set_stage(context, EnergyJobStage::ResolveWeather);
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::ResolveWeather => {
                 if self.weather_cursor < self.weather_target {
@@ -3293,11 +3419,11 @@ impl EnergyJobAuthority {
                     if self.weather_cursor.is_multiple_of(256) {
                         return self.begin_preview(context);
                     }
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 self.precompute = Some(PrecomputeBuilder::new(self.config.zone_timestep_minutes, self.config.system_timestep_minutes));
                 self.set_stage(context, EnergyJobStage::Precompute);
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::Precompute => {
                 let builder = self.precompute.as_mut().expect("precompute builder exists in Precompute stage");
@@ -3312,7 +3438,7 @@ impl EnergyJobAuthority {
                         { return self.begin_fault(); }
                     }
                 }
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::InitializeZones => {
                 if self.initialize_backing_stage == 0 {
@@ -3320,7 +3446,7 @@ impl EnergyJobAuthority {
                         { return self.begin_fault(); }
                     }
                     self.initialize_backing_stage = 1;
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 if let Some(zone) = self.model.zones.get(self.initialize_cursor) {
                     let weather = *self.weather.get_index(0).expect("admitted weather record");
@@ -3333,7 +3459,7 @@ impl EnergyJobAuthority {
                     self.initialize_backing_stage = 2;
                     self.set_stage(context, EnergyJobStage::InitializeSurfaces);
                 }
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::InitializeSurfaces => {
                 if self.initialize_backing_stage == 2 {
@@ -3346,7 +3472,7 @@ impl EnergyJobAuthority {
                         return self.begin_fault();
                     }
                     self.initialize_backing_stage = 3;
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 if self.initialize_backing_stage == 3 {
                     if let Some(surface) = self.model.surfaces.get(self.initialize_cursor) {
@@ -3364,18 +3490,18 @@ impl EnergyJobAuthority {
                             }
                         }
                         self.initialize_cursor += 1;
-                        return StepOutcome::Yield;
+                        return EnergyRun::Yield;
                     }
                     self.initialize_cursor = 0;
                     self.initialize_backing_stage = 4;
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 if self.initialize_backing_stage == 4 {
                     if self.state.as_mut().expect("state exists while reserving windows").windows.admit(self.model.fenestrations.len()).is_err() {
                         { return self.begin_fault(); }
                     }
                     self.initialize_backing_stage = 5;
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 if self.initialize_backing_stage == 5 {
                     if let Some(fenestration) = self.model.fenestrations.get(self.initialize_cursor) {
@@ -3388,11 +3514,11 @@ impl EnergyJobAuthority {
                             }
                         }
                         self.initialize_cursor += 1;
-                        return StepOutcome::Yield;
+                        return EnergyRun::Yield;
                     }
                     self.initialize_cursor = 0;
                     self.initialize_backing_stage = 6;
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 let (faces, nodes) = self.pre.as_ref().map_or((0, 2), |pre| (pre.maximum_enclosure_faces, pre.maximum_nodes));
                 if self.state.as_mut().expect("state exists while reserving the solver").solver.reserve(faces, nodes).is_err() {
@@ -3407,24 +3533,24 @@ impl EnergyJobAuthority {
                     if self.previous_temperatures.try_reserve_exact(zones).is_err() {
                         { return self.begin_fault(); }
                     }
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 if self.previous_temperatures.len() < zones {
                     self.previous_temperatures.push(f64::NAN);
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 if self.previous_loads.capacity() < zones {
                     if self.previous_loads.try_reserve_exact(zones).is_err() {
                         { return self.begin_fault(); }
                     }
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 if self.previous_loads.len() < zones {
                     self.previous_loads.push(f64::NAN);
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 self.set_stage(context, EnergyJobStage::WarmupTimestep);
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::WarmupTimestep => {
                 let warmup_hours = self.config.warmup_days.saturating_mul(24);
@@ -3433,7 +3559,7 @@ impl EnergyJobAuthority {
                         state.warmup_complete = true;
                     }
                     self.set_stage(context, EnergyJobStage::StartRun);
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 let pre = self.pre.as_ref().expect("precompute complete before warmup");
                 if self.timestep_work.is_none() && self.timestep_builder.is_none() {
@@ -3441,7 +3567,7 @@ impl EnergyJobAuthority {
                     let weather = self.hour_weather(start + self.warmup_hour as usize % 24, true);
                     let date = crate::calendar::SimDate::new(weather.current.year, weather.current.month, weather.current.day);
                     self.timestep_builder = Some(TimestepBuilder::new(weather, date, self.warmup_hour as f64));
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 if self.timestep_work.is_none() {
                     match self.timestep_builder.as_mut().expect("warmup timestep builder").step(&self.model, pre) {
@@ -3449,7 +3575,7 @@ impl EnergyJobAuthority {
                             self.timestep_work = Some(work);
                             self.timestep_builder = None;
                         }
-                        Ok(None) => return StepOutcome::Yield,
+                        Ok(None) => return EnergyRun::Yield,
                         Err(_) => return self.begin_fault(),
                     }
                 }
@@ -3459,14 +3585,14 @@ impl EnergyJobAuthority {
                 // grant is always exhausted here — checking `should_yield` first starved the job in
                 // this stage forever, and rotating per call made the chronology depend on the grant.
                 if !self.timestep_work.as_ref().is_some_and(TimestepWork::is_complete) {
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 self.rng_state = self.rng_state.rotate_left(17).wrapping_mul(0x94d0_49bb_1331_11eb);
                 self.timestep_work = None;
                 self.warmup_convergence =
                     Some(WarmupConvergenceWork { stage: WarmupConvergenceStage::TemperatureCheck, cursor: 0, temperature_converged: true, load_converged: true, evaluate: self.warmup_hour > 24 && self.warmup_hour.is_multiple_of(24) });
                 self.set_stage(context, EnergyJobStage::WarmupConvergence);
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::WarmupConvergence => {
                 let pre = self.pre.as_ref().expect("precompute complete during warmup convergence");
@@ -3530,7 +3656,7 @@ impl EnergyJobAuthority {
                         }
                     }
                 }
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::StartRun => {
                 let zones = self.numerical_census.series;
@@ -3581,18 +3707,18 @@ impl EnergyJobAuthority {
                     }
                     _ => {
                         self.set_stage(context, EnergyJobStage::RunZoneTimestep);
-                        return StepOutcome::Yield;
+                        return EnergyRun::Yield;
                     }
                 }
                 self.run_backing_stage += 1;
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::RunZoneTimestep => {
                 let pre = self.pre.as_ref().expect("precompute complete before run");
                 if self.timestep_work.is_none() && self.timestep_builder.is_none() {
                     let Some((date, hour, _)) = self.run_hours.as_mut().and_then(|hours| hours.next()) else {
                         self.set_stage(context, EnergyJobStage::Finalize);
-                        return StepOutcome::Yield;
+                        return EnergyRun::Yield;
                     };
                     let record = if self.weather.len() >= 8_760 { (date.day_of_year() as usize - 1) * 24 + hour as usize } else { self.hour_index as usize };
                     let mut weather = self.hour_weather(record, self.hour_index == 0);
@@ -3603,7 +3729,7 @@ impl EnergyJobAuthority {
                     }
                     weather.current.hour = hour;
                     self.timestep_builder = Some(TimestepBuilder::new(weather, date, self.hour_index as f64));
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 if self.timestep_work.is_none() {
                     match self.timestep_builder.as_mut().expect("run timestep builder").step(&self.model, pre) {
@@ -3611,20 +3737,20 @@ impl EnergyJobAuthority {
                             self.timestep_work = Some(work);
                             self.timestep_builder = None;
                         }
-                        Ok(None) => return StepOutcome::Yield,
+                        Ok(None) => return EnergyRun::Yield,
                         Err(_) => return self.begin_fault(),
                     }
                 }
                 self.timestep_work.as_mut().expect("run timestep work exists").step(&self.model, &self.config, pre, self.state.as_mut().expect("state initialized before run"));
                 // 🧵️ Same order as the warmup stage: acknowledge completion first, rotate once per timestep.
                 if !self.timestep_work.as_ref().is_some_and(TimestepWork::is_complete) {
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 self.rng_state = self.rng_state.rotate_left(17).wrapping_mul(0x94d0_49bb_1331_11eb);
                 self.timestep_work = None;
                 self.aggregate_zone_cursor = 0;
                 self.set_stage(context, EnergyJobStage::AggregateZone);
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::AggregateZone => {
                 if self.aggregate_zone_cursor < self.model.zones.len() {
@@ -3638,7 +3764,7 @@ impl EnergyJobAuthority {
                 } else {
                     self.set_stage(context, EnergyJobStage::AggregateFacility);
                 }
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::AggregateFacility => {
                 let complete = self.step_aggregate_facility();
@@ -3650,15 +3776,15 @@ impl EnergyJobAuthority {
                     self.checkpoint_due = self.hour_index.is_multiple_of(24);
                     self.set_stage(context, EnergyJobStage::PublishTimestep);
                 }
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::PublishTimestep => {
                 if self.checkpoint_due {
                     self.checkpoint_due = false;
                     if self.start_wire(EnergyWireKind::Checkpoint, self.hour_index as u64, semio_framework_job::JobPayloadStream::CheckpointState).is_err() {
-                        return StepOutcome::Yield;
+                        return EnergyRun::Yield;
                     }
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 self.set_stage(context, EnergyJobStage::RunZoneTimestep);
                 self.begin_preview(context)
@@ -3668,7 +3794,7 @@ impl EnergyJobAuthority {
                 self.sizing_builder = Some(SizingBuilder::new(SizingConfig::default()));
                 self.finalization = FinalizationWork::default();
                 self.set_stage(context, EnergyJobStage::Size);
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::Size => {
                 let builder = self.sizing_builder.as_mut().expect("sizing builder exists");
@@ -3681,7 +3807,7 @@ impl EnergyJobAuthority {
                 } else {
                     builder.step(&self.model);
                 }
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::FinalizeSummaries => {
                 let complete = self.step_finalization();
@@ -3691,36 +3817,36 @@ impl EnergyJobAuthority {
                 if complete {
                     self.set_stage(context, EnergyJobStage::BuildResults);
                 }
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::FinalizeMetrics => {
                 self.set_stage(context, EnergyJobStage::FinalizeSummaries);
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::FinalizeEconomics => {
                 self.set_stage(context, EnergyJobStage::FinalizeSummaries);
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::BuildResults => match self.step_result_build() {
                 Ok(true) => {
                     self.set_stage(context, EnergyJobStage::PublishFinal);
                     self.begin_preview(context)
                 }
-                Ok(false) => StepOutcome::Yield,
+                Ok(false) => EnergyRun::Yield,
                 Err(_) => self.begin_fault(),
             },
             EnergyJobStage::PublishFinal => {
                 self.set_stage(context, EnergyJobStage::EncodeOutput);
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::EncodeOutput => {
                 if self.commit_reservation.is_none() {
                     if self.commit_census.is_none() {
                         self.commit_census = Some(CommitCensusWork::default());
-                        return StepOutcome::Yield;
+                        return EnergyRun::Yield;
                     }
                     match self.step_commit_census() {
-                        Ok(false) => return StepOutcome::Yield,
+                        Ok(false) => return EnergyRun::Yield,
                         Ok(true) => {}
                         Err(fault) => {
                             self.output_fault = Some(fault);
@@ -3730,10 +3856,10 @@ impl EnergyJobAuthority {
                 }
                 if self.output_writer.is_none() && self.output_payload.is_none() {
                     self.output_writer = Some(semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput));
-                    return StepOutcome::Yield;
+                    return EnergyRun::Yield;
                 }
                 match self.encode_output_step(context) {
-                    Ok(false) => return StepOutcome::Yield,
+                    Ok(false) => return EnergyRun::Yield,
                     Ok(true) => {}
                     Err(fault) => {
                         self.output_fault = Some(fault);
@@ -3746,7 +3872,7 @@ impl EnergyJobAuthority {
                             self.output_fault = Some(OutputFault::BackingRejected);
                             return self.begin_fault();
                         }
-                        return StepOutcome::Yield;
+                        return EnergyRun::Yield;
                     }
                     let writer = self.output_writer.take().expect("output writer exists");
                     match writer.finish() {
@@ -3761,7 +3887,7 @@ impl EnergyJobAuthority {
                         }
                         Err(writer) => {
                             self.output_writer = Some(writer);
-                            return StepOutcome::Yield;
+                            return EnergyRun::Yield;
                         }
                     }
                     let payload = self.output_payload.take().expect("prepared commit payload exists");
@@ -3775,21 +3901,19 @@ impl EnergyJobAuthority {
                         Err(packet) => {
                             self.output_payload = Some(packet.payload);
                             self.commit_reservation = packet.reservation;
-                            return StepOutcome::Yield;
+                            return EnergyRun::Yield;
                         }
                     }
                 }
-                StepOutcome::Yield
+                EnergyRun::Yield
             }
             EnergyJobStage::Complete => {
                 if std::mem::take(&mut self.commit_acknowledged) {
-                    return StepOutcome::Complete(CommitCandidate {
-                        state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                        output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                    });
+                    return EnergyRun::Complete;
                 }
-                let Some(packet) = self.publication.commits.take_terminal() else { return StepOutcome::Yield };
-                StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output: packet.payload })
+                let Some(packet) = self.publication.commits.take_terminal() else { return EnergyRun::Yield };
+                self.commit_output = Some(packet);
+                EnergyRun::Complete
             }
         }
     }
@@ -3798,50 +3922,77 @@ impl EnergyJobAuthority {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    /// 🏷️ Resolves the outcome markers or the leased commit packet into the immutable descriptor's payload pair.
+    fn commit_payloads(&self) -> (&RetainedJobPayload, &RetainedJobPayload) {
+        (&self.markers.commit_state, self.commit_output.as_ref().map_or(&self.markers.commit_output, |packet| &packet.payload))
+    }
+
+    /// 📏️ Quotes the next close frontier: a payload owner, a staged page source, or one popped ladder rung.
+    fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if authority_is_terminal_empty(self) {
+            return Ok(RetirementDemand::default());
+        }
+        if let Some(build) = self.wire_build.as_ref() {
+            return build.writer.retirement_demands();
+        }
+        if let Some(writer) = self.output_writer.as_ref() {
+            return writer.retirement_demands();
+        }
+        if let Some(payload) = self.output_payload.as_ref() {
+            return payload.retirement_demands();
+        }
+        for packet in [self.wire_ready.as_ref(), self.restore_input.as_ref(), self.publication.preview.as_ref(), self.publication.retiring_preview.as_ref(), self.commit_output.as_ref()].into_iter().flatten() {
+            return packet.retirement_demands();
+        }
+        for queue in [&self.publication.checkpoints, &self.publication.commits, &self.publication.faults] {
+            if let Some(demand) = queue.retirement_demands() {
+                return demand;
+            }
+        }
+        for reservation in [self.commit_census.as_ref().and_then(|work| work.reservation.as_ref()), self.commit_reservation.as_ref()].into_iter().flatten() {
+            if let Some(demand) = reservation.close_source_demand() {
+                return Ok(demand);
+            }
+        }
+        Ok(ENERGY_RUNG_DEMAND)
+    }
+
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.closing = true;
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        if authority_is_terminal_empty(self) {
+            return energy_done();
         }
         if let Some(build) = self.wire_build.as_mut() {
             build.writer.begin_close();
-            return match build.writer.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    self.wire_build = None;
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
+            let (step, done) = energy_turn(energy_guarded(grant, build.writer.retirement_demands(), || build.writer.close_step(grant)));
+            if done {
+                self.wire_build = None;
+            }
+            return step;
         }
         if let Some(writer) = self.output_writer.as_mut() {
             writer.begin_close();
-            return match writer.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    self.output_writer = None;
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
+            let (step, done) = energy_turn(energy_guarded(grant, writer.retirement_demands(), || writer.close_step(grant)));
+            if done {
+                self.output_writer = None;
+            }
+            return step;
         }
         if let Some(payload) = self.output_payload.as_mut() {
-            return match payload.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    self.output_payload = None;
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
+            let (step, done) = energy_turn(energy_guarded(grant, payload.retirement_demands(), || payload.close_step(grant)));
+            if done {
+                self.output_payload = None;
+            }
+            return step;
         }
         macro_rules! close_packet {
             ($packet:expr) => {
                 if let Some(packet) = $packet.as_mut() {
-                    return match packet.payload.close_step(maximum_items, maximum_bytes) {
-                        semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                        semio_framework_job::JobPayloadCloseStep::Complete => {
-                            $packet = None;
-                            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                        }
-                    };
+                    let (step, done) = energy_turn(packet.close_step(grant));
+                    if done {
+                        $packet = None;
+                    }
+                    return step;
                 }
             };
         }
@@ -3849,76 +4000,85 @@ impl EnergyJobAuthority {
         close_packet!(self.restore_input);
         close_packet!(self.publication.preview);
         close_packet!(self.publication.retiring_preview);
-        if let Some((released_items, released_bytes)) = self.publication.checkpoints.close_step(maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        close_packet!(self.commit_output);
+        for queue in [&mut self.publication.checkpoints, &mut self.publication.commits, &mut self.publication.faults] {
+            if let Some(step) = queue.close_step(grant) {
+                return step;
+            }
         }
-        if let Some((released_items, released_bytes)) = self.publication.commits.close_step(maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
-        }
-        if let Some((released_items, released_bytes)) = self.publication.faults.close_step(maximum_items, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        macro_rules! close_sources {
+            ($reservation:expr) => {
+                if let Some(demand) = $reservation.as_ref().and_then(EnergyCommitReservation::close_source_demand) {
+                    if !energy_grant_covers(grant, demand) {
+                        return energy_idle();
+                    }
+                    let released_bytes = $reservation.as_mut().and_then(EnergyCommitReservation::close_source_step).unwrap_or_default();
+                    return energy_rung((1, released_bytes));
+                }
+            };
         }
         if let Some(work) = self.commit_census.as_mut() {
-            if work.reservation.as_mut().is_some_and(EnergyCommitReservation::close_source_step) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES };
-            }
+            close_sources!(work.reservation);
             self.commit_census = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
-        if let Some(reservation) = self.commit_reservation.as_mut() {
-            if reservation.close_source_step() {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES };
-            }
+        if self.commit_reservation.is_some() {
+            close_sources!(self.commit_reservation);
             self.commit_reservation = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
+        if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
+            return energy_idle();
+        }
+        let maximum_bytes = grant.maximum_release_bytes;
+        let maximum_items = grant.maximum_items;
         if std::mem::take(&mut self.commit_pages_mounted) != 0 || std::mem::take(&mut self.commit_items_encoded) != 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some((released_items, released_bytes)) = close_string_step(&mut self.close_string_owner, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            return energy_rung((released_items, released_bytes));
         }
         macro_rules! pop_owner {
             ($owners:expr) => {
                 if $owners.pop().is_some() {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    return energy_one();
                 }
             };
         }
         pop_owner!(self.weather);
         if let Some((released_items, released_bytes)) = close_string_vector_step(&mut self.time_series_order, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            return energy_rung((released_items, released_bytes));
         }
         if let Some((released_items, released_bytes)) = close_string_vector_step(&mut self.meter_order, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            return energy_rung((released_items, released_bytes));
         }
         if let Some((released_items, released_bytes)) = close_time_series_step(&mut self.time_series, &mut self.close_string_owner, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            return energy_rung((released_items, released_bytes));
         }
         if let Some((released_items, released_bytes)) = close_meter_table_step(&mut self.meters, &mut self.close_string_owner, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            return energy_rung((released_items, released_bytes));
         }
         pop_owner!(self.zone_temperature_history);
         pop_owner!(self.previous_temperatures);
         pop_owner!(self.previous_loads);
         if let Some(work) = self.aggregate_zone_work.as_mut() {
             if let Some((released_items, released_bytes)) = close_aggregate_work_step(work, maximum_bytes) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                return energy_rung((released_items, released_bytes));
             }
             self.aggregate_zone_work = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some(work) = self.aggregate_facility_work.as_mut() {
             if let Some((released_items, released_bytes)) = close_aggregate_work_step(work, maximum_bytes) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                return energy_rung((released_items, released_bytes));
             }
             self.aggregate_facility_work = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         macro_rules! remove_validation_entry {
             ($owners:expr) => {{
                 if $owners.pop().is_some() {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    return energy_one();
                 }
             }};
         }
@@ -3927,97 +4087,97 @@ impl EnergyJobAuthority {
         remove_validation_entry!(self.validation.construction_ids);
         remove_validation_entry!(self.validation.surface_ids);
         if let Some((released_items, released_bytes)) = close_string_step(&mut self.finalization.row_unit, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            return energy_rung((released_items, released_bytes));
         }
         if let Some((released_items, released_bytes)) = close_string_step(&mut self.finalization.row_key, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            return energy_rung((released_items, released_bytes));
         }
         if !self.result_build.model_name.is_empty() || !self.result_build.model_version.is_empty() || !self.result_build.weather_location.is_empty() {
             if maximum_bytes == 0 {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                return energy_idle();
             }
             let released_bytes = self.result_build.weather_location.pop().or_else(|| self.result_build.model_version.pop()).or_else(|| self.result_build.model_name.pop()).map_or(0, |character| character.len_utf8());
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes };
+            return energy_rung((0, released_bytes));
         }
         if let Some(builder) = self.timestep_builder.as_mut() {
             if !builder.close_step(maximum_items) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                return energy_one();
             }
             self.timestep_builder = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some(work) = self.timestep_work.as_mut() {
             if !work.close_step(maximum_items) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                return energy_one();
             }
             self.timestep_work = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some(builder) = self.precompute.as_mut() {
             if !builder.close_step(maximum_items) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                return energy_one();
             }
             self.precompute = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some(pre) = self.pre.as_mut() {
             if !pre.close_step(maximum_items) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                return energy_one();
             }
             self.pre = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some(state) = self.state.as_mut() {
             if state.zones.pop().is_some() {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                return energy_one();
             }
             if state.surfaces.pop().is_some() {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                return energy_one();
             }
             if state.windows.pop().is_some() {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                return energy_one();
             }
             if state.per_surface.pop() {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                return energy_one();
             }
             self.state = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some(results) = self.result.as_mut() {
             if let Some((released_items, released_bytes)) = close_results_step(results, &mut self.close_string_owner, maximum_bytes) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                return energy_rung((released_items, released_bytes));
             }
             self.result = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some(sizing) = self.final_sizing.as_mut() {
             if let Some((released_items, released_bytes)) = close_sizing_step(sizing, maximum_bytes) {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                return energy_rung((released_items, released_bytes));
             }
             self.final_sizing = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some((released_items, released_bytes)) = close_summaries_step(&mut self.final_summaries, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            return energy_rung((released_items, released_bytes));
         }
         if let Some(builder) = self.sizing_builder.as_mut() {
             let (complete, released_items, released_bytes) = builder.close_step(maximum_bytes);
             if !complete {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                return energy_rung((released_items, released_bytes));
             }
             self.sizing_builder = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
         if let Some((released_items, released_bytes)) = close_model_step(&mut self.model, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            return energy_rung((released_items, released_bytes));
         }
         if let Some((released_items, released_bytes)) = close_config_step(&mut self.config, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            return energy_rung((released_items, released_bytes));
         }
         if self.run_hours.take().is_some() || self.final_environmental.take().is_some() || self.final_resilience.take().is_some() || self.output_fault.take().is_some() || self.weather_fault.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return energy_one();
         }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        energy_done()
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -4026,22 +4186,72 @@ impl EnergyJobAuthority {
 }
 
 impl InteractiveJob for EnergyJob {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        EnergyJobAuthority::step(self, context)
+    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        let authority = &mut **self;
+        let run = match authority.pending_outcome.take() {
+            Some(run) => run,
+            None => authority.run(context),
+        };
+        let admitted = match run {
+            EnergyRun::Yield => return Ok(None),
+            EnergyRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context)?,
+            EnergyRun::Preview => JobOutcomeBorrow::admit_preview(context, &authority.markers.preview)?,
+            EnergyRun::Checkpoint(applied_progress) => JobOutcomeBorrow::admit_checkpoint(context, &authority.markers.checkpoint, applied_progress)?,
+            EnergyRun::Fault => JobOutcomeBorrow::admit_fault(context, &authority.markers.fault)?,
+            EnergyRun::Complete => {
+                let output = authority.commit_output.as_ref().map_or(&authority.markers.commit_output, |packet| &packet.payload);
+                JobOutcomeBorrow::admit_complete(context, Some(&authority.markers.commit_state), Some(output))?
+            }
+        };
+        if admitted.is_none() {
+            authority.pending_outcome = Some(run);
+        }
+        Ok(admitted)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::PreviewReady => descriptor.preview(&self.markers.preview),
+            JobOutcomeKind::CheckpointReady { .. } => descriptor.checkpoint(&self.markers.checkpoint),
+            JobOutcomeKind::Complete => {
+                let (state, output) = self.commit_payloads();
+                descriptor.complete(Some(state), Some(output))
+            }
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Fault => descriptor.fault(&self.markers.fault),
+        }
     }
 
     fn begin_close(&mut self) {
         EnergyJobAuthority::begin_close(self);
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        EnergyJobAuthority::close_step(self, maximum_items, maximum_bytes)
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        EnergyJobAuthority::close_step(self, grant)
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demands()?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
         EnergyJobAuthority::terminal_is_empty(self)
     }
 }
+
 
 impl EnergyJobStage {
     fn label(self) -> &'static str {
@@ -4591,13 +4801,21 @@ impl EnergyModelCloseCursor {
         Self { model: Some(model) }
     }
 
-    pub fn close_step(&mut self, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        let Some(model) = self.model.as_mut() else { return semio_framework_job::InteractiveJobCloseStep::Complete };
-        if let Some((released_items, released_bytes)) = close_model_step(model, maximum_bytes) {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+    /// 📏️ Quotes the next popped model owner.
+    pub fn close_demands(&self) -> RetirementDemand {
+        if self.model.is_some() { ENERGY_RUNG_DEMAND } else { RetirementDemand::default() }
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let Some(model) = self.model.as_mut() else { return energy_done() };
+        if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
+            return energy_idle();
+        }
+        if let Some(released) = close_model_step(model, grant.maximum_release_bytes) {
+            return energy_rung(released);
         }
         self.model = None;
-        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        energy_one()
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -4699,6 +4917,7 @@ fn authority_is_terminal_empty(authority: &EnergyJobAuthority) -> bool {
         && authority.wire_build.is_none()
         && authority.wire_ready.is_none()
         && authority.restore_input.is_none()
+        && authority.commit_output.is_none()
         && authority.publication.preview.is_none()
         && authority.publication.retiring_preview.is_none()
         && authority.publication.checkpoints.len == 0
@@ -4759,57 +4978,88 @@ impl Engine {
 
     /// ⚡️ Run full building energy simulation.
     pub fn run(model: Model, config: SimulationConfig) -> Result<Results, Error> {
+        enum Seen {
+            Yield,
+            Preview,
+            Checkpoint,
+            Complete,
+            Fault,
+            Cancelled,
+        }
         let mut job = Self::job(model, config).map_err(|_| Error::severe("energy numerical admission rejected"))?;
         let operation = job.operation.operation;
         let generation = job.operation.generation;
         let mut sequence = 0;
-        let outcome = loop {
-            let mut context = StepContext::new(operation, generation, semio_framework_job::StepBudget::new(32, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
-            match job.step(&mut context) {
-                StepOutcome::PreviewReady(mut notice) => {
-                    close_retained_payload(&mut notice);
+        let seen = loop {
+            let mut receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation, generation, StepBudget::new(32, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut receipt);
+            let seen = match InteractiveJob::step(&mut job, &mut context) {
+                Ok(Some(JobOutcomeBorrow::PreviewReady { .. })) => Seen::Preview,
+                Ok(Some(JobOutcomeBorrow::CheckpointReady { .. })) => Seen::Checkpoint,
+                Ok(Some(JobOutcomeBorrow::Complete { .. })) => Seen::Complete,
+                Ok(Some(JobOutcomeBorrow::Fault { .. })) | Err(_) => Seen::Fault,
+                Ok(Some(JobOutcomeBorrow::Cancelled { .. })) => Seen::Cancelled,
+                Ok(Some(JobOutcomeBorrow::Yield { .. }) | None) => Seen::Yield,
+            };
+            match seen {
+                Seen::Preview => {
                     if let Some(mut packet) = job.take_preview_packet(generation).map_err(|_| Error::severe("energy preview generation rejected"))? {
-                        close_retained_payload(&mut packet.payload);
+                        close_retained_packet(&mut packet);
                     }
                 }
-                StepOutcome::CheckpointReady(mut checkpoint) => {
-                    close_retained_payload(&mut checkpoint.state);
+                Seen::Checkpoint => {
                     if let Some(mut lease) = job.take_checkpoint_packet(generation).map_err(|_| Error::severe("energy checkpoint generation rejected"))? {
-                        close_retained_payload(&mut lease.packet_mut().payload);
+                        close_retained_packet(lease.packet_mut());
                         job.ack_checkpoint_packet(lease).map_err(|_| Error::severe("energy checkpoint ACK rejected"))?;
                     }
                 }
-                terminal @ (StepOutcome::Complete(_) | StepOutcome::Fault(_) | StepOutcome::Cancelled) => break terminal,
-                StepOutcome::Yield => {}
+                Seen::Yield => {}
+                terminal => break terminal,
             }
         };
-        let result = match outcome {
-            StepOutcome::Complete(mut candidate) => {
-                close_retained_payload(&mut candidate.state);
-                close_retained_payload(&mut candidate.output);
-                job.take_results().ok_or_else(|| Error::severe("energy job completed without results"))
-            }
-            StepOutcome::Fault(mut fault) => {
-                close_retained_payload(&mut fault.detail);
-                Err(Error::severe("energy simulation fault"))
-            }
-            StepOutcome::Cancelled => Err(Error::severe("energy simulation cancelled")),
-            StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => Err(Error::severe("energy batch adapter stopped before a terminal outcome")),
+        let result = match seen {
+            Seen::Complete => job.take_results().ok_or_else(|| Error::severe("energy job completed without results")),
+            Seen::Fault => Err(Error::severe("energy simulation fault")),
+            Seen::Cancelled => Err(Error::severe("energy simulation cancelled")),
+            Seen::Yield | Seen::Preview | Seen::Checkpoint => Err(Error::severe("energy batch adapter stopped before a terminal outcome")),
         };
-        InteractiveJob::begin_close(&mut job);
-        loop {
-            if matches!(InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
-                break;
-            }
-        }
+        close_owned_job(&mut job);
         result
     }
 }
 // #endregion 🔖️Engine
 
-fn close_retained_payload(payload: &mut semio_framework_job::RetainedJobPayload) {
-    while !payload.terminal_is_empty() {
-        let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+/// 🎟️ The bounded five-currency authority the batch adapter supplies to every admitted step.
+const ENERGY_BATCH_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
+
+/// 🎟️ A grant that pays exactly one quoted close turn.
+fn energy_self_funded(demand: RetirementDemand) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+}
+
+/// ♻️ Releases one locally owned packet turn by turn with grants it quotes itself.
+fn close_retained_packet(packet: &mut EnergyWirePacket) {
+    while !packet.terminal_is_empty() {
+        let grant = energy_self_funded(packet.retirement_demands().expect("a locally owned packet quotes its close demand"));
+        let (step, _) = energy_turn(packet.close_step(grant));
+        assert!(!matches!(step, InteractiveJobCloseStep::Refused { .. }), "a locally owned packet close is never refused");
+    }
+}
+
+/// 🚪️ Runs the job's own close ladder to completion with grants it quotes itself.
+fn close_owned_job(job: &mut EnergyJob) {
+    InteractiveJob::begin_close(job);
+    let mut idle = 0usize;
+    loop {
+        if InteractiveJob::terminal_is_empty(job) {
+            return;
+        }
+        let grant = energy_self_funded(job.close_demands().expect("a locally owned energy job quotes its close demand"));
+        let step = InteractiveJob::close_step(job, grant);
+        assert!(step.progress().fits(grant), "an energy close receipt must fit its own quoted grant");
+        assert!(!matches!(step, InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. }), "a locally owned energy job close has no external owner and no refusal");
+        idle = if step.progress() == RetainedCloneProgress::default() && !matches!(step, InteractiveJobCloseStep::Complete { .. }) { idle + 1 } else { 0 };
+        assert!(idle < 1_000, "the energy close ladder stalled");
     }
 }
 

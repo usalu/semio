@@ -1784,7 +1784,7 @@ async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_
     run_action(&mut app, "toolRunPause", &mut caller).await;
     pump_until(&mut app, "paused and settled", |app| app.tool_runs.state() == Some(ToolRunState::Paused) && !app.tool_runs.has_pending_work(), &mut caller).await;
     let view = app.tool_runs.view().expect("run view");
-    let payload = view.payload.as_deref().and_then(|payload| payload.try_into().ok()).map(u32::from_le_bytes).expect("the latest tick payload");
+    let payload = view.payload.as_deref().map(Vec::as_slice).and_then(|payload| payload.try_into().ok()).map(u32::from_le_bytes).expect("the latest tick payload");
     assert_eq!(u64::from(payload), view.progress.completed, "the payload is the latest tick's: the toy writes its completed units");
     assert!(view.progress.total.is_some_and(|total| total == number(&expected["target"])));
     let body = render_text(&mut app, "main").await;

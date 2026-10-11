@@ -55,7 +55,7 @@ async fn spawns_draw_app_instance() {
     let next = apply_mutations(&projection, &emit.artifact_mutations).await;
     assert_eq!(next.graph.nodes.len(), projection.graph.nodes.len() + 1);
     let expected_active = next.graph.nodes.last().map(|node| node.id.clone());
-    assert_eq!(emit.config_mutations, vec![SpaceConfigMutation::SetActiveNode { node_id: expected_active }]);
+    assert_eq!(emit.config_mutations, vec![SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: expected_active })]);
 }
 
 #[semio_framework_async_macros::async_test]

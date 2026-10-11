@@ -10,7 +10,7 @@ pub mod export_registers_csv {
 use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "export-registers-csv")]
     pub struct ExportRegistersCsv {}
 
@@ -30,7 +30,7 @@ pub mod import_registers_csv {
 use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "import-registers-csv")]
     pub struct ImportRegistersCsv {
         pub payload: String,
@@ -60,7 +60,7 @@ use semio_framework_value::ToValue;
     /// 🪪️ This app's CSV file-open request id — distinct from its program picker (110) and every other plugin's.
     pub const ARCHITECT_IMPORT_CSV_REQUEST_ID: u64 = 132;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "import-registers-csv-request")]
     pub struct ImportRegistersCsvRequest {}
 
@@ -85,7 +85,7 @@ pub mod export_program {
 use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "export-program")]
     pub struct ExportProgram {}
 
@@ -104,7 +104,7 @@ pub mod import_program_request {
 use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "import-program-request")]
     pub struct ImportProgramRequest {}
 
@@ -127,7 +127,7 @@ pub mod import_program {
 use semio_framework_value::ToValue;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "import-program")]
     pub struct ImportProgram {
         pub payload: String,

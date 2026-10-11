@@ -200,7 +200,7 @@ fn an_engine_fault_shows_the_last_complete_inference_and_a_finding_in_both_langu
     let (snapshot, instance) = (demo(), mounted());
     let complete = with_inference(Some(&instance), &snapshot, Clone::clone);
     assert!(!complete.storey_levels.is_empty());
-    let shown_after = instance.lend_inference::<ModelInferenceSession, _>(DOCUMENT, |session| shown(session, Err(InferenceError::Cancelled)).into_owned());
+    let shown_after = super::lend_handle(&instance, DOCUMENT, |session| shown(session, Err(InferenceError::Cancelled)).into_owned());
     assert_eq!(shown_after.storey_levels, complete.storey_levels, "the last complete values stay");
     assert_eq!(shown_after.wall_layout, complete.wall_layout);
     let finding = shown_after.diagnostics.iter().find(|finding| finding.code == DiagnosticCode::InferenceFault).expect("the fault is a finding");

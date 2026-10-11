@@ -1,8 +1,8 @@
 //! 🎯️ Publish completed intrinsic selection coverage into session configuration.
-use crate::editor::raster::config::{RasterConfig,RasterConfigMutation,RasterPixelSelection};
+use crate::editor::raster::config::{RasterConfig, RasterConfigMutation, RasterPixelSelection, SetPixelSelectionEdit};
 use crate::{RasterMutation,RasterSnapshot};
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all="camelCase")]
 #[dsl(keyword="pixel-selection")]
 pub struct SetPixelSelection {
@@ -15,5 +15,5 @@ pub fn handle(payload:&SetPixelSelection,doc:&ArtifactView<'_,RasterSnapshot>,cf
         if selection.target!=cfg.snapshot.paint_target{return Err(Fault::from("raster-selection-target-changed"));}
         selection.validate_current(doc.snapshot,payload.expected_image_key.as_deref())?;
     }
-    Ok(Emit::config(vec![RasterConfigMutation::SetPixelSelection{selection:payload.selection.clone()}]))
+    Ok(Emit::config(vec![RasterConfigMutation::SetPixelSelection(SetPixelSelectionEdit {selection:payload.selection.clone()})]))
 }

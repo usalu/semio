@@ -4,11 +4,11 @@ use super::*;
 fn sample_dxf() -> DxfSnapshot {
     DxfSnapshot {
         tables: semio_s_artifact_stdio_dxf::schema::snapshot::DxfTables { layers: vec![DxfLayer { name: "0".into(), color: 7, linetype: "CONTINUOUS".into(), flags: 0, ..Default::default() }], ..Default::default() },
-        blocks: vec![DxfBlock { name: "door".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] }],
+        blocks: vec![DxfBlock { name: "door".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 0.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] })], unknown_group_codes: vec![] }],
         entities: vec![
-            DxfEntity::Circle { center: [2.0, 2.0, 0.0], radius: 1.5, layer: "0".into(), unknown_group_codes: vec![] },
-            DxfEntity::Insert { block_name: "door".into(), position: [5.0, 5.0, 0.0], scale: [1.0, 1.0, 1.0], rotation: 90.0, layer: "0".into(), unknown_group_codes: vec![] },
-            DxfEntity::Other {
+            DxfEntity::Circle(DxfCircle { center: [2.0, 2.0, 0.0], radius: 1.5, layer: "0".into(), unknown_group_codes: vec![] }),
+            DxfEntity::Insert(DxfInsert { block_name: "door".into(), position: [5.0, 5.0, 0.0], scale: [1.0, 1.0, 1.0], rotation: 90.0, layer: "0".into(), unknown_group_codes: vec![] }),
+            DxfEntity::Other(DxfOther {
                 kind: "ELLIPSE".into(),
                 group_codes: vec![
                     (10, DxfValue::Double { value: 1.0 }),
@@ -19,8 +19,8 @@ fn sample_dxf() -> DxfSnapshot {
                     (41, DxfValue::Double { value: 0.0 }),
                     (42, DxfValue::Double { value: 6.28 }),
                 ],
-            },
-            DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![] },
+            }),
+            DxfEntity::Other(DxfOther { kind: "3DFACE".into(), group_codes: vec![] }),
         ],
         ..DxfSnapshot::default()
     }

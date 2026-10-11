@@ -12,9 +12,10 @@ pub type Puzzle2dStore = ArtifactStore<Puzzle2dSnapshot, Puzzle2dMutation>;
 /// retirement factory"* — the exact owners installed here are the ones
 /// `Puzzle2dPlayApp::build_document_store_owners` hands the host, so both entry points record edits
 /// under one authority instead of two.
-pub async fn puzzle2d_store(envelope: Puzzle2dEnvelope, actor: protocol::ActorId) -> Result<Puzzle2dStore, store::VcsError> {
-    let mut store = Puzzle2dStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Puzzle2dSnapshot, Puzzle2dMutation>());
+pub async fn puzzle2d_store(envelope: Puzzle2dEnvelope, actor: protocol::ActorId) -> Result<Puzzle2dStore, String> {
+    let mut store = Puzzle2dStore::new(envelope, actor).await.map_err(|error| format!("puzzle2d store construction refused: {error:?}"))?;
+    let owners = store::funded_bounded_artifact_store_owners::<Puzzle2dSnapshot, Puzzle2dMutation>().map_err(semio_framework_value::ValueError::into_message)?;
+    store.install_document_store_owners_exact(owners).map_err(|(error, _)| error.into_message())?;
     Ok(store)
 }
 
@@ -28,10 +29,12 @@ pub fn close_puzzle2d_store(store: &mut Puzzle2dStore) -> Result<(), String> {
         if disposer.terminal_is_empty(store) {
             return Ok(());
         }
-        match disposer.close_step(store, 1, PUZZLE2D_STORE_CLOSE_BYTES) {
-            Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason }) => return Err(format!("puzzle2d store close blocked: {reason}")),
-            Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { reason }) => return Err(format!("puzzle2d store close awaits input: {reason}")),
-            Ok(semio_framework_plugin::PluginCloseStep::Pending { .. } | semio_framework_plugin::PluginCloseStep::Complete) => {}
+        let demand = disposer.retirement_demands(store, PUZZLE2D_STORE_CLOSE_BYTES).map_err(semio_framework_value::ValueError::into_message)?;
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        match disposer.close_step(store, grant) {
+            Ok(semio_framework_plugin::PluginLifecycleStep::Blocked { reason }) => return Err(format!("puzzle2d store close blocked: {reason}")),
+            Ok(semio_framework_plugin::PluginLifecycleStep::AwaitingInput { reason }) => return Err(format!("puzzle2d store close awaits input: {reason}")),
+            Ok(semio_framework_plugin::PluginLifecycleStep::Progress(_) | semio_framework_plugin::PluginLifecycleStep::Complete(_)) => {}
             Err(fault) => return Err(fault.message),
         }
     }

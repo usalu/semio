@@ -181,3 +181,54 @@ fn retained_clone_terminal_ticket_quotes_and_funds_the_original_header(){
  for axis in law["refused"].as_array().unwrap(){let axis=axis.as_str().unwrap();let denied=match axis{"items"=>RetainedCloneGrant{maximum_items:0,..grant},"copy"=>RetainedCloneGrant{maximum_copy_bytes:copy-1,..grant},"release"=>RetainedCloneGrant{maximum_release_bytes:release-1,..grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..grant},_=>unreachable!()};let(result,heap)=observe_retirement_allocations(||close.step_granted(denied));assert_eq!(heap,(0,0));if axis=="depth"{assert_eq!(result.unwrap_err().kind,crate::ValueRefusalKind::DepthLimit);}else{assert_eq!(result.unwrap().progress(),Default::default());}assert!(!close.is_empty());assert_eq!(close.retirement.as_ref().unwrap().as_ref()as*const dyn crate::ErasedSnapshotRetirement as*const (),original);}
  let(step,heap)=observe_retirement_allocations(||close.step_granted(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(step.progress().copied_bytes,copy);assert_eq!(heap,(0,release));assert_eq!(step.progress().released_bytes,release);assert!(close.is_empty());assert_eq!(observe_retirement_allocations(||drop(close)).1,(0,0));println!("[DEBUG] original terminal ticket header copy={copy} release={release}, all refused currencies preserve original pointer and zero heap; funded terminal drop exact");
 }
+
+fn clone_through_source<T:RetainedClone+Clone+std::fmt::Debug+PartialEq+Send+Sync+crate::retirement::RetireOwned>(original:T){
+    let expected=original.clone();let source=RetainedCloneSource::from_owner(original);let mut cursor=T::retained_clone_cursor();
+    let wide=RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<16,maximum_release_bytes:1<<16,maximum_depth:64};
+    let mut output=None;
+    for _ in 0..4096{if let RetainedCloneStep::Complete(_)=cursor.advance(source.borrow(),wide).unwrap(){output=cursor.take();break;}}
+    assert_eq!(output.unwrap(),expected);
+    cursor.begin_close();
+    for _ in 0..4096{if cursor.terminal_is_empty(){break;}cursor.close_step(RetainedCloneGrant{maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(1<<16).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),..wide}).unwrap();}
+    assert!(cursor.terminal_is_empty());
+}
+
+#[test]
+fn retained_optional_clone_matches_the_clone_oracle_for_none_and_some(){
+    clone_through_source(Option::<String>::None);
+    clone_through_source(Some(String::from("retained")));
+    clone_through_source(Option::<u32>::None);
+    clone_through_source(Some(7u32));
+    clone_through_source(Some(Option::<String>::None));
+}
+
+fn cancel_clone_after<T:RetainedClone+Clone+Send+Sync+crate::retirement::RetireOwned>(original:T,turns:usize){
+    let source=RetainedCloneSource::from_owner(original);let mut cursor=T::retained_clone_cursor();
+    let wide=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<16,maximum_release_bytes:1<<16,maximum_depth:64};
+    let mut output=None;
+    for _ in 0..turns{if let RetainedCloneStep::Complete(_)=cursor.advance(source.borrow(),wide).unwrap(){output=cursor.take();break;}}
+    cursor.begin_close();
+    for _ in 0..1024{if cursor.terminal_is_empty(){break}cursor.close_step(RetainedCloneGrant{maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(1<<16).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),..wide}).unwrap();}
+    assert!(cursor.terminal_is_empty());
+    if let Some(output)=output{let mut owner=crate::retirement::controlled::ControlledRetirement::new(output).map_err(|(error,_)|error).unwrap();for _ in 0..1024{if owner.terminal_is_empty(){break}owner.step(RetainedCloneGrant{maximum_capacity_bytes:owner.next_capacity_byte_demand(1<<16).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap(),..wide}).unwrap();}assert!(owner.terminal_is_empty());}
+}
+
+#[test]
+fn retained_array_clone_matches_the_clone_oracle_for_scalar_and_owned_elements(){
+    clone_through_source([1u32,2,3]);
+    clone_through_source([[1.5f64,2.5],[3.5,4.5]]);
+    clone_through_source([String::from("alpha"),String::from("γ中🐚")]);
+    clone_through_source([vec![1u8,2,3],Vec::new()]);
+    clone_through_source([Some(String::from("x")),None]);
+    clone_through_source([[String::from("a"),String::new()],[String::from("c"),String::from("d")]]);
+    clone_through_source(<[String;0]>::default());
+}
+
+#[test]
+fn retained_array_clone_cancels_at_every_turn_without_abandoning_element_owners(){
+    for turns in 0..48{
+        cancel_clone_after([String::from("alpha"),String::from("beta"),String::from("gamma")],turns);
+        cancel_clone_after([vec![1u8,2,3],vec![4u8],Vec::new()],turns);
+        cancel_clone_after([7u32,8,9],turns);
+    }
+}

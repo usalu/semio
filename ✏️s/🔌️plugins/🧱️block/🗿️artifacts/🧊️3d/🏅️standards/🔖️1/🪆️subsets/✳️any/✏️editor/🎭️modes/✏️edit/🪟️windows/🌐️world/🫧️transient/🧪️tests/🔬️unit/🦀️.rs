@@ -13,22 +13,23 @@ fn preview_replacement_publication_and_retirement_obey_tiny_grants() {
         let after: Block3dWorldWindowTransient = serde_json::from_value(row["after"].clone()).unwrap();
         let mut store = store::TransientStore::<_, Block3dWorldWindowTransientMutation>::new(before);
         let mut publication = store.begin_publish_one_leased(semio_framework_job::OperationId(1), 0, SetBrushPreview { preview: after.brush_preview }.into(), owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap();
-        let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 };
+        let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 8 };
         assert!(matches!(store.advance_publish_one(&mut publication, zero).unwrap(), store::ArtifactStoreOneItemAdvance::Blocked));
         assert_eq!(publication.progress().completed_items, 0);
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 };
+        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 8 };
         for _ in 0..8 {
             if matches!(store.advance_publish_one(&mut publication, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)) { break; }
         }
         assert_eq!(serde_json::to_value(store.current_root().as_ref()).unwrap(), row["after"]);
         assert_eq!(publication.progress().completed_bytes, 0);
         assert!(publication.acknowledge());
-        assert_eq!(publication.close_step(zero).unwrap(), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        assert!(matches!(publication.close_step(zero).unwrap(), semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == Default::default()));
         for _ in 0..4096 {
-            match publication.close_step(grant).unwrap() {
-                store::SnapshotRetirementStep::Complete => break,
-                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 1),
-                store::SnapshotRetirementStep::Blocked => panic!("unaliased preview publication must close"),
+            let demand = publication.retirement_demands(4096).unwrap();
+            let turn = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            match publication.close_step(turn).unwrap() {
+                semio_framework_value::retained_clone::RetainedCloneStep::Complete(_) => break,
+                semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(turn.retained_grant())),
             }
         }
         assert!(publication.terminal_is_empty());

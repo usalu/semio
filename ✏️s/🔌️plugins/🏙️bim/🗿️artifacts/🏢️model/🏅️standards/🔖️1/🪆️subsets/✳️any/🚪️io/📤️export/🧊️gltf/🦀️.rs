@@ -25,7 +25,7 @@ pub const GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", stand
 
 /// 🧊️ The glTF model of `model` plus a note per element that could not be placed: the inference comes from the shared session.
 pub fn model_to_gltf(model: &ModelSnapshot) -> Result<(document::GltfModel, Vec<String>), String> {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::try_with_inference(None, model, |inferred| scene::build(model, inferred)).map_err(|error| error.to_string())
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| scene::build(model, inferred)).map_err(|error| error.to_string())
 }
 
 /// 📤️ The GLB bytes of `model` plus a note per element that could not be placed.

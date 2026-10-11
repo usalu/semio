@@ -2,7 +2,8 @@
 //! @see ✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs
 
 /// 🧬️ config schema of `s.wfc.2d`, projected from `Wfc2dConfig`.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct Wfc2dConfig {
     /// 🏷️ @state config
     pub camera_x: f64,

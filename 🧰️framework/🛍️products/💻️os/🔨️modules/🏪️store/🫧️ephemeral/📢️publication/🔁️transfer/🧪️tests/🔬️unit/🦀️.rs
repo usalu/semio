@@ -35,11 +35,6 @@ fn close(preparation: &mut dyn ArtifactEphemeralOneItemPreparation<String, Strin
     panic!("isolated transfer must close under its fixed physical grant");
 }
 
-fn close(preparation: &mut dyn ArtifactEphemeralOneItemPreparation<String, String>) {
-    preparation.begin_close();
-    close_quoted(preparation, 1);
-}
-
 #[test]
 fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();

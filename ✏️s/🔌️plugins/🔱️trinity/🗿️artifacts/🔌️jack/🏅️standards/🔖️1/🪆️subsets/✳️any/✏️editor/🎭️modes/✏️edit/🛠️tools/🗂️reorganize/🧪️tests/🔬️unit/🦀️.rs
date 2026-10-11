@@ -248,7 +248,7 @@ fn reorganize_start_complete_finalize_is_one_undo_entry() {
     assert_eq!((history_len(&mut app) - history) as u64, law["historyEntriesAdded"].as_u64().expect("entries"));
     ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id));
     assert_eq!(node_positions(&app), before, "one undo restores every committed position");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, crate::trinity_mounted_owner_policy());
 }
 
 /// 🛑️ Abort after provisional moves exist leaves the document pack byte-identical and the history untouched.
@@ -268,5 +268,5 @@ fn aborting_a_reorganize_run_leaves_the_document_byte_identical() {
     assert_eq!((after.pack, after.spr), (pack.pack, pack.spr), "abort leaves the document byte-identical");
     assert_eq!(node_positions(&app), positions, "abort leaves the content child untouched");
     assert_eq!(history_len(&mut app), history);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, crate::trinity_mounted_owner_policy());
 }

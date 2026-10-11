@@ -30,21 +30,6 @@
     }
   ],
   "scope": "per-transition; cumulative receipt is observation, not replenished operation authority",
-  "metadataTurn": {
-    "grant": {
-      "maximumItems": 1,
-      "maximumCopyBytes": 1,
-      "maximumCapacityBytes": 0,
-      "maximumReleaseBytes": 0,
-      "maximumDepth": 1
-    },
-    "receipt": {
-      "copiedItems": 1,
-      "copiedBytes": 1,
-      "retainedCapacityBytes": 0,
-      "releasedBytes": 0
-    }
-  },
   "nativeIoDenials": [
     {
       "axis": "items",

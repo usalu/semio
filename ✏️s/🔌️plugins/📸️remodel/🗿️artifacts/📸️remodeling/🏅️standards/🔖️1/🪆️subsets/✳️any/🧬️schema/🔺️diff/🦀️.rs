@@ -15,7 +15,8 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the remodeling artifact; persistent entries apply via MutationDiff.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.remodel.remodeling")]
 pub struct RemodelingDiff {
@@ -42,7 +43,8 @@ pub struct RemodelingDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🎯️ An explicitly assigned optional value: wraps the value so assigning `None` stays distinct from leaving the slot untouched on the wire (a bare nested `Option` collapses both to `null`).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RemodelingAssigned<T> {
     pub value: T,
@@ -56,7 +58,8 @@ impl<T> RemodelingAssigned<T> {
 }
 
 /// 🩹 The patch of a collection whose rows never patch a member (a member is inserted, replaced as a whole record or removed).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct RemodelingNoPatch {}
 
 /// 🗝️ A member of an id-keyed, key-ordered collection: it names its key and knows how to apply, merge and restore its own patch.
@@ -72,7 +75,8 @@ pub trait RemodelingEntity<P>: Clone + PartialEq {
 }
 
 /// 🧩 Keyed rows over a key-ordered collection: at most one row per key when they compose (a pair that cannot compose stays as two rows so the sequence keeps being rejected), kept in key order.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct RemodelingRows<E, P> {
     pub rows: Vec<RemodelingRow<E, P>>,
@@ -85,7 +89,8 @@ impl<E, P> Default for RemodelingRows<E, P> {
 }
 
 /// 🧱️ One keyed row: `insert` needs an absent key and lands at the key's ordered position, `replace` swaps a present member whole, `remove` drops a present member, `patch` writes a present member's slots.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "row", rename_all = "camelCase")]
 pub enum RemodelingRow<E, P> {
     #[value(rename = "insert", rename_all = "camelCase")]
@@ -119,7 +124,8 @@ pub type RemodelingRigDelta = RemodelingRows<RigExtrinsic, RemodelingNoPatch>;
 pub type RemodelingAssetsDelta = RemodelingRows<RemodelingAssetEntry, RemodelingNoPatch>;
 
 /// 🖼️ One asset-handle row member: the asset key beside its composed child handle.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RemodelingAssetEntry {
     pub key: String,
@@ -127,7 +133,8 @@ pub struct RemodelingAssetEntry {
 }
 
 /// 📐️ Calibration delta: cameras and rig extrinsics are separate keyed collections.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct RemodelingCalibrationDelta {
     pub cameras: RemodelingCamerasDelta,
@@ -135,7 +142,8 @@ pub struct RemodelingCalibrationDelta {
 }
 
 /// 🎞️ A multiset of members of an ordered list: `removed` members leave (the first equal one), `added` members enter at their ordered position.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct RemodelingMembers<T> {
     pub removed: Vec<T>,
@@ -210,7 +218,8 @@ impl<T: RemodelingOrdered> RemodelingMembers<T> {
 }
 
 /// 🩹 Sparse media-stream patch: the slots a stream edit owns after creation.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct MediaStreamPatch {
     pub sync_offset_ms: Option<f64>,
@@ -219,7 +228,8 @@ pub struct MediaStreamPatch {
 }
 
 /// 🩹 Sparse ground-control-point patch: the slots a point edit owns after creation.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct GroundControlPointPatch {
     pub observations: Option<RemodelingMembers<GcpObservation>>,
@@ -428,7 +438,8 @@ fn coalesce_rows<E: RemodelingEntity<P>, P: Clone>(earlier: &RemodelingRow<E, P>
 
 //#region 🔖️Content
 /// 📦️ The presentation a durable content artifact is created with.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RemodelingContentHeader {
     pub kind: String,
@@ -438,14 +449,16 @@ pub struct RemodelingContentHeader {
 }
 
 /// 📦️ Ordered row delta over the durable content store: a row appends leaves to one content artifact or truncates it.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct RemodelingContentDelta {
     pub rows: Vec<RemodelingContentRow>,
 }
 
 /// 📦️ One content row. `append` with a `header` creates an absent artifact, without one it extends a present artifact; `truncate` keeps the first `from` leaves and removes the artifact when `from` is `0`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "row", rename_all = "camelCase")]
 pub enum RemodelingContentRow {
     #[value(rename = "append", rename_all = "camelCase")]
@@ -548,7 +561,8 @@ impl RemodelingContentDelta {
 
 //#region 🔖️Params
 /// ⚙️ Sparse reconstruction-parameter delta: each slot replaces one whole pipeline-stage facet.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct RemodelingParamsDiff {
     pub ingest: Option<IngestParams>,
@@ -594,7 +608,8 @@ facet_algebra!(ingest, feature, matching, sfm, dense, mesh, motion, geo);
 
 //#region 🔖️Results
 /// 📦️ Sparse reconstruction-results delta: each slot replaces one result sub-payload as a whole.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct RemodelingResultsDiff {
     pub sparse: Option<RemodelingAssigned<Option<SparseCloud>>>,

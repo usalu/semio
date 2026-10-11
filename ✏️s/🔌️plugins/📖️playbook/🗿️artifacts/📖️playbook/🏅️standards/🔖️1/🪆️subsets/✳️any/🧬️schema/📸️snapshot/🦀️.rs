@@ -8,8 +8,8 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted playbook document snapshot (persistent fields of the artifact). `#[child(...)]`
-/// drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+/// drives `#[derive(ArtifactSchema, semio_framework_value::RetireOwned)]`'s slot-table emission; never hand-written.
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[artifact_schema(id = "s.playbook.playbook")]
 pub struct PlaybookSnapshot {
     #[state(artifact)]

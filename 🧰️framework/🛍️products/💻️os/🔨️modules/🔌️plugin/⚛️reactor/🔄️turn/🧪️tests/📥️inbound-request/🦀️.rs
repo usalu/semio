@@ -47,7 +47,7 @@ fn inbound_request_fixture() -> InboundRequestFixture {
 }
 
 fn inbound_request_budget() -> semio_framework::kernel::Budget {
-    semio_framework::kernel::Budget { fuel: 64, deadline_ms: 1_000, max_effects: 16, max_patch_bytes: 65_536, max_frames: 16 }
+    semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1_000, max_effects: 16, max_patch_bytes: 65_536, max_frames: 16 }
 }
 
 /// 🧩️ A bundle whose one handler mirrors what every real flow extension installs: a pure
@@ -68,7 +68,7 @@ async fn drive_inbound_request(runtime: &crate::plugin_runtime::PluginRuntime<cr
         capability: capability.to_string(),
         payload: request.as_bytes().to_vec(),
     };
-    crate::reactor::poll_kernel(runtime, vec![event], None, None, inbound_request_budget()).await.expect("one inbound-request turn").effects
+    crate::reactor::poll_kernel(runtime, vec![event], None, None, inbound_request_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one inbound-request turn").effects
 }
 
 /// ⚖️ LAW: every fixture row is answered by exactly one `Effect::Respond` carrying the SAME `req`, on

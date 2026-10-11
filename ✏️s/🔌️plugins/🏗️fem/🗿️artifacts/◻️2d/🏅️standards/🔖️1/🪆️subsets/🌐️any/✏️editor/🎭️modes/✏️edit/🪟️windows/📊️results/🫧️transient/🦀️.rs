@@ -120,25 +120,6 @@ impl protocol::DiffAlgebra<FemResultsWindowTransient> for FemResultsWindowTransi
 mod mutations;
 pub use mutations::*;
 
-impl semio_framework_value::retirement::RetireOwned for FemPlaybackClock {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(self.phase), semio_framework_value::retirement::leaf(self.reverse)])
-    }
-}
-
-impl semio_framework_value::retirement::RetireOwned for FemResultsWindowTransient {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::RetireOwned::retirement(self.clock)
-    }
-}
-
-impl semio_framework_value::retirement::RetireOwned for FemResultsWindowTransientMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        let Self::SetPlaybackClock(mutation) = self;
-        semio_framework_value::retirement::RetireOwned::retirement(mutation.clock)
-    }
-}
-
 #[expect(clippy::unnecessary_wraps, reason = "ArtifactEphemeralTransferPreparationFactory requires a fallible footprint callback")]
 fn clock_footprint(_: &FemResultsWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<FemResultsWindowTransientMutation>()))

@@ -4,7 +4,8 @@
 
 //#region 🔖️Transient
 /// 🏁 One solved slot — the transient's own row type, deliberately not the document's.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct Wfc2dAssignment {
     pub slot_id: String,
@@ -13,7 +14,7 @@ pub struct Wfc2dAssignment {
 
 /// 🫧️ `Wfc2dEditor::Transient` — the inferred assignment in the document's own slot order, plus the
 /// contradiction verdict the preview reads.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "wfc2dtransient")]
 #[artifact(id = "wfc.wfc2d.transient")]

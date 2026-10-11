@@ -1,4 +1,5 @@
 import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
 /** 🌊️ Qualifies actor-isolated canonical async result and stream imports through JCO/Wasm. */
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -19,7 +20,7 @@ type EmittedAsyncBinding = Readonly<{ trampoline: string; fnName: string }>;
 type Fixture = Readonly<{ identity: Readonly<{ component: string; canonicalInterface: string; expectedImports: readonly string[]; jco: JcoPolicy; emittedAsyncBindings: readonly EmittedAsyncBinding[]; unsupportedImport: string; productionHostAsyncAbiQualified: true; artifactPolicy: string }>; actors: readonly ActorSpec[]; limits: Readonly<{ buildBudgetMs: number; runtimeBudgetMs: number; maximumOutputBytes: number; actors: number }>; streamClose: Readonly<{ phase: "closed"; activeInvocations: 0; cancellations: 1; result: "rejected"; locked: false }>; guestStreamDrop: Readonly<{ phase: "closed"; activeInvocations: 0; cancellations: 1; result: "fulfilled"; locked: false }>; lateStreamFault: Readonly<{ code: string; message: string }>; failedStreamRetirement: Readonly<{ code: string; message: string; cancelMessage: string }> }>;
 
 /** 🧪️ Builds the standalone guest and executes two independent canonical actors. */
-export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRoot: string, closeFactory?: ActorImportFactoryPort, closeActorBundle?: ActorImportFactoryPort, pendingHostClose = true): Promise<void> {
+export async function testCanonicalActorAsyncImport(repoRoot: string, invocation: ScriptInvocation, evidenceRoot: string, closeFactory?: ActorImportFactoryPort, closeActorBundle?: ActorImportFactoryPort, pendingHostClose = true): Promise<void> {
   const fixtureRoot = testSourceDirectory;
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as Fixture;
   const schemaDocument = JSON.parse(readFileSync(resolve(fixtureRoot, "../../🧬️schema/🔣️.json"), "utf8"));
@@ -33,13 +34,13 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRo
   const evidence = mkdtempSync(join(evidenceRoot, "actor-import-"));
   const manifest = fileURLToPath(new URL("../../🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.toml", import.meta.url));
   const build = await captureOwnedProcess("cargo", ["build", "--manifest-path", manifest, "--target", "wasm32-wasip2", "--release", "--offline"], {
+    invocation,
     cwd: repoRoot,
     env: { ...process.env, CARGO_TARGET_DIR: cargoTargetDirectory(repoRoot), CARGO_BUILD_JOBS: "1" },
     budgetMs: fixture.limits.buildBudgetMs,
     maxOutputBytes: 8 * 1024 * 1024,
     stdoutPath: join(evidence, "cargo.stdout"),
     stderrPath: join(evidence, "cargo.stderr"),
-    cancelled: () => false,
   });
   assert.equal(build.status, 0, `${build.reason}: ${build.stderr}`);
   const component = readFileSync(join(cargoTargetDirectory(repoRoot), "wasm32-wasip2", "release", "semio_browser_actor_import_guest.wasm"));
@@ -62,13 +63,13 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRo
     }
     process.stdout.write(JSON.stringify({ imports: result.imports, exports: result.exports, files: Object.keys(result.files), policy }));
   `, componentPath, jcoRoot, JSON.stringify(fixture.identity.expectedImports), JSON.stringify(fixture.identity.jco)], {
+    invocation,
     cwd: repoRoot,
     env: process.env,
     budgetMs: fixture.limits.runtimeBudgetMs,
     maxOutputBytes: fixture.limits.maximumOutputBytes,
     stdoutPath: join(evidence, "jco.stdout.json"),
     stderrPath: join(evidence, "jco.stderr"),
-    cancelled: () => false,
   });
   assert.equal(transpiled.status, 0, `${transpiled.reason}: ${transpiled.stderr}`);
   const generated = JSON.parse(transpiled.stdout) as { imports: string[]; exports: [string, string][]; files: string[]; policy: JcoPolicy };
@@ -106,7 +107,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRo
     await assert.rejects(closeActorBundle(indirectSuspension, cores, { importInterfaces }), /blocking WASI import requires JSPI suspension/);
     await assert.rejects(closeActorBundle(source, cores, { importInterfaces: [...importInterfaces, fixture.identity.unsupportedImport] }), /unsupported import interface/);
     actorModulePath = join(evidence, "actor-import.closed.js");
-    const { bytes, ...receipt } = await buildClosedBrowserActorArtifactV1(component, {});
+    const { bytes, ...receipt } = await buildClosedBrowserActorArtifactV1(component, invocation);
     // 🧭️ `slice()` answers a `Uint8Array<ArrayBuffer>`: a view over a `SharedArrayBuffer` is not a
     // `BufferSource`, and `Uint8Array` alone no longer says which of the two backs it.
     const digest = async (value: Uint8Array) => Buffer.from(await crypto.subtle.digest("SHA-256", value.slice())).toString("hex");
@@ -207,13 +208,13 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRo
     assert.notEqual(runtimes.get("actor-a").trace, runtimes.get("actor-b").trace);
     console.log(JSON.stringify({ observations, component: fixture.component, canonicalInterface: fixture.canonicalInterface, imports: fixture.importInterfaces, mode: fixture.mode, jco: 1, wasm: 1 }));
   `, inputPath], {
+    invocation,
     cwd: repoRoot,
     env: process.env,
     budgetMs: fixture.limits.runtimeBudgetMs,
     maxOutputBytes: fixture.limits.maximumOutputBytes,
     stdoutPath: join(evidence, "runtime.stdout.json"),
     stderrPath: join(evidence, "runtime.stderr"),
-    cancelled: () => false,
   });
   assert.equal(runtime.status, 0, `${runtime.reason}: ${runtime.stderr}`);
   const observation = JSON.parse(runtime.stdout) as { observations: unknown[]; canonicalInterface: string; mode: string; jco: number; wasm: number };
@@ -431,13 +432,13 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRo
       await assert.rejects(module.activate({ actorId: "missing-wasi", activationGeneration: 1n }, { ...abortConnection.port, wasi: undefined }), /WASI port required/);
       console.log(JSON.stringify({ observations, pending: pending.progress(), aborted: aborted.progress(), laws: 15, hostCloseLaws }));
     `, actorInputPath], {
+      invocation,
       cwd: repoRoot,
       env: process.env,
       budgetMs: fixture.limits.runtimeBudgetMs,
       maxOutputBytes: fixture.limits.maximumOutputBytes,
       stdoutPath: join(evidence, "closed-runtime.stdout.json"),
       stderrPath: join(evidence, "closed-runtime.stderr"),
-      cancelled: () => false,
     });
     assert.equal(closedRuntime.status, 0, `${closedRuntime.reason}: ${closedRuntime.stderr}`);
     const closedObservation = JSON.parse(closedRuntime.stdout) as { laws: number; hostCloseLaws: number; observations: unknown[] };

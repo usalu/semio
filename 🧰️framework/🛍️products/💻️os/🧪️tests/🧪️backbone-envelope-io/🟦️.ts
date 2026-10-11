@@ -2593,7 +2593,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("document opening attempt stays outer-wire-owned without widening the browser patch contract", async () => {
       const clientInstanceId = "33333333-3333-4333-8333-333333333333";
       const requests: readonly BackboneWorkerRequest[] = [
-        { kind: "open", documentId: "same-document", clientInstanceId, schema: "fixture.counter", actor: "caller", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "https://hub.test", spaceId: "space-a" }] },
+        { kind: "open", actorIdentityGrant: { maximumItems: 1024, maximumCopyBytes: 65536, maximumCapacityBytes: 65536, maximumReleaseBytes: 65536, maximumDepth: 64 }, documentId: "same-document", clientInstanceId, schema: "fixture.counter", actor: "caller", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "https://hub.test", spaceId: "space-a" }] },
         { kind: "send", documentId: "same-document", spaceId: "space-a", clientInstanceId, message: { kind: "externalChanged" } },
         { kind: "close", documentId: "same-document", spaceId: "space-a", clientInstanceId },
       ];

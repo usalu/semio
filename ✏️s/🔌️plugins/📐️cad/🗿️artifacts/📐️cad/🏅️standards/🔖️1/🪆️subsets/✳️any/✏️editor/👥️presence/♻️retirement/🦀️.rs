@@ -1,73 +1,20 @@
 //! 🧹️ Exact CAD presence ownership retirement, including variable-length engagement identifiers.
 
-use super::CadPresence;
-use std::mem::ManuallyDrop;
+use super::{CadPresence, CadPresenceMutation};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, ValueError};
 use std::sync::Arc;
-use store::{ErasedSnapshotRetirement, SnapshotRetirementFactory, SnapshotRetirementStep};
+
+semio_framework_value::artifact_retire_struct!(CadPresence { camera_position, camera_target, camera_zoom, camera_fov, engagement_step, engagement_pane });
 
 //#region 🧹️SnapshotRetirement
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct CadPresenceRetirementFactory;
 
-impl SnapshotRetirementFactory<CadPresence> for CadPresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<CadPresence>) -> usize { std::mem::size_of::<CadPresenceRetirement>() }
+impl store::SnapshotRetirementFactory<CadPresence> for CadPresenceRetirementFactory {
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<CadPresence>) -> usize { semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<CadPresence>() }
 
-    fn retire(&self, root: Arc<CadPresence>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(CadPresenceRetirement { root: ManuallyDrop::new(Some(root)), owned: ManuallyDrop::new(None), bytes: ManuallyDrop::new(None), field: 0 })
-    }
-}
-
-struct CadPresenceRetirement {
-    root: ManuallyDrop<Option<Arc<CadPresence>>>,
-    owned: ManuallyDrop<Option<CadPresence>>,
-    bytes: ManuallyDrop<Option<Vec<u8>>>,
-    field: u8,
-}
-
-impl ErasedSnapshotRetirement for CadPresenceRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(bytes) = self.bytes.as_mut() {
-            if bytes.is_empty() {
-                drop(self.bytes.take());
-                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-            }
-            let released_bytes = bytes.len().min(maximum_bytes);
-            bytes.truncate(bytes.len() - released_bytes);
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
-        }
-        if let Some(root) = self.root.take() {
-            *self.owned = Arc::into_inner(root);
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(owned) = self.owned.as_mut() {
-            let value = match self.field {
-                0 => Some(std::mem::take(&mut owned.engagement_step)),
-                1 => owned.engagement_pane.take(),
-                _ => {
-                    drop(self.owned.take());
-                    return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-            };
-            self.field += 1;
-            *self.bytes = value.map(String::into_bytes);
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.root.is_none() && self.owned.is_none() && self.bytes.is_none()
-    }
-}
-
-impl Drop for CadPresenceRetirement {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            assert!(self.terminal_is_empty(), "CAD presence retirement requires its exact terminal-empty witness");
-        }
+    fn retire(&self, source: Arc<CadPresence>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<CadPresence>)> {
+        semio_framework_value::retirement::shared::admit_shared_retirement(source, grant, true)
     }
 }
 //#endregion 🧹️SnapshotRetirement
@@ -81,49 +28,9 @@ pub fn terminal_is_empty(value: &CadPresence) -> bool {
     value.engagement_step.is_empty() && value.engagement_pane.is_none()
 }
 
-pub struct CadPresenceStoreDisposer {
-    terminal: Option<Arc<CadPresence>>,
-    active: Option<store::PresenceStoreRetirement<CadPresence>>,
-}
-
-impl Default for CadPresenceStoreDisposer {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl CadPresenceStoreDisposer {
-    pub fn new() -> Self {
-        Self { terminal: Some(Arc::new(empty_terminal())), active: None }
-    }
-}
-
-impl semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<CadPresence, super::CadPresenceMutation>> for CadPresenceStoreDisposer {
-    fn close_step(&mut self, owner: &mut store::PresenceStore<CadPresence, super::CadPresenceMutation>, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework_plugin::Fault> {
-        if maximum_items == 0 {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(active) = self.active.as_mut() {
-            return active.close_step(1, maximum_bytes).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, error.kind.as_str(), error.into_message())).map(|step| match step {
-                SnapshotRetirementStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
-                SnapshotRetirementStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "CAD presence retains captured local or peer readers" },
-                SnapshotRetirementStep::Complete => semio_framework_plugin::PluginCloseStep::Complete,
-            });
-        }
-        let terminal = self.terminal.take().expect("CAD presence close owns its exact empty terminal root");
-        match owner.begin_retirement(terminal, terminal_is_empty) {
-            Ok(active) => self.active = Some(active),
-            Err((reason, terminal)) => {
-                self.terminal = Some(terminal);
-                return Err(semio_framework_plugin::Fault::from(reason));
-            }
-        }
-        Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-    }
-
-    fn terminal_is_empty(&self, owner: &store::PresenceStore<CadPresence, super::CadPresenceMutation>) -> bool {
-        self.terminal.is_none() && self.active.as_ref().is_some_and(store::PresenceStoreRetirement::terminal_is_empty) && owner.retirement_started() && terminal_is_empty(owner.local()) && owner.peers_root().is_empty()
-    }
+/// 🧹️ Closes the presence store through the framework's exact owner, seeded with CAD's empty terminal root.
+pub fn store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<CadPresence, CadPresenceMutation>>> {
+    Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(Arc::new(empty_terminal()), terminal_is_empty).expect("CAD empty terminal root is its own empty witness"))
 }
 //#endregion 🏪️StoreRetirement
 

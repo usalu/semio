@@ -250,7 +250,7 @@ pub fn cad_tool_yields(models: &CadPaneModels, entries: &[CadToolEntry]) -> Vec<
 /// `authoring_seed`, the host clock and `<appId>#<verb>`, and the yielded leaves in order. `None` when nothing moves or
 /// lands: a stranger id, an identity motion or an empty request leaves zero trace.
 pub fn cad_transform_tool_commit(verb: &str, authoring_seed: &str, models: &CadPaneModels, entries: Vec<CadToolEntry>) -> Option<(protocol::TransactionRef, Vec<CadToolLeaf>)> {
-    let mut runner = ToolMachineRunner::<cad_transform_tool::CadTransformTool, CadTransformToolHost>::start(format!("{CAD_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), CadTransformToolContext, CadTransformToolHost).ok()?;
+    let mut runner = ToolMachineRunner::<cad_transform_tool::CadTransformTool, CadTransformToolHost>::start(format!("{CAD_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.into()), CadTransformToolContext, CadTransformToolHost).ok()?;
     match runner.send(cad_transform_tool::Event::Records(CadToolRequest { models: Arc::new(models.clone()), entries }), semio_framework_tool_machine::authoring_clock(0)).ok()? {
         ToolStep::Committed(transaction, leaves) => Some((transaction, leaves)),
         ToolStep::Idle | ToolStep::Open | ToolStep::Aborted(..) | ToolStep::Empty(_) => None,

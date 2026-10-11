@@ -25,7 +25,7 @@ use crate::schema::snapshot::StepFileDescription;
 use crate::schema::snapshot::StepFileName;
 use crate::schema::snapshot::StepFileSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::schema::snapshot::StepValue;
+use crate::schema::snapshot::{StepTypedValue, StepValue};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_encode(bytes: &[u8]) -> String {
@@ -120,7 +120,7 @@ pub(crate) fn enc_value(v: &StepValue) -> String {
         StepValue::Enum(s) => format!("E[{}]", enc_str(s)),
         StepValue::Reference(id) => format!("F[{id}]"),
         StepValue::Aggregate(items) => format!("A[{}]", items.iter().map(enc_value).collect::<Vec<_>>().join(",")),
-        StepValue::TypedValue { type_name, value } => format!("T[{},{}]", enc_str(type_name), enc_value(value)),
+        StepValue::TypedValue(StepTypedValue { type_name, value }) => format!("T[{},{}]", enc_str(type_name), enc_value(value)),
     }
 }
 
@@ -146,7 +146,7 @@ pub(crate) fn dec_value(s: &str) -> Result<StepValue, String> {
         "T" => {
             let parts = split_top_level(inner, ',');
             let [type_name, value] = parts.as_slice() else { return Err(format!("typed value: expected 2 fields, got {}", parts.len())) };
-            Ok(StepValue::TypedValue { type_name: dec_str(type_name)?, value: Box::new(dec_value(value)?) })
+            Ok(StepValue::TypedValue(StepTypedValue { type_name: dec_str(type_name)?, value: Box::new(dec_value(value)?) }))
         }
         other => Err(format!("step value: unknown tag {other:?}")),
     }

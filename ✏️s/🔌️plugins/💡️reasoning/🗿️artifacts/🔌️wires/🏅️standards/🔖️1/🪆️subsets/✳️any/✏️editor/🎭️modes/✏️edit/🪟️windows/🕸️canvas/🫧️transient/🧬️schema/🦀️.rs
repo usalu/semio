@@ -44,8 +44,8 @@ pub struct WiresCanvasTransientDiff {
     pub drag_zoom: Option<f64>,
 }
 
-impl protocol::MutationDiff<WiresCanvasTransient> for WiresCanvasTransientDiff {
-    fn apply(&self, base: &WiresCanvasTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WiresCanvasTransient> {
+impl protocol::MutationDiff<super::WiresCanvasTransient> for WiresCanvasTransientDiff {
+    fn apply(&self, base: &super::WiresCanvasTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<super::WiresCanvasTransient> {
         let mut next = base.clone();
         if let Some(value) = &self.drag_node_id {
             next.drag_node_id = value.value.clone();
@@ -89,8 +89,8 @@ impl protocol::MutationDiff<WiresCanvasTransient> for WiresCanvasTransientDiff {
     }
 }
 
-impl protocol::DiffAlgebra<WiresCanvasTransient> for WiresCanvasTransientDiff {
-    fn inverse(&self, base: &WiresCanvasTransient) -> Self {
+impl protocol::DiffAlgebra<super::WiresCanvasTransient> for WiresCanvasTransientDiff {
+    fn inverse(&self, base: &super::WiresCanvasTransient) -> Self {
         Self {
             drag_node_id: self.drag_node_id.as_ref().map(|_| WiresCanvasOptionalNode { value: base.drag_node_id.clone() }),
             drag_start_x: self.drag_start_x.as_ref().map(|_| base.drag_start_x.clone()),

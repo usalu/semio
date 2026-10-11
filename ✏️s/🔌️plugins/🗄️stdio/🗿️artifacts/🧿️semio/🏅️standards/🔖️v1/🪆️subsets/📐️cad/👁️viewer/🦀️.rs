@@ -37,7 +37,7 @@ pub const SEMIO_CAD_DOCUMENT_SCHEMA: &str = "stdio.semio.cad";
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions, so its typed command channel has exactly one inert variant.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum SemioCadViewCommand {
     #[default]
     Noop,

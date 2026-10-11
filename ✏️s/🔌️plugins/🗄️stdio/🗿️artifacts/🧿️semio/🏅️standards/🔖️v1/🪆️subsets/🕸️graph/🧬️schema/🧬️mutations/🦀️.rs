@@ -51,7 +51,8 @@ use super::set_node_property;
 /// (`add-node-port`/`remove-node-port`/`add-node-property`/`remove-node-property`), then edge
 /// lifecycle (`create-edge`/`delete-edge`).
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioGraphSnapshot, diff = SemioGraphDiff, schema = "s.stdio.semio.graph")]
 pub enum SemioGraphMutation {
     CreateNode(create_node::CreateNode),

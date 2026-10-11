@@ -2,10 +2,26 @@ use super::*;
 use semio_framework_pack_json::{self as json, JsonMemberPolicy};
 use semio_framework_value::{native_decoding::NativeDecodeProgress, NativeEncodeControl};
 
+fn unbounded_grant() -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }
+}
+
 fn drain(mut owner: Box<dyn ErasedSnapshotRetirement>) {
     while !owner.terminal_is_empty() {
-        owner.close_step(32, 4096).unwrap();
+        let copy = owner.next_copy_byte_demand().unwrap();
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant {
+            maximum_items: 32,
+            maximum_copy_bytes: copy,
+            maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(),
+            maximum_release_bytes: owner.next_release_byte_demand().unwrap(),
+            maximum_depth: owner.next_depth_demand().unwrap().max(1),
+        };
+        owner.close_step(grant).unwrap();
     }
+}
+
+fn retire_value<T: semio_framework_value::retirement::RetireOwned>(value: T) -> Box<dyn ErasedSnapshotRetirement> {
+    semio_framework_value::retirement::admit_owned_retirement(value, unbounded_grant()).map_err(|(error, _)| error).unwrap().0
 }
 
 fn input(value: &serde_json::Value) -> DslValue {
@@ -33,10 +49,10 @@ fn puzzle_scene_projection_matches_language_neutral_cases_and_sqlite_oracle() {
         let mut projection = Projection::new();
         let accepted = projection.project(&value, mode, &mut control).is_ok();
         assert_eq!(accepted, case["accepted"].as_bool().unwrap(), "{}", case["id"]);
-        let actual = projection.take_scene().map(|scene| { let result = output(&scene); drain(semio_framework_value::retirement::owned_retirement(scene)); result }).unwrap_or(serde_json::Value::Null);
+        let actual = projection.take_scene().map(|scene| { let result = output(&scene); drain(retire_value(scene)); result }).unwrap_or(serde_json::Value::Null);
         assert_eq!(actual, case["expected"], "{}", case["id"]);
-        drain(projection.take_retirement());
-        drain(semio_framework_value::retirement::owned_retirement(value));
+        drain(projection.take_retirement(unbounded_grant()).unwrap().0);
+        drain(retire_value(value));
         results.push(serde_json::json!({"id":case["id"],"accepted":accepted,"actual":actual}));
     }
     let script = format!("{}\nconst input=JSON.parse(await Bun.stdin.text());await Bun.write(Bun.stdout,JSON.stringify(oracleCases(input.fixture)));", include_str!("🟦️.ts"));
@@ -60,7 +76,7 @@ fn puzzle_scene_projection_retains_partial_owners_at_every_cancellation_boundary
         let mut complete = Projection::new();
         complete.project(&value, mode, &mut control).unwrap();
         drop(control);
-        drain(complete.take_retirement());
+        drain(complete.take_retirement(unbounded_grant()).unwrap().0);
         for cancel_at in 1..=calls {
             let mut observed = 0;
             let mut progress = |_: NativeDecodeProgress| { observed += 1; observed < cancel_at };
@@ -68,14 +84,14 @@ fn puzzle_scene_projection_retains_partial_owners_at_every_cancellation_boundary
             let mut partial = Projection::new();
             assert_eq!(partial.project(&value, mode, &mut control).unwrap_err().kind, ValueRefusalKind::Canceled);
             assert!(partial.take_scene().is_none());
-            drain(partial.take_retirement());
+            drain(partial.take_retirement(unbounded_grant()).unwrap().0);
         }
         let mut progress = |_: NativeDecodeProgress| true;
         let mut control = NativeDecodeControl::new(0, &mut progress);
         let mut refused = Projection::new();
         assert_eq!(refused.project(&value, mode, &mut control).unwrap_err().kind, ValueRefusalKind::OwnershipLimit);
-        drain(refused.take_retirement());
-        drain(semio_framework_value::retirement::owned_retirement(value));
+        drain(refused.take_retirement(unbounded_grant()).unwrap().0);
+        drain(retire_value(value));
     }
     println!("[DEBUG] Puzzle projection: every observed callback cancellation retains a drainable owner");
 }

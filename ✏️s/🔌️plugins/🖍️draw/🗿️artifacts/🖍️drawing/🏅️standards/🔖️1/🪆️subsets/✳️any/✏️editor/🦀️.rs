@@ -526,6 +526,11 @@ const DRAWING_GESTURE_TOOL_IDS: &[&str] = &["canvasPointerDown", "canvasPointerM
 const DRAWING_GESTURE_RAW_BYTES: usize = 8_192;
 const DRAWING_GESTURE_RETAINED_BYTES: usize = 131_072;
 
+/// 🎟️ One release turn that can retire a gesture owner's declared retained budget.
+fn drawing_gesture_release_grant() -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(DRAWING_GESTURE_RETAINED_BYTES, 32)
+}
+
 /// 🛣️ One publication lane row per gesture route, read off each route's real `Emit` construction, not
 /// off its `ActionKind`: every gesture that reaches a commit does so through the canvas tool's one
 /// `Emit::commit_transaction` (`drawing_tool_emit`, artifact lane), and the two routes that
@@ -642,13 +647,13 @@ impl DrawingInstanceOperationOwner {
                     if self.operations.can_admit(live_key, DRAWING_GESTURE_RETAINED_BYTES) {
                         break;
                     }
-                    let _ = self.operations.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
+                    let _ = self.operations.close_step(drawing_gesture_release_grant());
                 }
             }
             self.operations.admit(live_key, DrawingGestureOperationOwner::new(active_utility_id, &operation.authoring_seed)).map_err(|mut rejected| {
                 rejected.owner.cancel();
                 rejected.owner.begin_close();
-                let _ = rejected.owner.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
+                let _ = rejected.owner.close_step(drawing_gesture_release_grant());
                 Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.saturated"), "the fixed Drawing gesture operation authority is saturated")
             })?;
             self.active = Some((live_key, source_identity));
@@ -842,24 +847,24 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceO
         self
     }
 
-    fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        // 🔁️ The registry's close cursor visits one slot per call; an idle (live or vacant) slot answers
-        // `Pending { 0, 0 }`. Skip past those within one bounded sweep so a retiring owner gets a page
-        // every maintenance step rather than every 64th — 9 steps to retire a gesture, not 576.
-        for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {
-            let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:maximum_bytes,maximum_release_bytes:maximum_bytes,maximum_depth:32};
-            match self.operations.close_step(grant) {
-                semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress==Default::default() && !self.operations.is_empty() => continue,
-                semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "Drawing gesture close owner awaits a non-empty grant" }),
-                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items:progress.copied_items, released_bytes:progress.released_bytes }),
-                semio_framework_job::InteractiveJobCloseStep::Complete {..} => return Ok(semio_framework_plugin::PluginCloseStep::Complete),
-                semio_framework_job::InteractiveJobCloseStep::Refused(kind) => return Err(Fault::from(format!("Drawing gesture retirement refused: {kind:?}"))),
-            }
-        }
-        Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
+    fn retirement_demands(&self, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(if self.operations.is_empty() { Default::default() } else { semio_framework_value::RetirementDemand { release_bytes: DRAWING_GESTURE_RAW_BYTES, depth: 4, ..Default::default() } })
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+    fn maintenance_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
+        for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {
+            match self.operations.close_step(grant) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress == Default::default() && !self.operations.is_empty() => continue,
+                semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(semio_framework_plugin::PluginLifecycleStep::Blocked { reason: "Drawing gesture close owner awaits a non-empty grant" }),
+                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => return Ok(semio_framework_plugin::PluginLifecycleStep::Progress(progress)),
+                semio_framework_job::InteractiveJobCloseStep::Complete { progress } => return Ok(semio_framework_plugin::PluginLifecycleStep::Complete(progress)),
+                semio_framework_job::InteractiveJobCloseStep::Refused { kind, .. } => return Err(Fault::from(format!("Drawing gesture retirement refused: {kind:?}"))),
+            }
+        }
+        Ok(semio_framework_plugin::PluginLifecycleStep::Progress(Default::default()))
+    }
+
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
         self.closing = true;
         if !self.close_begun {
             for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {
@@ -867,7 +872,7 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceO
             }
             self.close_begun = true;
         }
-        self.maintenance_step(maximum_items, maximum_bytes)
+        self.maintenance_step(grant)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -938,55 +943,60 @@ struct DrawingGestureOperationJob {
     raw_validated: bool,
     completed: bool,
     closing: bool,
+    outcomes: crate::host::outcome::DrawingJobOutcomes,
 }
 
-impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
-    fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+impl DrawingGestureOperationJob {
+    fn turn(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> crate::host::outcome::DrawingJobTurn {
+        use crate::host::outcome::DrawingJobTurn;
+        if self.outcomes.faulted() {
+            return DrawingJobTurn::Fault;
+        }
         if context.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
+            return DrawingJobTurn::Cancelled;
         }
         if context.should_yield() || context.fuel_remaining() == 0 {
-            return semio_framework_job::StepOutcome::Yield;
+            return DrawingJobTurn::Yield;
         }
         if !self.raw_validated {
-            let Some(input) = self.raw_input.as_ref() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
+            let Some(input) = self.raw_input.as_ref() else { return self.outcomes.fault("drawing.gesture-wire-input-missing") };
             if let Some(page) = input.page(self.raw_page_cursor) {
                 let Some(decoder) = self.decoder.as_mut() else {
-                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                    return self.outcomes.fault("drawing.gesture-wire-decoder-missing");
                 };
                 if !decoder.feed_page(page) {
-                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                    return self.outcomes.fault("drawing.gesture-wire-oversized");
                 }
                 self.raw_page_cursor += 1;
                 self.raw_byte_cursor = 0;
                 context.consume_fuel(page.len().max(1) as u64);
-                return semio_framework_job::StepOutcome::Yield;
+                return DrawingJobTurn::Yield;
             }
             let exact = self.decoder.as_ref().is_some_and(DrawingRetainedCommandDecoder::finish);
             if !exact {
-                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                return self.outcomes.fault("drawing.gesture-wire-command-mismatch");
             }
             self.raw_validated = true;
             context.consume_fuel(1);
-            return semio_framework_job::StepOutcome::Yield;
+            return DrawingJobTurn::Yield;
         }
         if self.pending_completion_rejection.is_some() {
-            return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+            return self.outcomes.fault("drawing.gesture-completion-rejected");
         }
         if !self.completed {
-            let Some(payload) = self.payload.as_ref() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
+            let Some(payload) = self.payload.as_ref() else { return self.outcomes.fault("drawing.gesture-payload-missing") };
             let emit = payload.instance_owner.with_mut::<DrawingInstanceOperationOwner, _>(|owner| owner.dispatch(payload,context));
             let (emit, transient) = match emit {
                 Ok(Some(output)) => output,
                 Ok(None) => {
                     context.consume_fuel(1);
-                    return semio_framework_job::StepOutcome::Yield;
+                    return DrawingJobTurn::Yield;
                 }
                 Err(error) => {
                     if let Err(rejected) = payload.completion.complete(Err(error), semio_framework_plugin::EphemeralEmit::default()) {
                         self.pending_completion_rejection = Some(rejected);
                     }
-                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                    return self.outcomes.fault("drawing.gesture-dispatch-refused");
                 }
             };
             let window_transient = (transient != payload.window_transient)
@@ -999,20 +1009,53 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
                     if let Err(rejected) = payload.completion.complete(Err(error), semio_framework_plugin::EphemeralEmit::default()) {
                         self.pending_completion_rejection = Some(rejected);
                     }
-                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                    return self.outcomes.fault("drawing.gesture-transient-refused");
                 }
             };
             if let Err(rejected) = payload.completion.complete(Ok(emit), ephemeral) {
                 self.pending_completion_rejection = Some(rejected);
-                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                return self.outcomes.fault("drawing.gesture-completion-rejected");
             }
             self.completed = true;
             context.consume_fuel(1);
         }
-        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-        })
+        DrawingJobTurn::Complete
+    }
+
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let unit = semio_framework_value::RetirementDemand { depth: 1, ..Default::default() };
+        if !self.outcomes.terminal_is_empty() {
+            return self.outcomes.retirement_demands();
+        }
+        if let Some(rejected) = self.pending_completion_rejection.as_ref() {
+            if let Ok(emit) = rejected.emit.as_ref() {
+                if let Some(demand) = emit.child_close_demands(body)? {
+                    return Ok(demand);
+                }
+            }
+            return Ok(unit);
+        }
+        if let Some(input) = self.raw_input.as_ref() {
+            return Ok(semio_framework_value::RetirementDemand { copy_bytes: input.next_close_copy_byte_demand()?, capacity_bytes: input.next_close_capacity_byte_demand(body)?, release_bytes: input.next_close_release_byte_demand()?, depth: input.next_close_depth_demand()? });
+        }
+        if self.payload.is_some() {
+            return Ok(unit);
+        }
+        if let Some(decoder) = self.decoder.as_ref() {
+            return Ok(semio_framework_value::RetirementDemand { release_bytes: decoder.raw.capacity(), depth: 1, ..Default::default() });
+        }
+        Ok(Default::default())
+    }
+}
+
+impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
+    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        let turn = self.turn(context);
+        self.outcomes.lend(turn, context)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        self.outcomes.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -1028,14 +1071,16 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
         if !self.closing {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
+        if !self.outcomes.terminal_is_empty() {
+            return self.outcomes.close_job_step(grant);
+        }
         if let Some(rejected) = self.pending_completion_rejection.as_mut() {
             if let Ok(emit) = rejected.emit.as_mut() {
-                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
-                    return match step {
-                        semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => pending(released_items,released_bytes),
-                        semio_framework_plugin::PluginCloseStep::Blocked { .. } | semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                        semio_framework_plugin::PluginCloseStep::Complete => unreachable!("child close helper consumes completed children"),
-                    };
+                match emit.close_child_one(grant) {
+                    Ok(Some(semio_framework_plugin::PluginLifecycleStep::Progress(progress) | semio_framework_plugin::PluginLifecycleStep::Complete(progress))) => return semio_framework_job::InteractiveJobCloseStep::Pending { progress },
+                    Ok(Some(semio_framework_plugin::PluginLifecycleStep::Blocked { .. } | semio_framework_plugin::PluginLifecycleStep::AwaitingInput { .. })) => return semio_framework_job::InteractiveJobCloseStep::Blocked,
+                    Ok(None) => {}
+                    Err(_) => return semio_framework_job::InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: Default::default() },
                 }
             }
             if maximum_items == 0 {
@@ -1069,16 +1114,13 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
         semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()}
     }
 
-    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(0)}
-    fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError> {Ok(0)}
-    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {
-        if let Some(input)=self.raw_input.as_ref(){return input.next_close_release_byte_demand();}
-        Ok(self.decoder.as_ref().map_or(0,|decoder|decoder.raw.capacity()))
-    }
-    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(usize::from(!self.terminal_is_empty()))}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,semio_framework_value::ValueError> {Ok(self.close_demands(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(self.close_demands(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(self.close_demands(0)?.depth)}
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.pending_completion_rejection.is_none() && self.payload.is_none() && self.raw_input.is_none() && self.decoder.is_none()
+        self.closing && self.pending_completion_rejection.is_none() && self.payload.is_none() && self.raw_input.is_none() && self.decoder.is_none() && self.outcomes.terminal_is_empty()
     }
 }
 
@@ -1113,7 +1155,7 @@ impl semio_framework::ToolJobFactory for DrawingGestureOperationJobFactory {
     }
 
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(DrawingGestureOperationJob { payload: Some(payload), pending_completion_rejection: None, raw_input: None, raw_page_cursor: 0, raw_byte_cursor: 0, decoder: None, raw_validated: true, completed: false, closing: false })
+        Ok(DrawingGestureOperationJob { payload: Some(payload), pending_completion_rejection: None, raw_input: None, raw_page_cursor: 0, raw_byte_cursor: 0, decoder: None, raw_validated: true, completed: false, closing: false, outcomes: crate::host::outcome::DrawingJobOutcomes::new() })
     }
 
     fn create_job_from_wire_pages_with_payload(
@@ -1281,6 +1323,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
     fn tool_id(&self) -> &'static str { self.tool_id }
 
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<DrawingPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+    }
+
     fn extent(
         &self,
         command: &DrawingCommand,
@@ -1419,6 +1465,7 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
         operation_id: request.operation.operation.0,
         generation: request.operation.generation.0,
         canonical_base_revision: request.canonical_base_revision,
+        retained: request.retained,
         authoring_seed: request.authoring_seed.clone(),
     };
     let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
@@ -1448,16 +1495,43 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
 struct DrawingArtifactStorePreparationFactory;
 
 struct DrawingArtifactStorePreparation {
-    base: Option<store::SnapshotRead<DrawingSnapshot>>,
-    mutation: Option<DrawingMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<DrawingSnapshot, DrawingMutation>>,
+    base: std::mem::ManuallyDrop<Option<store::SnapshotRead<DrawingSnapshot>>>,
+    mutation: std::mem::ManuallyDrop<Option<DrawingMutation>>,
+    inverse: std::mem::ManuallyDrop<Option<Vec<DrawingMutation>>>,
+    refused: std::mem::ManuallyDrop<Option<(::protocol::Edit<DrawingMutation>, std::sync::Arc<DrawingSnapshot>)>>,
+    apply_refusal: std::mem::ManuallyDrop<Option<::protocol::MutationApplyError>>,
+    authority: std::mem::ManuallyDrop<Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>>,
+    prepared: std::mem::ManuallyDrop<Option<store::ArtifactStoreOneItemPrepared<DrawingSnapshot, DrawingMutation>>>,
+    mutation_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<DrawingMutation>>>>,
+    snapshot_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<DrawingSnapshot>>>>,
+    active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    factories: std::mem::ManuallyDrop<[Option<semio_framework_value::FactoryAuthority>; 2]>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
     closing: bool,
 }
 
+impl DrawingArtifactStorePreparation {
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let nested = |mut demand: semio_framework_value::RetirementDemand| -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "preparation close depth overflow"))?; Ok(demand) };
+        if let Some(active) = self.active.as_ref() { return nested(store::artifact_retirement_box_demands(active, body)?); }
+        if self.prepared.is_some() { let birth = store::ArtifactStoreOneItemPrepared::<DrawingSnapshot, DrawingMutation>::retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }
+        if self.mutation.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.mutation)?); }
+        if self.inverse.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.inverse)?); }
+        if self.refused.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.refused)?); }
+        if self.apply_refusal.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.apply_refusal)?); }
+        if self.base.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.base)?); }
+        if let Some(authority) = self.authority.as_ref() { let birth = authority.retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }
+        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        self.factories.iter().find_map(Option::as_ref).map_or(Ok(Default::default()), |factory| nested(factory.demands(body)?))
+    }
+}
+
 impl store::ArtifactStoreOneItemPreparationFactory<DrawingSnapshot, DrawingMutation> for DrawingArtifactStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<::protocol::Edit<DrawingMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<DrawingMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &DrawingMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("drawing-artifact-lane".into());
@@ -1465,10 +1539,15 @@ impl store::ArtifactStoreOneItemPreparationFactory<DrawingSnapshot, DrawingMutat
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
+    fn begin_demand(&self, _mutation: &DrawingMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<DrawingArtifactStorePreparation>(), depth: 1 })
+    }
+
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<DrawingSnapshot, DrawingMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation>>, store::ArtifactStoreOneItemPreparationRequest<DrawingSnapshot, DrawingMutation>> {
+        request: store::ArtifactStoreOneItemPreparationRequest<DrawingSnapshot, DrawingMutation, DrawingMutation>,
+        grant: store::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<DrawingSnapshot, DrawingMutation, DrawingMutation>)> {
         let items = request.base.get().layers.len().saturating_add(request.base.get().assets.len());
         if request.lane != store::HistoryLane::Document
             || request.operation != request.authority.operation()
@@ -1477,39 +1556,67 @@ impl store::ArtifactStoreOneItemPreparationFactory<DrawingSnapshot, DrawingMutat
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || items > DRAWING_BOUNDED_WORK_ITEMS
         {
-            return Err(request);
+            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "drawing preparation rejected original publication authority"), request));
         }
-        Ok(Box::new(DrawingArtifactStorePreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+        Ok((Box::new(DrawingArtifactStorePreparation {
+            base: std::mem::ManuallyDrop::new(Some(request.base)),
+            mutation: std::mem::ManuallyDrop::new(Some(request.mutation)),
+            inverse: std::mem::ManuallyDrop::new(None),
+            refused: std::mem::ManuallyDrop::new(None),
+            apply_refusal: std::mem::ManuallyDrop::new(None),
+            authority: std::mem::ManuallyDrop::new(Some(request.authority)),
+            prepared: std::mem::ManuallyDrop::new(None),
+            mutation_retirement: std::mem::ManuallyDrop::new(Some(request.mutation_retirement)),
+            snapshot_retirement: std::mem::ManuallyDrop::new(Some(request.snapshot_retirement)),
+            active: std::mem::ManuallyDrop::new(None),
+            factories: std::mem::ManuallyDrop::new(Default::default()),
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
             closing: false,
-        }))
+        }), progress))
     }
 }
 
 impl store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation> for DrawingArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use ::protocol::Mutation as _;
+        use semio_framework_value::{ValueError, ValueRefusalKind};
         if !grant.permits_one() || self.cancelled || self.closing {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.refused.is_some() || self.apply_refusal.is_some() {
+            return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
-        let base = self.base.as_ref().ok_or_else(|| "drawing-artifact-base-owner-missing".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "drawing-artifact-mutation-owner-missing".to_string())?;
-        let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-        let post = ::protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
-        let authority = self.authority.as_ref().ok_or_else(|| "drawing-artifact-authority-missing".to_string())?;
+        let progress = semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        if self.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, progress));
+        }
+        let base = self.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "drawing-artifact-base-owner-missing"))?;
+        let authority = self.authority.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "drawing-artifact-authority-missing"))?;
+        let mutation = self.mutation.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "drawing-artifact-mutation-owner-missing"))?;
+        let inverse = match mutation.inverse(base.get()) {
+            Ok(inverse) => inverse,
+            Err(error) => { *self.mutation = Some(mutation); return Err(error); }
+        };
+        let post = match ::protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()) {
+            Ok(post) => post,
+            Err(error) => {
+                *self.mutation = Some(mutation);
+                *self.inverse = Some(inverse);
+                *self.apply_refusal = Some(error);
+                return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "preparation retained the original mutation application refusal"));
+            }
+        };
         let edit = authority.next_edit(mutation, inverse);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => { *self.refused = Some((edit, post)); return Err(error); }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, progress))
     }
 
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
@@ -1532,32 +1639,54 @@ impl store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation> fo
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+        let empty = RetainedCloneProgress::default();
+        let grant = grant.retained_grant();
+        if !self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "preparation close exceeds original depth")); }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if self.active.is_some() { return store::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.prepared.is_some() {
+            if self.mutation_retirement.is_none() || self.snapshot_retirement.is_none() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation retains its original installed issuers")); }
+            let original = self.prepared.take().expect("observed original prepared candidate");
+            let mutations = self.mutation_retirement.take().expect("original mutation issuer");
+            let snapshots = self.snapshot_retirement.take().expect("original snapshot issuer");
+            return match original.admit_retirement(mutations, snapshots, child) {
+                Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "original prepared close birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation child changed its actual admitted birth")); } Ok(RetainedCloneStep::Progress(progress)) },
+                Err((error, original, mutations, snapshots)) => { *self.prepared = Some(original); *self.mutation_retirement = Some(mutations); *self.snapshot_retirement = Some(snapshots); Err(error) },
+            };
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"drawing-artifact-base-retirement-rejected"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+        if self.mutation.is_some() { return store::artifact_retirement_admit_owned(&mut self.mutation, &mut self.active, child); }
+        if self.inverse.is_some() { return store::artifact_retirement_admit_owned(&mut self.inverse, &mut self.active, child); }
+        if self.refused.is_some() { return store::artifact_retirement_admit_owned(&mut self.refused, &mut self.active, child); }
+        if self.apply_refusal.is_some() { return store::artifact_retirement_admit_owned(&mut self.apply_refusal, &mut self.active, child); }
+        if self.base.is_some() { return store::artifact_retirement_admit_owned(&mut self.base, &mut self.active, child); }
+        if let Some(authority) = self.authority.take() { return match authority.retire(child) { Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "original preparation authority close birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation authority changed admitted birth")); } Ok(RetainedCloneStep::Progress(progress)) }, Err((error, original)) => { *self.authority = Some(original); Err(error) } }; }
+        if let Some(factory) = self.mutation_retirement.take() { let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factories[0] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
+        if let Some(factory) = self.snapshot_retirement.take() { let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factories[1] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
+        if let Some(slot) = self.factories.iter_mut().find(|slot| slot.is_some()) { let factory = slot.as_mut().expect("original preparation factory alias"); let step = factory.step(child)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original preparation factory close")?; if factory.terminal_is_empty() { *slot = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
+        Ok(RetainedCloneStep::Complete(empty))
     }
 
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
+
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(body)?.capacity_bytes) }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.release_bytes) }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.depth) }
+
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.active.is_none() && self.factories.iter().all(Option::is_none) && self.mutation_retirement.is_none() && self.snapshot_retirement.is_none() && self.inverse.is_none() && self.refused.is_none() && self.apply_refusal.is_none() && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
+}
+
+impl Drop for DrawingArtifactStorePreparation {
+    fn drop(&mut self) { assert!(std::thread::panicking() || (self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none() && self.inverse.is_none() && self.refused.is_none() && self.apply_refusal.is_none() && self.mutation_retirement.is_none() && self.snapshot_retirement.is_none() && self.active.is_none() && self.factories.iter().all(Option::is_none)), "preparation must retain original owners until supplied-grant terminal closure"); }
 }
 
 //#endregion 📬️StorePreparation
@@ -1737,14 +1866,6 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(crate::spr::drawing_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::drawing_document_store_owners())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
-
     fn build_document_store_initialization_job(
         envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
@@ -1762,21 +1883,17 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(semio_framework_plugin::no_config_store_disposer())
     }
 
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
-
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(semio_framework_plugin::no_draft_store_disposer())
     }
 
     /// 👥️ Returned local reads retain the actual Draw presence fields and original Arc backing.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(drawing::presence::DrawingPresenceRetirementFactory))
+        Some(std::sync::Arc::new(crate::editor::drawing::presence::DrawingPresenceRetirementFactory))
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(drawing::presence::DrawingPresenceRetirementFactory))
+        Some(std::sync::Arc::new(crate::editor::drawing::presence::DrawingPresenceRetirementFactory))
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
@@ -1808,8 +1925,10 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn mounted_job_prepare_snapshot_read(operation:semio_framework_plugin::AppRenderOperationContext,snapshot:&Self::Snapshot)->bool{geometry_session::prepare(operation,snapshot)}
-    fn mounted_job_maintenance_step(instance:u32,items:usize,bytes:usize)->Result<semio_framework_plugin::PluginCloseStep,Fault>{Ok(geometry_session::maintenance(instance,items,bytes))}
-    fn mounted_job_close_step(instance:u32,items:usize,bytes:usize)->Result<semio_framework_plugin::PluginCloseStep,Fault>{Ok(geometry_session::close(instance,items,bytes))}
+    fn mounted_job_maintenance_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{geometry_session::maintenance_demands(instance,body)}
+    fn mounted_job_maintenance_step(instance:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,Fault>{geometry_session::maintenance(instance,grant)}
+    fn mounted_job_close_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{geometry_session::close_demands(instance,body)}
+    fn mounted_job_close_step(instance:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,Fault>{geometry_session::close(instance,grant)}
     fn mounted_jobs_terminal_is_empty(instance:u32)->bool{geometry_session::terminal_is_empty(instance)}
     fn pending_effects(_owner:&semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,_view:Option<&semio_framework_plugin::ViewModel>)->Vec<semio_framework::kernel::Effect>{geometry_session::reconcile(doc)}
 
@@ -1848,6 +1967,7 @@ impl ArtifactEditor for DrawingPlayApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = DrawingGestureOperationPayload {
@@ -1904,7 +2024,7 @@ impl ArtifactEditor for DrawingPlayApp {
 
     fn clipboard_media_type()->Option<semio_framework_plugin::MediaType>{Some(clipboard::media_type())}
 
-    fn copy_fragment(doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,interaction:&InteractionView<'_>)->Result<semio_framework_plugin::ClipboardFragment,semio_framework_plugin::ClipboardError>{
+    fn copy_fragment(doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,interaction:&InteractionView<'_>)->Result<semio_framework_plugin::kernel::ClipboardFragment,semio_framework_plugin::kernel::ClipboardError>{
         clipboard::copy(doc.snapshot,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids)
     }
 

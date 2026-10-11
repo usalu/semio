@@ -20,6 +20,11 @@ macro_rules! binary_math_operation {
     ($name:ident, $id:expr, $label:expr, $abbr:expr, $summary:expr, $calc:expr) => {
         pub struct $name;
         impl Operator for $name {
+            fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
+            fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+            fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+            fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+            fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 let a = read_number(input, "a")?;
                 let b = read_number(input, "b")?;
@@ -33,6 +38,11 @@ macro_rules! unary_math_operation {
     ($name:ident, $id:expr, $label:expr, $abbr:expr, $summary:expr, $calc:expr) => {
         pub struct $name;
         impl Operator for $name {
+            fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
+            fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+            fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+            fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+            fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 let value = read_number(input, "value")?;
                 write_into(input, $calc(value))
@@ -135,9 +145,8 @@ fn bundle() -> semio_framework_plugin::ExtensionBundle {
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Math", MODULE_VERSION)
         .extends("imperative").depends_on("imperative", semio_framework::tree_pin!())
         .mode(semio_framework_plugin::ExecutionMode::Linked)
-        .handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY, |request| {
-            imperative_extension_sdk::evaluate_invoke(&module_registry(), request).map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate"), message))
-        })
+        .resource_owner(imperative_extension_sdk::ImperativeEvaluationResources::new(module_registry))
+        .owned_handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY)
         .contributes_topic(topic_contribution.topic, topic_contribution.payload)
 }
 

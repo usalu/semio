@@ -35,7 +35,7 @@ pub const ZIP_ANY_VIEWER_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zi
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
 /// exactly one inert variant.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ZipAnyViewCommand {
     #[default]
     Noop,

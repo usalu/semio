@@ -74,7 +74,8 @@ pub mod scale_elements;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none (same consequence
 /// tiff's baseline migration reached — see
 /// `🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🦀️.rs`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioModelSnapshot, diff = SemioModelDiff, schema = "SemioModelMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioModelMutation {

@@ -42,12 +42,5 @@ async fn every_bounded_retained_route_answers_an_admissible_extent() {
         let extent = extent.unwrap_or_else(|| panic!("{tool_id}: extent refused the command outright — preflight reports that as a capacity fault"));
         assert!(capacity.admits(extent), "{tool_id}: extent {extent} exceeds the declared capacity {}", capacity.work_items());
     }
-    let mut closed = false;
-    for _ in 0..1_000_000 {
-        if instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| Ok(matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete)))).expect("the owner lends its close ladder") {
-            closed = true;
-            break;
-        }
-    }
-    assert!(closed, "the extent fixture owner must close terminal-empty");
+    crate::retirement_driver::close_instance_owner::<Generation3dInstanceOperationOwner>(&instance_owner, "the extent fixture owner");
 }

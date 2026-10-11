@@ -28,11 +28,11 @@ pub fn resolve(
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
 ) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
-    preview_eval::resolve_tessellate(payload, session);
+    preview_eval::resolve_tessellate(payload, session, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
     flow_eval_tick::continue_inline(&payload.window_id, &payload.window_kind_id, doc, cfg, session, retained_eval, turn_started_us)
 }
 
-pub fn handle(payload: &FlowTessellateResolve, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    preview_eval::resolve_tessellate(payload, session);
+pub fn handle(payload: &FlowTessellateResolve, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+    preview_eval::resolve_tessellate(payload, session, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
     Ok(Emit { ui_scope: flow_eval_tick::chain_ui_scope(&payload.window_kind_id, true), ..Default::default() })
 }

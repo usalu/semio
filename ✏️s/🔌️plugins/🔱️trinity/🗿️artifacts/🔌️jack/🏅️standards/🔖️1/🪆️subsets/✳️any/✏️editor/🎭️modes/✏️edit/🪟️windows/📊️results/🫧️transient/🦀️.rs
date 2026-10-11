@@ -44,69 +44,6 @@ impl store::ArtifactPack for JackResultsWindowTransient {
 mod mutations;
 pub use mutations::*;
 
-struct JackResultsWindowTransientRetirement {
-    children: std::mem::ManuallyDrop<Vec<Box<dyn store::ErasedSnapshotRetirement>>>,
-}
-
-impl JackResultsWindowTransientRetirement {
-    fn new(execution_id: Option<String>, result: Option<crate::ast::QueryResult>, error: Option<String>) -> Self {
-        let mut children = vec![semio_framework_value::retirement::owned_retirement((execution_id, error))];
-        if let Some(result) = result {
-            let crate::ast::QueryResult { kind: _, columns, rows, graph_snapshot } = result;
-            children.push(semio_framework_value::retirement::owned_retirement((columns, rows)));
-            if let Some(snapshot) = graph_snapshot {
-                children.push(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::JackSnapshotRetirementFactory, *snapshot));
-            }
-        }
-        Self { children: std::mem::ManuallyDrop::new(children) }
-    }
-}
-
-impl store::ErasedSnapshotRetirement for JackResultsWindowTransientRetirement {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        let Some(child) = self.children.last_mut() else { return Ok(store::SnapshotRetirementStep::Complete) };
-        match child.close_step(maximum_items, maximum_bytes)? {
-            store::SnapshotRetirementStep::Complete if child.terminal_is_empty() => {
-                drop(self.children.pop());
-                Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-            }
-            store::SnapshotRetirementStep::Complete => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Jack results-window child retirement reported false terminal")),
-            step => Ok(step),
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.children.is_empty()
-    }
-}
-
-impl Drop for JackResultsWindowTransientRetirement {
-    fn drop(&mut self) {
-        assert!(self.children.is_empty(), "Jack results-window state reached Drop before exact retirement");
-        unsafe { std::mem::ManuallyDrop::drop(&mut self.children) };
-    }
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct JackResultsWindowTransientRetirementFactory;
-
-impl store::ArtifactOwnedValueRetirementFactory<JackResultsWindowTransient> for JackResultsWindowTransientRetirementFactory {
-    fn retire_owned(&self, value: JackResultsWindowTransient) -> Box<dyn store::ErasedSnapshotRetirement> {
-        let JackResultsWindowTransient { query_execution_id, result, query_error } = value;
-        Box::new(JackResultsWindowTransientRetirement::new(query_execution_id, result, query_error))
-    }
-}
-
-impl store::ArtifactOwnedValueRetirementFactory<JackResultsWindowTransientMutation> for JackResultsWindowTransientRetirementFactory {
-    fn retire_owned(&self, value: JackResultsWindowTransientMutation) -> Box<dyn store::ErasedSnapshotRetirement> {
-        let JackResultsWindowTransientMutation::ReplaceQueryResult(value) = value;
-        Box::new(JackResultsWindowTransientRetirement::new(value.execution_id, value.result, value.error))
-    }
-}
-
 /// 📏️ Heap bytes one property value retains (inline enum size plus every owned string/key), the
 /// same walk for a table cell and for a fixture node's property bag.
 fn property_value_retained_bytes(value: &crate::PropertyValue) -> usize {
@@ -180,8 +117,8 @@ impl semio_framework_plugin::WindowTransientOwner for JackResultsWindowTransient
     type Mutation = JackResultsWindowTransientMutation;
 
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state = std::sync::Arc::new(JackResultsWindowTransientRetirementFactory);
-        let mutation = std::sync::Arc::new(JackResultsWindowTransientRetirementFactory);
+        let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(results_window_transient_footprint, results_window_transient_transfer, state.clone(), mutation.clone()));
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }

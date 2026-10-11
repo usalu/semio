@@ -10,7 +10,7 @@ use semio_framework_geometry::vector::{add3, dot3, scale3, sub3, Xyz};
 pub const TOUCH: f64 = 1e-9;
 
 /// 💥️ One clashing pair: the ids (`a` before `b`), the shortest distance between their centre lines and the sum of their reaches.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct MepClash {
     pub a: String,
     pub b: String,
@@ -19,7 +19,7 @@ pub struct MepClash {
 }
 
 /// 💥️ The clashing pairs of one storey in the order of their ids.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct MepClashes {
     pub pairs: Vec<MepClash>,
 }

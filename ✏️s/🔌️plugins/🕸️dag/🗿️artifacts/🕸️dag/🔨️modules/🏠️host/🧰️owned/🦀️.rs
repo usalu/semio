@@ -11,7 +11,7 @@ pub type DagStore = store::ArtifactStore<crate::DagSnapshot, crate::schema::muta
 /// `build_document_store_owners`; every standalone store goes through here instead.
 pub async fn new_dag_store(envelope: DagEnvelope, actor: protocol::ActorId) -> Result<OwnedDagStore, store::VcsError> {
     let mut store = DagStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<crate::DagSnapshot, crate::schema::mutations::DagMutation>());
+    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<crate::DagSnapshot, crate::schema::mutations::DagMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     Ok(OwnedDagStore(store))
 }
 
@@ -24,9 +24,7 @@ pub struct OwnedDagStore(DagStore);
 impl OwnedDagStore {
     /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
     pub fn close(&mut self) {
-        while !self.0.close_owned_terminal_is_empty() {
-            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Dag document store closes through its exact bounded owners");
-        }
+        self.0.close_owned_unscheduled().expect("Dag document store closes through its exact bounded owners");
     }
 }
 

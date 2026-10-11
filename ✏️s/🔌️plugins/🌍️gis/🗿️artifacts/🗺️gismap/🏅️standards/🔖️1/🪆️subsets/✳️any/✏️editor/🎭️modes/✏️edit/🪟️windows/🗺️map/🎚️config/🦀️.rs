@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 /// read via `InteractionView::selection("features")`/`.hover("features", "pointer")`, never stored
 /// here again. Per-layer maps are `BTreeMap` (not `HashMap`) because the DSL derive only binds
 /// string-keyed maps through `dsl_schema::Shape::Map`'s `BTreeMap<String, V>` case.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, ToValue, FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -121,8 +121,13 @@ impl semio_framework_plugin::WindowConfigOwner for MapWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = MapWindowConfig;
     type Mutation = MapWindowConfigMutation;
+    type Edit = store::snapshot_clone_preparation::ConfigApplyEdit<MapWindowConfig, MapWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+        std::sync::Arc::new(store::snapshot_clone_preparation::ConfigApplyEdit::new())
+    }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
+    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { store::mutation_apply_preparation_factory::<MapWindowConfig, MapWindowConfigMutation>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
 }
 

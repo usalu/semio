@@ -9,7 +9,8 @@ use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🔁️ Whole-value swap of one flexibility requirement row's non-identity content, addressed by
 /// `flexibility_requirement.header.id`. Missing target ⇒ an empty diff (nothing to change).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]

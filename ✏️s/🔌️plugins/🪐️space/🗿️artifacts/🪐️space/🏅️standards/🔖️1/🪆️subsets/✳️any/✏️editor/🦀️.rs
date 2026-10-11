@@ -283,17 +283,6 @@ impl ArtifactEditor for SpaceIndexEditor {
         semio_s_space_core::space_retained_store_preparation::<Self::Config, Self::ConfigMutation>("space-index-config-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
     }
 
-    /// 🗃️ …and once presence stops refusing, the ARTIFACT store's own retirement catalog is the next
-    /// thing missing: `ArtifactStore`'s batch stage (`🧰️framework/…/🏪️store/🦀️.rs:17288`) copies
-    /// `mutation_retirement`/`snapshot_retirement` out of the store and refuses with
-    /// `batched fold lacks exact snapshot or mutation retirement authority` when either is `None`,
-    /// which the trait default is. Measured inside `s` on 2026-09-22 on the rebuilt guest as the
-    /// refusal that replaced the presence one, under BOTH `renameArtifact` and `touchArtifact`.
-    /// `⚙️playbook-module-procedural` hit the identical ladder the same afternoon.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
     /// 🧍 Every durable space-index gesture reads local presence on its ephemeral leg, and
     /// `PresenceStore::local_read` fails closed with `presence local read requires a live exact local
     /// retirement owner` while `local_retirement_factory` is `None` — measured inside `s` on
@@ -329,6 +318,7 @@ impl ArtifactEditor for SpaceIndexEditor {
         let tool_id = request.command.command_id();
         let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, space_index_retained_reduce, space_index_retained_extent));
         let operation_context = semio_framework_plugin::AppOperationContext {
+            retained: request.retained,
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,

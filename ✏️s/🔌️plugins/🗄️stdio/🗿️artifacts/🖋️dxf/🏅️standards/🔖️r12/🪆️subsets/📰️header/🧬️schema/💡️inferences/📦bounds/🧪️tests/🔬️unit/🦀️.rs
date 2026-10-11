@@ -8,8 +8,8 @@ async fn bounds_matches_hand_built_entity_extent() {
         header_vars: Vec::new(),
         tables: Default::default(),
         other_tables: Vec::new(),
-        blocks: vec![DxfBlock { name: "b1".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Circle { center: [5.0, 7.5, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }], unknown_group_codes: vec![] }],
-        entities: vec![DxfEntity::Line { start: [-2.0, 1.0, 0.0], end: [0.0, 2.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }, DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![] }],
+        blocks: vec![DxfBlock { name: "b1".into(), base_point: [0.0, 0.0, 0.0], entities: vec![DxfEntity::Circle(DxfCircle { center: [5.0, 7.5, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] })], unknown_group_codes: vec![] }],
+        entities: vec![DxfEntity::Line(DxfLine { start: [-2.0, 1.0, 0.0], end: [0.0, 2.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }), DxfEntity::Other(DxfOther { kind: "3DFACE".into(), group_codes: vec![] })],
     };
     let bounds = compute_dxf_bounds(&snapshot);
     assert_eq!(bounds.min, [-2.0, 1.0, -1.0]);
@@ -25,7 +25,7 @@ async fn inference_determinism_law() {
         tables: Default::default(),
         other_tables: Vec::new(),
         blocks: Vec::new(),
-        entities: vec![DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 1.0], layer: "0".into(), unknown_group_codes: vec![] }],
+        entities: vec![DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 1.0, 1.0], layer: "0".into(), unknown_group_codes: vec![] })],
     };
     assert_eq!(compute_dxf_bounds(&snapshot), compute_dxf_bounds(&snapshot));
 }

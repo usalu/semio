@@ -10,8 +10,14 @@ pub use crate::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🕳️ The uninhabited parent vocabulary of a document whose whole content is its composed child.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 pub enum SequenceMutation {}
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for SequenceMutation {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+        match *self {}
+    }
+}
 
 impl protocol::Mutation<SequenceSnapshot> for SequenceMutation {
     type Diff = SequenceDiff;

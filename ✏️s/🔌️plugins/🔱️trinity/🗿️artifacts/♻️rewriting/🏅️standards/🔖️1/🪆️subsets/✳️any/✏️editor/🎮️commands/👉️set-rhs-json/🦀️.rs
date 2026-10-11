@@ -1,5 +1,5 @@
 //! 👉️ A declared JSON input is decoded into the typed rewrite program and its actual parameter defaults.
-use crate::standards::v1::subsets::any::schema::{Rhs,snapshot::json,mutations::{edit_rhs,text::RewriteRuleMutation}};
+use crate::standards::v1::subsets::any::schema::{Rhs,snapshot::json,mutations::{edit_rhs,RewriteRuleMutation}};
 use crate::RewritingSnapshot;
 use semio_framework_plugin::{Emit,Fault,FaultOrigin,FaultCode,NoConfigMutation};
 pub(crate) fn set_rhs(state:&RewritingSnapshot,value:&str)->Result<Emit<RewriteRuleMutation,NoConfigMutation>,Fault>{

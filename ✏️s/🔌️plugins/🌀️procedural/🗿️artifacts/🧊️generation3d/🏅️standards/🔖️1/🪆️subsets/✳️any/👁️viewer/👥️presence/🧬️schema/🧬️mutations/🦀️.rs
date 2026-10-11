@@ -14,7 +14,8 @@ mod set_show_mode;
 pub use set_preview_camera::SetPreviewCamera;
 pub use set_show_mode::SetShowMode;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Generation3dViewPresence, diff = Generation3dViewPresencePatch, schema = "generation3dview.presence")]
 pub enum Generation3dViewPresenceMutation {
     #[dsl(key = "preview-camera")]

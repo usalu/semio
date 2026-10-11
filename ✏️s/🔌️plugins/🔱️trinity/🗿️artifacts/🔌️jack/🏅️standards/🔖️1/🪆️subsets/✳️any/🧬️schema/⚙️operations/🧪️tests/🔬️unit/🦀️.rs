@@ -124,27 +124,30 @@ async fn set_query_validation_bounds_the_query() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_graph_store() {
+    test_identity!(identity);
     let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
-    dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())]).await.expect("apply");
+    dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())], &mut identity).await.expect("apply");
     ::store::os_store::test_support::assert_document_text_round_trip(&store).await;
     ::store::os_store::test_support::assert_document_pack_round_trip(&store).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_trinity_graph_mutations_noop_on_empty() {
+    test_identity!(identity);
     let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     let generation_before = store.generation();
-    dispatch_trinity_graph_mutations(&mut store, vec![]).await.expect("empty ops ok");
+    dispatch_trinity_graph_mutations(&mut store, vec![], &mut identity).await.expect("empty ops ok");
     assert_eq!(store.generation(), generation_before);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_query_undo_restores_the_prior_query() {
+    test_identity!(identity);
     let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     let before = store.snapshot().unwrap().query.clone();
-    dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())]).await.expect("set query");
+    dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())], &mut identity).await.expect("set query");
     assert_eq!(store.snapshot().unwrap().query, "MATCH (a:Piece) RETURN a");
-    store.dispatch(ArtifactCommand::Undo).await.expect("undo set query");
+    store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo set query");
     assert_eq!(store.snapshot().unwrap().query, before);
 }
 

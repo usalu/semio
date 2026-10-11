@@ -40,7 +40,7 @@ const GROUND_REFLECTANCE: f64 = 0.2;
 
 // #region 🔖️Config
 /// ⚙️ Simulation environment type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum SimulationEnvironment {
     WeatherRunPeriod,
     HeatingDesignDay,
@@ -49,7 +49,7 @@ pub enum SimulationEnvironment {
 }
 
 /// ⚙️ Convergence tolerances.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ConvergenceTolerances {
     pub temperature_k: f64,
     pub humidity_ratio: f64,
@@ -68,7 +68,7 @@ impl Default for ConvergenceTolerances {
 /// position, shading and exterior film coefficients are refreshed; `system_timestep_minutes` the
 /// implicit step of the coupled surface/air balance and its HVAC control (never longer than the
 /// zone timestep). Both divide the hour.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SimulationConfig {
     pub environment: SimulationEnvironment,
     pub zone_timestep_minutes: u32,
@@ -104,7 +104,7 @@ impl Default for SimulationConfig {
 
 // #region 🔖️DeliveredEnergy
 /// ⚡️ Delivered energy per timestep for metering.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct DeliveredEnergy {
     pub heating_w: f64,
     pub cooling_w: f64,
@@ -147,7 +147,7 @@ impl DeliveredEnergy {
 // #region 🔖️State
 /// 🔄️ Per-zone simulation state. `mean_air_temp_c` and `delivered` are the averages over the last
 /// completed hour; `air` is the state after the last heat-balance step.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ZoneState {
     pub air: ZoneAirState,
     pub mean_air_temp_c: f64,
@@ -181,7 +181,7 @@ impl ZoneState {
 }
 
 /// 🧱️ Node temperatures of an opaque surface, outside face first, and its last room-side film.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SurfaceState {
     pub temperatures_c: Vec<f64>,
     pub inside_convection_w_m2k: f64,
@@ -195,14 +195,14 @@ impl SurfaceState {
 }
 
 /// 🪟️ Glazing face temperatures of a window, outside face first.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct WindowState {
     pub face_temperatures_c: [f64; 2 * MAX_PANES],
     pub inside_convection_w_m2k: f64,
 }
 
 /// 🧮️ Reserved scratch of the zone heat-balance solver, sized once for the largest enclosure.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SolverWorkspace {
     pub faces: usize,
     pub nodes: usize,
@@ -246,7 +246,7 @@ impl SolverWorkspace {
 }
 
 /// 🔄️ Full simulation state.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SimulationModel {
     pub(crate) zones: FixedTable<EntityId, ZoneState>,
     pub(crate) surfaces: FixedTable<EntityId, SurfaceState>,
@@ -282,7 +282,7 @@ impl Default for SimulationModel {
 
 // #region 🔖️TimestepJob
 /// 🧭️ Bounded phase of one persistent hourly timestep.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(crate) enum TimestepStage {
     Zone,
     Balance,
@@ -297,7 +297,7 @@ pub(crate) enum TimestepStage {
 }
 
 /// 🧭️ One-semantic-unit preparation cursor for a zone.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(crate) enum ZonePreparationStage {
     Begin,
     DaylightConfig,
@@ -316,7 +316,7 @@ pub(crate) enum ZonePreparationStage {
     Publish,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct ZonePreparationWork {
     stage: ZonePreparationStage,
     cursor: usize,
@@ -343,7 +343,7 @@ struct ZonePreparationWork {
 }
 
 /// 🌡️ One zone's hourly boundary conditions resolved from its schedules.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(crate) struct ZoneLoads {
     convective_w: f64,
     radiant_w: f64,
@@ -355,7 +355,7 @@ pub(crate) struct ZoneLoads {
     controlled: bool,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(crate) enum ScheduleLookupStage {
     Constant,
     Annual,
@@ -368,7 +368,7 @@ pub(crate) enum ScheduleLookupStage {
 }
 
 /// 🧭️ Bounded phase of one zone's heat-balance step.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(crate) enum BalanceStage {
     Weather,
     Clear,
@@ -450,7 +450,7 @@ pub(crate) const P7C1_SCHEDULE_LOOKUP_STAGES: [ScheduleLookupStage; 8] = [
     ScheduleLookupStage::TimeSeries,
 ];
 
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct ScheduleLookupWork {
     requested_id: crate::model::ScheduleId,
     stage: ScheduleLookupStage,
@@ -460,7 +460,7 @@ struct ScheduleLookupWork {
     daily_fallback: ScheduleLookupStage,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(crate) enum PlantStage {
     ReduceZoneLoad,
     BuildPriority,
@@ -468,7 +468,7 @@ pub(crate) enum PlantStage {
     Simulate,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct PlantWork {
     plant_index: usize,
     stage: PlantStage,
@@ -479,7 +479,7 @@ struct PlantWork {
     first_load_w: f64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct BatteryWork {
     battery_index: usize,
     zone_cursor: usize,
@@ -487,7 +487,7 @@ struct BatteryWork {
 }
 
 /// 🧮️ Cursor of one zone's heat-balance step.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct BalanceWork {
     stage: BalanceStage,
     zone_cursor: usize,
@@ -544,7 +544,7 @@ impl BalanceWork {
 }
 
 /// 🌦️ The three hourly weather records one hour interpolates between.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(crate) struct HourWeather {
     pub(crate) previous: WeatherRecord,
     pub(crate) current: WeatherRecord,
@@ -552,7 +552,7 @@ pub(crate) struct HourWeather {
 }
 
 /// ⏱️ Cursor-owned execution state for one hourly timestep.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(crate) struct TimestepWork {
     stage: TimestepStage,
     context: ScheduleContext,
@@ -579,7 +579,7 @@ pub(crate) struct TimestepWork {
 }
 
 /// 🧱️ Persistent backing constructor for one timestep.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(crate) struct TimestepBuilder {
     stage: u8,
     cursor: usize,

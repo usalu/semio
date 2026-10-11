@@ -526,15 +526,19 @@ fn admit_space_retained_mutation<P, M: ::protocol::OpBinary + ::protocol::Mutati
     Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, retained_bytes))
 }
 
-fn prepare_space_retained_one_item<P, M>(base: &P, mutation: M, maximum_bytes: usize) -> Result<(P, Vec<M>, M), String>
+fn prepare_space_retained_one_item<P, M>(base: &P, mutation: &M, maximum_bytes: usize) -> Result<(P, Vec<M>), semio_framework_value::ValueError>
 where
     M: ::protocol::Mutation<P> + ::protocol::OpBinary,
 {
-    admit_space_retained_mutation::<P, M>(&mutation, maximum_bytes)?;
-    let inverse = ::protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
-    let diff = ::protocol::Mutation::diff(&mutation, base).into_parts().0;
-    let post = ::protocol::apply_diff(&diff, base).map_err(|_| "s.space.retained.diff-apply".to_string())?;
-    Ok((post, inverse, mutation))
+    admit_space_retained_mutation::<P, M>(mutation, maximum_bytes).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "s.space.retained.mutation-envelope"))?;
+    let inverse = ::protocol::Mutation::inverse(mutation, base)?;
+    let diff = ::protocol::Mutation::diff(mutation, base).into_parts().0;
+    let post = ::protocol::apply_diff(&diff, base).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "s.space.retained.diff-apply"))?;
+    Ok((post, inverse))
+}
+
+fn space_refusal(message: &'static str) -> semio_framework_value::ValueError {
+    semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message)
 }
 
 /// 🏭️ The exact one-item Store preparation authority every migrated `🪐️space` tool needs: a
@@ -553,24 +557,23 @@ impl<P, M> SpaceOneItemPreparationFactory<P, M> {
     }
 }
 
-struct SpaceOneItemPreparation<P, M> {
-    prefix: &'static str,
+struct SpaceOneItemPreparation<P: 'static, M: 'static> {
+    owners: store::OneItemOwners<P, M>,
     maximum_bytes: usize,
-    base: Option<store::SnapshotRead<P>>,
-    mutation: Option<M>,
-    authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
-    closing: bool,
 }
 
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for SpaceOneItemPreparationFactory<P, M>
 where
-    P: Send + Sync + 'static,
-    M: ::protocol::Mutation<P> + ::protocol::OpBinary + Send + 'static,
+    P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: ::protocol::Mutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<::protocol::Edit<M>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
+
     fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document {
             return Err("s.space.retained.lane".into());
@@ -578,56 +581,69 @@ where
         admit_space_retained_mutation::<P, M>(mutation, self.maximum_bytes)
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
+    fn begin_demand(&self, _mutation: &M, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        if lane != store::HistoryLane::Document {
+            return Err(space_refusal("s.space.retained.lane"));
+        }
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<SpaceOneItemPreparation<P, M>>(), depth: 1 })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) {
+            Ok(demand) => demand,
+            Err(error) => return Err((error, request)),
+        };
+        let progress = match demand.admit(grant.retained_grant()) {
+            Ok(progress) => progress,
+            Err(error) => return Err((error, request)),
+        };
         let retained_bytes = space_retained_mutation_bytes(&request.mutation).unwrap_or(self.maximum_bytes.saturating_add(1));
-        if request.lane != store::HistoryLane::Document
-            || request.operation != request.authority.operation()
+        if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || retained_bytes > self.maximum_bytes
         {
-            return Err(request);
+            return Err((space_refusal("s.space.retained.request-refused"), request));
         }
-        Ok(Box::new(SpaceOneItemPreparation {
-            prefix: self.prefix,
-            maximum_bytes: self.maximum_bytes,
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            retained_bytes,
-            cancelled: false,
-            closing: false,
-        }))
+        Ok((Box::new(SpaceOneItemPreparation { owners: store::OneItemOwners::from_request(request), maximum_bytes: self.maximum_bytes, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false }), progress))
     }
 }
 
 impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for SpaceOneItemPreparation<P, M>
 where
-    P: Send + Sync + 'static,
-    M: ::protocol::Mutation<P> + ::protocol::OpBinary + Send + 'static,
+    P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: ::protocol::Mutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled || self.closing {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.refused.is_some() {
+            return Err(space_refusal("s.space.retained.original-refusal-retained"));
         }
-        if grant.maximum_bytes < self.retained_bytes {
+        if self.owners.prepared.is_some() {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+        }
+        if grant.maximum_copy_bytes < self.retained_bytes {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        let base = self.base.as_ref().ok_or_else(|| "s.space.retained.base-owner-missing".to_string())?;
-        let mutation = self.mutation.take().ok_or_else(|| "s.space.retained.mutation-owner-missing".to_string())?;
-        let (post, inverse, forward) = prepare_space_retained_one_item(base.get(), mutation, self.maximum_bytes)?;
-        let authority = self.authority.as_ref().ok_or_else(|| "s.space.retained.authority-missing".to_string())?;
+        let base = self.owners.base.as_ref().ok_or_else(|| space_refusal("s.space.retained.base-owner-missing"))?;
+        let mutation = self.owners.mutation.as_ref().ok_or_else(|| space_refusal("s.space.retained.mutation-owner-missing"))?;
+        let (post, inverse) = prepare_space_retained_one_item(base.get(), mutation, self.maximum_bytes)?;
+        let authority = self.owners.authority.as_ref().ok_or_else(|| space_refusal("s.space.retained.authority-missing"))?;
+        let forward = self.owners.mutation.take().ok_or_else(|| space_refusal("s.space.retained.mutation-owner-missing"))?;
         let edit = authority.next_edit(forward, inverse);
-        let prepared = authority.prepare_one_item(edit, Arc::new(post))?;
+        let prepared = match authority.prepare_one_item(edit, Arc::new(post)) {
+            Ok(prepared) => prepared,
+            Err((error, edit, post)) => {
+                *self.owners.refused = Some((edit, post));
+                return Err(error);
+            }
+        };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+        *self.owners.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
     }
 
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
@@ -635,11 +651,11 @@ where
     }
 
     fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.as_ref()
+        self.owners.prepared.as_ref()
     }
 
     fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.take()
+        self.owners.prepared.take()
     }
 
     fn cancel(&mut self) {
@@ -647,38 +663,39 @@ where
     }
 
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "s.space.retained.base-retirement-rejected"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.authority.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        self.owners.close_step(grant.retained_grant())
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.owners.close_demands(0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.owners.terminal_is_empty()
     }
 }
 
 /// 📬️ One lane's `Artifact`/`Config` store override, addressed by its edit-id prefix and byte ceiling.
 pub fn space_retained_store_preparation<P, M>(prefix: &'static str, maximum_bytes: usize) -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<P, M>>>
 where
-    P: Send + Sync + 'static,
-    M: ::protocol::Mutation<P> + ::protocol::OpBinary + Send + 'static,
+    P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: ::protocol::Mutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
     Some(Arc::new(SpaceOneItemPreparationFactory::<P, M>::new(prefix, maximum_bytes)))
 }

@@ -8,7 +8,7 @@ pub mod owned;
 use super::mutation::RenameLayer;
 use crate::{DrawingLayerNode, DrawingSnapshot};
 use crate::standards::v1::subsets::any::schema::snapshot::lookup::{DrawingLayerLookupCursor, DrawingLayerLookupStep};
-use semio_framework_value::{paged::PagedUtf8, SnapshotRetirementStep, ValueError, ValueRefusalKind};
+use semio_framework_value::{paged::PagedUtf8, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}, paged::PagedUtf8BoundedOrdCursor};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -82,8 +82,12 @@ impl<'a> DrawingRenamePreparationCursor<'a> {
         if self.phase == 2 {
             let old_name = self.node.expect("found Drawing rename layer").project(2, |node| &crate::schema::layer_base(node).name);
             let new_name = self.payload.expect("retained Drawing rename payload").project(2, |payload| &payload.new_name);
-            let step = self.comparison.compare(old_name, new_name, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes })?;
-            let (ordering, progress) = match step { BoundedOrdStep::Progress(progress) => (None, progress), BoundedOrdStep::Complete { ordering, progress } => (Some(ordering), progress) };
+            let step = self.comparison.compare(old_name, new_name, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)?;
+            let (ordering, progress) = match step {
+                BoundedOrdStep::Authority(progress) => return Ok(DrawingRenamePreparationStep::Pending(progress)),
+                BoundedOrdStep::Progress(progress) => (None, progress),
+                BoundedOrdStep::Complete { ordering, progress } => (Some(ordering), progress),
+            };
             if let Some(ordering) = ordering {
                 self.disposition = Some(if ordering == std::cmp::Ordering::Equal { DrawingRenameDisposition::NoOp } else { DrawingRenameDisposition::Changed });
                 self.comparison.begin_close();
@@ -92,9 +96,9 @@ impl<'a> DrawingRenamePreparationCursor<'a> {
             return Ok(DrawingRenamePreparationStep::Pending(RetainedCloneProgress { copied_items: progress.compared_items, copied_bytes: progress.compared_bytes, ..Default::default() }));
         }
         if self.phase == 3 {
-            let step = self.comparison.close_step(1, grant.maximum_release_bytes)?;
-            if step == SnapshotRetirementStep::Complete { self.phase = 4; }
-            return Ok(DrawingRenamePreparationStep::Pending(close_progress(step)));
+            let step = self.comparison.close_step(grant)?;
+            if self.comparison.terminal_is_empty() { self.phase = 4; }
+            return Ok(DrawingRenamePreparationStep::Pending(step.progress()));
         }
         if grant.maximum_copy_bytes < std::mem::size_of::<DrawingRenamePlan<'a>>() { return Ok(DrawingRenamePreparationStep::Pending(Default::default())); }
         let plan = DrawingRenamePlan { disposition: self.disposition.expect("settled Drawing rename disposition"), payload: self.payload.expect("retained Drawing rename payload"), node: self.node };
@@ -123,8 +127,8 @@ impl<'a> DrawingRenamePreparationCursor<'a> {
             if matches!(step, RetainedCloneStep::Complete(_)) { self.lookup.take(); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = self.comparison.close_step(1, grant.maximum_release_bytes)?;
-        if step != SnapshotRetirementStep::Complete { return Ok(RetainedCloneStep::Progress(close_progress(step))); }
+        let step = self.comparison.close_step(grant)?;
+        if !self.comparison.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(step.progress())); }
         if self.output.take().is_some() || self.node.take().is_some() || self.source.take().is_some() || self.payload.take().is_some() {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
@@ -132,10 +136,6 @@ impl<'a> DrawingRenamePreparationCursor<'a> {
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.lookup.is_none() && self.comparison.terminal_is_empty() && self.source.is_none() && self.payload.is_none() && self.node.is_none() && self.output.is_none() }
-}
-
-fn close_progress(step: SnapshotRetirementStep) -> RetainedCloneProgress {
-    match step { SnapshotRetirementStep::Pending { released_items, released_bytes } => RetainedCloneProgress { copied_items: released_items, released_bytes, ..Default::default() }, SnapshotRetirementStep::Complete => RetainedCloneProgress { copied_items: 1, ..Default::default() }, SnapshotRetirementStep::Blocked => Default::default() }
 }
 
 impl Drop for DrawingRenamePreparationCursor<'_> {

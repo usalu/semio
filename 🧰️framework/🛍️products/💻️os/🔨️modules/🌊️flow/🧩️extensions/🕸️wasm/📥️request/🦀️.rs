@@ -1,7 +1,8 @@
 //! 📥️ The original invocation borrows caller octets and retains every native grammar owner.
 use super::*;
 use semio_framework_pack_json::{JsonGrammarCursor,JsonReadLimits,JsonSourceCursor,JsonMemberPolicy,Value,Number};
-use semio_framework_value::{NativeDecodeControl,NativeDecodeContinuation};
+use semio_framework_value::native_decoding::NativeDecodeContinuation;
+use semio_framework_value::NativeDecodeControl;
 
 #[path="🎟️context/🦀️.rs"] mod original_context;
 pub use original_context::EvaluationRequestContextInput;
@@ -112,7 +113,7 @@ impl EvaluationInvokeCursor {
             let Some((axis,value))=policy.iter().nth(self.retained_field)else{if self.retained_field!=5{return Err("original retained policy requires all five axes".into());}self.required|=8;self.field+=1;self.retained_field=0;return Ok(RetainedCloneProgress{copied_items:1,..empty});};
             let Value::Number(Number::UInt(value))=value else{return Err("original retained axis requires an unsigned integer".into());};
             let value=usize::try_from(*value).map_err(|_|EvaluationFailure::Literal("original retained axis exceeds address space"))?;
-            match axis.as_str(){"maximumItems"=>request.retained.maximum_items=value,"maximumCopyBytes"=>request.retained.maximum_copy_bytes=value,"maximumCapacityBytes"=>request.retained.maximum_capacity_bytes=value,"maximumReleaseBytes"=>request.retained.maximum_release_bytes=value,"maximumDepth"=>request.retained.maximum_depth=value,_=>return Err("original retained policy contains an unknown axis".into())};
+            match &*axis{"maximumItems"=>request.retained.maximum_items=value,"maximumCopyBytes"=>request.retained.maximum_copy_bytes=value,"maximumCapacityBytes"=>request.retained.maximum_capacity_bytes=value,"maximumReleaseBytes"=>request.retained.maximum_release_bytes=value,"maximumDepth"=>request.retained.maximum_depth=value,_=>return Err("original retained policy contains an unknown axis".into())};
             self.retained_field+=1;return Ok(RetainedCloneProgress{copied_items:1,..empty});
         }
         if key=="externalResult"{
@@ -121,10 +122,10 @@ impl EvaluationInvokeCursor {
             let Some((name,value))=fields.iter_mut().nth(self.result_field)else{if self.result_required!=31{return Err("external result requires all five original fields".into());}self.field+=1;self.result_field=0;return Ok(RetainedCloneProgress{copied_items:1,..empty});};
             let original=request.external_result.as_mut().unwrap();
             if name=="nodeHash"{let Value::Number(Number::UInt(hash))=value else{return Err("external result node hash requires an unsigned integer".into());};original.node_hash=*hash;self.result_required|=8;}
-            else{let(bit,destination)=match name.as_str(){"neuronId"=>(1,&mut original.neuron_id),"extensionId"=>(2,&mut original.extension_id),"operatorId"=>(4,&mut original.operator_id),"outputJson"=>(16,&mut original.output_json),_=>return Err("external result contains an unknown field".into())};let Value::String(text)=value else{return Err("external result string field has a different type".into());};if bit!=16&&text.is_empty(){return Err("external result identity must be nonempty".into());}let Value::String(text)=std::mem::replace(value,Value::Null)else{unreachable!()};*destination=text;self.result_required|=bit;}
+            else{let(bit,destination)=match &*name{"neuronId"=>(1,&mut original.neuron_id),"extensionId"=>(2,&mut original.extension_id),"operatorId"=>(4,&mut original.operator_id),"outputJson"=>(16,&mut original.output_json),_=>return Err("external result contains an unknown field".into())};let Value::String(text)=value else{return Err("external result string field has a different type".into());};if bit!=16&&text.is_empty(){return Err("external result identity must be nonempty".into());}let Value::String(text)=std::mem::replace(value,Value::Null)else{unreachable!()};*destination=text;self.result_required|=bit;}
             self.result_field+=1;return Ok(RetainedCloneProgress{copied_items:1,..empty});
         }
-        let string=match key.as_str(){"neuronId"=>{self.required|=1;Some(&mut request.neuron_id)},"operatorId"=>{self.required|=2;Some(&mut request.operator_id)},"inputJson"=>{self.required|=4;Some(&mut request.input_json)},"dependencyJson"=>Some(&mut request.dependency_json),"operatorVersion"=>Some(&mut request.operator_version),"cancellationId"=>Some(&mut request.cancellation_id),_=>None};
+        let string=match &*key{"neuronId"=>{self.required|=1;Some(&mut request.neuron_id)},"operatorId"=>{self.required|=2;Some(&mut request.operator_id)},"inputJson"=>{self.required|=4;Some(&mut request.input_json)},"dependencyJson"=>Some(&mut request.dependency_json),"operatorVersion"=>Some(&mut request.operator_version),"cancellationId"=>Some(&mut request.cancellation_id),_=>None};
         if let Some(destination)=string{
             if !matches!(value,Value::String(_)){return Err("original request string field has a different type".into());}
             if (key=="neuronId"||key=="operatorId")&&matches!(value,Value::String(text)if text.is_empty()){return Err("original request identity must be nonempty".into());}
@@ -132,7 +133,7 @@ impl EvaluationInvokeCursor {
         }else if key=="resume"{let Value::Bool(original)=value else{return Err("original resume requires a boolean".into());};request.resume=*original;}
         else{
             let Value::Number(Number::UInt(original))=value else{return Err("original request numeric field requires an unsigned integer".into());};
-            match key.as_str(){"nodeHash"=>request.node_hash=*original,"budget"=>request.budget=*original,"wallMicros"=>request.wall_micros=*original,"roundUnits"=>request.round_units=*original,_=>return Err("original request contains an unknown field".into())}
+            match &*key{"nodeHash"=>request.node_hash=*original,"budget"=>request.budget=*original,"wallMicros"=>request.wall_micros=*original,"roundUnits"=>request.round_units=*original,_=>return Err("original request contains an unknown field".into())}
         }
         self.field+=1;Ok(RetainedCloneProgress{copied_items:1,..empty})
     }

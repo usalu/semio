@@ -59,14 +59,16 @@ fn export_widget_display_meta(format: &str) -> (String, String, String) {
 }
 
 /// 📍️ Persisted node position on the canvas.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct WidgetLayout {
     pub x: f64,
     pub y: f64,
 }
 
 /// 🧾️ Flow document encoded through the first-party value contract.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FlowArtifact {
     pub schema: String,
@@ -75,7 +77,8 @@ pub struct FlowArtifact {
 }
 
 /// 🖼️ GUI-only flow data that can be removed without destroying logic.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FlowUi {
     pub camera: CameraJson,
@@ -88,7 +91,8 @@ pub struct FlowUi {
 pub type FlowGui = FlowUi;
 
 /// 🧩️ GUI-only node presentation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct FlowNodeGui {
@@ -97,7 +101,8 @@ pub struct FlowNodeGui {
 }
 
 /// 🪟️ GUI-only node chrome.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum NodeChrome {
@@ -132,7 +137,8 @@ pub enum NodeChrome {
 }
 
 /// 👁️ GUI-only preview binding.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FlowPreviewGui {
     pub id: String,
@@ -147,7 +153,8 @@ pub struct FlowPreviewGui {
 }
 
 /// 📡️ Serializable channel reference.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct FlowChannelRef {
@@ -155,8 +162,9 @@ pub struct FlowChannelRef {
     pub channel: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[derive(semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 pub struct CameraJson {
     pub x: f64,
     pub y: f64,
@@ -171,7 +179,8 @@ fn default_to_port() -> String {
     String::new()
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct SynapseSpec {
@@ -187,7 +196,8 @@ pub struct SynapseSpec {
 }
 
 /// 🎛️ Flow widget discriminant encoded through the first-party value contract.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Widget {
     Neuron {
@@ -260,7 +270,8 @@ pub enum Widget {
 }
 
 /// 🧩️ Flow-host retained fixture encoded through the first-party value contract.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FlowHostSnapshot {
     pub schema: String,

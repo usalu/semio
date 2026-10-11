@@ -39,7 +39,7 @@ pub const DOCX_STRICT_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdi
 /// ✏️ The editor's typed command channel — exactly the one edit `🪟️main`'s `editable_window_kind()`
 /// action (`set-page`, contract §2.6) can trigger. The canonical address binds the XML part,
 /// child path, expanded element name, and ancestor structure revision.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum DocxStrictEditorCommand {
     SetPage { address: DocxXmlAddress, text: String },
     SetRunFormatting { address: DocxXmlAddress, bold: bool, italic: bool, underline: bool },

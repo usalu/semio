@@ -2022,17 +2022,6 @@ pub fn render_snapshot_details<S: ArtifactDsl + ToValue>(doc: &semio_framework_p
     render_snapshot_details_provider_at_revision(&DslSnapshotDetailsProvider::new_with_schema_hint(doc.snapshot, Some(controller_id)), locale, controller_id, windows, Some(publication_revision))
 }
 
-#[doc(hidden)]
-#[macro_export]
-macro_rules! snapshot_details_document_store_owners {
-    () => {
-        semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>()
-    };
-    ($owners:path) => {
-        $owners()
-    };
-}
-
 #[macro_export]
 macro_rules! snapshot_details_editor_support {
     (
@@ -2103,20 +2092,15 @@ macro_rules! snapshot_details_editor_support {
             Ok(None)
         }
 
-        fn build_document_store_owners() -> Option<semio_framework_plugin::plugin_app_close_prelude::store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-            Some($crate::snapshot_details_document_store_owners!($($document_store_owners)?))
-        }
-
-        fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-            Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-        }
+        $(
+            fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(semio_framework_plugin::plugin_app_close_prelude::store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_plugin::plugin_app_close_prelude::store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+                Some($document_store_owners(grant))
+            }
+        )?
 
         fn build_artifact_store_one_item_preparation_factory(
         ) -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-            let factory = semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>(
-                $preparation,
-                semio_framework_plugin::plugin_app_close_prelude::store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,
-            );
+            let factory = semio_framework_plugin::plugin_app_close_prelude::store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>();
             $(
                 let _ = stringify!($bounded_native);
                 let factory = $crate::editing::routed_native_edit_preparation_factory(
@@ -2127,41 +2111,6 @@ macro_rules! snapshot_details_editor_support {
             Some(semio_framework_plugin::plugin_app_close_prelude::store::operation_wire_preparation_factory(factory, <Self as $crate::editing::SnapshotEditingEditor>::snapshot_operation_wire_source, |operation| { let semantics = semio_framework_plugin::plugin_app_close_prelude::protocol::SemanticMutation::semantics(operation); Some((semantics.entity, semantics.kind)) }))
         }
 
-        fn build_config_store_owners() -> Option<semio_framework_plugin::plugin_app_close_prelude::store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-            Some(semio_framework_plugin::no_config_store_owners())
-        }
-
-        fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<semio_framework_plugin::plugin_app_close_prelude::store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-            Some(semio_framework_plugin::no_config_store_disposer())
-        }
-
-        fn build_draft_store_owners() -> Option<semio_framework_plugin::plugin_app_close_prelude::store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-            Some(semio_framework_plugin::no_draft_store_owners())
-        }
-
-        fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<semio_framework_plugin::plugin_app_close_prelude::store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-            Some(semio_framework_plugin::no_draft_store_disposer())
-        }
-
-        fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<semio_framework_plugin::plugin_app_close_prelude::store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-            Some(semio_framework_plugin::no_presence_store_disposer())
-        }
-
-        fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
-        }
-
-        fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::SnapshotRetirementFactory<Self::Presence>>> {
-            Some(semio_framework_plugin::no_presence_peer_retirement_factory())
-        }
-
-        fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<semio_framework_plugin::plugin_app_close_prelude::store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-            Some(semio_framework_plugin::no_transient_store_disposer())
-        }
-
-        fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::SnapshotRetirementFactory<Self::Transient>>> {
-            Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
-        }
     };
 }
 

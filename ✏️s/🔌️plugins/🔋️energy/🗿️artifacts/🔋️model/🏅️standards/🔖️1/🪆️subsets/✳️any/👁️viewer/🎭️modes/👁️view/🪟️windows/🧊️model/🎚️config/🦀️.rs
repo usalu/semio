@@ -54,6 +54,19 @@ impl store::ConfigRecord for EnergyModelViewerWindowConfig {}
 mod mutations;
 pub use mutations::*;
 
+impl semio_framework_plugin::WindowConfigApplyMutation<EnergyModelViewerWindowConfig> for EnergyModelViewerWindowConfigMutation {
+    fn exchange(self, post: &mut EnergyModelViewerWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetCamera(SetCamera { camera }) => Self::SetCamera(SetCamera { camera: std::mem::replace(&mut post.camera, camera) }),
+        })
+    }
+    fn admissible(&self) -> bool {
+        match self {
+            Self::SetCamera(SetCamera { camera }) => camera.is_valid(),
+        }
+    }
+}
+
 pub struct EnergyModelViewerWindowConfigOwner;
 
 impl semio_framework_plugin::WindowConfigOwner for EnergyModelViewerWindowConfigOwner {
@@ -63,6 +76,12 @@ impl semio_framework_plugin::WindowConfigOwner for EnergyModelViewerWindowConfig
     const MAXIMUM_PUBLICATION_BYTES: usize = 1024;
     type State = EnergyModelViewerWindowConfig;
     type Mutation = EnergyModelViewerWindowConfigMutation;
+    type Edit = semio_framework_plugin::WindowConfigApplyEdit<EnergyModelViewerWindowConfig, EnergyModelViewerWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+        std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
+    }
 
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()

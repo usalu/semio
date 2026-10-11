@@ -1,8 +1,9 @@
 //! 🧬️ Sets which generation the generate mode's form and preview are bound to.
 
-use super::{Generation3dConfigPatch, Generation3dConfig, Generation3dConfigMutation};
+use super::{Generation3dConfigPatch, Generation3dSelectedGenerationChange, Generation3dConfig, Generation3dConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "selected-generation")]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]

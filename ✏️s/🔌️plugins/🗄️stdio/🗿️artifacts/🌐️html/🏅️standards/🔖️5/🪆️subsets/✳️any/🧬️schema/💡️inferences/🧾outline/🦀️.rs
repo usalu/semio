@@ -8,7 +8,7 @@ use crate::HtmlSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Html` document outline.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct HtmlOutline {
     pub element_count: u32,

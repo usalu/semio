@@ -8,11 +8,12 @@ use crate::schema::scene_trace::DocumentTraceLimits;
 use crate::schema::scene_retirement::ScenePlanCloseJob;
 use crate::schema::scene_paint::scene::{ScenePaintJob,ScenePaintRetirement,PreparedScene,PreparedSceneCloseJob,PaintedSceneLimits};
 use semio_framework::kernel::{Effect,JobPlacement};
-use semio_framework_plugin::{AppRenderOperationContext,ArtifactView,PluginCloseStep};
-use semio_framework_plugin::reactor::jobs::{BoundedJob,BoundedJobFactory,JobBudget,JobStep};
+use semio_framework_plugin::{AppRenderOperationContext,ArtifactView,Fault,PluginLifecycleStep};
+use semio_framework_plugin::reactor::jobs::{BoundedJob,BoundedJobFactory,IoRunControl,JobBudget,JobStep,SqliteSnapshotControl};
+use semio_framework_job::StepContext;
 use std::{cell::RefCell,rc::Rc};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 const KIND:&str="semio.draw.mounted-vector";
 const INSTANCES:usize=64;
 const SHELLS:usize=256;
@@ -54,10 +55,10 @@ struct Instance{identity:SceneIdentity,candidate:Option<usize>,visual:Option<usi
 struct Registry{instances:[Option<Instance>;INSTANCES],shells:[Rc<RefCell<Option<State>>>;SHELLS],retiring:[bool;SHELLS],counter:u64,cursor:usize}
 impl Registry{fn new()->Self{Self{instances:[None;INSTANCES],shells:std::array::from_fn(|_|Rc::new(RefCell::new(None))),retiring:[false;SHELLS],counter:0,cursor:0}}}
 thread_local!{static MOUNTED:RefCell<Registry>=RefCell::new(Registry::new());}
-struct GeometryJob{shell:Rc<RefCell<Option<State>>>,slot:usize,identity:SceneIdentity,job:u64}
+struct GeometryJob{shell:Rc<RefCell<Option<State>>>,slot:usize,identity:SceneIdentity,job:u64,input:Option<Vec<u8>>,restored:Option<Vec<u8>>}
 fn fail_current(identity:SceneIdentity,slot:usize){MOUNTED.with(|r|{if let Some(i)=r.borrow_mut().instances[identity.instance as usize%INSTANCES].as_mut().filter(|i|i.identity.matches(identity)&&i.candidate==Some(slot)){i.failed=true;}});}
-impl BoundedJob for GeometryJob{
- fn step(&mut self,budget:JobBudget)->JobStep{
+impl GeometryJob{
+ fn advance(&mut self,budget:JobBudget)->JobStep{
   let current=MOUNTED.with(|r|r.borrow().instances[self.identity.instance as usize%INSTANCES].is_some_and(|i|i.identity.matches(self.identity)&&i.candidate==Some(self.slot)));
   let mut shell=match self.shell.try_borrow_mut(){Ok(shell)=>shell,Err(_)=>return JobStep::Running(None)};
   let Some(state)=shell.as_mut()else{return JobStep::Failed(b"drawing.geometry.owner-missing".to_vec())};
@@ -81,30 +82,48 @@ impl BoundedJob for GeometryJob{
    }
   }JobStep::Running((state.work!=previous_work).then(||state.work.to_le_bytes().to_vec()))
  }
+ }
+impl BoundedJob for GeometryJob{
+ fn step(&mut self,budget:JobBudget,_original:&mut IoRunControl<'_,'_>,_snapshot:&mut SqliteSnapshotControl<'_>,_cx:&mut StepContext<'_>)->Result<JobStep,ValueError>{Ok(self.advance(budget))}
+ /// 🧹️ The retained scene owners close through the registry ladder; this handle releases its two original input buffers and itself.
+ fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
+  let grant=cx.retained_grant();let demand=self.retirement_demands(0)?;
+  if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_release_bytes<demand.release_bytes{return Ok(false);}
+  if let Some(input)=self.input.take(){cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:input.capacity(),..Default::default()})?;return Ok(false);}
+  if let Some(restored)=self.restored.take(){cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:restored.capacity(),..Default::default()})?;return Ok(false);}
+  cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)
+ }
+ fn retirement_demands(&self,_copy:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{release_bytes:self.input.as_ref().map_or_else(||self.restored.as_ref().map_or(0,Vec::capacity),Vec::capacity),depth:1,..Default::default()})}
  fn cancel(&mut self){if let Ok(mut shell)=self.shell.try_borrow_mut(){if let Some(state)=shell.as_mut().filter(|state|state.job_id==self.job&&state.identity.matches(self.identity)){state.cancelled=true;}}}
  fn checkpoint(&self)->Option<Vec<u8>>{Some(input(self.slot,self.identity,self.job))}
- fn terminal_drop_is_shallow(&self)->bool{true}
+ fn terminal_drop_is_shallow(&self)->bool{self.input.is_none()&&self.restored.is_none()}
 }
 fn input(slot:usize,identity:SceneIdentity,job:u64)->Vec<u8>{let mut bytes=Vec::with_capacity(63);bytes.push(1);bytes.extend_from_slice(&(slot as u16).to_le_bytes());bytes.extend_from_slice(&identity.instance.to_le_bytes());bytes.extend_from_slice(&identity.base.to_le_bytes());bytes.extend_from_slice(&identity.generation.to_le_bytes());bytes.extend_from_slice(&identity.revision);bytes.extend_from_slice(&job.to_le_bytes());bytes}
-fn factory(job:u64,bytes:&[u8],_restored:Option<&[u8]>)->Result<Box<dyn BoundedJob>,Vec<u8>>{
- if bytes.len()!=63||bytes[0]!=1||u64::from_le_bytes(bytes[55..63].try_into().unwrap())!=job||job&!COUNTER_MAX!=TAG{return Err(b"drawing.geometry.input".to_vec());}
+fn geometry_demands(_job:u64,input:&Option<Vec<u8>>,restored:&Option<Vec<u8>>,_cx:&StepContext<'_>)->Result<RetainedCloneGrant,ValueError>{semio_framework_plugin::reactor::jobs::original_job_admission_demands::<GeometryJob>(input,restored)}
+fn geometry_admit(job:u64,input:&mut Option<Vec<u8>>,restored:&mut Option<Vec<u8>>,cx:&mut StepContext<'_>)->Result<Option<Box<dyn BoundedJob>>,ValueError>{
+ let invalid=|message:&'static str|ValueError::literal(ValueRefusalKind::InvalidValue,message);
+ let bytes=input.as_deref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"drawing.geometry.input"))?;
+ if bytes.len()!=63||bytes[0]!=1||u64::from_le_bytes(bytes[55..63].try_into().unwrap())!=job||job&!COUNTER_MAX!=TAG{return Err(invalid("drawing.geometry.input"));}
  let slot=usize::from(u16::from_le_bytes(bytes[1..3].try_into().unwrap()));let identity=SceneIdentity{instance:u32::from_le_bytes(bytes[3..7].try_into().unwrap()),base:u64::from_le_bytes(bytes[7..15].try_into().unwrap()),generation:u64::from_le_bytes(bytes[15..23].try_into().unwrap()),revision:bytes[23..55].try_into().unwrap()};
- MOUNTED.with(|r|{let r=r.borrow();let shell=r.shells.get(slot).ok_or_else(||b"drawing.geometry.slot".to_vec())?.clone();if !shell.try_borrow().is_ok_and(|owner|owner.as_ref().is_some_and(|state|state.job_id==job&&state.identity.matches(identity))){return Err(b"drawing.geometry.stale-factory".to_vec());}Ok(Box::new(GeometryJob{shell,slot,identity,job})as Box<dyn BoundedJob>)})
+ let shell=MOUNTED.with(|r|{let r=r.borrow();let shell=r.shells.get(slot).ok_or_else(||invalid("drawing.geometry.slot"))?.clone();if !shell.try_borrow().is_ok_and(|owner|owner.as_ref().is_some_and(|state|state.job_id==job&&state.identity.matches(identity))){return Err(invalid("drawing.geometry.stale-factory"));}Ok(shell)})?;
+ semio_framework_plugin::reactor::jobs::admit_original_job(input,restored,cx,move |input,restored|GeometryJob{shell,slot,identity,job,input:Some(input),restored})
 }
+thread_local!{static REGISTERED:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
 /// 🏭️ Register the genuine host factory before any render can spawn work.
-pub fn initialize(){MOUNTED.with(|r|{let _=r.borrow().counter;});if !semio_framework_plugin::reactor::jobs::job_kind_is_admitted(KIND){semio_framework_plugin::reactor::jobs::register_bounded_job_kind(KIND,factory as BoundedJobFactory);}}
+pub fn initialize(){MOUNTED.with(|r|{let _=r.borrow().counter;});if !REGISTERED.with(std::cell::Cell::get)&&semio_framework_plugin::reactor::jobs::register_bounded_job_kind(KIND,BoundedJobFactory{admit:geometry_admit,demands:geometry_demands}){REGISTERED.with(|registered|registered.set(true));}}
 /// 🔍️ Reserve a free retained shell before requesting the genuine source read.
-pub fn prepare(render:AppRenderOperationContext,document:&DrawingSnapshot)->bool{
+pub fn prepare(render:AppRenderOperationContext,document:&DrawingSnapshot)->bool{prepare_source(identity(render),document)}
+fn prepare_source(id:SceneIdentity,document:&DrawingSnapshot)->bool{
  initialize();
- if render.app_instance_id==0||document.layers.len()>1024||document.assets.len()>1024{return false;}
- MOUNTED.with(|r|{let mut r=r.borrow_mut();let index=render.app_instance_id as usize%INSTANCES;let id=identity(render);let mut i=match r.instances[index]{Some(i)if i.identity.instance!=id.instance=>return false,Some(i)if i.identity.matches(id)=>return i.pending.is_some(),Some(i)=>i,None=>Instance{identity:id,candidate:None,visual:None,pending:None,failed:false}};
+ if id.instance==0||document.layers.len()>1024||document.assets.len()>1024{return false;}
+ MOUNTED.with(|r|{let mut r=r.borrow_mut();let index=id.instance as usize%INSTANCES;let mut i=match r.instances[index]{Some(i)if i.identity.instance!=id.instance=>return false,Some(i)if i.identity.matches(id)=>return i.pending.is_some(),Some(i)=>i,None=>Instance{identity:id,candidate:None,visual:None,pending:None,failed:false}};
   if let Some(old)=i.pending.take(){r.retiring[old]=false;}
   let Some(slot)=r.shells.iter().enumerate().find_map(|(slot,shell)|(!r.retiring[slot]&&shell.try_borrow().is_ok_and(|owner|owner.is_none())&&!r.instances.iter().flatten().any(|i|i.pending==Some(slot))).then_some(slot))else{return false};
   i.identity=id;i.pending=Some(slot);i.failed=false;r.instances[index]=Some(i);true
  })
 }
 /// 🖱️ Reserve the current pointer source before the host supplies its genuine read.
-pub fn prepare_query(source:SceneIdentity,document:&DrawingSnapshot)->bool{prepare(AppRenderOperationContext{app_instance_id:source.instance,base_revision:semio_framework_job::RevisionId(source.base),generation:semio_framework_job::Generation(source.generation),canonical_base_revision:source.revision},document)}
+pub fn prepare_query(source:SceneIdentity,document:&DrawingSnapshot)->bool{prepare_source(source,document)}
 /// 🔁️ Start one revision job and cancel only its superseded private candidate.
 pub fn reconcile(doc:&ArtifactView<'_,DrawingSnapshot>)->Vec<Effect>{let Some(render)=doc.render_operation()else{return Vec::new()};reconcile_source(render,||doc.take_snapshot_read())}
 fn reconcile_source(render:AppRenderOperationContext,take:impl FnOnce()->Result<store::SnapshotRead<DrawingSnapshot>,semio_framework_plugin::Fault>)->Vec<Effect>{MOUNTED.with(|r|{let mut r=r.borrow_mut();let index=render.app_instance_id as usize%INSTANCES;let Some(mut i)=r.instances[index].filter(|i|i.identity.matches(identity(render)))else{return Vec::new()};let Some(slot)=i.pending else{return Vec::new()};let Some(next)=r.counter.checked_add(1).filter(|next|*next<=COUNTER_MAX)else{return Vec::new()};let Ok(read)=take()else{return Vec::new()};r.counter=next;let job=TAG|next;let mut effects=Vec::with_capacity(2);
@@ -143,13 +162,24 @@ impl GeometryOwner{
  pub fn begin_close(&mut self)->Result<(),ValueError>{MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();let index=self.instance as usize%INSTANCES;if registry.instances[index].is_some_and(|instance|instance.identity.instance==self.instance){registry.instances[index]=None;}for slot in 0..SHELLS{let mut owner=registry.shells[slot].try_borrow_mut().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"Drawing geometry worker is checked out"))?;if let Some(state)=owner.as_mut().filter(|state|state.identity.instance==self.instance){state.begin_close();drop(owner);registry.retiring[slot]=true;}}Ok(())})}
  pub fn terminal_is_empty(&self)->bool{terminal_is_empty(self.instance)}
 }
-/// 🧹️ The two-currency host cannot authorize physical cleanup of retained geometry.
-pub fn maintenance(instance:u32,maximum_items:usize,maximum_bytes:usize)->PluginCloseStep{
- if maximum_items==0||maximum_bytes==0{return PluginCloseStep::Pending{released_items:0,released_bytes:0};}
- MOUNTED.with(|registry|{let registry=registry.borrow();if registry.shells.iter().enumerate().any(|(slot,shell)|shell.try_borrow().map_or(true,|owner|owner.as_ref().is_some_and(|state|state.identity.instance==instance&&(registry.retiring[slot]||state.cleanup_pending()||state.cancelled)))){PluginCloseStep::Blocked{reason:"Drawing geometry cleanup requires item, copy, capacity, release and depth grants"}}else{PluginCloseStep::Complete}})
+fn demand_of(demands:[usize;4])->RetirementDemand{RetirementDemand{copy_bytes:demands[0],capacity_bytes:demands[1],release_bytes:demands[2],depth:demands[3]}}
+fn lifecycle(step:RetainedCloneStep)->PluginLifecycleStep{match step{RetainedCloneStep::Complete(progress)=>PluginLifecycleStep::Complete(progress),RetainedCloneStep::Progress(progress)=>PluginLifecycleStep::Progress(progress)}}
+fn refused(error:ValueError)->Fault{Fault::from(error.into_message())}
+/// 📏️ Quotes the next retained scene cleanup turn without granting it.
+pub fn maintenance_demands(instance:u32,body:usize)->Result<RetirementDemand,ValueError>{GeometryOwner::new(instance).demands(body).map(demand_of)}
+/// 🧹️ Pays one cleanup turn of a retained shell whose private job already finished or was superseded.
+pub fn maintenance(instance:u32,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
+ if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
+ GeometryOwner::new(instance).close_step(grant).map(lifecycle).map_err(refused)
 }
-/// 🚪️ Detach instance references before retaining each exact owned shell for cleanup.
-pub fn close(instance:u32,maximum_items:usize,maximum_bytes:usize)->PluginCloseStep{MOUNTED.with(|r|{let mut r=r.borrow_mut();let index=instance as usize%INSTANCES;if let Some(i)=r.instances[index].filter(|i|i.identity.instance==instance){for slot in [i.candidate,i.visual].into_iter().flatten(){r.retiring[slot]=true;}r.instances[index]=None;}});maintenance(instance,maximum_items,maximum_bytes)}
+/// 📏️ Quotes the next close turn; identical to maintenance because both pay the same retained child.
+pub fn close_demands(instance:u32,body:usize)->Result<RetirementDemand,ValueError>{maintenance_demands(instance,body)}
+/// 🚪️ Detaches instance references, then pays one cleanup turn of each exact owned shell.
+pub fn close(instance:u32,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
+ let mut owner=GeometryOwner::new(instance);owner.begin_close().map_err(refused)?;
+ if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
+ owner.close_step(grant).map(lifecycle).map_err(refused)
+}
 /// 🧾️ Completion includes every retained shell and genuine source return witness.
 pub fn terminal_is_empty(instance:u32)->bool{MOUNTED.with(|r|{let r=r.borrow();!r.instances.iter().flatten().any(|i|i.identity.instance==instance)&&r.shells.iter().all(|shell|shell.try_borrow().is_ok_and(|owner|owner.as_ref().is_none_or(|state|state.identity.instance!=instance)))})}
 #[cfg(test)]

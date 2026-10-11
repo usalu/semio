@@ -1275,7 +1275,7 @@ where
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
-        assert!(self.parent.is_none() && self.drawing.is_none() && self.value.is_none(), "committed recovery admission reached Drop before exact DB witness transfer");
+        assert!(std::thread::panicking() || (self.parent.is_none() && self.drawing.is_none() && self.value.is_none()), "committed recovery admission reached Drop before exact DB witness transfer");
     }
 }
 
@@ -1734,7 +1734,8 @@ where
 {
     fn drop(&mut self) {
         assert!(
-            self.phase == DurableOwnedThreeStoreMapAssemblyPhaseV1::Empty
+            std::thread::panicking()
+                || self.phase == DurableOwnedThreeStoreMapAssemblyPhaseV1::Empty
                 && self.parent.is_none()
                 && self.drawing.is_none()
                 && self.value.is_none()
@@ -2142,7 +2143,8 @@ where
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     fn drop(&mut self) {
         assert!(
-            self.phase == DurableOwnedThreeStoreCommitPhaseV1::Complete
+            std::thread::panicking()
+                || self.phase == DurableOwnedThreeStoreCommitPhaseV1::Complete
                 && self.parent.is_none()
                 && self.drawing.is_none()
                 && self.value.is_none()
@@ -2225,7 +2227,7 @@ where
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
-        assert!(self.parent.is_none() && self.drawing.is_none() && self.value.is_none() && self.coordinator.is_none() && self.sink.is_none(), "retained Map commit operation reached Drop before exact terminal owner handoff");
+        assert!(std::thread::panicking() || (self.parent.is_none() && self.drawing.is_none() && self.value.is_none() && self.coordinator.is_none() && self.sink.is_none()), "retained Map commit operation reached Drop before exact terminal owner handoff");
     }
 }
 
@@ -2331,7 +2333,7 @@ where
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
-        assert!(self.parent.is_none() && self.drawing.is_none() && self.value.is_none() && self.coordinator.is_none(), "retained committed Map recovery reached Drop before exact terminal owner handoff");
+        assert!(std::thread::panicking() || (self.parent.is_none() && self.drawing.is_none() && self.value.is_none() && self.coordinator.is_none()), "retained committed Map recovery reached Drop before exact terminal owner handoff");
     }
 }
 
@@ -2394,7 +2396,7 @@ where
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
-        assert!(self.operation.is_none(), "committed Map recovery host reached Drop before terminal owner handoff");
+        assert!(std::thread::panicking() || (self.operation.is_none()), "committed Map recovery host reached Drop before terminal owner handoff");
     }
 }
 
@@ -2408,7 +2410,7 @@ where
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
-        assert!(self.operation.is_none(), "retained Map host reached Drop before exact terminal owner handoff");
+        assert!(std::thread::panicking() || (self.operation.is_none()), "retained Map host reached Drop before exact terminal owner handoff");
     }
 }
 

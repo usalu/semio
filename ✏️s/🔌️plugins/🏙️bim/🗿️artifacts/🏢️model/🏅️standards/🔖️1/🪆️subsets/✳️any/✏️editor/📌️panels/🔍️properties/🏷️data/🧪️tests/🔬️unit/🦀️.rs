@@ -17,7 +17,7 @@ fn model() -> (ModelSnapshot, ModelInference) {
     snapshot.properties.insert("wt-300".into(), BTreeMap::from([("Pset_WallCommon".to_string(), BTreeMap::from([("FireRating".to_string(), PropertyValue::Text { value: "EI60".into() })]))]));
     snapshot.classification_systems.insert("cs-uni".into(), ClassificationSystem { name: "Uniclass 2015".into(), edition: "2024".into(), source: None, entries: vec![ClassificationItem { code: "EF_25_10".into(), title: "Walls".into(), parent: None }] });
     snapshot.classifications.insert("w-south".into(), BTreeMap::from([("cs-uni".to_string(), "EF_25_10".to_string())]));
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, Clone::clone);
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     (snapshot, inference)
 }
 

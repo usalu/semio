@@ -6,6 +6,7 @@ use crate::ast::QueryResultKind;
 use crate::language_service::{parse, complete, format as format_source, hover, lint, semantic_tokens};
 use crate::lexer::{lex, tokenize, Token, TokenClass};
 use crate::{Camera, JackSnapshot, Manifest};
+use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 /// 🧸️ The retained content child of a standalone snapshot — what the run-query job reads from its child view.
 fn content_of(snapshot: &JackSnapshot) -> semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot {
@@ -280,14 +281,12 @@ fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live(
     }
     preparation.begin_close();
     for _ in 0..100_000 {
-        match preparation.close_step(policy["retirementItemsPerStep"].as_u64().expect("retirement items") as usize, maximum_bytes).expect("preparation close") {
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= maximum_bytes);
-            }
-            store::SnapshotRetirementStep::Complete => break,
-            store::SnapshotRetirementStep::Blocked => panic!("cancelled preparation waited for its live source"),
+        if preparation.terminal_is_empty() {
+            break;
         }
+        let demand = preparation.close_demands(maximum_bytes).expect("preparation close quote");
+        let grant = RetainedCloneGrant { maximum_items: policy["retirementItemsPerStep"].as_u64().expect("retirement items") as usize, ..crate::jack_self_funded_grant(demand) };
+        assert!(preparation.close_step(grant).expect("preparation close").progress().fits(grant));
     }
     assert!(preparation.terminal_is_empty());
     assert_eq!(source.content.local_owner::<crate::JackContentOwner>().expect("source survives cancellation").snapshot().nodes.len(), source_owner.snapshot().nodes.len());
@@ -305,21 +304,15 @@ fn query_ownership_preparation_rejection(source: &JackSnapshot) -> semio_framewo
         })
         .expect("oversized source entity is rejected");
     preparation.begin_close();
-    let mut complete = false;
     for _ in 0..100_000 {
-        match preparation.close_step(1, 4_096).expect("rejected preparation close") {
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= 4_096);
-            }
-            store::SnapshotRetirementStep::Complete => {
-                complete = true;
-                break;
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("rejected preparation failed to retire"),
+        if preparation.terminal_is_empty() {
+            break;
         }
+        let demand = preparation.close_demands(4_096).expect("rejected preparation close quote");
+        let grant = crate::jack_self_funded_grant(demand);
+        assert!(preparation.close_step(grant).expect("rejected preparation close").progress().fits(grant));
     }
-    assert!(complete && preparation.terminal_is_empty());
+    assert!(preparation.terminal_is_empty());
     error
 }
 
@@ -371,21 +364,15 @@ fn query_ownership_output_admission_rejects_oversized_table_before_publication()
         .expect("oversized query result is rejected");
     assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message, "query result exceeds its retained ownership grant");
     execution.begin_close();
-    let mut complete = false;
     for _ in 0..100_000 {
-        match execution.close_step(1, 4_096).expect("rejected execution close") {
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= 4_096);
-            }
-            store::SnapshotRetirementStep::Complete => {
-                complete = true;
-                break;
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("rejected execution failed to retire"),
+        if execution.terminal_is_empty() {
+            break;
         }
+        let demand = execution.close_demands(4_096).expect("rejected execution close quote");
+        let grant = crate::jack_self_funded_grant(demand);
+        assert!(execution.close_step(grant).expect("rejected execution close").progress().fits(grant));
     }
-    assert!(complete && execution.terminal_is_empty());
+    assert!(execution.terminal_is_empty());
     eprintln!("[DEBUG] query retained ownership rejected a table whose JSON has {encoded_cells} bytes");
 }
 

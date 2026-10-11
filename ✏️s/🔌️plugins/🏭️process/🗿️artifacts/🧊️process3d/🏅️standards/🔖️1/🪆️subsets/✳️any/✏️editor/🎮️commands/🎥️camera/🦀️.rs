@@ -1,6 +1,6 @@
 //! 🎥️ Process 3d play app commands — the 3D viewport camera (config-only, ephemeral view state).
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation, Process3dConfigSetCamera};
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::{Process3dSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub mod set_camera {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "camera")]
     pub struct SetCamera {
         #[dsl(coord)]
@@ -21,7 +21,7 @@ pub mod set_camera {
     }
 
     pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        Ok(Emit::config(vec![Process3dConfigMutation::SetCamera { position: payload.position, target: payload.target, fov: payload.fov }]))
+        Ok(Emit::config(vec![Process3dConfigMutation::SetCamera(Process3dConfigSetCamera{ position: payload.position, target: payload.target, fov: payload.fov })]))
     }
 }
 //#endregion 🔖️SetCamera

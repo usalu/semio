@@ -74,7 +74,8 @@ fn default_voxel_dims() -> [u32; 3] {
 //#endregion 🔖️Defaults
 
 //#region 🔖️Cameras
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera2d {
     #[value(default)]
@@ -85,7 +86,8 @@ pub struct Puzzle5dCamera2d {
     pub zoom: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dCamera3d {
     #[value(default)]
@@ -127,7 +129,8 @@ pub const PUZZLE5D_CAMERA3D_DEFAULT_DISTANCE: f64 = 13.856_406_460_551_018;
 //#region 🔖️Selection
 /// 🎯️ Which entity kinds a pick in either pane may even reach — the 5d twin of
 /// `Puzzle3dSelectableKinds`, in this artifact's part/grip/fastener vocabulary.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dSelectableKinds {
     #[value(default = "default_true")]
@@ -255,7 +258,7 @@ impl Default for Puzzle5dRuntime {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dConfig {
     #[value(default = "default_fill_count")]
@@ -404,22 +407,22 @@ impl Puzzle5dConfig {
     pub fn mutations_to(&self, next: &Puzzle5dConfig) -> Vec<Puzzle5dConfigMutation> {
         let mut mutations = Vec::new();
         if self.fill_count != next.fill_count {
-            mutations.push(Puzzle5dConfigMutation::SetFillCount { value: next.fill_count });
+            mutations.push(Puzzle5dConfigMutation::SetFillCount(Puzzle5dConfigSetFillCount{ value: next.fill_count }));
         }
         if self.contact_tolerance != next.contact_tolerance {
-            mutations.push(Puzzle5dConfigMutation::SetContactTolerance { value: next.contact_tolerance });
+            mutations.push(Puzzle5dConfigMutation::SetContactTolerance(Puzzle5dConfigSetContactTolerance{ value: next.contact_tolerance }));
         }
         if self.proximity_radius != next.proximity_radius {
-            mutations.push(Puzzle5dConfigMutation::SetProximityRadius { value: next.proximity_radius });
+            mutations.push(Puzzle5dConfigMutation::SetProximityRadius(Puzzle5dConfigSetProximityRadius{ value: next.proximity_radius }));
         }
         if self.chunk_size != next.chunk_size {
-            mutations.push(Puzzle5dConfigMutation::SetChunkSize { value: next.chunk_size });
+            mutations.push(Puzzle5dConfigMutation::SetChunkSize(Puzzle5dConfigSetChunkSize{ value: next.chunk_size }));
         }
         if self.object_kind_weights != next.object_kind_weights {
-            mutations.push(Puzzle5dConfigMutation::SetObjectKindWeights { value: next.object_kind_weights.clone() });
+            mutations.push(Puzzle5dConfigMutation::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights{ value: next.object_kind_weights.clone() }));
         }
         if self.vortex_kind_weights != next.vortex_kind_weights {
-            mutations.push(Puzzle5dConfigMutation::SetVortexKindWeights { value: next.vortex_kind_weights.clone() });
+            mutations.push(Puzzle5dConfigMutation::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights{ value: next.vortex_kind_weights.clone() }));
         }
         mutations
     }
@@ -430,14 +433,57 @@ impl Puzzle5dConfig {
 //#region 🔖️ConfigMutation
 /// 🧮️ B1: `Puzzle5dConfig`'s operation enum. Every real config edit is captured as "the whole config
 /// after this edit"; `backwards()` is the same one-liner regardless of what changed.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 🎚️ Payload of [`Puzzle5dConfigMutation::SetFillCount`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle5dConfigSetFillCount {
+    pub value: u32,
+}
+
+/// 🎚️ Payload of [`Puzzle5dConfigMutation::SetContactTolerance`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle5dConfigSetContactTolerance {
+    pub value: f64,
+}
+
+/// 🎚️ Payload of [`Puzzle5dConfigMutation::SetProximityRadius`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle5dConfigSetProximityRadius {
+    pub value: f64,
+}
+
+/// 🎚️ Payload of [`Puzzle5dConfigMutation::SetChunkSize`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle5dConfigSetChunkSize {
+    pub value: f64,
+}
+
+/// 🎚️ Payload of [`Puzzle5dConfigMutation::SetObjectKindWeights`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle5dConfigSetObjectKindWeights {
+    pub value: HashMap<String, f64>,
+}
+
+/// 🎚️ Payload of [`Puzzle5dConfigMutation::SetVortexKindWeights`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle5dConfigSetVortexKindWeights {
+    pub value: HashMap<String, f64>,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Puzzle5dConfigMutation {
-    SetFillCount { value: u32 },
-    SetContactTolerance { value: f64 },
-    SetProximityRadius { value: f64 },
-    SetChunkSize { value: f64 },
-    SetObjectKindWeights { value: HashMap<String, f64> },
-    SetVortexKindWeights { value: HashMap<String, f64> },
+    SetFillCount(Puzzle5dConfigSetFillCount),
+    SetContactTolerance(Puzzle5dConfigSetContactTolerance),
+    SetProximityRadius(Puzzle5dConfigSetProximityRadius),
+    SetChunkSize(Puzzle5dConfigSetChunkSize),
+    SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights),
+    SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights),
 }
 
 impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
@@ -454,23 +500,23 @@ impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::SetFillCount { .. } => &Self::DESCRIPTORS[0],
-            Self::SetContactTolerance { .. } => &Self::DESCRIPTORS[1],
-            Self::SetProximityRadius { .. } => &Self::DESCRIPTORS[2],
-            Self::SetChunkSize { .. } => &Self::DESCRIPTORS[3],
-            Self::SetObjectKindWeights { .. } => &Self::DESCRIPTORS[4],
-            Self::SetVortexKindWeights { .. } => &Self::DESCRIPTORS[5],
+            Self::SetFillCount(Puzzle5dConfigSetFillCount{ .. }) => &Self::DESCRIPTORS[0],
+            Self::SetContactTolerance(Puzzle5dConfigSetContactTolerance{ .. }) => &Self::DESCRIPTORS[1],
+            Self::SetProximityRadius(Puzzle5dConfigSetProximityRadius{ .. }) => &Self::DESCRIPTORS[2],
+            Self::SetChunkSize(Puzzle5dConfigSetChunkSize{ .. }) => &Self::DESCRIPTORS[3],
+            Self::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights{ .. }) => &Self::DESCRIPTORS[4],
+            Self::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights{ .. }) => &Self::DESCRIPTORS[5],
         }
     }
 
     fn diff(&self, base: &Puzzle5dConfig) -> protocol::MutationOutcome<Puzzle5dConfigDiff> {
         let diff = match self {
-            Self::SetFillCount { value } => Puzzle5dConfigDiff { fill_count: (value != &base.fill_count).then_some(*value), ..Default::default() },
-            Self::SetContactTolerance { value } => Puzzle5dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
-            Self::SetProximityRadius { value } => Puzzle5dConfigDiff { proximity_radius: (value != &base.proximity_radius).then_some(*value), ..Default::default() },
-            Self::SetChunkSize { value } => Puzzle5dConfigDiff { chunk_size: (value != &base.chunk_size).then_some(*value), ..Default::default() },
-            Self::SetObjectKindWeights { value } => Puzzle5dConfigDiff { object_kind_weights: (value != &base.object_kind_weights).then(|| value.clone()), ..Default::default() },
-            Self::SetVortexKindWeights { value } => Puzzle5dConfigDiff { vortex_kind_weights: (value != &base.vortex_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetFillCount(Puzzle5dConfigSetFillCount{ value }) => Puzzle5dConfigDiff { fill_count: (value != &base.fill_count).then_some(*value), ..Default::default() },
+            Self::SetContactTolerance(Puzzle5dConfigSetContactTolerance{ value }) => Puzzle5dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
+            Self::SetProximityRadius(Puzzle5dConfigSetProximityRadius{ value }) => Puzzle5dConfigDiff { proximity_radius: (value != &base.proximity_radius).then_some(*value), ..Default::default() },
+            Self::SetChunkSize(Puzzle5dConfigSetChunkSize{ value }) => Puzzle5dConfigDiff { chunk_size: (value != &base.chunk_size).then_some(*value), ..Default::default() },
+            Self::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights{ value }) => Puzzle5dConfigDiff { object_kind_weights: (value != &base.object_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights{ value }) => Puzzle5dConfigDiff { vortex_kind_weights: (value != &base.vortex_kind_weights).then(|| value.clone()), ..Default::default() },
         };
         if protocol::DiffAlgebra::<Puzzle5dConfig>::is_empty(&diff) {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "The configuration already holds this value.");
@@ -480,12 +526,12 @@ impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
 
     fn inverse(&self, base: &Puzzle5dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            Self::SetFillCount { .. } => Self::SetFillCount { value: base.fill_count },
-            Self::SetContactTolerance { .. } => Self::SetContactTolerance { value: base.contact_tolerance },
-            Self::SetProximityRadius { .. } => Self::SetProximityRadius { value: base.proximity_radius },
-            Self::SetChunkSize { .. } => Self::SetChunkSize { value: base.chunk_size },
-            Self::SetObjectKindWeights { .. } => Self::SetObjectKindWeights { value: base.object_kind_weights.clone() },
-            Self::SetVortexKindWeights { .. } => Self::SetVortexKindWeights { value: base.vortex_kind_weights.clone() },
+            Self::SetFillCount(Puzzle5dConfigSetFillCount{ .. }) => Self::SetFillCount(Puzzle5dConfigSetFillCount{ value: base.fill_count }),
+            Self::SetContactTolerance(Puzzle5dConfigSetContactTolerance{ .. }) => Self::SetContactTolerance(Puzzle5dConfigSetContactTolerance{ value: base.contact_tolerance }),
+            Self::SetProximityRadius(Puzzle5dConfigSetProximityRadius{ .. }) => Self::SetProximityRadius(Puzzle5dConfigSetProximityRadius{ value: base.proximity_radius }),
+            Self::SetChunkSize(Puzzle5dConfigSetChunkSize{ .. }) => Self::SetChunkSize(Puzzle5dConfigSetChunkSize{ value: base.chunk_size }),
+            Self::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights{ .. }) => Self::SetObjectKindWeights(Puzzle5dConfigSetObjectKindWeights{ value: base.object_kind_weights.clone() }),
+            Self::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights{ .. }) => Self::SetVortexKindWeights(Puzzle5dConfigSetVortexKindWeights{ value: base.vortex_kind_weights.clone() }),
         }])
     }
 }

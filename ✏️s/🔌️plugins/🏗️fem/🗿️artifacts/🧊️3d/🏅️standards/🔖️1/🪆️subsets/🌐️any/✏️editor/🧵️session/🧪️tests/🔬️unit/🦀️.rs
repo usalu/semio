@@ -1,73 +1,48 @@
 use super::*;
 
+const PAGE_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY, maximum_depth: 1 };
+
+const TEST_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
+
 #[test]
-fn fem3d_numerical_child_retains_every_outcome_until_bounded_retirement() {
-    use semio_framework_job::{Checkpoint, CommitCandidate, JobFault, JobPayloadStream, JOB_PAYLOAD_PAGE_BYTES};
+fn fem3d_numerical_child_classifies_every_lent_outcome_without_retaining_it() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧫️fixtures/🧒️child-outcomes/🔣️.json")).expect("neutral child outcomes");
     let operation = semio_framework_job::Operation::new(OperationId(991), RevisionId(997), Generation(1009), 0);
-    let payload = |stream| {
-        let mut sequence = 0;
-        StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence)
-            .payload_from_bytes(stream, b"retained-child-state").expect("admitted child payload")
-    };
     for row in corpus["cases"].as_array().expect("cases") {
         let kind = row["kind"].as_str().expect("kind");
-        let outcome = match kind {
-            "preview" => StepOutcome::PreviewReady(payload(JobPayloadStream::Preview)),
-            "checkpoint" => StepOutcome::CheckpointReady(Checkpoint { applied_progress: 1, state: payload(JobPayloadStream::CheckpointState) }),
-            "complete" => StepOutcome::Complete(CommitCandidate { state: payload(JobPayloadStream::CommitState), output: payload(JobPayloadStream::CommitOutput) }),
-            "fault" => StepOutcome::Fault(JobFault { detail: payload(JobPayloadStream::Fault) }),
+        let end = match kind {
+            "preview" | "checkpoint" => ChildEnd::Lent,
+            "complete" => ChildEnd::Complete,
+            "fault" => ChildEnd::Fault,
             _ => unreachable!(),
         };
         let mut child = Box::new(Fem3dNumericalChild::new());
-        let result = child.observe_child_outcome(outcome);
+        let result = child.observe_child_end(end);
         assert_eq!(result.is_err(), kind == "fault");
-        if let Ok(complete) = result { assert_eq!(complete, kind == "complete"); }
-        let pointer = child.child_outcome.as_ref().expect("exact retained outcome") as *const StepOutcome;
+        if let Ok(complete) = result {
+            assert_eq!(complete, kind == "complete");
+        }
+        assert!(child.observe_child_end(ChildEnd::Cancelled).is_err());
+        assert_eq!(child.observe_child_end(ChildEnd::Yield), Ok(false));
         let doc = Fem3dSnapshot::default();
         let mut solver = Fem3dSolverView::new(freshness(19), 0);
         let mut backing = Fem3dBackingCredit::new();
         let mut sequence = 0;
-        for budget in [StepBudget::new(0, u64::MAX), StepBudget::new(1, 0)] {
-            let mut context = StepContext::new(operation.operation, operation.generation, budget, semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut receipt = RetainedCloneProgress::default();
+        for budget in [StepBudget::new(0, u64::MAX, TEST_GRANT), StepBudget::new(1, 0, TEST_GRANT)] {
+            let mut context = StepContext::new(operation.operation, operation.generation, budget, semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
             assert_eq!(child.step(&doc, &mut solver, &mut backing, freshness(19), operation, &mut context), Ok(false));
-            assert_eq!(child.child_outcome.as_ref().expect("yield retains outcome") as *const StepOutcome, pointer);
-            assert!(!child.child_outcome.as_ref().expect("payload still live").terminal_is_empty());
         }
         let cancelled = semio_framework_job::root_cancel_token();
         cancelled.cancel_now();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), cancelled, || Some(0), &mut sequence);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), cancelled, || Some(0), &mut sequence, &mut receipt);
         assert!(child.step(&doc, &mut solver, &mut backing, freshness(19), operation, &mut context).is_err());
-        assert_eq!(child.child_outcome.as_ref().expect("cancellation retains outcome") as *const StepOutcome, pointer);
-        // 💳️ `charge_payload_page` (`🧰️framework/🔨️modules/🧵️job/🦀️.rs`) ACCRUES a page's charge
-        // instead of demanding it in one turn — the repair for the never-terminating close spin of
-        // ticket 26/09/18 (the mounted presence capture law). So a turn granted less than a whole
-        // page SPENDS its grant against the page and retains the backing; it does not answer
-        // `released_bytes: 0`, which would be the old all-or-nothing contract. An EMPTY grant still
-        // spends nothing, and the retained pointer below is what states "no page was freed".
-        assert_eq!(child.close_child_outcome(0), Some((false, 0, 0)));
-        assert_eq!(child.close_child_outcome(JOB_PAYLOAD_PAGE_BYTES - 1), Some((false, 0, JOB_PAYLOAD_PAGE_BYTES - 1)));
-        assert_eq!(child.child_outcome.as_ref().expect("retained without a page's worth of grant") as *const StepOutcome, pointer);
-        // 🧾️ Accrual means a page is paid for EXACTLY once across however many turns pay it, so the
-        // law is a byte ledger, not a per-turn page count: the sub-page probe above already spent
-        // `JOB_PAYLOAD_PAGE_BYTES - 1` of the first page, and the remaining turns pay the rest.
-        let mut paid_bytes = JOB_PAYLOAD_PAGE_BYTES - 1;
-        for _ in 0..8 {
-            match child.close_child_outcome(JOB_PAYLOAD_PAGE_BYTES) {
-                Some((false, items, bytes)) => {
-                    assert!(items <= 1);
-                    assert!(bytes <= JOB_PAYLOAD_PAGE_BYTES);
-                    paid_bytes += bytes;
-                }
-                None => break,
-                other => panic!("unexpected child close {other:?}"),
-            }
-        }
-        assert_eq!(paid_bytes, row["pages"].as_u64().expect("pages") as usize * JOB_PAYLOAD_PAGE_BYTES);
-        assert!(child.child_outcome.is_none());
         let mut complete = false;
         for _ in 0..256 {
-            if child.close_step(JOB_PAYLOAD_PAGE_BYTES).0 { complete = true; break; }
+            if child.close_step(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).0 {
+                complete = true;
+                break;
+            }
         }
         assert!(complete, "all numerical owners close");
     }
@@ -338,8 +313,9 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
     for _ in 0..maximum_turns {
         turns += 1;
         let deadline = semio_framework_job::default_now_us().unwrap().checked_add(INTERACTIVE_STEP_CEILING_US).unwrap();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, deadline), cancel.clone(), semio_framework_job::default_now_us, &mut preview);
-        let before = (child.stage, child.node_cursor, child.scalar_axis, child.reaction_entry, child.child_outcome.is_some());
+        let mut preview_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, deadline, TEST_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview, &mut preview_receipt);
+        let before = (child.stage, child.node_cursor, child.scalar_axis, child.reaction_entry);
         let watchdog = Watchdog::start("fem3d.production-numerical-child", operation.operation, operation.generation, InteractiveStage::UserVisibleSimStep);
         match child.step(&doc, &mut fields, &mut backing, freshness(19), operation, &mut context) {
             Ok(complete) => terminal = complete,
@@ -348,7 +324,7 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
         let verdict = watchdog.finish();
         let admission = overruns.admit(&verdict);
         let elapsed_us = verdict.elapsed_us();
-        let after = (child.stage, child.node_cursor, child.scalar_axis, child.reaction_entry, child.child_outcome.is_some());
+        let after = (child.stage, child.node_cursor, child.scalar_axis, child.reaction_entry);
         if context.fuel_remaining() != 0 && !(context.deadline_exceeded() && before == after && !terminal) {
             failure.get_or_insert_with(|| format!("numerical unconsumed opportunity before={before:?}, after={after:?}, context {}, terminal={terminal}, expired={}, elapsed_us={elapsed_us:?}", context.stage(), context.deadline_exceeded()));
         }
@@ -363,7 +339,7 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
             break;
         }
     }
-    let progress = (child.stage, child.pcg.as_ref().map(PcgJob::visual_progress), child.subspace.as_ref().map(SubspaceIterationJob::visual_progress), child.child_outcome.is_some());
+    let progress = (child.stage, child.pcg.as_ref().map(PcgJob::visual_progress), child.subspace.as_ref().map(SubspaceIterationJob::visual_progress));
     let ready = fields.ready();
     let has_static = (0..fields.len).filter_map(|index| fields.scalar(index)).any(|scalar| scalar.displacement != [0.0; 3] || scalar.reaction != [0.0; 3]);
     let has_modal = (0..fields.len).filter_map(|index| fields.scalar(index)).any(|scalar| scalar.eigen_estimate > 0.0 && scalar.mode_shape != [0.0; 3]);
@@ -407,7 +383,8 @@ fn fem3d_production_numerical_child_refuses_the_demo_at_the_mounted_owner_page()
     let mut terminal = false;
     let mut failure = None;
     for _ in 0..4_000_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview);
+        let mut preview_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview, &mut preview_receipt);
         match child.step(&doc, &mut fields, &mut backing, freshness(3), operation, &mut context) {
             Ok(complete) => terminal = complete,
             Err(fault) => failure = Some((child.stage, String::from_utf8_lossy(&fault).into_owned())),
@@ -531,13 +508,13 @@ fn drain_recovery_state(registry: &mut Registry, identity: Identity, shell: u16)
         registry.recovery_cursor = shell as usize;
         let step = recover_abandoned_one(registry, identity.app_instance_id, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY).unwrap();
         match step {
-            PluginCloseStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY);
+            PluginLifecycleStep::Progress(progress) => {
+                assert!(progress.copied_items <= 1);
+                assert!(progress.released_bytes <= WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY);
             }
-            PluginCloseStep::Complete => {}
-            PluginCloseStep::AwaitingInput { reason } => panic!("unexpected recovery input: {reason}"),
-            PluginCloseStep::Blocked { reason } => panic!("{reason}"),
+            PluginLifecycleStep::Complete(_) => {}
+            PluginLifecycleStep::AwaitingInput { reason } => panic!("unexpected recovery input: {reason}"),
+            PluginLifecycleStep::Blocked { reason } => panic!("{reason}"),
         }
         if !registry.recoveries[shell as usize].contains(identity.app_instance_id) {
             assert!(registry.shells[shell as usize].borrow().is_none());
@@ -604,20 +581,20 @@ fn fem3d_window_config_mounted_close_preserves_foreign_instance_in_same_slot() {
                 preflight: SnapshotPreflight::new(),
             });
         });
-        let first = close_step(closing, 1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY);
+        let first = close_step(closing, PAGE_GRANT);
         if pending == Some(closing) {
-            assert_eq!(first, PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            assert_eq!(close_step(closing, 1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY), PluginCloseStep::Complete);
+            assert_eq!(first, session_pending(1, 0));
+            assert_eq!(close_step(closing, PAGE_GRANT), PluginLifecycleStep::Complete(RetainedCloneProgress::default()));
         } else {
-            assert_eq!(first, PluginCloseStep::Complete);
+            assert_eq!(first, PluginLifecycleStep::Complete(RetainedCloneProgress::default()));
         }
         assert!(terminal_is_empty(closing));
         let remaining = MOUNTED.with(|registry| registry.borrow().pending[slot].as_ref().map(|pending| pending.render.app_instance_id));
         assert_eq!(serde_json::json!({ "pendingInstanceId": remaining }), row["expected"], "{}", row["id"]);
         if let Some(remaining) = remaining {
             assert!(!terminal_is_empty(remaining));
-            assert_eq!(close_step(remaining, 1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-            assert_eq!(close_step(remaining, 1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY), PluginCloseStep::Complete);
+            assert_eq!(close_step(remaining, PAGE_GRANT), session_pending(1, 0));
+            assert_eq!(close_step(remaining, PAGE_GRANT), PluginLifecycleStep::Complete(RetainedCloneProgress::default()));
         }
     }
 }

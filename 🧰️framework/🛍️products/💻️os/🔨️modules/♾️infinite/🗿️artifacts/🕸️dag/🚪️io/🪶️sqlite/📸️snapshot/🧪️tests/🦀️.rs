@@ -1,4 +1,6 @@
 //! 🕸️ Framework DAG persisted-owner capability, literal-state and control baselines.
+#[path="../../../../../../../🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/🦀️.rs"]mod native_caller;
+use native_caller::*;
 use crate::*;
 use semio_framework_value::{DslValue, FromValue, Number, ToValue};
 
@@ -178,14 +180,14 @@ fn sqlite_snapshot_framework_dag_erased_both_native_formats_have_queryable_entit
             SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
             SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
         };
-        let database = (capability.export)("dag.host_snapshot", &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+        let database = with_original_decode(&native_caller_policy(),SqliteDatabaseLimits::default(),&mut |_| true,&mut |_|true,|_|{},|original_sql,original_owner|(capability.export)("dag.host_snapshot", &dialect, &payload,original_sql,original_owner)).unwrap().value;
         assert_eq!(database.tables.len(), 40);
         assert_eq!(database.table("dag_document").unwrap().single_row().unwrap().text(1).unwrap(), "");
         assert_eq!(database.table("dag_node").unwrap().rows.len(), expected.nodes.len());
         let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
         let bytes = independent_sqlite_file(&bytes);
         let database = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-        let payload = (capability.import)("dag.host_snapshot", &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+        let payload = {let mut original_input=Some(database);with_original_encode(&native_caller_policy(),SqliteDatabaseLimits::default(),&mut |_| true,&mut |_|true,|_|{},|original_sql,original_owner|(capability.import)("dag.host_snapshot", &dialect,&mut original_input,encoding,original_sql,original_owner))}.unwrap().value;
         let actual = Owned::new(match payload {
             store::io_schema::IoPayload::Binary(bytes) => DagSnapshot::decode_pack(&bytes).unwrap(),
             store::io_schema::IoPayload::Text(text) => DagSnapshot::parse_dsl(&text).unwrap(),

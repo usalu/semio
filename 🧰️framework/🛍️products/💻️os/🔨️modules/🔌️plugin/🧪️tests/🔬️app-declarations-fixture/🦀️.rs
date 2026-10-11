@@ -801,7 +801,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let identifier = char::from(fixture["identifierByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
         let parent = char::from(fixture["parentByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
         let slot = char::from(fixture["slotByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
-        let mut app = VcsArtifactApp::<EditorApp<Std1AnyEditor>>::new(EditorApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+        let mut app = VcsArtifactApp::<EditorApp<Std1AnyEditor>>::new(EditorApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
         assert_eq!(app.close_retirement_demands(4096).unwrap(), app.store.close_owned_demands(4096).unwrap());
         app.composition.graph_mut().await.insert_owns(&parent, &slot, &identifier).await.unwrap();
         app.close_owned_stage = fixture["finalOwnedStage"].as_u64().unwrap() as u8;
@@ -838,7 +838,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(app_demand, graph_demand, "final application phase must forward the exact retained composition allocation");
         println!("[DEBUG] Vcs composition query={app_demand:?} exact={graph_demand:?}; denied0/4096/8193 retain owner; whole8194 releases actual8194 with zero allocation");
         app.close_owned_stage = 0;
-        artifact_app_laws::close_registered_fixture_app(&mut app);
+        artifact_app_laws::close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
     }
 
     include!("⚠️refusal/🦀️.rs");

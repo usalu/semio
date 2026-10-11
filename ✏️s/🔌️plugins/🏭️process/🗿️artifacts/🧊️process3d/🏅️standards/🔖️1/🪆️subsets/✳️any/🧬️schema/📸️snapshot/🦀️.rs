@@ -19,7 +19,7 @@ use store::mounted_pack_rt as mounted;
 /// `steps`/`tool_solids` are composed CHILD slots — `#[child(...)]` drives
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Children must sit directly
 /// on this struct (not nested inside a helper record) for the derive to see them.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[dsl(extension = "process3d")]
 #[artifact_schema(id = "s.process.process3d")]

@@ -293,7 +293,7 @@ pub struct LayoutTransformTool {
 impl LayoutTransformTool {
     /// 🚀️ The tool at rest, for `<appId>#<verb>` under this admission's seed and document revision.
     pub fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
-        let runner = ToolMachineRunner::start(format!("{LAYOUT_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), TransformToolContext::default(), TransformToolHost)?;
+        let runner = ToolMachineRunner::start(format!("{LAYOUT_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.into()), TransformToolContext::default(), TransformToolHost)?;
         Ok(Self { runner, verb: verb.to_string(), authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string() })
     }
 
@@ -305,7 +305,7 @@ impl LayoutTransformTool {
         let entries = state.entries.iter().map(|entry| Ok((entry.key.clone(), semio_framework_value::FromValue::from_value(entry.mutation.clone()).map_err(|_| ToolRefusal::Closed)?))).collect::<Result<Vec<(String, LayoutMutation)>, ToolRefusal>>()?;
         let stream = entries.iter().find(|(key, _)| key == LAYOUT_TRANSFORM_TOOL_LEAF_KEY).and_then(|(_, leaf)| LayoutFrameRecord::from_leaf(leaf));
         let snapshot = machine::restore::<transform_tool::TransformTool, machine::NoMigrations>(&persisted, TransformToolContext { stream }, &[]).map_err(|_| ToolRefusal::Closed)?;
-        let runner = ToolMachineRunner::resume(format!("{LAYOUT_EDITOR_APP_ID}#{}", state.verb), protocol::ActorId(state.authoring_seed.clone()), TransformToolContext::default(), snapshot, Some(ToolTransaction::resume(state.transaction.clone(), entries)), TransformToolHost)?;
+        let runner = ToolMachineRunner::resume(format!("{LAYOUT_EDITOR_APP_ID}#{}", state.verb), protocol::ActorId(state.authoring_seed.as_str().into()), TransformToolContext::default(), snapshot, Some(ToolTransaction::resume(state.transaction.clone(), entries)), TransformToolHost)?;
         Ok(Self { runner, verb: state.verb.clone(), authoring_seed: state.authoring_seed.clone(), base_revision: state.base_revision.clone() })
     }
 

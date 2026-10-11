@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 
 //#region 🔖️CompositeKeys
 /// 🩹 Sparse patch over one [`OutputVariableSpec`](crate::model::OutputVariableSpec) row, addressed by `(name, key)`.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct OutputVariableSpecPatch {
     pub name: String,
     pub key: String,
@@ -58,7 +58,7 @@ impl RowPatch for OutputVariableSpecPatch {
 
 /// 🩹 Sparse patch over one [`AdjacencyPair`](crate::model::AdjacencyPair) row, addressed by its two surfaces; a pair has no
 /// field to modify, so only insertion and removal ever name it.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct AdjacencyPairPatch {
     pub surface_a_id: crate::model::EntityId,
     pub surface_b_id: crate::model::EntityId,

@@ -1,7 +1,8 @@
 //! 📬️ The exact external completion is parsed and bound before returning to its original finish cursor.
 use super::*;
 use semio_framework_pack_json::{JsonGrammarCursor,JsonMemberPolicy};
-use semio_framework_value::{NativeDecodeControl,NativeDecodeContinuation};
+use semio_framework_value::native_decoding::NativeDecodeContinuation;
+use semio_framework_value::NativeDecodeControl;
 
 pub(super) struct EvaluationExternalCompletion {
  pub(super) original:Option<EvaluationExternalResult>,parser:Option<JsonGrammarCursor<DslValue>>,continuation:Option<NativeDecodeContinuation>,

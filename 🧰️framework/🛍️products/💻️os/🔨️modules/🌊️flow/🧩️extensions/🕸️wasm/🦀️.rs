@@ -1,7 +1,6 @@
 //! 🔌️ Shared wasm extension glue for flow modules.
 
 use neural_engine::{inject_channel_defaults, ColdOwner, Dictionary, Registry};
-use semio_framework_replication as protocol;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_value::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
@@ -341,11 +340,11 @@ fn evaluation_admit_original<T:RetireOwned>(original:&mut Option<T>,active:&mut 
 }
 
 fn evaluation_child_demands(active:&Option<Box<dyn ErasedSnapshotRetirement>>,copy:usize)->Result<RetirementDemand,ValueError>{
-    active.as_ref().map_or(Ok(Default::default()),|owner|semio_framework_value::retirement::factory::factory_ticket_demands(owner,copy))
+    active.as_ref().map_or(Ok(Default::default()),|owner|semio_framework_value::factory_ticket_demands(owner,copy))
 }
 
 fn evaluation_child_close(active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-    semio_framework_value::retirement::factory::close_factory_ticket(active,grant)
+    semio_framework_value::close_factory_ticket(active,grant)
 }
 
 /// ⚠️ Keeps each original typed failure without allocating display text during a normal turn.

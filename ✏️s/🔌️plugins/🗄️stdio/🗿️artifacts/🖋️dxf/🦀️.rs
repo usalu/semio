@@ -16,7 +16,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 
 pub use schema::diff::DxfDiff;
 pub use schema::mutations::DxfMutation;
-pub use schema::snapshot::DxfSnapshot;
+pub use schema::snapshot::{DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSnapshot, DxfSolid, DxfText};
 pub use schema::DxfArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.

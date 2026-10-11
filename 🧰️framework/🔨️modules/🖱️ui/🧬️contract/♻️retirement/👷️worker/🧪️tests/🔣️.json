@@ -1,7 +1,7 @@
 {
   "policy": {
     "maximum_items": 1,
-    "maximum_copy_bytes": 4096,
+    "maximum_copy_bytes": 65536,
     "maximum_capacity_bytes": 65536,
     "maximum_release_bytes": 262144,
     "maximum_depth": 64
@@ -20,7 +20,7 @@
     {
       "name": "all-boundaries",
       "demand": {
-        "copy_bytes": 4096,
+        "copy_bytes": 65536,
         "capacity_bytes": 65536,
         "release_bytes": 262144,
         "depth": 64
@@ -30,7 +30,7 @@
     {
       "name": "copy_bytes below",
       "demand": {
-        "copy_bytes": 4095,
+        "copy_bytes": 65535,
         "capacity_bytes": 65536,
         "release_bytes": 262144,
         "depth": 64
@@ -40,7 +40,7 @@
     {
       "name": "copy_bytes above",
       "demand": {
-        "copy_bytes": 4097,
+        "copy_bytes": 65537,
         "capacity_bytes": 65536,
         "release_bytes": 262144,
         "depth": 64
@@ -50,7 +50,7 @@
     {
       "name": "capacity_bytes below",
       "demand": {
-        "copy_bytes": 4096,
+        "copy_bytes": 65536,
         "capacity_bytes": 65535,
         "release_bytes": 262144,
         "depth": 64
@@ -60,7 +60,7 @@
     {
       "name": "capacity_bytes above",
       "demand": {
-        "copy_bytes": 4096,
+        "copy_bytes": 65536,
         "capacity_bytes": 65537,
         "release_bytes": 262144,
         "depth": 64
@@ -70,7 +70,7 @@
     {
       "name": "release_bytes below",
       "demand": {
-        "copy_bytes": 4096,
+        "copy_bytes": 65536,
         "capacity_bytes": 65536,
         "release_bytes": 262143,
         "depth": 64
@@ -80,7 +80,7 @@
     {
       "name": "release_bytes above",
       "demand": {
-        "copy_bytes": 4096,
+        "copy_bytes": 65536,
         "capacity_bytes": 65536,
         "release_bytes": 262145,
         "depth": 64
@@ -90,7 +90,7 @@
     {
       "name": "depth below",
       "demand": {
-        "copy_bytes": 4096,
+        "copy_bytes": 65536,
         "capacity_bytes": 65536,
         "release_bytes": 262144,
         "depth": 63
@@ -100,7 +100,7 @@
     {
       "name": "depth above",
       "demand": {
-        "copy_bytes": 4096,
+        "copy_bytes": 65536,
         "capacity_bytes": 65536,
         "release_bytes": 262144,
         "depth": 65
@@ -110,7 +110,7 @@
     {
       "name": "giant-original",
       "demand": {
-        "copy_bytes": 4096,
+        "copy_bytes": 65536,
         "capacity_bytes": 65536,
         "release_bytes": 3145728,
         "depth": 64

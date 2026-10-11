@@ -2,6 +2,7 @@ use super::*;
 use crate::standards::v1::subsets::any::io::binary::mutations::{encode_op, generation2d_all_retained_mutation_fixtures_for_test};
 use crate::central_apply::{generation2d_retire_mutation_cold};
 use crate::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, generation2d_apply_initialization_mutation, generation2d_retire_mutations_cold};
+use crate::retirement_driver::{drive_erased_released, job_grant, retire_owned_for_test, retire_shared_for_test};
 
 
 fn close_session(session: &mut Generation2dMutationSession) {
@@ -193,8 +194,8 @@ fn retained_pack_outer_cancellation_preserves_subexact_source_and_releases_exact
     snapshot.state = Generation2dPackSnapshotState::Ingest;
     let vcs = store::ArtifactEnvelopeFreshVcsAuthority::try_new(
         Box::new(snapshot),
-        std::sync::Arc::new(Generation2dRetainedSnapshotRetirementFactory),
-        std::sync::Arc::new(Generation2dRetainedMutationRetirementFactory),
+        std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()),
+        std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()),
         store::ArtifactEnvelopeOwnedFieldCatalog::edit_history_decoder(&Generation2dEnvelopeOwnedFieldCatalog),
     )
     .unwrap_or_else(|_| panic!("outer retained Pack VCS admission"));
@@ -213,26 +214,24 @@ fn retained_pack_outer_cancellation_preserves_subexact_source_and_releases_exact
     for _ in 0..100_000 {
         if let Some(ticket) = registry.next_returned_ticket() {
             let mut returned = registry.take_returned_ticket(ticket).expect("outer retained Pack returned field detach");
-            for _ in 0..4 {
-                if store::ErasedSnapshotRetirement::close_step(&mut returned, 1, maximum_close_byte_demand).expect("outer retained Pack returned field close") == store::SnapshotRetirementStep::Complete {
-                    break;
-                }
-            }
+            drive_erased_released(&mut returned, "outer retained Pack returned field");
             assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&returned));
         }
-        let demand = job.next_close_byte_demand().expect("outer retained Pack close demand");
-        if demand > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && !refused_subexact {
+        let release = InteractiveJob::next_close_release_byte_demand(&job).expect("outer retained Pack close demand");
+        if release > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && !refused_subexact {
             let before = job.released_field_bytes();
-            assert_eq!(InteractiveJob::close_step(&mut job, 1, demand - 1), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
-            assert_eq!(job.next_close_byte_demand().expect("preserved outer retained Pack close demand"), demand);
+            let exact = job_grant(&job);
+            let subexact = store::RetainedCloneGrant { maximum_release_bytes: release - 1, ..exact };
+            assert_eq!(InteractiveJob::close_step(&mut job, subexact), semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
+            assert_eq!(InteractiveJob::next_close_release_byte_demand(&job).expect("preserved outer retained Pack close demand"), release);
             assert_eq!(job.released_field_bytes(), before);
             refused_subexact = true;
         }
-        let step = InteractiveJob::close_step(&mut job, 1, demand);
+        let step = InteractiveJob::close_step(&mut job, job_grant(&job));
         let released = job.released_field_bytes();
         released_source_bytes += released - prior_released_source_bytes;
         prior_released_source_bytes = released;
-        if step == semio_framework_job::InteractiveJobCloseStep::Complete {
+        if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete { .. }) {
             terminal = true;
             break;
         }
@@ -243,8 +242,8 @@ fn retained_pack_outer_cancellation_preserves_subexact_source_and_releases_exact
     assert_eq!(job.released_field_bytes(), admitted_source_bytes);
     assert_eq!(released_source_bytes, admitted_source_bytes);
     let mut sequence = 0;
-    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-    assert!(matches!(InteractiveJob::step(&mut job, &mut context), semio_framework_job::StepOutcome::Cancelled));
+    let stepped = crate::retirement_driver::step_once(&mut job, 1, u64::MAX, &semio_framework_job::root_cancel_token(), operation, generation, &mut sequence);
+    assert_eq!(stepped, crate::retirement_driver::Stepped::Cancelled);
 }
 
 struct RefusedSnapshotOwner {
@@ -280,10 +279,6 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Ref
         Err(Self::diagnostic())
     }
 
-    fn next_close_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
-        Ok(0)
-    }
-
     fn maximum_close_byte_demand(&self) -> usize {
         self.maximum_close_byte_demand
     }
@@ -292,13 +287,32 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Ref
         self.maximum_retained_close_bytes
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(0)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+        Ok(usize::from(!self.terminal))
+    }
+
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+        if self.terminal {
+            return Ok(store::RetainedCloneStep::Complete(Default::default()));
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(store::RetainedCloneStep::Progress(Default::default()));
         }
         self.terminal = true;
         self.closed.store(true, std::sync::atomic::Ordering::Release);
-        Ok(store::SnapshotRetirementStep::Complete)
+        Ok(store::RetainedCloneStep::Complete(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -328,13 +342,14 @@ fn retained_pack_outer_oversized_nested_snapshot_is_returned_for_close_before_vc
         });
         let mut returned = store::ArtifactEnvelopeFreshVcsAuthority::try_new(
             snapshot,
-            std::sync::Arc::new(Generation2dRetainedSnapshotRetirementFactory),
-            std::sync::Arc::new(Generation2dRetainedMutationRetirementFactory),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()),
             store::ArtifactEnvelopeOwnedFieldCatalog::edit_history_decoder(&Generation2dEnvelopeOwnedFieldCatalog),
         )
         .err()
         .expect("oversized nested snapshot must be returned before VCS admission");
-        assert_eq!(returned.close_step(1, 0).expect("returned oversized snapshot close"), store::SnapshotRetirementStep::Complete);
+        let exact = store::RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..Default::default() };
+        assert!(matches!(returned.close_step(exact).expect("returned oversized snapshot close"), store::RetainedCloneStep::Complete(_)));
         assert!(returned.terminal_is_empty());
         drop(returned);
         assert!(closed.load(std::sync::atomic::Ordering::Acquire));
@@ -342,39 +357,15 @@ fn retained_pack_outer_oversized_nested_snapshot_is_returned_for_close_before_vc
 }
 
 //#region 🧹️FlowFrontierOwnership
-/// 🚪️ The exact driver every framework close ladder is: one item, one 4 KiB page, and no channel to
-/// ask the owner for a bigger grant. `close_registered_fixture_app`
-/// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`) yields and asks again with the same grant
-/// until its deadline, so for a retirement this app owns `Blocked` is a permanent stall that surfaces as
-/// "document store close awaits a retained reader or owner".
-fn drive_under_the_frameworks_fixed_page_grant(retirement: &mut dyn store::ErasedSnapshotRetirement, owner: &str) -> usize {
-    let mut released = 0usize;
-    for _ in 0..GENERATION2D_MAXIMUM_DOMAIN_ITEMS {
-        match retirement.close_step(1, GENERATION2D_OWNER_BYTES).unwrap_or_else(|reason| panic!("{owner} retirement faulted: {reason}")) {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty(), "{owner} reported Complete without its exact terminal-empty witness");
-                return released;
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1, "{owner} released {released_items} items under a one-item grant");
-                assert!(released_bytes <= GENERATION2D_OWNER_BYTES, "{owner} released {released_bytes} bytes under a {GENERATION2D_OWNER_BYTES}-byte grant");
-                released += released_bytes;
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("{owner} answered Blocked under the framework's exact one-page close grant; paying the Flow frontier's own reserve-then-close demand is this retirement's business"),
-        }
-    }
-    panic!("{owner} did not reach its terminal-empty close witness")
-}
-
-/// 🧊️ Both document retirement routes pay their own `FlowRetirement` reserve-then-close demand. The
-/// oracle is the framework's generic `Arc` route (`store::SnapshotRetirementFactory`), which must release
-/// byte-for-byte what the owned route releases.
+/// 🧊️ Both document retirement routes pay their own `FlowRetirement` reserve-then-close demand under
+/// exactly their quoted grants. The oracle is the framework's generic `Arc` route
+/// (`SharedValueRetirementFactory`), which must release byte-for-byte what the owned route releases.
 #[test]
-fn every_document_retirement_pays_its_own_flow_frontier_under_the_fixed_page_grant() {
-    let mut owned = generation2d_retire_owned_snapshot(Generation2dSnapshot::default());
-    let owned_bytes = drive_under_the_frameworks_fixed_page_grant(owned.as_mut(), "owned document snapshot");
-    let mut aliased = store::SnapshotRetirementFactory::retire(&Generation2dRetainedSnapshotRetirementFactory, std::sync::Arc::new(Generation2dSnapshot::default()));
-    let aliased_bytes = drive_under_the_frameworks_fixed_page_grant(aliased.as_mut(), "aliased document snapshot");
+fn every_document_retirement_pays_its_own_flow_frontier_under_its_quoted_grants() {
+    let mut owned = retire_owned_for_test(Generation2dSnapshot::default(), "owned document snapshot");
+    let owned_bytes = drive_erased_released(owned.as_mut(), "owned document snapshot");
+    let mut aliased = retire_shared_for_test(std::sync::Arc::new(Generation2dSnapshot::default()), "aliased document snapshot");
+    let aliased_bytes = drive_erased_released(aliased.as_mut(), "aliased document snapshot");
     assert_eq!(owned_bytes, aliased_bytes, "the owned and Arc retirement routes must release the same exact document backing");
     assert!(owned_bytes > 0, "a populated document fixture owns real backing");
 }
@@ -382,17 +373,19 @@ fn every_document_retirement_pays_its_own_flow_frontier_under_the_fixed_page_gra
 /// 🔁️ The same law for every replay displacement `generation2d_apply_initialization_mutation` hands the
 /// store's displaced-retirement ladder.
 #[test]
-fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_the_fixed_page_grant() {
+fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_its_quoted_grants() {
     let mut snapshot = Generation2dSnapshot::default();
     let mutations = generation2d_all_retained_mutation_fixtures_for_test();
     let mut displaced = 0usize;
     for mutation in &mutations {
-        let Ok(Some(mut retirement)) = generation2d_apply_initialization_mutation(&mut snapshot, mutation) else { continue };
-        drive_under_the_frameworks_fixed_page_grant(retirement.as_mut(), "displaced replay owner");
+        let Ok(Some(value)) = generation2d_apply_initialization_mutation(&mut snapshot, mutation) else { continue };
+        let mut owner = retire_owned_for_test(value, "displaced replay owner");
+        drive_erased_released(owner.as_mut(), "displaced replay owner");
         displaced += 1;
     }
     generation2d_retire_mutations_cold(mutations);
     assert!(displaced > 0, "the retained mutation fixtures must displace at least one owner");
-    drive_under_the_frameworks_fixed_page_grant(generation2d_retire_owned_snapshot(snapshot).as_mut(), "replayed document snapshot");
+    let mut replayed = retire_owned_for_test(snapshot, "replayed document snapshot");
+    drive_erased_released(replayed.as_mut(), "replayed document snapshot");
 }
 //#endregion 🧹️FlowFrontierOwnership

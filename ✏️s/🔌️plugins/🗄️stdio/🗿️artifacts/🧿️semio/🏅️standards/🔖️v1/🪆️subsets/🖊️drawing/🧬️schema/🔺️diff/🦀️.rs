@@ -622,7 +622,8 @@ impl DiffAlgebra<SemioDrawingSnapshot> for SemioDrawingDiff {
 /// `path` is a chain of child indices from that layer's `root` (`path == []` addresses the root
 /// itself). Kept out of the diff facet (svg precedent) -- `diff_at_path` lowers it into a nested
 /// `SemioDrawingDiff` via `Group.children` triple entries down to the addressed depth.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct NodePath {
     pub layer: usize,

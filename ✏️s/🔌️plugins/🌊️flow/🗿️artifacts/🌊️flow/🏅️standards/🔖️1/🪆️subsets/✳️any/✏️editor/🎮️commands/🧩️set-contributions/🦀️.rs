@@ -27,7 +27,7 @@ pub fn install(payload: &SetContributions, session: &mut FlowEvalSession) -> Res
     let page = u32::try_from(payload.page).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     let page_count = u32::try_from(payload.page_count).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)?;
-    Ok(session.invalidate_for_flow_extension_registry(flow::flow_extension_registry_generation()))
+    session.invalidate_for_flow_extension_registry(flow::flow_extension_registry_generation(), crate::editor::flow::cold_grant()).map(|(invalidated, _)| invalidated).map_err(crate::editor::flow::value_fault)
 }
 
 /// 🧩️ The `app_commands!` row: installs the page against the session it is handed. The served route

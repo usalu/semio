@@ -180,16 +180,16 @@ struct CountingComputeJob {
 }
 
 impl InteractiveJob for CountingComputeJob {
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         if cx.is_cancelled() {
             if self.entered {
                 self.current.as_ref().expect("compute current counter").fetch_sub(1, Ordering::SeqCst);
                 self.entered = false;
             }
-            return StepOutcome::Cancelled;
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
         }
         if cx.should_yield() {
-            return StepOutcome::Yield;
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
         }
         if !self.entered {
             let now = self.current.as_ref().expect("compute current counter").fetch_add(1, Ordering::SeqCst) + 1;
@@ -199,14 +199,20 @@ impl InteractiveJob for CountingComputeJob {
         cx.consume_fuel(1);
         if self.remaining_steps > 0 {
             self.remaining_steps -= 1;
-            return StepOutcome::Yield;
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
         }
         self.current.as_ref().expect("compute current counter").fetch_sub(1, Ordering::SeqCst);
         self.entered = false;
-        StepOutcome::Complete(semio_framework_job::CommitCandidate {
-            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-        })
+        semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            semio_framework_job::JobOutcomeKind::Yield => descriptor.yielded(),
+            semio_framework_job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            semio_framework_job::JobOutcomeKind::Complete => descriptor.complete(None, None),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "counting compute fixture publishes yield, cancelled and empty complete only")),
+        }
     }
 
     fn begin_close(&mut self) {
@@ -249,12 +255,20 @@ struct NeverCompleteComputeJob {
 }
 
 impl InteractiveJob for NeverCompleteComputeJob {
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         if cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
         }
         cx.consume_fuel(1);
-        StepOutcome::Yield
+        semio_framework_job::JobOutcomeBorrow::admit_yield(cx)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            semio_framework_job::JobOutcomeKind::Yield => descriptor.yielded(),
+            semio_framework_job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "never-complete compute fixture publishes yield and cancelled only")),
+        }
     }
 
     fn begin_close(&mut self) {
@@ -321,7 +335,8 @@ async fn stopped_compute_pool_returns_worker_lost_and_releases_the_job_owner() {
     workers.shutdown();
     let pool = ComputePool::with_pool(1, workers);
     let scope = runtime.open_scope(ScopeOwner::Service("compute-stopped"), None).await;
-    let ctx = test_ctx(0, scope.cancel.clone()).await;
+    let mut ctx = test_ctx(0, scope.cancel.clone()).await;
+    ctx.lane = 1;
     let outcome = receive_original_compute_job(&pool,&runtime,&scope,&ctx,NeverCompleteComputeJob{closing:false}).await;
     assert_eq!(outcome, Err(ComputeError::WorkerLost));
 }
@@ -1519,20 +1534,6 @@ async fn mock_completion_sink_records_calls_in_order() {
     assert_eq!(recorded[1].actor, 2);
 }
 //#endregion 🧾️CompletionSinkTests
-
-#[test]
-fn compute_returned_outcome_keeps_original_metadata_on_denied_grant_and_observes_exact_receipt(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();
-    let grant:semio_framework_job::RetainedCloneGrant=serde_json::from_value(fixture["metadataTurn"]["grant"].clone()).unwrap();
-    let expected:semio_framework_job::RetainedCloneProgress=serde_json::from_value(fixture["metadataTurn"]["receipt"].clone()).unwrap();
-    let mut owner=ComputeOutcomeCloseOwner{original:semio_framework_job::JobOutcomeSlot::from_outcome(StepOutcome::Cancelled),grant,progress:Default::default()};
-    let pointer=owner.original.original().unwrap() as *const StepOutcome;
-    for denied in [semio_framework_job::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_job::RetainedCloneGrant{maximum_copy_bytes:0,..grant},semio_framework_job::RetainedCloneGrant{maximum_depth:0,..grant}]{
-        owner.grant=denied;let step=owner.close_step().unwrap();assert_eq!(step.progress(),Default::default());assert_eq!(owner.progress,Default::default());assert_eq!(owner.original.original().unwrap() as *const StepOutcome,pointer);assert_eq!(owner.grant,denied);
-    }
-    owner.grant=grant;let step=owner.close_step().unwrap();assert_eq!(step,semio_framework_job::RetainedCloneStep::Complete(expected));assert!(owner.original.is_empty());assert_eq!(owner.progress,expected);assert_eq!(owner.grant,grant);assert_eq!(owner.close_step().unwrap().progress(),Default::default());assert_eq!(owner.progress,expected);
-    eprintln!("[DEBUG] actual Services returned original metadata same pointer under item/copy/depth denial; caller grant unchanged; exact copied1 byte1 release0 terminal receipt");
-}
 
 #[test]
 fn original_compute_owned_admission_quotes_the_complete_atomic_child_before_receiving(){

@@ -22,7 +22,7 @@ pub const READS: &[&str] = &["schedules", "properties", "walls", "wall_types", "
 
 //#region 🔖️Values
 /// 🧾️ One cell of a schedule table: nothing, a text (a stable token for enumerations, localized only when shown) or a number in the unit of its field (metres, square metres, cubic metres, kilograms, a count).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum ScheduleCell {
     #[default]
     Empty,
@@ -61,7 +61,7 @@ impl ScheduleCell {
 }
 
 /// 🧩️ What a row of a table is: one element (or layer), the subtotal or collapsed row of a group, or the grand total.
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum RowKind {
     #[default]
     Item,
@@ -70,7 +70,7 @@ pub enum RowKind {
 }
 
 /// 🧾️ One row of a table: its kind, its nesting depth (the grouping level a group row closes; the number of grouping levels for an item), the elements a pick selects and one cell per column.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ScheduleRow {
     pub kind: RowKind,
     pub level: u32,
@@ -79,7 +79,7 @@ pub struct ScheduleRow {
 }
 
 /// 📋️ The table of one schedule: its column keys, its rows and the number of source rows that passed the scope and the filters.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ScheduleTable {
     pub keys: Vec<ScheduleKey>,
     pub rows: Vec<ScheduleRow>,

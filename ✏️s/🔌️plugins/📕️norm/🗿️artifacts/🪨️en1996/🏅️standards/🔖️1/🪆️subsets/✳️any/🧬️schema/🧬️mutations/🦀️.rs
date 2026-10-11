@@ -65,7 +65,8 @@ use super::change_opening_sill;
 use super::change_opening_width;
 use super::change_hk_earth;
 
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = En1996Snapshot, diff = En1996Diff, schema = "s.norm.en1996")]
 pub enum En1996Mutation {

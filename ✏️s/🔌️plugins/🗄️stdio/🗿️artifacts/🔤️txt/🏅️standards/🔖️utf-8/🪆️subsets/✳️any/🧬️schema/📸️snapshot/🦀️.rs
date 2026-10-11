@@ -12,7 +12,8 @@ use framework_schema::ArtifactSchema;
 /// `f6-recon-report.md`: `DslScalar` is one of the two derive sources for `DslField`, unit
 /// variants only), letting `Option<LineEnding>`/`LineEnding` fields embed in `TxtDiff`/
 /// `TxtSnapshot`/`TxtMutation` below without hand-rolling.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum LineEnding {
     #[default]
@@ -41,7 +42,7 @@ impl LineEnding {
 /// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
 /// (so it can be carried by direct mutation payloads and storage surfaces), it
 /// does not touch the artifact's own honest line-joined-by-line-ending envelope format.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.txt")]
 pub struct TxtSnapshot {

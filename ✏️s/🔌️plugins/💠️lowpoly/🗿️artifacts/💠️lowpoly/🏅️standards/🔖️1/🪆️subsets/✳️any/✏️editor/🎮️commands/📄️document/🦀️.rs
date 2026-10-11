@@ -22,7 +22,7 @@ fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
 pub mod set_snapshot_json {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "import-snapshot-json")]
     pub struct ImportSnapshotJson {
@@ -39,7 +39,7 @@ pub mod set_snapshot_json {
 pub mod replace_snapshot_json {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
     #[cfg_attr(test, derive(Serialize, Deserialize))]
     #[dsl(keyword = "replace-snapshot-json")]
     pub struct ReplaceSnapshotJson {

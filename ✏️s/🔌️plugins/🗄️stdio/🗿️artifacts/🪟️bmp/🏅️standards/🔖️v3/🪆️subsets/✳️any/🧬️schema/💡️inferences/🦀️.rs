@@ -11,7 +11,7 @@ use super::dimensions::compute_bmp_dimensions;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a bmp snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp.inference")]
 pub struct BmpInference {

@@ -25,11 +25,11 @@ fn native_entity_rows(entities:&[DxfEntity],rows:&mut usize,control:&mut Control
     for entity in entities{
         add_native_rows(rows,1,control)?;
         let codes=match entity{
-            DxfEntity::Line{unknown_group_codes,..}=>{add_native_rows(rows,2,control)?;unknown_group_codes},
-            DxfEntity::Circle{unknown_group_codes,..}|DxfEntity::Arc{unknown_group_codes,..}|DxfEntity::Text{unknown_group_codes,..}|DxfEntity::Insert{unknown_group_codes,..}=>{add_native_rows(rows,1,control)?;unknown_group_codes},
-            DxfEntity::Solid{unknown_group_codes,..}=>{add_native_rows(rows,4,control)?;unknown_group_codes},
-            DxfEntity::Polyline{vertices,unknown_group_codes,..}=>{for vertex in vertices{add_native_rows(rows,1,control)?;add_native_rows(rows,vertex.unknown_group_codes.len(),control)?;}unknown_group_codes},
-            DxfEntity::Other{group_codes,..}=>group_codes,
+            DxfEntity::Line(DxfLine {unknown_group_codes,..})=>{add_native_rows(rows,2,control)?;unknown_group_codes},
+            DxfEntity::Circle(DxfCircle {unknown_group_codes,..})|DxfEntity::Arc(DxfArc {unknown_group_codes,..})|DxfEntity::Text(DxfText {unknown_group_codes,..})|DxfEntity::Insert(DxfInsert {unknown_group_codes,..})=>{add_native_rows(rows,1,control)?;unknown_group_codes},
+            DxfEntity::Solid(DxfSolid {unknown_group_codes,..})=>{add_native_rows(rows,4,control)?;unknown_group_codes},
+            DxfEntity::Polyline(DxfPolyline {vertices,unknown_group_codes,..})=>{for vertex in vertices{add_native_rows(rows,1,control)?;add_native_rows(rows,vertex.unknown_group_codes.len(),control)?;}unknown_group_codes},
+            DxfEntity::Other(DxfOther {group_codes,..})=>group_codes,
         };add_native_rows(rows,codes.len(),control)?;
     }Ok(())
 }
@@ -48,25 +48,25 @@ fn entities(out: &mut Projection<'_, '_>, block: Option<i64>, entities: &[DxfEnt
     for (ordinal, entity) in entities.iter().enumerate() {
         let mut fields = [C::Null; 14];
         let (kind, layer, extra) = match entity {
-            DxfEntity::Line { layer, unknown_group_codes, .. } => ("line", Some(layer.as_str()), unknown_group_codes),
-            DxfEntity::Circle { radius, layer, unknown_group_codes, .. } => { fields[2] = C::Real(*radius); ("circle", Some(layer.as_str()), unknown_group_codes) },
-            DxfEntity::Arc { radius, start_angle, end_angle, layer, unknown_group_codes, .. } => { fields[2] = C::Real(*radius); fields[3] = C::Real(*start_angle); fields[4] = C::Real(*end_angle); ("arc", Some(layer.as_str()), unknown_group_codes) },
-            DxfEntity::Polyline { closed, layer, unknown_group_codes, .. } => { fields[12] = C::Integer(i64::from(*closed)); ("polyline", Some(layer.as_str()), unknown_group_codes) },
-            DxfEntity::Text { height, value, layer, unknown_group_codes, .. } => { fields[5] = C::Real(*height); fields[6] = C::Text(value); ("text", Some(layer.as_str()), unknown_group_codes) },
-            DxfEntity::Solid { layer, unknown_group_codes, .. } => ("solid", Some(layer.as_str()), unknown_group_codes),
-            DxfEntity::Insert { block_name, scale, rotation, layer, unknown_group_codes, .. } => { fields[7] = C::Text(block_name); fields[8] = C::Real(scale[0]); fields[9] = C::Real(scale[1]); fields[10] = C::Real(scale[2]); fields[11] = C::Real(*rotation); ("insert", Some(layer.as_str()), unknown_group_codes) },
-            DxfEntity::Other { kind, group_codes } => { fields[13] = C::Text(kind); ("other", None, group_codes) },
+            DxfEntity::Line(DxfLine { layer, unknown_group_codes, .. }) => ("line", Some(layer.as_str()), unknown_group_codes),
+            DxfEntity::Circle(DxfCircle { radius, layer, unknown_group_codes, .. }) => { fields[2] = C::Real(*radius); ("circle", Some(layer.as_str()), unknown_group_codes) },
+            DxfEntity::Arc(DxfArc { radius, start_angle, end_angle, layer, unknown_group_codes, .. }) => { fields[2] = C::Real(*radius); fields[3] = C::Real(*start_angle); fields[4] = C::Real(*end_angle); ("arc", Some(layer.as_str()), unknown_group_codes) },
+            DxfEntity::Polyline(DxfPolyline { closed, layer, unknown_group_codes, .. }) => { fields[12] = C::Integer(i64::from(*closed)); ("polyline", Some(layer.as_str()), unknown_group_codes) },
+            DxfEntity::Text(DxfText { height, value, layer, unknown_group_codes, .. }) => { fields[5] = C::Real(*height); fields[6] = C::Text(value); ("text", Some(layer.as_str()), unknown_group_codes) },
+            DxfEntity::Solid(DxfSolid { layer, unknown_group_codes, .. }) => ("solid", Some(layer.as_str()), unknown_group_codes),
+            DxfEntity::Insert(DxfInsert { block_name, scale, rotation, layer, unknown_group_codes, .. }) => { fields[7] = C::Text(block_name); fields[8] = C::Real(scale[0]); fields[9] = C::Real(scale[1]); fields[10] = C::Real(scale[2]); fields[11] = C::Real(*rotation); ("insert", Some(layer.as_str()), unknown_group_codes) },
+            DxfEntity::Other(DxfOther { kind, group_codes }) => { fields[13] = C::Text(kind); ("other", None, group_codes) },
         };
         fields[0] = C::Text(kind); fields[1] = layer.map_or(C::Null, C::Text);
         let mut cells = [C::Null; 17]; cells[..3].copy_from_slice(&[C::Integer(1), block.map_or(C::Null, C::Integer), C::Integer(i64::try_from(ordinal).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"DXF entity ordinal exceeds i64"))?)]); cells[3..].copy_from_slice(&fields);
         let key = out.insert("dxf_entity", &cells)?;
         match entity {
-            DxfEntity::Line { start, end, .. } => { point(out, key, 0, "start", start)?; point(out, key, 1, "end", end)?; },
-            DxfEntity::Circle { center, .. } | DxfEntity::Arc { center, .. } => point(out, key, 0, "center", center)?,
-            DxfEntity::Text { position, .. } | DxfEntity::Insert { position, .. } => point(out, key, 0, "position", position)?,
-            DxfEntity::Solid { points, .. } => { for (ordinal, corner) in points.iter().enumerate() { point(out, key, ordinal, "corner", corner)?; } },
-            DxfEntity::Polyline { vertices, .. } => { for (ordinal, vertex) in vertices.iter().enumerate() { let vertex_key = out.insert("dxf_vertex", &[C::Integer(key), C::Integer(ordinal as i64), C::Real(vertex.x), C::Real(vertex.y), C::Real(vertex.z), C::Real(vertex.bulge)])?; codes(out, 6, vertex_key, &vertex.unknown_group_codes)?; } },
-            DxfEntity::Other { .. } => {},
+            DxfEntity::Line(DxfLine { start, end, .. }) => { point(out, key, 0, "start", start)?; point(out, key, 1, "end", end)?; },
+            DxfEntity::Circle(DxfCircle { center, .. }) | DxfEntity::Arc(DxfArc { center, .. }) => point(out, key, 0, "center", center)?,
+            DxfEntity::Text(DxfText { position, .. }) | DxfEntity::Insert(DxfInsert { position, .. }) => point(out, key, 0, "position", position)?,
+            DxfEntity::Solid(DxfSolid { points, .. }) => { for (ordinal, corner) in points.iter().enumerate() { point(out, key, ordinal, "corner", corner)?; } },
+            DxfEntity::Polyline(DxfPolyline { vertices, .. }) => { for (ordinal, vertex) in vertices.iter().enumerate() { let vertex_key = out.insert("dxf_vertex", &[C::Integer(key), C::Integer(ordinal as i64), C::Real(vertex.x), C::Real(vertex.y), C::Real(vertex.z), C::Real(vertex.bulge)])?; codes(out, 6, vertex_key, &vertex.unknown_group_codes)?; } },
+            DxfEntity::Other(DxfOther { .. }) => {},
         }
         codes(out, 5, key, extra)?;
     }
@@ -204,14 +204,14 @@ impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
             for column in 6..18 {if !used.contains(&column)&&!row.is_null(column)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DXF entity carries fields belonging to another kind"));}}
             let layer=if kind=="other" {if row.values[5]!=V::Null{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DXF other entity has an undeclared layer field"));}String::new()}else{self.text(row,5)?};
             entities.push(match kind {
-                "line"=>{let points=self.points(key,&["start","end"])?;DxfEntity::Line{start:points[0],end:points[1],layer,unknown_group_codes:extra}},
-                "circle"=>DxfEntity::Circle{center:self.points(key,&["center"])?[0],radius:row.real(6)?,layer,unknown_group_codes:extra},
-                "arc"=>DxfEntity::Arc{center:self.points(key,&["center"])?[0],radius:row.real(6)?,start_angle:row.real(7)?,end_angle:row.real(8)?,layer,unknown_group_codes:extra},
-                "polyline"=>{let closed=match row.integer(16)?{0=>false,1=>true,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DXF polyline closed flag must be boolean"))};let mut vertices=Vec::new();for vertex in self.ordered("dxf_vertex",Some(key)){self.take("dxf_vertex",vertex.rowid)?;vertices.push(DxfVertex{x:vertex.real(3)?,y:vertex.real(4)?,z:vertex.real(5)?,bulge:vertex.real(6)?,unknown_group_codes:self.codes(6,vertex.rowid)?});}DxfEntity::Polyline{vertices,closed,layer,unknown_group_codes:extra}},
-                "text"=>DxfEntity::Text{position:self.points(key,&["position"])?[0],height:row.real(9)?,value:self.text(row,10)?,layer,unknown_group_codes:extra},
-                "solid"=>{let points=self.points(key,&["corner","corner","corner","corner"])?;DxfEntity::Solid{points:[points[0],points[1],points[2],points[3]],layer,unknown_group_codes:extra}},
-                "insert"=>DxfEntity::Insert{block_name:self.text(row,11)?,position:self.points(key,&["position"])?[0],scale:[row.real(12)?,row.real(13)?,row.real(14)?],rotation:row.real(15)?,layer,unknown_group_codes:extra},
-                "other"=>DxfEntity::Other{kind:self.text(row,17)?,group_codes:extra},
+                "line"=>{let points=self.points(key,&["start","end"])?;DxfEntity::Line(DxfLine {start:points[0],end:points[1],layer,unknown_group_codes:extra})},
+                "circle"=>DxfEntity::Circle(DxfCircle {center:self.points(key,&["center"])?[0],radius:row.real(6)?,layer,unknown_group_codes:extra}),
+                "arc"=>DxfEntity::Arc(DxfArc {center:self.points(key,&["center"])?[0],radius:row.real(6)?,start_angle:row.real(7)?,end_angle:row.real(8)?,layer,unknown_group_codes:extra}),
+                "polyline"=>{let closed=match row.integer(16)?{0=>false,1=>true,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DXF polyline closed flag must be boolean"))};let mut vertices=Vec::new();for vertex in self.ordered("dxf_vertex",Some(key)){self.take("dxf_vertex",vertex.rowid)?;vertices.push(DxfVertex{x:vertex.real(3)?,y:vertex.real(4)?,z:vertex.real(5)?,bulge:vertex.real(6)?,unknown_group_codes:self.codes(6,vertex.rowid)?});}DxfEntity::Polyline(DxfPolyline {vertices,closed,layer,unknown_group_codes:extra})},
+                "text"=>DxfEntity::Text(DxfText {position:self.points(key,&["position"])?[0],height:row.real(9)?,value:self.text(row,10)?,layer,unknown_group_codes:extra}),
+                "solid"=>{let points=self.points(key,&["corner","corner","corner","corner"])?;DxfEntity::Solid(DxfSolid {points:[points[0],points[1],points[2],points[3]],layer,unknown_group_codes:extra})},
+                "insert"=>DxfEntity::Insert(DxfInsert {block_name:self.text(row,11)?,position:self.points(key,&["position"])?[0],scale:[row.real(12)?,row.real(13)?,row.real(14)?],rotation:row.real(15)?,layer,unknown_group_codes:extra}),
+                "other"=>DxfEntity::Other(DxfOther {kind:self.text(row,17)?,group_codes:extra}),
                 _=>unreachable!(),
             });
         }
@@ -254,7 +254,7 @@ use semio_framework_value::FromValue;
     #[test]
     fn sqlite_snapshot_dxf_preserves_ieee_entity_geometry_and_group_values(){
         use std::{io::Write,process::{Command,Stdio}};let cases:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔢️ieee.json")).unwrap();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
-        for case in cases["binary64"].as_array().unwrap(){let bits=u64::from_str_radix(case["bits"].as_str().unwrap(),16).unwrap();let value=f64::from_bits(bits);let mut snapshot=fixture();snapshot.header_vars.push(DxfHeaderVar{name:"$IEEE".into(),group_code:40,value:DxfValue::Double{value},extra_group_codes:vec![(10,DxfValue::Point{value:[value;3]})]});snapshot.blocks[0].base_point=[value;3];let DxfEntity::Circle{radius,center,..}=&mut snapshot.entities[1]else{panic!("circle");};*radius=value;*center=[value;3];let DxfEntity::Polyline{vertices,..}=&mut snapshot.entities[3]else{panic!("polyline");};vertices[0].bulge=value;let db=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let file=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();let loaded=sqlite_snapshot::import_sqlite_database(&file,limits,&mut |_|true).unwrap();let restored=DxfSnapshot::from_sqlite_database(&loaded,&mut Control::new(&mut |_|true,limits)).unwrap();let DxfValue::Double{value}=restored.header_vars.last().unwrap().value else{panic!("double");};assert_eq!(value.to_bits(),bits);let DxfValue::Point{value}=restored.header_vars.last().unwrap().extra_group_codes[0].1 else{panic!("point");};assert!(value.iter().all(|value|value.to_bits()==bits));assert!(restored.blocks[0].base_point.iter().all(|value|value.to_bits()==bits));let DxfEntity::Circle{radius,center,..}=&restored.entities[1]else{panic!("circle");};assert_eq!(radius.to_bits(),bits);assert!(center.iter().all(|value|value.to_bits()==bits));let DxfEntity::Polyline{vertices,..}=&restored.entities[3]else{panic!("polyline");};assert_eq!(vertices[0].bulge.to_bits(),bits);
+        for case in cases["binary64"].as_array().unwrap(){let bits=u64::from_str_radix(case["bits"].as_str().unwrap(),16).unwrap();let value=f64::from_bits(bits);let mut snapshot=fixture();snapshot.header_vars.push(DxfHeaderVar{name:"$IEEE".into(),group_code:40,value:DxfValue::Double{value},extra_group_codes:vec![(10,DxfValue::Point{value:[value;3]})]});snapshot.blocks[0].base_point=[value;3];let DxfEntity::Circle(DxfCircle {radius,center,..})=&mut snapshot.entities[1]else{panic!("circle");};*radius=value;*center=[value;3];let DxfEntity::Polyline(DxfPolyline {vertices,..})=&mut snapshot.entities[3]else{panic!("polyline");};vertices[0].bulge=value;let db=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let file=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();let loaded=sqlite_snapshot::import_sqlite_database(&file,limits,&mut |_|true).unwrap();let restored=DxfSnapshot::from_sqlite_database(&loaded,&mut Control::new(&mut |_|true,limits)).unwrap();let DxfValue::Double{value}=restored.header_vars.last().unwrap().value else{panic!("double");};assert_eq!(value.to_bits(),bits);let DxfValue::Point{value}=restored.header_vars.last().unwrap().extra_group_codes[0].1 else{panic!("point");};assert!(value.iter().all(|value|value.to_bits()==bits));assert!(restored.blocks[0].base_point.iter().all(|value|value.to_bits()==bits));let DxfEntity::Circle(DxfCircle {radius,center,..})=&restored.entities[1]else{panic!("circle");};assert_eq!(radius.to_bits(),bits);assert!(center.iter().all(|value|value.to_bits()==bits));let DxfEntity::Polyline(DxfPolyline {vertices,..})=&restored.entities[3]else{panic!("polyline");};assert_eq!(vertices[0].bulge.to_bits(),bits);
             let script="import {Database} from 'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,JSON.stringify(db.query(\"SELECT CAST(double_value_bits AS TEXT) AS bits,double_value_class AS class,double_value IS NULL AS nullQuery FROM dxf_header WHERE name='$IEEE'\").get()));db.close();";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&file).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let actual:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();assert_eq!(actual["bits"].as_str().unwrap(),(bits as i64).to_string());assert_eq!(actual["class"],case["class"]);assert_eq!(actual["nullQuery"].as_i64().unwrap(),i64::from(case["class"]=="nan"));}
     }
 
@@ -288,17 +288,17 @@ use semio_framework_value::FromValue;
         for encoding in [sqlite_snapshot::SnapshotEncoding::Binary,sqlite_snapshot::SnapshotEncoding::Text]{for case in cases["binary64"].as_array().unwrap(){
             let bits=u64::from_str_radix(case["bits"].as_str().unwrap(),16).unwrap();let value=f64::from_bits(bits);let mut snapshot=fixture();
             snapshot.header_vars.push(DxfHeaderVar{name:"$IEEE".into(),group_code:40,value:DxfValue::Double{value},extra_group_codes:vec![(10,DxfValue::Point{value:[value;3]}),(160,DxfValue::Int{value:i64::MIN})]});
-            snapshot.blocks[0].base_point=[value;3];let DxfEntity::Circle{radius,center,..}=&mut snapshot.entities[1]else{panic!("circle");};*radius=value;*center=[value;3];let DxfEntity::Polyline{vertices,..}=&mut snapshot.entities[3]else{panic!("polyline");};vertices[0].bulge=value;
+            snapshot.blocks[0].base_point=[value;3];let DxfEntity::Circle(DxfCircle {radius,center,..})=&mut snapshot.entities[1]else{panic!("circle");};*radius=value;*center=[value;3];let DxfEntity::Polyline(DxfPolyline {vertices,..})=&mut snapshot.entities[3]else{panic!("polyline");};vertices[0].bulge=value;
             let restored=erased_snapshot(&snapshot,encoding).await;assert_eq!(restored.schema,snapshot.schema);
             let header=restored.header_vars.last().unwrap();let DxfValue::Double{value}=header.value else{panic!("double");};assert_eq!(value.to_bits(),bits);let DxfValue::Point{value}=header.extra_group_codes[0].1 else{panic!("point");};assert_eq!(value.map(f64::to_bits),[bits;3]);assert_eq!(header.extra_group_codes[1].1,DxfValue::Int{value:i64::MIN});assert_eq!(restored.blocks[0].base_point.map(f64::to_bits),[bits;3]);
-            let DxfEntity::Circle{radius,center,..}=&restored.entities[1]else{panic!("circle");};assert_eq!(radius.to_bits(),bits);assert_eq!(center.map(f64::to_bits),[bits;3]);let DxfEntity::Polyline{vertices,..}=&restored.entities[3]else{panic!("polyline");};assert_eq!(vertices[0].bulge.to_bits(),bits);
+            let DxfEntity::Circle(DxfCircle {radius,center,..})=&restored.entities[1]else{panic!("circle");};assert_eq!(radius.to_bits(),bits);assert_eq!(center.map(f64::to_bits),[bits;3]);let DxfEntity::Polyline(DxfPolyline {vertices,..})=&restored.entities[3]else{panic!("polyline");};assert_eq!(vertices[0].bulge.to_bits(),bits);
         }}
     }
     #[test]
     fn sqlite_snapshot_dxf_independent_sql_entity_join_and_edit(){
         use std::{io::Write,process::{Command,Stdio}};let mut snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let db=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let bytes=sqlite_snapshot::export_sqlite_database(&db,limits,&mut |_|true).unwrap();
         let script="import {Database} from 'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const rows=db.query(\"SELECT e.kind,p.role,p.x,p.y,p.z FROM dxf_entity e JOIN dxf_entity_point p ON p.entity_id=e.id WHERE e.kind='line' ORDER BY e.id,p.ordinal\").all();if(rows.length!==2||rows[0].role!=='start'||rows[1].role!=='end')throw Error('entity join');db.query(\"UPDATE dxf_entity SET radius=123.5,radius_bits=4638390956842811392,radius_class='finite' WHERE kind='circle'\").run();await Bun.write(Bun.stdout,db.serialize());db.close();";
-        let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let loaded=sqlite_snapshot::import_sqlite_database(&output.stdout,limits,&mut |_|true).unwrap();if let DxfEntity::Circle{radius,..}=&mut snapshot.entities[1]{*radius=123.5;}else{panic!("fixture circle");}assert_eq!(DxfSnapshot::from_sqlite_database(&loaded,&mut Control::new(&mut |_|true,limits)).unwrap(),snapshot);
+        let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let loaded=sqlite_snapshot::import_sqlite_database(&output.stdout,limits,&mut |_|true).unwrap();if let DxfEntity::Circle(DxfCircle {radius,..})=&mut snapshot.entities[1]{*radius=123.5;}else{panic!("fixture circle");}assert_eq!(DxfSnapshot::from_sqlite_database(&loaded,&mut Control::new(&mut |_|true,limits)).unwrap(),snapshot);
     }
 
     #[test]
@@ -314,7 +314,7 @@ use semio_framework_value::FromValue;
         assert_eq!(DxfSnapshot::from_sqlite_database(&loaded,&mut control).unwrap(),snapshot);
         let mut edited=loaded;let circle=edited.table_mut("dxf_entity").unwrap().rows.iter_mut().find(|row|row.text(4).unwrap()=="circle").unwrap();circle.values[6]=V::Real(123.5);circle.values[18]=V::Integer(123.5f64.to_bits() as i64);circle.values[19]=V::Text("finite".into());
         let changed=DxfSnapshot::from_sqlite_database(&edited,&mut control).unwrap();
-        assert!(matches!(changed.entities[1],DxfEntity::Circle{radius:123.5,..}));
+        assert!(matches!(changed.entities[1],DxfEntity::Circle(DxfCircle {radius:123.5,..})));
     }
 
     #[test]

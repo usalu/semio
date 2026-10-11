@@ -60,10 +60,10 @@ impl<A: ArtifactApp> FixtureJobOwners<A> {
         }
         let demand = match self.demand(grant.maximum_copy_bytes) {
             Ok(demand) => demand,
-            Err(error) => return InteractiveJobCloseStep::Refused(error.kind),
+            Err(error) => return InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()},
         };
         match plugin_turn_admitted(demand, grant) {
-            Err(_) => return InteractiveJobCloseStep::Refused(ValueRefusalKind::DepthLimit),
+            Err(_) => return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::DepthLimit,progress:Default::default()},
             Ok(false) => return InteractiveJobCloseStep::Pending { progress: Default::default() },
             Ok(true) => {}
         }
@@ -96,7 +96,7 @@ impl<A: ArtifactApp> FixtureJobOwners<A> {
     fn retained(step: Result<RetainedCloneStep, ValueError>, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         match step {
             Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress }.admit(grant, true),
-            Err(error) => InteractiveJobCloseStep::Refused(error.kind),
+            Err(error) => InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()},
         }
     }
 }

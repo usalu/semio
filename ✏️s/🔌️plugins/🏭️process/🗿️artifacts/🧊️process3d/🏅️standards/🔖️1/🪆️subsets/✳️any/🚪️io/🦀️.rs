@@ -10,7 +10,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::Process3dAnalyzer;
     use crate::Process3dSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.process.process3d", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -67,7 +67,7 @@ pub use derived_composition::*;
 //#region 🔖️MediaImportExport
 use crate::{Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
 use semio_framework::DslValue;
-use semio_framework_plugin::{MeshExporter, MeshImporter};
+use semio_framework::mesh_io::{MeshExporter, MeshImporter};
 use semio_framework_3d::brep::engine::{
     Brep, BrepError, GeometryHandle, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StlSolidExporter, StlSolidImporter,
 };
@@ -170,7 +170,7 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
         let Some(mesh) = crate::schema::inferences::processed_mesh(scene, resolved_up_to) else {
             return Ok(None);
         };
-        let bytes = semio_framework_plugin::GlbExporter.export(&mesh)?;
+        let bytes = semio_framework::mesh_io::GlbExporter.export(&mesh)?;
         let descriptor = process_export_format("glb")?;
         let extension = descriptor.extensions.first().ok_or_else(|| "process export format kind `glb` has no extension claim".to_string())?;
         let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| "process export format kind `glb` has no MIME claim".to_string())?;
@@ -216,7 +216,7 @@ fn process3d_bytes_from_data_url(data_url: &str) -> Option<Vec<u8>> {
 pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSnapshot> {
     let bytes = process3d_bytes_from_data_url(data_url)?;
     if name.ends_with(".glb") {
-        semio_framework_plugin::GlbImporter.import(&bytes).ok()?;
+        semio_framework::mesh_io::GlbImporter.import(&bytes).ok()?;
         let stock = Stock { id: "stock".into(), label: "Imported GLB".into(), solid: WorkingSolid::ImportedMesh { mesh_url: data_url.into() }, pose: Pose::default() };
         return Some(crate::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default()));
     }
@@ -240,7 +240,7 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSna
 pub mod io_registry {
     use crate::standards::v1::subsets::any::io::Process3dBuilder as Process3dAnyBuilder;
     use crate::standards::v1::subsets::any::io::Process3dComposer as Process3dAnyComposer;
-    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -365,7 +365,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::Process3dSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Process3dParts {

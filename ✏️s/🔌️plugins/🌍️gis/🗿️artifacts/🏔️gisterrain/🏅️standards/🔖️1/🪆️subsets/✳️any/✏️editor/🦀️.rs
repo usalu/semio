@@ -268,72 +268,76 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFact
 //#region 📬️StorePreparation
 const GIS3D_STORE_MAXIMUM_BYTES: usize = 32_768;
 
-type Gis3dPrepareOne<P, M> = fn(&P, M) -> Result<(P, Vec<M>, M, usize), String>;
+type Gis3dPrepareOne<P, M> = fn(&P, &M) -> Result<(P, Vec<M>, usize), semio_framework_value::ValueError>;
 
-struct Gis3dOneItemPreparation<P, M> {
-    base: Option<store::SnapshotRead<P>>,
-    mutation: Option<M>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    candidate: Option<(P, Vec<M>, M, usize)>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
+struct Gis3dOneItemPreparation<P: 'static, M: 'static> {
+    owners: store::OneItemOwners<P, M>,
+    candidate_bytes: usize,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     prepare: Gis3dPrepareOne<P, M>,
     phase: u8,
     cancelled: bool,
-    closing: bool,
 }
 
-fn gis3d_bounded_serialized_bytes<T: semio_framework_value::ToValue>(value: &T) -> Result<usize, String> {
+fn gis3d_bounded_serialized_bytes<T: semio_framework_value::ToValue>(value: &T) -> Result<usize, semio_framework_value::ValueError> {
     let bytes = semio_framework_pack_json::to_json_string(value).len();
     if bytes > GIS3D_STORE_MAXIMUM_BYTES {
-        return Err("GIS terrain Store root exceeds its fixed envelope".to_string());
+        return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS terrain Store root exceeds its fixed envelope"));
     }
     Ok(bytes)
 }
 
-fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: GisTerrainMutation) -> Result<(GisTerrainSnapshot, Vec<GisTerrainMutation>, GisTerrainMutation, usize), String> {
+fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: &GisTerrainMutation) -> Result<(GisTerrainSnapshot, Vec<GisTerrainMutation>, usize), semio_framework_value::ValueError> {
     use protocol::Mutation as _;
-    if !matches!(&mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite()) {
-        return Err("GIS terrain Artifact preparation only admits ChangeExaggeration".into());
+    if !matches!(mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite()) {
+        return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "GIS terrain Artifact preparation only admits ChangeExaggeration"));
     }
     let retained_bytes = gis3d_bounded_serialized_bytes(base)?;
-    let inverse = mutation.inverse(base).map_err(semio_framework_value::ValueError::into_message)?;
-    let post = protocol::apply_diff(&mutation.diff(base).into_parts().0, base).map_err(|_| "GIS terrain Artifact mutation could not produce its post root".to_string())?;
-    Ok((post, inverse, mutation, retained_bytes))
+    let inverse = mutation.inverse(base)?;
+    let post = protocol::apply_diff(&mutation.diff(base).into_parts().0, base).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "GIS terrain Artifact mutation could not produce its post root"))?;
+    Ok((post, inverse, retained_bytes))
 }
 
 impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for Gis3dOneItemPreparation<P, M>
 where
-    P: Send + Sync + 'static,
-    M: semio_framework_value::ToValue + Send + 'static,
+    P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
-        if self.prepared.is_some() || self.phase >= 2 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
+        if self.owners.refused.is_some() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
+        }
+        if self.owners.prepared.is_some() || self.phase >= 2 {
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         match self.phase {
             0 => {
-                let base = self.base.as_ref().ok_or_else(|| "GIS terrain preparation lost its exact base root".to_string())?;
-                let mutation = self.mutation.take().ok_or_else(|| "GIS terrain preparation lost its mutation owner".to_string())?;
-                self.candidate = Some((self.prepare)(base.get(), mutation)?);
+                let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation lost its exact base root"))?;
+                let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation lost its mutation owner"))?;
+                let (post, inverse, completed_bytes) = (self.prepare)(base.get(), mutation)?;
+                let mutation = self.owners.mutation.take().expect("observed original mutation owner");
+                *self.owners.candidate = Some((post, inverse, mutation));
+                self.candidate_bytes = completed_bytes;
                 self.phase = 1;
-                let completed_bytes = self.candidate.as_ref().map_or(0, |candidate| candidate.3);
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: completed_bytes as u64, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()))
             }
             1 => {
-                let (post, inverse, forward, completed_bytes) = self.candidate.take().ok_or_else(|| "GIS terrain preparation lost its semantic candidate".to_string())?;
-                let authority = self.authority.as_ref().ok_or_else(|| "GIS terrain preparation lost its Store authority".to_string())?;
-                let prepared = authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post))?;
+                let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation lost its Store authority"))?;
+                let (post, inverse, forward) = self.owners.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation lost its semantic candidate"))?;
+                let prepared = match authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post)) {
+                    Ok(prepared) => prepared,
+                    Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
+                };
                 self.phase = 2;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: completed_bytes as u64, digest: prepared.edit_digest() };
-                self.prepared = Some(prepared);
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.candidate_bytes as u64, digest: prepared.edit_digest() };
+                *self.owners.prepared = Some(prepared);
+                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
             }
-            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)),
+            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())),
         }
     }
 
@@ -341,51 +345,36 @@ where
         self.checkpoint
     }
     fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.as_ref()
+        self.owners.prepared.as_ref()
     }
     fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
-        self.prepared.take()
+        self.owners.prepared.take()
     }
     fn cancel(&mut self) {
         self.cancelled = true;
     }
     fn begin_close(&mut self) {
-        self.closing = true;
+        self.owners.begin_close();
     }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            if grant.maximum_bytes < authority.actor().len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        self.owners.close_step(grant.retained_grant())
     }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.owners.terminal_is_empty()
     }
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Gis3dArtifactStorePreparationFactory;
 
-fn begin_gis3d_preparation<P, M>(request: store::ArtifactStoreOneItemPreparationRequest<P, M>, prepare: Gis3dPrepareOne<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>>
+fn begin_gis3d_preparation<P, M>(request: store::ArtifactStoreOneItemPreparationRequest<P, M, M>, prepare: Gis3dPrepareOne<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M, M>)>
 where
-    P: Send + Sync + 'static,
-    M: semio_framework_value::ToValue + Send + 'static,
+    P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
     if request.lane != store::HistoryLane::Document
         || request.operation != request.authority.operation()
@@ -393,23 +382,22 @@ where
         || request.base_revision != request.authority.base_revision()
         || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
     {
-        return Err(request);
+        return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation rejected original publication authority"), request));
     }
     Ok(Box::new(Gis3dOneItemPreparation {
-        base: Some(request.base),
-        mutation: Some(request.mutation),
-        authority: Some(request.authority),
-        candidate: None,
-        prepared: None,
+        owners: store::OneItemOwners::from_request(request),
+        candidate_bytes: 0,
         checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
         prepare,
         phase: 0,
         cancelled: false,
-        closing: false,
     }))
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<GisTerrainSnapshot, GisTerrainMutation> for Gis3dArtifactStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<GisTerrainMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<GisTerrainMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        store::admit_artifact_batch_digest(edit, grant)
+    }
     fn preflight(&self, mutation: &GisTerrainMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || !matches!(mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite())
         {
@@ -417,11 +405,18 @@ impl store::ArtifactStoreOneItemPreparationFactory<GisTerrainSnapshot, GisTerrai
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, 8))
     }
+    fn begin_demand(&self, _mutation: &GisTerrainMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Gis3dOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>(), depth: 1 })
+    }
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>, store::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation>> {
-        begin_gis3d_preparation(request, prepare_gis3d_artifact)
+        request: store::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation, GisTerrainMutation>,
+        grant: store::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation, GisTerrainMutation>)> {
+        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
+        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+        let preparation = begin_gis3d_preparation(request, prepare_gis3d_artifact)?;
+        Ok((preparation, progress))
     }
 }
 
@@ -450,46 +445,6 @@ impl ArtifactEditor for Gis3dPlayApp {
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Gis3dArtifactStorePreparationFactory))
-    }
-
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
-
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
-    }
-
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
-    }
-
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default()).expect("default GIS terrain presence is the exact empty terminal")))
-    }
-
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
-    }
-
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
-    }
-
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
@@ -531,7 +486,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         }
         let tool_id = request.command.command_id();
         let work = Box::new(BoundedArtifactCommandWork::new(tool_id, gis3d_retained_reduce, gis3d_retained_extent));
-        let operation_context = AppOperationContext {
+        let operation_context = AppOperationContext { retained: request.retained,
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
             operation_id: request.operation.operation.0,

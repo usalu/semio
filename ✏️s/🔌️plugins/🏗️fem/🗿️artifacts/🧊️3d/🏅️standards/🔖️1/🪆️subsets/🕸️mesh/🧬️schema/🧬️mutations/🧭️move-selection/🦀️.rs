@@ -13,7 +13,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// the pure factors; every part stays editable in history. A solid follows only a map that keeps its footprint
 /// plane (it cannot tip over its own extrusion axis); one that cannot is skipped and reported. Targets keep their ids,
 /// so every element, support and load that names them travels along.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "move-selection")]

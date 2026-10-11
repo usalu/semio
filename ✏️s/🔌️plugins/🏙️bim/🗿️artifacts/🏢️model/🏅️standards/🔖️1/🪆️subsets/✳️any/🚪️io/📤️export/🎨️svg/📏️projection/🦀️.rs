@@ -7,7 +7,7 @@ use super::sheet::{layout, Slot};
 use super::drawing::tint;
 use super::style::{annotated, kind_class, style_class, view_class, STYLE_CLASSES};
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::registry;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use crate::ModelSnapshot;
 use std::collections::BTreeMap;
@@ -133,7 +133,7 @@ pub fn project(model: &ModelSnapshot, drawings: &BTreeMap<String, ViewLinework>)
 
 /// 📊️ The report of `model`'s export.
 pub fn projection(model: &ModelSnapshot) -> Projection {
-    registry::with_inference(None, model, |inferred| project(model, &inferred.view_linework))
+    inference::with_inference(None, model, |inferred| project(model, &inferred.view_linework))
 }
 
 fn quote(text: &str) -> String {

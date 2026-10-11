@@ -28,7 +28,8 @@ pub const BITMAP_MAX_EDGE: u32 = 512;
 //#region 🔖️Color
 /// 🎨️ One straight-alpha sRGB palette entry, 0–255 per channel — integers, not floats, so a
 /// committed fixture never depends on a float print convention.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapColor {
     pub r: u32,
@@ -51,7 +52,7 @@ impl BitmapColor {
 
 //#region 🔖️Input
 /// 🖼️ Authored row-major palette indices, exactly one owned octet per pixel.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapInput {
     pub width: u32,
@@ -84,7 +85,7 @@ impl BitmapInput {
 //#region 🔖️Output
 /// 🧩️ What the solve must produce — a size and whether the output torus wraps. The pixels
 /// themselves are inferred, never persisted.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapOutputSpec {
     pub width: u32,
@@ -104,7 +105,7 @@ impl Default for BitmapOutputSpec {
 /// `symmetry` elements of `Transform2d::ALL` are applied to every extracted window before
 /// deduplication, so `1` learns the sample verbatim and `8` learns it under the full dihedral
 /// group. `ground`, when set, is a palette index every bottom-row output cell is forced to.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapOverlappingModel {
     pub pattern_size: u32,
@@ -132,7 +133,7 @@ pub const BITMAP_SYMMETRY_RANGE: (u32, u32) = (1, 8);
 //#region 🔖️Pinned
 /// 📌️ One output cell pre-assigned to a palette colour — a hard domain restriction the solve must
 /// respect, never something the solve writes back.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapPinnedPixel {
     pub x: u32,
@@ -148,7 +149,7 @@ pub fn pin_key(x: u32, y: u32) -> String {
 //#endregion 🔖️Pinned
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.wfc.bitmap")]
 pub struct BitmapSnapshot {

@@ -9,7 +9,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, F
 /// 📄️ The default when the palette dispatches the verb without arguments.
 pub const DEFAULT_EXPORT_FORMAT: &str = "pdf";
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "export-document")]
 pub struct ExportDocument {
     pub format: String,
@@ -20,7 +20,7 @@ pub struct ExportDocument {
 impl Default for ExportDocument{fn default()->Self{Self{format:DEFAULT_EXPORT_FORMAT.into(),width:None,height:None,transparent:None}}}
 
 /// 📎️ A fixed header copies at most 256 authored filename scalars.
-pub(super) fn export_stem(document: &DrawingSnapshot) -> String {
+pub(crate) fn export_stem(document: &DrawingSnapshot) -> String {
     let source = if document.id.chars().take(256).all(char::is_whitespace) { document.title.as_ref() } else { Some(&document.id) };
     let stem: String = source.map(|source| source.chars().take(256).map(|ch| if ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.') { ch } else { '-' }).collect()).unwrap_or_else(|| "drawing".into());
     let stem = stem.trim_matches(['-', '.']).to_owned();

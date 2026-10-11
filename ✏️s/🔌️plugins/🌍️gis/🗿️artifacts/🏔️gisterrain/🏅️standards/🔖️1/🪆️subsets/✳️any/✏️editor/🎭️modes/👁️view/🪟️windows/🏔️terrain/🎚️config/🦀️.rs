@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ Free/live viewport camera for one concrete terrain window.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, ToValue, FromValue)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_os_kernel::DslArtifact, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -88,6 +88,11 @@ impl semio_framework_plugin::WindowConfigOwner for GisTerrainWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 8_192;
     type State = GisTerrainWindowConfig;
     type Mutation = GisTerrainWindowConfigMutation;
+    type Edit = store::snapshot_clone_preparation::ConfigApplyEdit<GisTerrainWindowConfig, GisTerrainWindowConfigMutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
+        std::sync::Arc::new(store::snapshot_clone_preparation::ConfigApplyEdit::new())
+    }
 
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()

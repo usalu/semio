@@ -49,7 +49,8 @@ use super::change_vent_duct_class;
 use super::change_vent_duct_leakage;
 use super::change_vent_design_airflow;
 
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = Din16798Snapshot, diff = Din16798Diff, schema = "s.norm.din16798")]
 pub enum Din16798Mutation {

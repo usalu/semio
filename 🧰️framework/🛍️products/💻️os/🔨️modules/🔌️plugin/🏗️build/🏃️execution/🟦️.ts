@@ -11,9 +11,7 @@ import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRo
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
-import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
-
-import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import type { PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
 
 
@@ -21,7 +19,7 @@ import { DEFAULT_PLAYGROUND_VARIANT } from "../../📇️registry/🤖️generat
 
 const repoRoot = getWorkspaceRoot();
 
-import { ensureWasmTarget, pluginOutRoot, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets } from "../📋️plan/🟦️.ts";
+import { discoverPluginBuildCatalog, ensureWasmTarget, pluginOutRoot, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets } from "../📋️plan/🟦️.ts";
 
 import { assertExtensionOutputsFresh, syncBuiltExtensionsToInstallRoot } from "../📥️installation/🟦️.ts";
 
@@ -39,7 +37,7 @@ import { ensureAppleDeveloperDir } from "../../../🧑‍💻dev/⚙️engine/�
  * requests onto the SAME `target/` cargo lock) and the two-crate collab-e2e prebuild. The full-catalog
  * entry points (`buildPlugins`/`buildPluginsStreaming`) go through `buildPluginCatalog` instead, which
  * pipelines this same pair of stages across many targets. */
-async function buildPlugin(target: DeployedRegistryEntryV1): Promise<void> {
+async function buildPlugin(target: PluginBuildTargetV1): Promise<void> {
   const { artifact } = await buildPluginCargo(target);
   await materializePlugin(target, artifact);
   publishShardWorker();
@@ -108,21 +106,20 @@ function assertNoStalePublicPluginOutputs(path: string): void {
  * that isn't itself a `cargo build`. Split out of the old monolithic `buildPlugins` so the dev runner's
  * streaming variant can run this fast (no-cargo) prep synchronously before Vite starts, then stream the
  * slow per-crate builds in afterward instead of blocking the first byte on all of them. */
-async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonly DeployedRegistryEntryV1[]> {
+async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonly PluginBuildTargetV1[]> {
   ensureWasmTarget();
   await ensurePluginRegistry(filterPlugin);
-  const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
-  const catalogEntries = filterProjectedPluginRegistry(readGeneratedCatalogProjection(), filterPluginId);
+  const catalog = discoverPluginBuildCatalog();
+  const targets = resolvePluginBuildTargets(filterPlugin, catalog);
   mkdirSync(pluginOutRoot, { recursive: true });
   ensurePreview2ShimVendor();
   ensureGuestSlimTypstFontsAsset();
   rewriteExistingPluginShimImports();
   const stalePublicPlugins = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/public/plugin-modules");
   assertNoStalePublicPluginOutputs(stalePublicPlugins);
-  const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
   syncBuiltExtensionsToInstallRoot(targets);
   assertExtensionOutputsFresh(undefined, targets);
-  if (filterPlugin && !projectedHostPluginFilter(readGeneratedCatalogProjection(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")), filterPlugin)) {
+  if (resolveCatalogFilterPluginId(filterPlugin, catalog) !== undefined) {
     console.log(`program build scope: ${targets.map((target) => target.pluginId).join(", ")}`);
   } else {
     console.log(`program build scope: all (${targets.length} plugin crates)`);

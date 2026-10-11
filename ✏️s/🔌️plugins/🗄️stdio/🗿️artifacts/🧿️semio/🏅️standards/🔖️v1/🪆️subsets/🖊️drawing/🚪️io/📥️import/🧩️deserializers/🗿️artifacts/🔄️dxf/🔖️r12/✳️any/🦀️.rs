@@ -20,7 +20,7 @@
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_dxf::{schema::snapshot::DxfEntity, DxfSnapshot};
+use semio_s_artifact_stdio_dxf::{schema::snapshot::DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
@@ -51,10 +51,10 @@ fn arc_path(cx: f64, cy: f64, r: f64, start_deg: f64, end_deg: f64) -> Vec<PathS
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
     match e {
-        DxfEntity::Line { start, end, .. } => Some(DrawNode::Path { segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: start[0], y: start[1] } }, PathSegment::LineTo { to: SemioPoint2 { x: end[0], y: end[1] } }], style: None }),
-        DxfEntity::Circle { center, radius, .. } => Some(DrawNode::Path { segments: ellipse_path(center[0], center[1], *radius), style: None }),
-        DxfEntity::Arc { center, radius, start_angle, end_angle, .. } => Some(DrawNode::Path { segments: arc_path(center[0], center[1], *radius, *start_angle, *end_angle), style: None }),
-        DxfEntity::Polyline { vertices, closed, .. } => {
+        DxfEntity::Line(DxfLine { start, end, .. }) => Some(DrawNode::Path { segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: start[0], y: start[1] } }, PathSegment::LineTo { to: SemioPoint2 { x: end[0], y: end[1] } }], style: None }),
+        DxfEntity::Circle(DxfCircle { center, radius, .. }) => Some(DrawNode::Path { segments: ellipse_path(center[0], center[1], *radius), style: None }),
+        DxfEntity::Arc(DxfArc { center, radius, start_angle, end_angle, .. }) => Some(DrawNode::Path { segments: arc_path(center[0], center[1], *radius, *start_angle, *end_angle), style: None }),
+        DxfEntity::Polyline(DxfPolyline { vertices, closed, .. }) => {
             let mut segments: Vec<PathSegment> = vertices
                 .iter()
                 .enumerate()
@@ -72,8 +72,8 @@ fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
             }
             Some(DrawNode::Path { segments, style: None })
         }
-        DxfEntity::Text { position, value, .. } => Some(DrawNode::Text { value: value.clone(), at: SemioPoint2 { x: position[0], y: position[1] }, style: None }),
-        DxfEntity::Solid { points, .. } => Some(DrawNode::Path {
+        DxfEntity::Text(DxfText { position, value, .. }) => Some(DrawNode::Text { value: value.clone(), at: SemioPoint2 { x: position[0], y: position[1] }, style: None }),
+        DxfEntity::Solid(DxfSolid { points, .. }) => Some(DrawNode::Path {
             segments: vec![
                 PathSegment::MoveTo { to: SemioPoint2 { x: points[0][0], y: points[0][1] } },
                 PathSegment::LineTo { to: SemioPoint2 { x: points[1][0], y: points[1][1] } },
@@ -83,17 +83,17 @@ fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
             ],
             style: None,
         }),
-        DxfEntity::Insert { .. } | DxfEntity::Other { .. } => None,
+        DxfEntity::Insert(DxfInsert { .. }) | DxfEntity::Other(DxfOther { .. }) => None,
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_layer(e: &DxfEntity) -> Option<&str> {
     match e {
-        DxfEntity::Line { layer, .. } | DxfEntity::Circle { layer, .. } | DxfEntity::Arc { layer, .. } | DxfEntity::Polyline { layer, .. } | DxfEntity::Text { layer, .. } | DxfEntity::Solid { layer, .. } | DxfEntity::Insert { layer, .. } => {
+        DxfEntity::Line(DxfLine { layer, .. }) | DxfEntity::Circle(DxfCircle { layer, .. }) | DxfEntity::Arc(DxfArc { layer, .. }) | DxfEntity::Polyline(DxfPolyline { layer, .. }) | DxfEntity::Text(DxfText { layer, .. }) | DxfEntity::Solid(DxfSolid { layer, .. }) | DxfEntity::Insert(DxfInsert { layer, .. }) => {
             Some(layer.as_str())
         }
-        DxfEntity::Other { .. } => None,
+        DxfEntity::Other(DxfOther { .. }) => None,
     }
 }
 //#endregion 🔖️EntityMap

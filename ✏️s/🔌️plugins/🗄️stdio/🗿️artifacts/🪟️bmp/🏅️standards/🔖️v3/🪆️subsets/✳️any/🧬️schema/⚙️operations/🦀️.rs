@@ -166,7 +166,7 @@ impl<'a> BmpPaintWorkOperation<'a> {
         if !self.closing {return Step::Blocked;}
         fn retire<T>(values:&mut Vec<T>,maximum_items:usize,maximum_bytes:usize)->Option<(usize,usize)> {let size=std::mem::size_of::<T>();if !values.is_empty() {let count=values.len().min(maximum_items).min(if size==0 {maximum_items}else{maximum_bytes/size});values.truncate(values.len()-count);return Some((count,count*size));}if values.capacity()>0 {let bytes=values.capacity()*size;if maximum_items==0||maximum_bytes<bytes {return Some((0,0));}*values=Vec::new();return Some((1,bytes));}None}
         if let Some(result)=&mut self.result {
-            let pending=|values:(usize,usize)|Step::Pending {released_items:values.0,released_bytes:values.1};
+            let pending=|values:(usize,usize)|Step::Pending {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:values.0,released_bytes:values.1,..Default::default()}};
             if let Some(step)=retire(&mut result.image.palette,maximum_items,maximum_bytes) {return pending(step);}
             let pixels=match &mut result.image.pixels {BmpPixels::Indexed {indices}=>retire(indices,maximum_items,maximum_bytes),BmpPixels::Direct {samples}=>retire(samples,maximum_items,maximum_bytes)};if let Some(step)=pixels {return pending(step);}
             if let Some(step)=retire(&mut result.image.opaque_gap,maximum_items,maximum_bytes) {return pending(step);}
@@ -175,7 +175,7 @@ impl<'a> BmpPaintWorkOperation<'a> {
             if result.schema.capacity()>0 {let bytes=result.schema.capacity();if maximum_items==0||maximum_bytes<bytes {return pending((0,0));}result.schema=String::new();return pending((1,bytes));}
             if maximum_items==0||maximum_bytes<std::mem::size_of::<BmpSnapshot>() {return pending((0,0));}self.result=None;return pending((1,std::mem::size_of::<BmpSnapshot>()));
         }
-        Step::Complete
+        Step::Complete {progress:Default::default()}
     }
     pub fn terminal_is_empty(&self)->bool {self.closing&&self.result.is_none()&&self.source.is_none()}
 }

@@ -7,7 +7,7 @@ use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 
 //#region 🔖️Generation3dSnapshot
 /// 🧬️ Generation3dSnapshot facet type.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[artifact_schema(id = "s.procedural.generation3d")]
 pub struct Generation3dSnapshot {
     #[state(artifact)]

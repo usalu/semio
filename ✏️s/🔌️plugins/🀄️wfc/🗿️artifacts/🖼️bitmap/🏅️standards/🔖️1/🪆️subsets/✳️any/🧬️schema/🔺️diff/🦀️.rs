@@ -22,7 +22,7 @@ pub trait BitmapRow: Clone + PartialEq {
 macro_rules! wfc_patch {
     ($(#[$doc:meta])* $name:ident for $row:ty { plain { $($field:ident : $ty:ty),* } optional { $($ofield:ident : $wrap:ident),* } }) => {
         $(#[$doc])*
-        #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+        #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, protocol::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase", default)]
         pub struct $name {
             $(pub $field: Option<$ty>,)*
@@ -69,7 +69,7 @@ protocol::list_delta! {
 //#region 🔖️Region
 /// 🖌️ One rectangular write into the input index buffer, palette indices, row-major within the rectangle. A stroke
 /// coalesces into exactly one of these, never one per sampled pixel.
-#[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapPixelRegion {
     pub x: u32,
@@ -81,7 +81,7 @@ pub struct BitmapPixelRegion {
 }
 
 /// 🔲 One input pixel and the palette index it takes.
-#[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapPixelCell {
     pub x: u32,
@@ -92,7 +92,7 @@ pub struct BitmapPixelCell {
 
 //#region 🔖️Ops
 /// 📐️ A bitmap size in pixels.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapSize {
     pub width: u32,
@@ -100,7 +100,7 @@ pub struct BitmapSize {
 }
 
 /// 🖼️ One write into the input index buffer, in the coordinates of the buffer AFTER the patch's resize: a rectangular write or a sparse list of single pixels. Writes layer in list order.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "op", rename_all = "camelCase")]
 pub enum BitmapInputWrite {
     Region { region: BitmapPixelRegion },
@@ -108,7 +108,7 @@ pub enum BitmapInputWrite {
 }
 
 /// 🖼️ The input patch: an optional coordinate-preserving resize of the base buffer (crop, or pad with index 0), then the writes in their after-resize coordinates.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct BitmapInputPatch {
     pub size: Option<BitmapSize>,
@@ -116,7 +116,7 @@ pub struct BitmapInputPatch {
 }
 
 /// ➕️ One palette colour that enters at `index` of the AFTER palette.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapPaletteInsertion {
     pub index: u32,
@@ -124,7 +124,7 @@ pub struct BitmapPaletteInsertion {
 }
 
 /// 🎨️ One surviving palette colour recoloured; `index` is its position in the BASE palette.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapPaletteRecolor {
     pub index: u32,
@@ -132,7 +132,7 @@ pub struct BitmapPaletteRecolor {
 }
 
 /// 🎨️ The positional palette delta: `removed` are BASE indices, `inserted` carry AFTER indices, `recolored` are BASE indices of surviving colours. Pixels that point at shifted entries are renumbered by explicit input cells and pin patches, never implicitly.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct BitmapPaletteDelta {
     pub removed: Vec<u32>,
@@ -306,7 +306,7 @@ fn inverse_input_patch(patch: &BitmapInputPatch, base: &BitmapInput) -> BitmapIn
 //#endregion 🔖️Ops
 
 //#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.wfc.bitmap")]
 pub struct BitmapDiff {

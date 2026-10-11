@@ -7,12 +7,329 @@
 
 use crate::algebra::{MatD, VecD};
 use replication::value::list::PagedList;
-use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, JobPayloadAdmissionFault, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepBudget, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadAdmissionFault, JobPayloadStream, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload, RetainedJobPayloadWriter, StepBudget, StepContext};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::VecDeque;
 
 const SPARSE_INDEX_SPACE: usize = usize::MAX;
 const SPARSE_PAGE_BYTES: usize = 4096;
+
+/// 🧭️ What one internal step of a numerical job decided before any outcome is lent to the caller.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NumericalRun {
+    Yield,
+    Cancelled,
+    Fault,
+    Preview,
+    Checkpoint(u64),
+    Complete,
+}
+
+/// 🎁️ Owns the one finished payload a numerical job lends at a time, retries a refused admission and pays the lent payload back from the next call's wallet.
+pub struct NumericalOutcomeDesk {
+    lent: Option<RetainedJobPayload>,
+    delivered: bool,
+    pending: Option<NumericalRun>,
+    state_marker: RetainedJobPayload,
+    output_marker: RetainedJobPayload,
+    fault_marker: RetainedJobPayload,
+}
+
+impl Default for NumericalOutcomeDesk {
+    fn default() -> Self {
+        Self {
+            lent: None,
+            delivered: false,
+            pending: None,
+            state_marker: RetainedJobPayload::empty(JobPayloadStream::CommitState),
+            output_marker: RetainedJobPayload::empty(JobPayloadStream::CommitOutput),
+            fault_marker: RetainedJobPayload::empty(JobPayloadStream::Fault),
+        }
+    }
+}
+
+/// 🎟️ Whether one grant covers one quoted demand with at least one item.
+pub fn numerical_grant_covers(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
+    grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
+}
+
+/// 🚪️ Whether a grant admits one close turn: a payload or writer frontier must be covered by its own quote, an owner rung is bounded by its own release limit.
+pub fn numerical_close_gate(grant: RetainedCloneGrant, frontier: Option<RetirementDemand>) -> bool {
+    match frontier {
+        Some(demand) => numerical_grant_covers(grant, demand),
+        None => grant.maximum_items != 0 && grant.maximum_depth != 0,
+    }
+}
+
+/// 📏️ The largest single owner release one numerical close turn performs: every admitted owner is at most one owner page.
+pub const NUMERICAL_CLOSE_RELEASE_BYTES: usize = NUMERICAL_OWNER_PAGE_BYTES;
+
+/// 🪜️ Quotes one ladder rung of a numerical job's retained owners.
+pub fn numerical_rung_demand(terminal: bool) -> RetirementDemand {
+    if terminal { RetirementDemand::default() } else { RetirementDemand { release_bytes: NUMERICAL_CLOSE_RELEASE_BYTES, depth: 1, ..Default::default() } }
+}
+
+/// 🧯️ Maps one payload or writer close turn onto the job close vocabulary.
+pub fn numerical_close_result(step: Result<RetainedCloneStep, ValueError>) -> InteractiveJobCloseStep {
+    match step {
+        Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } },
+        Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+    }
+}
+
+/// 🪜️ Maps one tuple-shaped owner ladder rung onto the job close vocabulary; `None` once the ladder is exhausted.
+pub fn numerical_owner_turn(rung: Result<Option<(usize, usize)>, ()>) -> Option<InteractiveJobCloseStep> {
+    match rung {
+        Ok(Some((items, bytes))) => Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: items, released_bytes: bytes, ..Default::default() } }),
+        Err(()) => Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }),
+        Ok(None) => None,
+    }
+}
+
+/// 🪜️ Maps a `(complete, items, bytes)` ladder turn onto the job close vocabulary.
+pub fn numerical_ladder_turn(turn: (bool, usize, usize)) -> InteractiveJobCloseStep {
+    let (complete, items, bytes) = turn;
+    let progress = RetainedCloneProgress { copied_items: items, released_bytes: bytes, ..Default::default() };
+    if complete { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } }
+}
+
+/// 🎟️ The wallet one batch-adapter step and one batch-adapter close turn may spend.
+pub const NUMERICAL_BATCH_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
+
+/// 🧭️ What one batch-adapter step learned from its borrowed outcome.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NumericalBatchEnd {
+    Continue,
+    Complete,
+    Fault,
+    Cancelled,
+}
+
+/// ▶️ Runs one batch-adapter step with a fresh receipt; delivered payloads are paid back by the job's next step.
+pub fn numerical_batch_step<J: InteractiveJob>(job: &mut J, operation: Operation, preview_sequence: &mut u64) -> NumericalBatchEnd {
+    let mut receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, NUMERICAL_BATCH_GRANT), semio_framework_job::root_cancel_token(), || Some(0), preview_sequence, &mut receipt);
+    match job.step(&mut context).expect("numerical batch step admission") {
+        None | Some(JobOutcomeBorrow::Yield { .. } | JobOutcomeBorrow::PreviewReady { .. } | JobOutcomeBorrow::CheckpointReady { .. }) => NumericalBatchEnd::Continue,
+        Some(JobOutcomeBorrow::Complete { .. }) => NumericalBatchEnd::Complete,
+        Some(JobOutcomeBorrow::Fault { .. }) => NumericalBatchEnd::Fault,
+        Some(JobOutcomeBorrow::Cancelled { .. }) => NumericalBatchEnd::Cancelled,
+    }
+}
+
+/// 🧹️ Closes a batch-adapter job through its own quoted close grants until it is terminal-empty.
+pub fn numerical_batch_close<J: InteractiveJob>(job: &mut J) {
+    job.begin_close();
+    while !job.terminal_is_empty() {
+        let copy_bytes = job.next_close_copy_byte_demand().expect("numerical batch job quotes its copy demand");
+        let grant = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: copy_bytes,
+            maximum_capacity_bytes: job.next_close_capacity_byte_demand(copy_bytes).expect("numerical batch job quotes its capacity demand"),
+            maximum_release_bytes: job.next_close_release_byte_demand().expect("numerical batch job quotes its release demand"),
+            maximum_depth: job.next_close_depth_demand().expect("numerical batch job quotes its depth demand").max(1),
+        };
+        let step = job.close_step(grant);
+        assert!(!matches!(step, InteractiveJobCloseStep::Refused { .. } | InteractiveJobCloseStep::Blocked), "a locally owned numerical batch close has no external owner and no refusal");
+    }
+}
+
+/// 🪺️ Maps a child job's close turn onto the parent's; a terminal child is removed by the caller after this turn.
+fn numerical_child_close(step: InteractiveJobCloseStep, terminal: bool) -> InteractiveJobCloseStep {
+    let progress = step.progress();
+    match step {
+        InteractiveJobCloseStep::Refused { .. } | InteractiveJobCloseStep::Blocked => step,
+        _ if terminal => InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } },
+        _ => InteractiveJobCloseStep::Pending { progress },
+    }
+}
+
+/// 🧯️ Closes one retained payload under a grant that covers its own quote.
+pub fn numerical_payload_close(payload: &mut RetainedJobPayload, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+    let demand = match payload.retirement_demands() {
+        Ok(demand) => demand,
+        Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+    };
+    if !numerical_grant_covers(grant, demand) {
+        return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+    }
+    numerical_close_result(payload.close_step(grant))
+}
+
+/// 🧯️ Closes one half-built writer slot under a grant that covers its own quote; `None` when the slot is empty.
+pub fn numerical_writer_close(slot: &mut Option<RetainedJobPayloadWriter>, grant: RetainedCloneGrant) -> Option<InteractiveJobCloseStep> {
+    let writer = slot.as_mut()?;
+    writer.begin_close();
+    let demand = match writer.retirement_demands() {
+        Ok(demand) => demand,
+        Err(error) => return Some(InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() }),
+    };
+    if !numerical_grant_covers(grant, demand) {
+        return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+    }
+    let step = numerical_close_result(writer.close_step(grant));
+    if writer.terminal_is_empty() {
+        *slot = None;
+    }
+    Some(step)
+}
+
+/// 📏️ Quotes a half-built writer slot's next close turn; `None` when the slot is empty.
+pub fn numerical_writer_demand(slot: &Option<RetainedJobPayloadWriter>) -> Option<Result<RetirementDemand, ValueError>> {
+    slot.as_ref().map(RetainedJobPayloadWriter::retirement_demands)
+}
+
+/// 🔁️ Closes one restored checkpoint page, then the operation ledger, from the calling step's own wallet; true once the payload is terminal-empty.
+fn numerical_restore_close_due(payload: &mut RetainedJobPayload, context: &mut StepContext<'_>, page_slot: &mut usize, page_entry: &mut usize, close_due: &mut bool, total_pages: usize) -> Result<bool, NumericalCheckpointFault> {
+    let demand = payload.retirement_demands().map_err(|_| NumericalCheckpointFault::Admission)?;
+    let grant = context.retained_grant();
+    if !numerical_grant_covers(grant, demand) {
+        return Ok(false);
+    }
+    let pages = payload.page_count();
+    let step = payload.close_step(grant).map_err(|_| NumericalCheckpointFault::Admission)?;
+    context.consume_retained(step.progress()).map_err(|_| NumericalCheckpointFault::Admission)?;
+    if payload.page_count() < pages {
+        *page_slot += 1;
+        *page_entry = 0;
+        if *page_slot < total_pages {
+            *close_due = false;
+            return Ok(false);
+        }
+    }
+    Ok(payload.terminal_is_empty())
+}
+
+/// 🧯️ Closes a restore cursor's raw payload under a grant that covers its own quote; `None` once the payload is gone.
+fn numerical_restore_payload_close(slot: &mut Option<RetainedJobPayload>, grant: RetainedCloneGrant) -> Option<InteractiveJobCloseStep> {
+    let payload = slot.as_mut()?;
+    if payload.terminal_is_empty() {
+        *slot = None;
+        return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+    }
+    Some(numerical_payload_close(payload, grant))
+}
+
+/// 📏️ Quotes a restore cursor's raw payload frontier; `None` once only owner rungs remain.
+fn numerical_restore_frontier(payload: &Option<RetainedJobPayload>) -> Result<Option<RetirementDemand>, ValueError> {
+    match payload {
+        Some(payload) if !payload.terminal_is_empty() => payload.retirement_demands().map(Some),
+        Some(_) => Ok(Some(RetirementDemand { depth: 1, ..Default::default() })),
+        None => Ok(None),
+    }
+}
+
+impl NumericalOutcomeDesk {
+    pub fn lend_preview(&mut self, payload: RetainedJobPayload) -> NumericalRun {
+        self.lent = Some(payload);
+        NumericalRun::Preview
+    }
+
+    pub fn lend_checkpoint(&mut self, payload: RetainedJobPayload, applied_progress: u64) -> NumericalRun {
+        self.lent = Some(payload);
+        NumericalRun::Checkpoint(applied_progress)
+    }
+
+    pub fn lend_complete(&mut self, output: RetainedJobPayload) -> NumericalRun {
+        self.lent = Some(output);
+        NumericalRun::Complete
+    }
+
+    /// 🤝️ True when the previous call delivered a payload that this call must pay back before the job resumes.
+    pub fn retire_due(&self, cx: &StepContext<'_>, operation: Operation) -> bool {
+        self.delivered && !cx.is_cancelled() && cx.operation() == operation.operation && cx.generation() == operation.generation
+    }
+
+    pub fn take_pending(&mut self) -> Option<NumericalRun> {
+        self.pending.take()
+    }
+
+    /// 💸️ Pays the delivered payload back turn by turn from the calling step's own wallet.
+    pub fn retire_delivered(&mut self, cx: &mut StepContext<'_>) -> Result<(), ValueError> {
+        let Some(payload) = self.lent.as_mut() else {
+            self.delivered = false;
+            return Ok(());
+        };
+        let demand = payload.retirement_demands()?;
+        let grant = cx.retained_grant();
+        if numerical_grant_covers(grant, demand) {
+            let progress = match payload.close_step(grant)? {
+                RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => progress,
+            };
+            cx.consume_retained(progress)?;
+        }
+        if payload.terminal_is_empty() {
+            self.lent = None;
+            self.delivered = false;
+        }
+        Ok(())
+    }
+
+    /// 📬️ Lends the decided outcome, or keeps it pending when the caller's grant cannot admit it yet.
+    pub fn admit<'a>(&'a mut self, cx: &mut StepContext<'_>, run: NumericalRun) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        let admitted = match run {
+            NumericalRun::Yield => return Ok(None),
+            NumericalRun::Cancelled => JobOutcomeBorrow::admit_cancelled(cx)?,
+            NumericalRun::Fault => JobOutcomeBorrow::admit_fault(cx, &self.fault_marker)?,
+            NumericalRun::Preview => JobOutcomeBorrow::admit_preview(cx, self.lent.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "numerical preview has no staged payload"))?)?,
+            NumericalRun::Checkpoint(applied_progress) => JobOutcomeBorrow::admit_checkpoint(cx, self.lent.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "numerical checkpoint has no staged payload"))?, applied_progress)?,
+            NumericalRun::Complete => JobOutcomeBorrow::admit_complete(cx, Some(&self.state_marker), Some(self.lent.as_ref().unwrap_or(&self.output_marker)))?,
+        };
+        if admitted.is_none() {
+            self.pending = Some(run);
+        } else if matches!(run, NumericalRun::Preview | NumericalRun::Checkpoint(_) | NumericalRun::Complete) {
+            self.delivered = true;
+        }
+        Ok(admitted)
+    }
+
+    pub fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        let lent = || self.lent.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "numerical outcome has no staged payload"));
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Fault => descriptor.fault(&self.fault_marker),
+            JobOutcomeKind::PreviewReady => descriptor.preview(lent()?),
+            JobOutcomeKind::CheckpointReady { .. } => descriptor.checkpoint(lent()?),
+            JobOutcomeKind::Complete => descriptor.complete(Some(&self.state_marker), Some(self.lent.as_ref().unwrap_or(&self.output_marker))),
+        }
+    }
+
+    pub fn retirement_demands(&self) -> Option<Result<RetirementDemand, ValueError>> {
+        self.lent.as_ref().map(RetainedJobPayload::retirement_demands)
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Option<InteractiveJobCloseStep> {
+        let payload = self.lent.as_mut()?;
+        if payload.terminal_is_empty() {
+            self.lent = None;
+            self.delivered = false;
+            return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+        }
+        let step = numerical_payload_close(payload, grant);
+        if payload.terminal_is_empty() {
+            self.lent = None;
+            self.delivered = false;
+        }
+        Some(step)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.lent.is_none() && self.pending.is_none()
+    }
+
+    /// 🧹️ Pays back the lent payload through its own quoted grants; for owners that keep their job after completion.
+    pub fn retire_all(&mut self) {
+        while let Some(demand) = self.retirement_demands() {
+            let demand = demand.expect("a locally owned lent payload quotes its close demand");
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            let step = self.close_step(grant);
+            assert!(!matches!(step, Some(InteractiveJobCloseStep::Refused { .. } | InteractiveJobCloseStep::Blocked)), "a locally owned lent payload close has no external owner and no refusal");
+        }
+        self.pending = None;
+    }
+}
 
 fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
     if owner.pop().is_some() {
@@ -176,7 +493,7 @@ impl Coo {
 
 // #region 🔖️Csr
 /// 🧮️ General compressed-sparse-row matrix with independent fixed physical pages for SpMV.
-#[derive(Clone, ToValue, FromValue)]
+#[derive(Clone, ToValue, FromValue, semio_framework_value::RetireOwned)]
 struct CsrWire {
     n: usize,
     indptr: Vec<u32>,
@@ -831,6 +1148,7 @@ pub struct LdltJob {
     output_page_cursor: usize,
     checkpoint_writer: Option<RetainedJobPayloadWriter>,
     checkpoint_cursor: NumericalPageCursor,
+    desk: NumericalOutcomeDesk,
 }
 
 fn close_ldlt_checkpoint_step(state: &mut LdltCheckpoint, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
@@ -893,6 +1211,7 @@ impl LdltJob {
             output_page_cursor: 0,
             checkpoint_writer: None,
             checkpoint_cursor: NumericalPageCursor::new(),
+            desk: NumericalOutcomeDesk::default(),
         }
     }
 
@@ -1692,17 +2011,13 @@ impl LdltRestoreCursor {
         context.consume_fuel(1);
         if self.close_due {
             let payload = self.payload.as_mut().ok_or(NumericalCheckpointFault::Truncated)?;
-            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            self.page_slot += 1;
-            self.close_due = false;
-            self.page_entry = 0;
-            if self.page_slot == self.total_pages {
-                if self.expected_field != u16::MAX || !payload.terminal_is_empty() {
+            if numerical_restore_close_due(payload, context, &mut self.page_slot, &mut self.page_entry, &mut self.close_due, self.total_pages)? {
+                if self.expected_field != u16::MAX {
                     return Err(NumericalCheckpointFault::Truncated);
                 }
                 self.payload = None;
                 let state = self.state.take().ok_or(NumericalCheckpointFault::Truncated)?;
-                return Ok(Some(LdltJob { operation: self.operation, state, output_writer: None, output_page_cursor: 0, checkpoint_writer: None, checkpoint_cursor: NumericalPageCursor::new() }));
+                return Ok(Some(LdltJob { operation: self.operation, state, output_writer: None, output_page_cursor: 0, checkpoint_writer: None, checkpoint_cursor: NumericalPageCursor::new(), desk: NumericalOutcomeDesk::default() }));
             }
             return Ok(None);
         }
@@ -1717,28 +2032,33 @@ impl LdltRestoreCursor {
         Ok(None)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
+        numerical_restore_frontier(&self.payload)
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let frontier = match self.close_frontier() {
+            Ok(frontier) => frontier,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        if let Some(payload) = self.payload.as_mut() {
-            if !payload.terminal_is_empty() {
-                return match payload.close_step(1, maximum_bytes) {
-                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
-                };
+        if !numerical_close_gate(grant, frontier) {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        }
+        if let Some(step) = numerical_restore_payload_close(&mut self.payload, grant) {
+            return step.admit(grant, self.terminal_is_empty());
+        }
+        let Some(state) = self.state.as_mut() else { return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() } };
+        let step = match numerical_owner_turn(close_ldlt_checkpoint_step(state, grant.maximum_release_bytes)) {
+            Some(step) => step,
+            None => {
+                self.state = None;
+                InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }
             }
-            self.payload = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        let Some(state) = self.state.as_mut() else { return semio_framework_job::InteractiveJobCloseStep::Complete };
-        match close_ldlt_checkpoint_step(state, maximum_bytes) {
-            Ok(Some((released_items, released_bytes))) => return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-            Err(()) => return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
-            Ok(None) => {}
-        }
-        self.state = None;
-        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        };
+        step.admit(grant, self.terminal_is_empty())
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -1746,96 +2066,96 @@ impl LdltRestoreCursor {
     }
 }
 
-impl InteractiveJob for LdltJob {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+impl LdltJob {
+    fn run(&mut self, context: &mut StepContext<'_>) -> NumericalRun {
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return NumericalRun::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            return NumericalRun::Fault;
         }
         if self.state.admission_fault {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            return NumericalRun::Fault;
         }
         if self.state.checkpoint_due || self.checkpoint_writer.is_some() {
             context.set_stage("fem.ldlt.checkpoint-page");
             if context.should_yield() {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             context.consume_fuel(1);
             if self.checkpoint_writer.is_none() {
                 self.state.checkpoint_due = false;
                 self.checkpoint_cursor = NumericalPageCursor::new();
                 self.checkpoint_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState));
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             let Some(writer) = self.checkpoint_writer.as_mut() else {
-                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                return NumericalRun::Fault;
             };
             if writer.staged_page_len().is_none() {
                 return match writer.begin_staged_page(context) {
-                    Ok(()) => StepOutcome::Yield,
-                    Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                    Ok(()) => NumericalRun::Yield,
+                    Err(_) => NumericalRun::Fault,
                 };
             }
             let complete = match Self::advance_checkpoint_entry(&self.state, &mut self.checkpoint_cursor, writer) {
                 Ok(complete) => complete,
-                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Err(_) => return NumericalRun::Fault,
             };
             if !complete {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             let Some(writer) = self.checkpoint_writer.take() else {
-                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                return NumericalRun::Fault;
             };
             let state = match writer.finish() {
                 Ok(state) => state,
                 Err(writer) => {
                     self.checkpoint_writer = Some(writer);
-                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                    return NumericalRun::Fault;
                 }
             };
-            return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.state.column as u64 });
+            return self.desk.lend_checkpoint(state, self.state.column as u64);
         }
         if self.state.column == self.state.a.n {
             context.set_stage("fem.ldlt.output-entry");
             if context.should_yield() {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             if self.output_writer.is_none() {
                 context.consume_fuel(1);
                 self.output_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
                 self.output_page_cursor = 0;
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             context.consume_fuel(1);
             let Some(writer) = self.output_writer.as_mut() else {
-                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                return NumericalRun::Fault;
             };
             if writer.staged_page_len().is_none() {
                 return match writer.begin_staged_page(context) {
-                    Ok(()) => StepOutcome::Yield,
-                    Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                    Ok(()) => NumericalRun::Yield,
+                    Err(_) => NumericalRun::Fault,
                 };
             }
             let complete = match Self::advance_output_entry(&mut self.state, self.operation, writer) {
                 Ok(complete) => complete,
-                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Err(_) => return NumericalRun::Fault,
             };
             if !complete {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             let Some(writer) = self.output_writer.take() else {
-                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                return NumericalRun::Fault;
             };
             let output = match writer.finish() {
                 Ok(output) => output,
                 Err(writer) => {
                     self.output_writer = Some(writer);
-                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                    return NumericalRun::Fault;
                 }
             };
-            return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output });
+            return self.desk.lend_complete(output);
         }
         context.set_stage(match self.state.cursor.stage {
             LdltColumnStage::ReserveColumn => "fem.ldlt.reserve-column",
@@ -1849,16 +2169,82 @@ impl InteractiveJob for LdltJob {
             LdltColumnStage::CompleteColumn => "fem.ldlt.complete-column",
         });
         if context.should_yield() {
-            return StepOutcome::Yield;
+            return NumericalRun::Yield;
         }
         context.consume_fuel(1);
         if self.advance_column_microcursor().is_err() {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            return NumericalRun::Fault;
         }
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return NumericalRun::Cancelled;
         }
-        StepOutcome::Yield
+        NumericalRun::Yield
+    }
+
+    fn largest_owner_bytes(&self) -> usize {
+        let state = &self.state;
+        [state.a.colptr.capacity() * size_of::<u32>(), state.a.rowind.capacity() * size_of::<u32>(), state.a.vals.capacity() * size_of::<f64>(), state.d.capacity() * size_of::<f64>()]
+            .into_iter()
+            .chain(state.l_cols.iter().map(|column| column.capacity() * size_of::<(u32, f64)>()))
+            .chain(state.row_lists.iter().map(|row| row.capacity() * size_of::<usize>()))
+            .max()
+            .unwrap_or(0)
+    }
+
+    fn rung_demand(&self) -> RetirementDemand {
+        let mut demand = numerical_rung_demand(self.close_terminal_is_empty());
+        if self.state.admission_fault {
+            demand.release_bytes = demand.release_bytes.max(self.largest_owner_bytes());
+        }
+        demand
+    }
+
+    fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
+        if let Some(demand) = self.desk.retirement_demands() {
+            return demand.map(Some);
+        }
+        if let Some(demand) = numerical_writer_demand(&self.checkpoint_writer) {
+            return demand.map(Some);
+        }
+        if let Some(demand) = numerical_writer_demand(&self.output_writer) {
+            return demand.map(Some);
+        }
+        Ok(None)
+    }
+
+    fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
+        Ok(self.close_frontier()?.unwrap_or_else(|| self.rung_demand()))
+    }
+
+    fn close_turn(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if let Some(step) = self.desk.close_step(grant) {
+            return step;
+        }
+        if let Some(step) = numerical_writer_close(&mut self.checkpoint_writer, grant) {
+            return step;
+        }
+        if let Some(step) = numerical_writer_close(&mut self.output_writer, grant) {
+            return step;
+        }
+        numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes))
+    }
+}
+
+impl InteractiveJob for LdltJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if self.desk.retire_due(cx, self.operation) {
+            self.desk.retire_delivered(cx)?;
+            return Ok(None);
+        }
+        let run = match self.desk.take_pending() {
+            Some(run) => run,
+            None => self.run(cx),
+        };
+        self.desk.admit(cx, run)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        self.desk.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -1870,38 +2256,27 @@ impl InteractiveJob for LdltJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let frontier = match self.close_frontier() {
+            Ok(frontier) => frontier,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        if let Some(writer) = self.checkpoint_writer.as_mut() {
-            return match writer.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    self.checkpoint_writer = None;
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
+        if !numerical_close_gate(grant, frontier) {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
         }
-        if let Some(writer) = self.output_writer.as_mut() {
-            return match writer.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    self.output_writer = None;
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
-        }
-        let (complete, released_items, released_bytes) = self.close_retained_step(maximum_bytes);
-        if complete {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
-        }
+        self.close_turn(grant).admit(grant, self.terminal_is_empty())
     }
 
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> { Ok(self.close_demand()?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.depth) }
+
     fn terminal_is_empty(&self) -> bool {
-        self.checkpoint_writer.is_none() && self.output_writer.is_none() && self.close_terminal_is_empty()
+        self.checkpoint_writer.is_none() && self.output_writer.is_none() && self.desk.terminal_is_empty() && self.close_terminal_is_empty()
     }
 }
 
@@ -1961,7 +2336,7 @@ pub struct PcgStats {
     pub converged: bool,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "kind")]
 pub enum PcgStage {
     InitializeDiagonal,
@@ -2108,6 +2483,7 @@ pub struct PcgJob {
     publication_fault: Option<NumericalCheckpointFault>,
     terminal_published: bool,
     closing: bool,
+    desk: NumericalOutcomeDesk,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -2121,24 +2497,24 @@ pub struct PcgVisualScalar {
 
 impl PcgJob {
     fn from_state(operation: Operation, state: PcgCheckpoint) -> Self {
-        Self { operation, state, close_lane: 0, publication: None, publication_fault: None, terminal_published: false, closing: false }
+        Self { operation, state, close_lane: 0, publication: None, publication_fault: None, terminal_published: false, closing: false, desk: NumericalOutcomeDesk::default() }
     }
 
-    fn step_publication(&mut self, context: &mut StepContext<'_>, kind: PcgPublicationKind) -> Result<StepOutcome, NumericalCheckpointFault> {
-        if context.should_yield() { return Ok(StepOutcome::Yield); }
+    fn step_publication(&mut self, context: &mut StepContext<'_>, kind: PcgPublicationKind) -> Result<NumericalRun, NumericalCheckpointFault> {
+        if context.should_yield() { return Ok(NumericalRun::Yield); }
         context.consume_fuel(1);
         if self.publication.is_none() {
             self.publication = Some(PcgPublication::new(kind));
-            return Ok(StepOutcome::Yield);
+            return Ok(NumericalRun::Yield);
         }
         let publication = self.publication.as_mut().ok_or(NumericalCheckpointFault::Field)?;
         if !publication.complete {
             if publication.writer.staged_page_len().is_none() {
                 publication.writer.begin_staged_page(context).map_err(|_| NumericalCheckpointFault::Admission)?;
-                return Ok(StepOutcome::Yield);
+                return Ok(NumericalRun::Yield);
             }
             publication.complete = publication.advance(self.operation, &self.state).map_err(|_| NumericalCheckpointFault::Admission)?;
-            return Ok(StepOutcome::Yield);
+            return Ok(NumericalRun::Yield);
         }
         let publication = self.publication.take().ok_or(NumericalCheckpointFault::Field)?;
         let payload = match publication.writer.finish() {
@@ -2151,17 +2527,17 @@ impl PcgJob {
         Ok(match publication.kind {
             PcgPublicationKind::Checkpoint => {
                 self.state.checkpoint_due = false;
-                StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: payload, applied_progress: self.state.iteration as u64 })
+                self.desk.lend_checkpoint(payload, self.state.iteration as u64)
             }
             PcgPublicationKind::Preview => {
                 self.state.preview_due = false;
-                StepOutcome::PreviewReady(payload)
+                self.desk.lend_preview(payload)
             }
             PcgPublicationKind::Complete => {
                 self.terminal_published = true;
                 self.state.preview_due = false;
                 self.state.checkpoint_due = false;
-                StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: payload })
+                self.desk.lend_complete(payload)
             }
         })
     }
@@ -2210,6 +2586,7 @@ impl PcgJob {
             publication_fault: None,
             terminal_published: false,
             closing: false,
+            desk: NumericalOutcomeDesk::default(),
         }
     }
 
@@ -2235,14 +2612,8 @@ impl PcgJob {
     }
 
     /// 🧹️ Retires one matrix/vector scalar owner per governed close opportunity.
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    fn close_retained_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         self.closing = true;
-        if let Some(publication) = self.publication.as_mut() {
-            return match publication.writer.close_step(1, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => (false, released_items, released_bytes),
-                semio_framework_job::JobPayloadCloseStep::Complete => { self.publication = None; (false, 1, 0) }
-            };
-        }
         loop {
             if self.close_lane == 0 {
                 let (terminal, items, bytes) = self.state.a.close_step(maximum_bytes);
@@ -2904,6 +3275,7 @@ impl PcgJobConstruction {
                         publication_fault: None,
                         terminal_published: false,
                         closing: false,
+                        desk: NumericalOutcomeDesk::default(),
                     });
                 }
                 return Ok(true);
@@ -2916,39 +3288,52 @@ impl PcgJobConstruction {
         (self.stage == PcgConstructionStage::Complete).then(|| self.complete.take()).flatten()
     }
 
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.closing = true;
+        if grant.maximum_items == 0 {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        }
+        let maximum_bytes = grant.maximum_release_bytes;
         if let Some(complete) = self.complete.as_mut() {
-            let (terminal, items, bytes) = complete.close_step(maximum_bytes);
-            if !terminal {
-                return (false, items, bytes);
+            let step = InteractiveJob::close_step(complete, grant);
+            let terminal = complete.terminal_is_empty();
+            if terminal {
+                self.complete = None;
             }
-            self.complete = None;
-            return (false, 1, 0);
+            return numerical_child_close(step, terminal);
         }
         if let Some(matrix) = self.matrix.as_mut() {
             let (terminal, items, bytes) = matrix.close_step(maximum_bytes);
             if !terminal {
-                return (false, items, bytes);
+                return numerical_ladder_turn((false, items, bytes));
             }
             self.matrix = None;
-            return (false, 1, 0);
+            return numerical_ladder_turn((false, 1, 0));
         }
         if let Some(rhs) = self.mounted_b.as_mut() {
             if !rhs.close_step() {
-                return (false, 1, 0);
+                return numerical_ladder_turn((false, 1, 0));
             }
             self.mounted_b = None;
-            return (false, 1, 0);
+            return numerical_ladder_turn((false, 1, 0));
         }
         for vector in [&mut self.b, &mut self.x, &mut self.diag, &mut self.r, &mut self.z, &mut self.p, &mut self.ap] {
-            match close_vec_owner_step(&mut vector.0, maximum_bytes) {
-                Ok(Some((items, bytes))) => return (false, items, bytes),
-                Err(()) => return (false, 0, 0),
-                Ok(None) => {}
+            if let Some(step) = numerical_owner_turn(close_vec_owner_step(&mut vector.0, maximum_bytes)) {
+                return step;
             }
         }
-        (true, 0, 0)
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+    }
+
+    pub fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
+        match self.complete.as_ref() {
+            Some(complete) => complete.close_frontier(),
+            None => Ok(None),
+        }
+    }
+
+    pub fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
+        Ok(self.close_frontier()?.unwrap_or_else(|| numerical_rung_demand(false)))
     }
 }
 
@@ -3090,12 +3475,8 @@ impl PcgRestoreCursor {
         context.consume_fuel(1);
         if self.close_due {
             let payload = self.payload.as_mut().ok_or(NumericalCheckpointFault::Truncated)?;
-            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            self.page_slot += 1;
-            self.close_due = false;
-            self.page_entry = 0;
-            if self.page_slot == self.total_pages {
-                if self.expected_field != u16::MAX || !payload.terminal_is_empty() { return Err(NumericalCheckpointFault::Truncated); }
+            if numerical_restore_close_due(payload, context, &mut self.page_slot, &mut self.page_entry, &mut self.close_due, self.total_pages)? {
+                if self.expected_field != u16::MAX { return Err(NumericalCheckpointFault::Truncated); }
                 let job = self.job.as_ref().ok_or(NumericalCheckpointFault::Truncated)?;
                 let state = &job.state;
                 if state.entry_cursor > state.a.vals.len() || state.a.indices.len() != state.a.vals.len() { return Err(NumericalCheckpointFault::Envelope); }
@@ -3111,45 +3492,56 @@ impl PcgRestoreCursor {
         Ok(None)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        if maximum_items == 0 { return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }; }
+    fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
+        if self.payload.is_some() {
+            return numerical_restore_frontier(&self.payload);
+        }
+        match self.job.as_ref() {
+            Some(job) => job.close_frontier(),
+            None => Ok(None),
+        }
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.closing = true;
-        if let Some(payload) = self.payload.as_mut() {
-            if !payload.terminal_is_empty() {
-                return match payload.close_step(1, maximum_bytes) {
-                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                    semio_framework_job::JobPayloadCloseStep::Complete => InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
-                };
-            }
-            self.payload = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        let frontier = match self.close_frontier() {
+            Ok(frontier) => frontier,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        if let Some(job) = self.job.as_mut() {
-            let (complete, released_items, released_bytes) = job.close_step(maximum_bytes);
-            if !complete { return InteractiveJobCloseStep::Pending { released_items, released_bytes }; }
+        if !numerical_close_gate(grant, frontier) {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        }
+        if let Some(step) = numerical_restore_payload_close(&mut self.payload, grant) {
+            return step.admit(grant, self.terminal_is_empty());
+        }
+        let Some(job) = self.job.as_mut() else { return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() } };
+        let step = InteractiveJob::close_step(job, grant);
+        let terminal = job.terminal_is_empty();
+        if terminal {
             self.job = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        InteractiveJobCloseStep::Complete
+        numerical_child_close(step, terminal)
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.payload.is_none() && self.job.is_none() }
 }
 
 
-impl InteractiveJob for PcgJob {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+impl PcgJob {
+    fn run(&mut self, context: &mut StepContext<'_>) -> NumericalRun {
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return NumericalRun::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            return NumericalRun::Fault;
         }
         if self.closing || self.publication_fault.is_some() {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            return NumericalRun::Fault;
         }
-        if self.terminal_published { return StepOutcome::Yield; }
+        if self.terminal_published { return NumericalRun::Yield; }
         let publication_kind = self.publication.as_ref().map(|publication| publication.kind).or_else(|| {
             if self.state.stage == PcgStage::Complete { Some(PcgPublicationKind::Complete) }
             else if self.state.preview_due { Some(PcgPublicationKind::Preview) }
@@ -3166,7 +3558,7 @@ impl InteractiveJob for PcgJob {
                 Ok(outcome) => outcome,
                 Err(fault) => {
                     self.publication_fault = Some(fault);
-                    StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
+                    NumericalRun::Fault
                 }
             };
         }
@@ -3185,10 +3577,57 @@ impl InteractiveJob for PcgJob {
                 PcgStage::Complete => {}
             }
             if context.is_cancelled() {
-                return StepOutcome::Cancelled;
+                return NumericalRun::Cancelled;
             }
         }
-        StepOutcome::Yield
+        NumericalRun::Yield
+    }
+
+    fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
+        if let Some(demand) = self.desk.retirement_demands() {
+            return demand.map(Some);
+        }
+        if let Some(publication) = self.publication.as_ref() {
+            return publication.writer.retirement_demands().map(Some);
+        }
+        Ok(None)
+    }
+
+    fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
+        Ok(self.close_frontier()?.unwrap_or_else(|| numerical_rung_demand(self.close_lane >= 8)))
+    }
+
+    fn close_turn(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if let Some(step) = self.desk.close_step(grant) {
+            return step;
+        }
+        if let Some(publication) = self.publication.as_mut() {
+            publication.writer.begin_close();
+            let step = numerical_close_result(publication.writer.close_step(grant));
+            if publication.writer.terminal_is_empty() {
+                self.publication = None;
+            }
+            return step;
+        }
+        numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes))
+    }
+}
+
+impl InteractiveJob for PcgJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if self.desk.retire_due(cx, self.operation) {
+            self.desk.retire_delivered(cx)?;
+            return Ok(None);
+        }
+        let run = match self.desk.take_pending() {
+            Some(run) => run,
+            None => self.run(cx),
+        };
+        self.desk.admit(cx, run)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        self.desk.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -3196,20 +3635,27 @@ impl InteractiveJob for PcgJob {
         if let Some(publication) = self.publication.as_mut() { publication.writer.begin_close(); }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let frontier = match self.close_frontier() {
+            Ok(frontier) => frontier,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        let (complete, released_items, released_bytes) = PcgJob::close_step(self, maximum_bytes);
-        if complete {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        if !numerical_close_gate(grant, frontier) {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
         }
+        self.close_turn(grant).admit(grant, self.terminal_is_empty())
     }
 
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> { Ok(self.close_demand()?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.depth) }
+
     fn terminal_is_empty(&self) -> bool {
-        self.close_lane == 8 && self.publication.is_none()
+        self.close_lane == 8 && self.publication.is_none() && self.desk.terminal_is_empty()
     }
 }
 
@@ -3220,28 +3666,22 @@ pub fn pcg(a: &Csr, b: &VecD, x0: &mut VecD, tol_rel: f64, max_iter: usize) -> P
     let mut job = PcgJob::new(operation, a.clone(), b.clone(), x0.clone(), tol_rel, max_iter, 1_024);
     let mut preview_sequence = 0;
     loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut preview_sequence);
-        match job.step(&mut context) {
-            StepOutcome::Complete(candidate) => {
-                close_batch_payload(candidate.state);
-                close_batch_payload(candidate.output);
+        match numerical_batch_step(&mut job, operation, &mut preview_sequence) {
+            NumericalBatchEnd::Complete => {
                 let (solution, stats) = job.solution();
                 *x0 = solution.clone();
-                while !job.terminal_is_empty() { let _ = job.close_step(usize::MAX); }
+                numerical_batch_close(&mut job);
                 return stats;
             }
-            StepOutcome::CheckpointReady(checkpoint) => close_batch_payload(checkpoint.state),
-            StepOutcome::PreviewReady(preview) => close_batch_payload(preview),
-            StepOutcome::Fault(fault) => {
-                close_batch_payload(fault.detail);
-                while !job.terminal_is_empty() { let _ = job.close_step(usize::MAX); }
+            NumericalBatchEnd::Fault => {
+                numerical_batch_close(&mut job);
                 panic!("PCG batch execution faulted");
             }
-            StepOutcome::Cancelled => {
-                while !job.terminal_is_empty() { let _ = job.close_step(usize::MAX); }
+            NumericalBatchEnd::Cancelled => {
+                numerical_batch_close(&mut job);
                 panic!("PCG batch execution cancelled");
             }
-            StepOutcome::Yield => {}
+            NumericalBatchEnd::Continue => {}
         }
     }
 }
@@ -3532,6 +3972,7 @@ pub struct SubspaceIterationJob {
     terminal_page_cursor: usize,
     checkpoint_writer: Option<RetainedJobPayloadWriter>,
     checkpoint_cursor: NumericalPageCursor,
+    desk: NumericalOutcomeDesk,
 }
 
 fn close_subspace_checkpoint_step(state: &mut SubspaceCheckpoint, maximum_bytes: usize) -> (bool, usize, usize) {
@@ -3606,6 +4047,7 @@ impl SubspaceIterationJob {
             terminal_page_cursor: 0,
             checkpoint_writer: None,
             checkpoint_cursor: NumericalPageCursor::new(),
+            desk: NumericalOutcomeDesk::default(),
         }
     }
 
@@ -4876,12 +5318,8 @@ impl SubspaceRestoreCursor {
         context.consume_fuel(1);
         if self.close_due {
             let payload = self.payload.as_mut().ok_or(NumericalCheckpointFault::Truncated)?;
-            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            self.page_slot += 1;
-            self.close_due = false;
-            self.page_entry = 0;
-            if self.page_slot == self.total_pages {
-                if self.expected_field != u16::MAX || !payload.terminal_is_empty() {
+            if numerical_restore_close_due(payload, context, &mut self.page_slot, &mut self.page_entry, &mut self.close_due, self.total_pages)? {
+                if self.expected_field != u16::MAX {
                     return Err(NumericalCheckpointFault::Truncated);
                 }
                 self.payload = None;
@@ -4895,6 +5333,7 @@ impl SubspaceRestoreCursor {
                     terminal_page_cursor: 0,
                     checkpoint_writer: None,
                     checkpoint_cursor: NumericalPageCursor::new(),
+                    desk: NumericalOutcomeDesk::default(),
                 }));
             }
             return Ok(None);
@@ -4910,27 +5349,33 @@ impl SubspaceRestoreCursor {
         Ok(None)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
+        numerical_restore_frontier(&self.payload)
+    }
+
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let frontier = match self.close_frontier() {
+            Ok(frontier) => frontier,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        if let Some(payload) = self.payload.as_mut() {
-            if !payload.terminal_is_empty() {
-                return match payload.close_step(1, maximum_bytes) {
-                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
-                };
-            }
-            self.payload = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        if !numerical_close_gate(grant, frontier) {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
         }
-        let Some(state) = self.state.as_mut() else { return semio_framework_job::InteractiveJobCloseStep::Complete };
-        let (terminal, released_items, released_bytes) = close_subspace_checkpoint_step(state, maximum_bytes);
-        if !terminal {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        if let Some(step) = numerical_restore_payload_close(&mut self.payload, grant) {
+            return step.admit(grant, self.terminal_is_empty());
         }
-        self.state = None;
-        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        let Some(state) = self.state.as_mut() else { return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() } };
+        let (terminal, items, bytes) = close_subspace_checkpoint_step(state, grant.maximum_release_bytes);
+        let step = if terminal {
+            self.state = None;
+            InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }
+        } else {
+            InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: items, released_bytes: bytes, ..Default::default() } }
+        };
+        step.admit(grant, self.terminal_is_empty())
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -4938,121 +5383,121 @@ impl SubspaceRestoreCursor {
     }
 }
 
-impl InteractiveJob for SubspaceIterationJob {
-    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+impl SubspaceIterationJob {
+    fn run(&mut self, context: &mut StepContext<'_>) -> NumericalRun {
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return NumericalRun::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            return NumericalRun::Fault;
         }
         if !self.state.factor_validation_complete {
             context.set_stage("fem.subspace.validate-factor-owner");
             if context.should_yield() {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             context.consume_fuel(1);
             if let Some(column) = self.state.k_factor.l_cols.get(self.state.factor_validation_cursor) {
                 if column.capacity().saturating_mul(size_of::<(u32, f64)>()) > NUMERICAL_OWNER_PAGE_BYTES {
                     self.state.admission_fault = true;
                     self.state.factor_validation_complete = true;
-                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                    return NumericalRun::Fault;
                 }
                 self.state.factor_validation_cursor += 1;
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             self.state.factor_validation_complete = true;
-            return StepOutcome::Yield;
+            return NumericalRun::Yield;
         }
         if self.state.admission_fault || self.state.n > SUBSPACE_MAXIMUM_ORDER || self.state.m > SUBSPACE_MAXIMUM_COLUMNS {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            return NumericalRun::Fault;
         }
         if self.state.checkpoint_due || self.checkpoint_writer.is_some() {
             context.set_stage("fem.subspace.checkpoint-page");
             if context.should_yield() {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             context.consume_fuel(1);
             if self.checkpoint_writer.is_none() {
                 self.state.checkpoint_due = false;
                 self.checkpoint_cursor = NumericalPageCursor::new();
                 self.checkpoint_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState));
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             let Some(writer) = self.checkpoint_writer.as_mut() else {
-                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                return NumericalRun::Fault;
             };
             if writer.staged_page_len().is_none() {
                 return match writer.begin_staged_page(context) {
-                    Ok(()) => StepOutcome::Yield,
-                    Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                    Ok(()) => NumericalRun::Yield,
+                    Err(_) => NumericalRun::Fault,
                 };
             }
             let complete = match Self::advance_checkpoint_entry(&self.state, &mut self.checkpoint_cursor, writer) {
                 Ok(complete) => complete,
-                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Err(_) => return NumericalRun::Fault,
             };
             if !complete {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             let Some(writer) = self.checkpoint_writer.take() else {
-                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                return NumericalRun::Fault;
             };
             let state = match writer.finish() {
                 Ok(state) => state,
                 Err(writer) => {
                     self.checkpoint_writer = Some(writer);
-                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                    return NumericalRun::Fault;
                 }
             };
-            return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.state.iteration as u64 });
+            return self.desk.lend_checkpoint(state, self.state.iteration as u64);
         }
         if self.state.preview_due {
             context.set_stage("fem.subspace.preview-entry");
             if context.should_yield() {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             if self.preview_writer.is_none() {
                 context.consume_fuel(1);
                 self.preview_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::Preview));
                 self.preview_page_cursor = 0;
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             context.consume_fuel(1);
             let Some(writer) = self.preview_writer.as_mut() else {
-                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                return NumericalRun::Fault;
             };
             if writer.staged_page_len().is_none() && self.state.publication_stage < 4 {
                 return match writer.begin_staged_page(context) {
-                    Ok(()) => StepOutcome::Yield,
-                    Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                    Ok(()) => NumericalRun::Yield,
+                    Err(_) => NumericalRun::Fault,
                 };
             }
             let complete = match Self::advance_preview_entry(&mut self.state, self.operation, writer) {
                 Ok(complete) => complete,
-                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Err(_) => return NumericalRun::Fault,
             };
             if !complete {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             let Some(writer) = self.preview_writer.take() else {
-                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                return NumericalRun::Fault;
             };
             let preview = match writer.finish() {
                 Ok(preview) => preview,
                 Err(writer) => {
                     self.preview_writer = Some(writer);
-                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                    return NumericalRun::Fault;
                 }
             };
             self.preview_page_cursor = 0;
             self.state.preview_due = false;
-            return StepOutcome::PreviewReady(preview);
+            return self.desk.lend_preview(preview);
         }
         if self.state.iteration >= self.state.max_iter || self.state.converged {
             context.set_stage("fem.subspace.terminal-page");
             if context.should_yield() {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             context.consume_fuel(1);
             if self.terminal_writer.is_none() {
@@ -5061,35 +5506,35 @@ impl InteractiveJob for SubspaceIterationJob {
                 self.state.publication_second = 0;
                 self.terminal_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
                 self.terminal_page_cursor = 0;
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             let Some(writer) = self.terminal_writer.as_mut() else {
-                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                return NumericalRun::Fault;
             };
             if writer.staged_page_len().is_none() && self.state.publication_stage < 4 {
                 return match writer.begin_staged_page(context) {
-                    Ok(()) => StepOutcome::Yield,
-                    Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                    Ok(()) => NumericalRun::Yield,
+                    Err(_) => NumericalRun::Fault,
                 };
             }
             let complete = match Self::advance_preview_entry(&mut self.state, self.operation, writer) {
                 Ok(complete) => complete,
-                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                Err(_) => return NumericalRun::Fault,
             };
             if !complete {
-                return StepOutcome::Yield;
+                return NumericalRun::Yield;
             }
             let Some(writer) = self.terminal_writer.take() else {
-                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                return NumericalRun::Fault;
             };
             let output = match writer.finish() {
                 Ok(output) => output,
                 Err(writer) => {
                     self.terminal_writer = Some(writer);
-                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                    return NumericalRun::Fault;
                 }
             };
-            return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output });
+            return self.desk.lend_complete(output);
         }
         context.set_stage(match self.state.work.stage {
             SubspaceStage::ReserveIteration => "fem.subspace.reserve-iteration",
@@ -5110,7 +5555,7 @@ impl InteractiveJob for SubspaceIterationJob {
             SubspaceStage::PublishIteration => "fem.subspace.publish-iteration",
         });
         if context.should_yield() {
-            return StepOutcome::Yield;
+            return NumericalRun::Yield;
         }
         context.consume_fuel(1);
         let result = match self.state.work.stage {
@@ -5177,12 +5622,79 @@ impl InteractiveJob for SubspaceIterationJob {
             }
         };
         if result.is_err() {
-            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            return NumericalRun::Fault;
         }
         if context.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return NumericalRun::Cancelled;
         }
-        StepOutcome::Yield
+        NumericalRun::Yield
+    }
+
+    fn largest_owner_bytes(&self) -> usize {
+        let state = &self.state;
+        [state.k_factor.d.capacity() * size_of::<f64>(), state.x.data.capacity() * size_of::<f64>(), state.prev_theta.capacity() * size_of::<f64>(), state.final_theta.capacity() * size_of::<f64>(), state.residuals.capacity() * size_of::<f64>()]
+            .into_iter()
+            .chain(state.k_factor.l_cols.iter().map(|column| column.capacity() * size_of::<(u32, f64)>()))
+            .max()
+            .unwrap_or(0)
+    }
+
+    fn rung_demand(&self) -> RetirementDemand {
+        let mut demand = numerical_rung_demand(self.close_terminal_is_empty());
+        if self.state.admission_fault {
+            demand.release_bytes = demand.release_bytes.max(self.largest_owner_bytes());
+        }
+        demand
+    }
+
+    fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
+        if let Some(demand) = self.desk.retirement_demands() {
+            return demand.map(Some);
+        }
+        for slot in [&self.checkpoint_writer, &self.preview_writer, &self.terminal_writer] {
+            if let Some(demand) = numerical_writer_demand(slot) {
+                return demand.map(Some);
+            }
+        }
+        Ok(None)
+    }
+
+    fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
+        Ok(self.close_frontier()?.unwrap_or_else(|| self.rung_demand()))
+    }
+
+    fn close_turn(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        if let Some(step) = self.desk.close_step(grant) {
+            return step;
+        }
+        if let Some(step) = numerical_writer_close(&mut self.checkpoint_writer, grant) {
+            return step;
+        }
+        if let Some(step) = numerical_writer_close(&mut self.preview_writer, grant) {
+            return step;
+        }
+        if let Some(step) = numerical_writer_close(&mut self.terminal_writer, grant) {
+            return step;
+        }
+        numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes))
+    }
+}
+
+impl InteractiveJob for SubspaceIterationJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        if self.desk.retire_due(cx, self.operation) {
+            self.desk.retire_delivered(cx)?;
+            return Ok(None);
+        }
+        let run = match self.desk.take_pending() {
+            Some(run) => run,
+            None => self.run(cx),
+        };
+        self.desk.admit(cx, run)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        self.desk.borrow_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -5197,54 +5709,27 @@ impl InteractiveJob for SubspaceIterationJob {
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+        let frontier = match self.close_frontier() {
+            Ok(frontier) => frontier,
+            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+        };
+        if self.terminal_is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
         }
-        if let Some(writer) = self.checkpoint_writer.as_mut() {
-            return match writer.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    self.checkpoint_writer = None;
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
+        if !numerical_close_gate(grant, frontier) {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
         }
-        if let Some(writer) = self.preview_writer.as_mut() {
-            return match writer.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    self.preview_writer = None;
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
-        }
-        if let Some(writer) = self.terminal_writer.as_mut() {
-            return match writer.close_step(maximum_items, maximum_bytes) {
-                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                semio_framework_job::JobPayloadCloseStep::Complete => {
-                    self.terminal_writer = None;
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-                }
-            };
-        }
-        let (complete, released_items, released_bytes) = self.close_retained_step(maximum_bytes);
-        if complete {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
-        }
+        self.close_turn(grant).admit(grant, self.terminal_is_empty())
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> { Ok(self.close_demand()?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.depth) }
 
     fn terminal_is_empty(&self) -> bool {
-        self.checkpoint_writer.is_none() && self.preview_writer.is_none() && self.terminal_writer.is_none() && self.close_terminal_is_empty()
-    }
-}
-
-/// 🧹️ Closes retained batch-adapter payload pages before the next solver grant.
-fn close_batch_payload(mut payload: RetainedJobPayload) {
-    while !payload.terminal_is_empty() {
-        let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        self.checkpoint_writer.is_none() && self.preview_writer.is_none() && self.terminal_writer.is_none() && self.desk.terminal_is_empty() && self.close_terminal_is_empty()
     }
 }
 
@@ -5254,24 +5739,17 @@ pub fn subspace_iteration(k_factor: &LdltFactor, b: &Csr, n: usize, p: usize, ma
     let mut job = SubspaceIterationJob::new(operation, k_factor.clone(), b.clone(), n, p, max_iter);
     let mut preview_sequence = 0;
     loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut preview_sequence);
-        match job.step(&mut context) {
-            StepOutcome::Complete(candidate) => {
-                close_batch_payload(candidate.state);
-                close_batch_payload(candidate.output);
+        match numerical_batch_step(&mut job, operation, &mut preview_sequence) {
+            NumericalBatchEnd::Complete => {
                 let solution = job.solution();
-                while !job.terminal_is_empty() {
-                    let _ = job.close_step(1, usize::MAX);
-                }
+                numerical_batch_close(&mut job);
                 return solution;
             }
-            StepOutcome::CheckpointReady(checkpoint) => close_batch_payload(checkpoint.state),
-            StepOutcome::PreviewReady(preview) => close_batch_payload(preview),
-            StepOutcome::Fault(fault) => {
-                close_batch_payload(fault.detail);
+            NumericalBatchEnd::Fault => {
+                numerical_batch_close(&mut job);
                 panic!("subspace batch adapter faulted")
             }
-            _ => {}
+            NumericalBatchEnd::Cancelled | NumericalBatchEnd::Continue => {}
         }
     }
 }

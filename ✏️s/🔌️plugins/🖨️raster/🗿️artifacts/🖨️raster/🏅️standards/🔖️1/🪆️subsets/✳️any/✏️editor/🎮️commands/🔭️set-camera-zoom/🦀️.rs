@@ -1,12 +1,12 @@
 //! 🎥️ 🎥️ Raster play app commands command — `set-camera-zoom`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
+use crate::editor::raster::config::{RasterConfig, RasterConfigMutation, SetCameraEdit};
 use crate::op::RasterMutation;
 use crate::{RasterCamera, RasterSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "camera-zoom")]
 pub struct SetCameraZoom {
     pub zoom: f64,
@@ -14,5 +14,5 @@ pub struct SetCameraZoom {
 
 pub fn handle(payload: &SetCameraZoom, _doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let camera = RasterCamera { zoom: payload.zoom, ..cfg.snapshot.camera.clone() };
-    Ok(Emit::config(vec![RasterConfigMutation::SetCamera { camera }]))
+    Ok(Emit::config(vec![RasterConfigMutation::SetCamera(SetCameraEdit { camera })]))
 }

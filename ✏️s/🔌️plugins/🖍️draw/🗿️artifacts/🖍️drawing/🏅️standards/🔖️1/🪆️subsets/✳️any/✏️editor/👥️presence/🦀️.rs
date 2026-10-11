@@ -74,6 +74,8 @@ impl store::SnapshotRetirementFactory<DrawingPresence> for DrawingPresenceRetire
 
 
 
+impl store::ArtifactPresenceSnapshot for DrawingPresence {}
+
 impl store::ArtifactDsl for DrawingPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
@@ -121,7 +123,7 @@ impl ArtifactPack for DrawingPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum DrawingPresenceMutation {
     #[dsl(key = "set")]
@@ -130,20 +132,6 @@ pub enum DrawingPresenceMutation {
         #[dsl(block)]
         camera: store::Viewport2d,
     },
-}
-
-impl semio_framework_value::retirement::RetireOwned for DrawingPresenceMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self {
-            Self::Set { engagement_input, camera: store::Viewport2d { x, y, zoom } } => semio_framework_value::retirement::sequence(vec![
-                semio_framework_value::retirement::leaf(0u8),
-                semio_framework_value::retirement::RetireOwned::retirement(engagement_input),
-                semio_framework_value::retirement::leaf(x),
-                semio_framework_value::retirement::leaf(y),
-                semio_framework_value::retirement::leaf(zoom),
-            ]),
-        }
-    }
 }
 
 impl Mutation<DrawingPresence> for DrawingPresenceMutation {

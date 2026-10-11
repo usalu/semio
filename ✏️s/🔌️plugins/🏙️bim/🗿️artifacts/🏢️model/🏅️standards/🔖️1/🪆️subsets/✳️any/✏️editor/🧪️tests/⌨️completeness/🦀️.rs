@@ -84,7 +84,7 @@ async fn every_refusal_code_the_new_paths_raise_has_a_notice() {
 async fn a_default_name_comes_from_the_label_block_in_the_viewers_language_and_never_from_a_literal() {
     use crate::editor::bim::gestures::session::{Surface, ToolContext};
     let snapshot = demo();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, Clone::clone);
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     let mut context = ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
     assert_eq!(context.name_of(|labels| labels.kind_column, 0), "Column 1", "without a viewer the first language's labels name it");
     context.labels = Some(&BimLabels::NATIVE_DE);
@@ -206,7 +206,7 @@ async fn the_wall_sweep_the_attach_and_the_reveal_are_reachable_from_the_ui_thro
 //#region 🔖️Panel
 fn panel(snapshot: &ModelSnapshot, elements: &[&str], library: &[&str], locale: Locale) -> String {
     let own = |ids: &[&str]| ids.iter().map(|id| id.to_string()).collect::<Vec<_>>();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, snapshot, Clone::clone);
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, Clone::clone);
     let view = ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native);
     let node = properties_panel::render(snapshot, &inference, &own(elements), &own(library), bim_labels(&view)).expect("the properties panel renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
@@ -384,7 +384,7 @@ async fn the_marks_of_a_gesture_become_segments_and_points_at_the_floor_of_the_s
     let mut rig = Rig::plan("wall", room());
     rig.down(0.0, -2.0);
     rig.mv(3.0, -2.0);
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &rig.snapshot, Clone::clone);
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, Clone::clone);
     let config = world::config::BimWorldWindowConfig::default();
     assert!(world::scene(&rig.snapshot, &inference, &config, &[], &[], 1).engagement_preview_json.is_none(), "a scene without a gesture has no preview");
     let scene = world::scene_over(&rig.snapshot, &inference, &config, &[], &[], 1, &rig.preview);
@@ -404,7 +404,7 @@ async fn the_marks_of_a_gesture_become_segments_and_points_at_the_floor_of_the_s
 async fn a_closed_path_gets_its_closing_segment_and_a_label_has_no_3d_form() {
     use crate::editor::bim::gestures::session::{Mark, Preview, Style};
     let snapshot = demo();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::with_inference(None, &snapshot, Clone::clone);
+    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     let preview = Preview::of(vec![Mark::path(&[[0.0, 0.0], [2.0, 0.0], [2.0, 2.0]], true, Style::Ghost), Mark::label([1.0, 1.0], "2.00 m")]);
     let items = world::preview_items(&snapshot, &inference, &world::config::BimWorldWindowConfig::default(), &preview);
     assert_eq!(items.len(), 3, "two segments and the closing one; the label stays in the plan");

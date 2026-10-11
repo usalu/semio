@@ -1,13 +1,41 @@
 use super::*;
 use crate::calendar::RunPeriod;
 
+#[derive(Debug, PartialEq, Eq)]
+enum Seen {
+    Yield,
+    Preview,
+    Checkpoint,
+    Fault,
+    Cancelled,
+    Complete(Vec<u8>),
+}
+
+fn page_bytes(payload: &RetainedJobPayload) -> Vec<u8> {
+    (0..payload.page_count()).flat_map(|index| payload.page(index).expect("retained output page").iter().copied()).collect()
+}
+
+fn seen_step(job: &mut EnergyJob, context: &mut StepContext<'_>) -> Seen {
+    match InteractiveJob::step(job, context).expect("energy step admission") {
+        None | Some(JobOutcomeBorrow::Yield { .. }) => Seen::Yield,
+        Some(JobOutcomeBorrow::PreviewReady { .. }) => Seen::Preview,
+        Some(JobOutcomeBorrow::CheckpointReady { .. }) => Seen::Checkpoint,
+        Some(JobOutcomeBorrow::Fault { .. }) => Seen::Fault,
+        Some(JobOutcomeBorrow::Cancelled { .. }) => Seen::Cancelled,
+        Some(JobOutcomeBorrow::Complete { output, .. }) => Seen::Complete(output.map(page_bytes).unwrap_or_default()),
+    }
+}
+
+const RUNG_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 4, maximum_depth: 1 };
+
 fn build_checkpoint_packet(job: &mut EnergyJob) -> EnergyWirePacket {
     let operation = job.operation;
     let hour_index = job.hour_index as u64;
     job.start_wire(EnergyWireKind::Checkpoint, hour_index, semio_framework_job::JobPayloadStream::CheckpointState).expect("checkpoint preflight");
     let mut sequence = 0;
     for _ in 0..32 {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
         if job.step_wire_build(&mut context).expect("checkpoint fragment") {
             return job.wire_ready.take().expect("sealed checkpoint packet");
         }
@@ -18,7 +46,8 @@ fn build_checkpoint_packet(job: &mut EnergyJob) -> EnergyWirePacket {
 fn retained_test_packet(operation: Operation, identity: EnergyWireIdentity, bytes: &[u8]) -> EnergyWirePacket {
     let mut writer = semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CheckpointState);
     let mut sequence = 0;
-    let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
     let mut page = writer.admit_page(&mut context).expect("test page admission");
     page.write(bytes).expect("single fixed checkpoint page");
     page.commit();
@@ -46,33 +75,25 @@ fn p7c2_wire_schema_maximum_plus_one_and_exact_restore_owner() {
     let mut recovered = EnergyRestoreJob::recover_abandoned(operation).expect("drop requeues exact restore authority");
     let mut sequence = 0;
     for _ in 0..4 {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
         let _ = recovered.step(&mut context).expect("field decode");
     }
     drop(recovered);
     assert!(EnergyRestoreJob::recover_abandoned(Operation { generation: Generation(8), ..operation }).is_none());
     let mut recovered = EnergyRestoreJob::recover_abandoned(operation).expect("same generation recovers once");
     for _ in 0..32 {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
         if recovered.step(&mut context).expect("restore rebuild") {
             break;
         }
     }
-    let install_context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let install_context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
     let mut restored = recovered.finish(&install_context).expect("restored authority");
-    InteractiveJob::begin_close(&mut restored);
-    for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut restored, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            break;
-        }
-    }
-    InteractiveJob::begin_close(&mut source);
-    for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut source, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            return;
-        }
-    }
-    panic!("source wire authority did not close")
+    close_owned_job(&mut restored);
+    close_owned_job(&mut source);
 }
 
 #[test]
@@ -97,24 +118,21 @@ fn p7c2_live_schema_mutations_reject_before_restore_mount() {
         mutate(&mut bytes);
         let packet = retained_test_packet(operation, identity, &bytes);
         let mut rejected = EnergyRestoreJob::admit(operation, test_model_single_zone(), SimulationConfig::default(), packet, EnergyNumericalBounds::default()).expect_err("hostile header/cap mutation");
-        while !rejected.packet.terminal_is_empty() {
-            let _ = rejected.packet.ack_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-        }
+        close_retained_packet(&mut rejected.packet);
     }
     let mut trailing = baseline.clone();
     trailing.push(0);
     let packet = retained_test_packet(operation, identity, &trailing);
     let mut rejected = EnergyRestoreJob::admit(operation, test_model_single_zone(), SimulationConfig::default(), packet, EnergyNumericalBounds::default()).expect_err("trailing byte mutation");
-    while !rejected.packet.terminal_is_empty() {
-        let _ = rejected.packet.ack_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    }
+    close_retained_packet(&mut rejected.packet);
     let mut ignored_digest = baseline;
     ignored_digest[156] ^= 0x80;
     let packet = retained_test_packet(operation, identity, &ignored_digest);
     let mut restore = EnergyRestoreJob::admit(operation, test_model_single_zone(), SimulationConfig::default(), packet, EnergyNumericalBounds::default()).expect("digest mutation passes bounded header admission");
     let mut sequence = 0;
     for _ in 0..64 {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
         assert!(!restore.step(&mut context).expect("digest mutation remains retained while replay proves mismatch"));
     }
     assert!(!restore.ready, "decoded numerical digest cannot be ignored by fresh-job restore");
@@ -125,18 +143,13 @@ fn p7c2_live_schema_mutations_reject_before_restore_mount() {
         let packet = retained_test_packet(operation, identity, &ignored_count);
         let mut restore = EnergyRestoreJob::admit(operation, test_model_single_zone(), SimulationConfig::default(), packet, EnergyNumericalBounds::default()).expect("under-cap decoded count mutation passes bounded header admission");
         for _ in 0..64 {
-            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+            let mut sequence_receipt = RetainedCloneProgress::default();
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
             assert!(!restore.step(&mut context).expect("decoded count remains retained while replay proves mismatch"));
         }
         assert!(!restore.ready, "decoded table/history count cannot be cap-checked then discarded");
     }
-    InteractiveJob::begin_close(&mut source);
-    for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut source, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            return;
-        }
-    }
-    panic!("schema mutation source did not close")
+    close_owned_job(&mut source);
 }
 
 #[test]
@@ -198,27 +211,22 @@ fn p7c3_commit_lease_ack_is_the_exact_terminal_detach_witness() {
 
     let lease = job.take_commit_packet(operation.generation).expect("fresh generation").expect("exact final lease");
     let mut sequence = 0;
-    let mut leased = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
-    assert_eq!(job.step(&mut leased), StepOutcome::Yield, "an unacknowledged exact lease must retain terminal ownership");
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut leased = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
+    assert_eq!(seen_step(&mut job, &mut leased), Seen::Yield, "an unacknowledged exact lease must retain terminal ownership");
     assert_eq!(job.publication.commits.len, 1);
     assert!(job.publication.commits.in_flight.is_some());
 
     job.ack_commit_packet(lease).expect("exact empty commit ACK");
     assert_eq!(job.publication.commits.len, 0);
     assert!(job.publication.commits.in_flight.is_none());
-    let mut acknowledged = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
-    let mut terminal = job.step(&mut acknowledged);
-    assert!(matches!(terminal, StepOutcome::Complete(_)), "the exact ACK must make the numerical authority terminal");
-    assert!(terminal.terminal_is_empty(), "the consumer retained and closed the only commit owner before terminal detach");
-    assert!(matches!(terminal.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete));
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut acknowledged = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
+    let terminal = seen_step(&mut job, &mut acknowledged);
+    assert_eq!(terminal, Seen::Complete(Vec::new()), "the exact ACK must make the numerical authority terminal with an empty lent output");
+    assert!(job.commit_output.is_none(), "the consumer retained and closed the only commit owner before terminal detach");
 
-    InteractiveJob::begin_close(&mut job);
-    for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut job, 1, 4), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            return;
-        }
-    }
-    panic!("ACK-terminal Energy authority did not close")
+    close_owned_job(&mut job);
 }
 
 #[test]
@@ -228,41 +236,31 @@ fn p7c2_preview_typed_view_is_derived_from_canonical_wire_with_live_facility_tot
     let mut job = EnergyJob::new(operation, test_model_full_topology(), config).expect("preview source admission");
     let mut sequence = 0;
     for _ in 0..50_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
-        match job.step(&mut context) {
-            StepOutcome::PreviewReady(mut notice) => {
-                close_retained_payload(&mut notice);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
+        match seen_step(&mut job, &mut context) {
+            Seen::Preview => {
                 let projected = job.preview().expect("installed packet owns typed preview projection").clone();
                 let mut packet = job.take_preview_packet(operation.generation).expect("fresh preview generation").expect("canonical preview packet");
                 assert_eq!(packet.payload.len(), ENERGY_WIRE_HEADER_BYTES + 20);
                 let decoded = decode_preview_packet(&packet).expect("SMENERGY preview schema");
                 assert_eq!(packet.preview(), Some(&decoded));
                 assert_eq!(projected, decoded);
-                close_retained_payload(&mut packet.payload);
+                close_retained_packet(&mut packet);
                 if decoded.facility_electricity_kwh > 0.0 {
-                    InteractiveJob::begin_close(&mut job);
-                    for _ in 0..100_000 {
-                        if matches!(InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
-                            return;
-                        }
-                    }
-                    panic!("canonical preview source did not close");
+                    close_owned_job(&mut job);
+                    return;
                 }
             }
-            StepOutcome::CheckpointReady(mut checkpoint) => {
-                close_retained_payload(&mut checkpoint.state);
+            Seen::Checkpoint => {
                 let mut lease = job.take_checkpoint_packet(operation.generation).expect("checkpoint generation").expect("checkpoint lease");
-                close_retained_payload(&mut lease.packet_mut().payload);
+                close_retained_packet(lease.packet_mut());
                 job.ack_checkpoint_packet(lease).expect("checkpoint ACK");
             }
-            StepOutcome::Yield => {}
-            StepOutcome::Fault(fault) => panic!("preview source faulted: {fault:?}"),
-            StepOutcome::Cancelled => panic!("preview source cancelled"),
-            StepOutcome::Complete(mut candidate) => {
-                close_retained_payload(&mut candidate.state);
-                close_retained_payload(&mut candidate.output);
-                break;
-            }
+            Seen::Yield => {}
+            Seen::Fault => panic!("preview source faulted"),
+            Seen::Cancelled => panic!("preview source cancelled"),
+            Seen::Complete(_) => break,
         }
     }
     panic!("canonical preview never exposed a substantive retained facility total")
@@ -275,33 +273,26 @@ fn p7c2_restore_stale_step_and_install_preserve_exact_replay_authority() {
     let packet = build_checkpoint_packet(&mut source);
     let mut restore = EnergyRestoreJob::admit(operation, test_model_single_zone(), SimulationConfig::default(), packet, EnergyNumericalBounds::default()).expect("restore admission");
     let mut sequence = 0;
-    let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
     assert_eq!(restore.step(&mut stale), Err(EnergyWireRejection::Identity));
     assert_eq!(restore.field, 0);
     for _ in 0..64 {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
         if restore.step(&mut context).expect("bounded replay step") {
             break;
         }
     }
     assert!(restore.ready);
-    let stale_install = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let stale_install = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
     let restore = restore.finish(&stale_install).expect_err("stale install retains exact replay authority");
-    let install = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let install = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
     let mut restored = restore.finish(&install).expect("fresh generation installs exact replay authority");
-    InteractiveJob::begin_close(&mut restored);
-    for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut restored, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            break;
-        }
-    }
-    InteractiveJob::begin_close(&mut source);
-    for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut source, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            return;
-        }
-    }
-    panic!("stale restore fixture owners did not close")
+    close_owned_job(&mut restored);
+    close_owned_job(&mut source);
 }
 
 #[test]
@@ -313,11 +304,13 @@ fn p7c2_cancel_deadline_and_stale_generation_gate_wire_before_mutation() {
     let cancel = CancelToken::root_now();
     cancel.cancel_now();
     let mut sequence = 0;
-    let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel, default_now_us, &mut sequence);
-    assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
+    assert_eq!(seen_step(&mut job, &mut cancelled), Seen::Cancelled);
     assert_eq!(job.wire_build.as_ref().expect("wire").field, before);
-    let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(0, 0), CancelToken::root_now(), default_now_us, &mut sequence);
-    assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(0, 0, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
+    assert_eq!(seen_step(&mut job, &mut deadline), Seen::Yield);
     assert_eq!(job.wire_build.as_ref().expect("wire").field, before);
     assert!(matches!(job.take_checkpoint_packet(Generation(6)), Err(EnergyWireRejection::Identity)));
 }
@@ -330,33 +323,34 @@ fn p7c2_restored_commit_bytes_match_one_and_four_fuel_chronology() {
     let mut original = EnergyJob::new(operation, model.clone(), config.clone()).expect("original admission");
     let mut sequence = 0;
     let packet = loop {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
-        match original.step(&mut context) {
-            StepOutcome::PreviewReady(mut notice) => {
-                close_retained_payload(&mut notice);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
+        match seen_step(&mut original, &mut context) {
+            Seen::Preview => {
                 let mut packet = original.take_preview_packet(operation.generation).expect("fresh preview").expect("preview packet");
-                close_retained_payload(&mut packet.payload);
+                close_retained_packet(&mut packet);
             }
-            StepOutcome::CheckpointReady(mut checkpoint) => {
-                close_retained_payload(&mut checkpoint.state);
+            Seen::Checkpoint => {
                 let packet = build_checkpoint_packet(&mut original);
                 let mut lease = original.take_checkpoint_packet(operation.generation).expect("fresh checkpoint").expect("checkpoint lease");
-                close_retained_payload(&mut lease.packet_mut().payload);
+                close_retained_packet(lease.packet_mut());
                 original.ack_checkpoint_packet(lease).expect("checkpoint ACK advances only after close");
                 break packet;
             }
-            StepOutcome::Yield => {}
+            Seen::Yield => {}
             other => panic!("checkpoint expected before terminal: {other:?}"),
         }
     };
     let mut restore = EnergyRestoreJob::admit(operation, model, config, packet, EnergyNumericalBounds::default()).expect("restore admission");
     for _ in 0..100_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
         if restore.step(&mut context).expect("restore field/rebuild") {
             break;
         }
     }
-    let install_context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let install_context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
     let restored = restore.finish(&install_context).expect("restore finish");
     let (_, _, _, original_bytes, _) = drive_energy_job_with_fuel(original, 1);
     let (_, _, _, restored_bytes, _) = drive_energy_job_with_fuel(restored, 4);
@@ -377,28 +371,27 @@ fn drive_energy_job_with_fuel(mut job: EnergyJob, fuel: u64) -> (EnergyJob, Vec<
     let mut worst = std::time::Duration::ZERO;
     for _ in 0..50_000 {
         let start = Instant::now();
-        let mut context = StepContext::new(operation, generation, semio_framework_job::StepBudget::new(fuel, u64::MAX), cancel.clone(), default_now_us, &mut preview_sequence);
-        let outcome = job.step(&mut context);
+        let mut preview_sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation, generation, semio_framework_job::StepBudget::new(fuel, u64::MAX, ENERGY_BATCH_GRANT), cancel.clone(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
+        let outcome = seen_step(&mut job, &mut context);
         let elapsed = start.elapsed();
         worst = worst.max(elapsed);
         match outcome {
-            StepOutcome::PreviewReady(mut notice) => {
-                close_retained_payload(&mut notice);
+            Seen::Preview => {
                 let mut packet = job.take_preview_packet(generation).expect("fresh preview generation").expect("preview packet");
                 previews.push(packet.preview().expect("typed projection belongs to canonical preview packet").clone());
-                close_retained_payload(&mut packet.payload);
+                close_retained_packet(&mut packet);
             }
-            StepOutcome::CheckpointReady(mut checkpoint) => {
-                close_retained_payload(&mut checkpoint.state);
+            Seen::Checkpoint => {
                 let mut lease = job.take_checkpoint_packet(generation).expect("fresh checkpoint generation").expect("checkpoint lease");
-                close_retained_payload(&mut lease.packet_mut().payload);
+                close_retained_packet(lease.packet_mut());
                 job.ack_checkpoint_packet(lease).expect("checkpoint ACK");
                 checkpoints += 1;
             }
-            StepOutcome::Complete(candidate) => return (job, previews, checkpoints, payload_bytes(candidate.output), worst),
-            StepOutcome::Fault(fault) => panic!("energy job faulted: {fault:?}"),
-            StepOutcome::Cancelled => panic!("energy job unexpectedly cancelled"),
-            StepOutcome::Yield => {}
+            Seen::Complete(bytes) => return (job, previews, checkpoints, bytes, worst),
+            Seen::Fault => panic!("energy job faulted"),
+            Seen::Cancelled => panic!("energy job unexpectedly cancelled"),
+            Seen::Yield => {}
         }
     }
     panic!("energy job did not complete within the deterministic step bound")
@@ -410,7 +403,8 @@ fn payload_bytes(mut payload: semio_framework_job::RetainedJobPayload) -> Vec<u8
         bytes.extend_from_slice(payload.page(index).expect("retained output page"));
     }
     while !payload.terminal_is_empty() {
-        let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let grant = energy_self_funded(payload.retirement_demands().expect("a locally owned payload quotes its close demand"));
+        let _ = payload.close_step(grant);
     }
     bytes
 }
@@ -511,14 +505,16 @@ fn energy_job_cancellation_and_freshness_precede_mutation() {
     let cancel = CancelToken::root_now();
     cancel.cancel_now();
     let mut sequence = 0;
-    let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel, default_now_us, &mut sequence);
-    assert_eq!(cancelled_job.step(&mut context), StepOutcome::Cancelled);
+    let mut sequence_receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
+    assert_eq!(seen_step(&mut cancelled_job, &mut context), Seen::Cancelled);
     assert_eq!(cancelled_job.stage(), EnergyJobStage::Validate);
 
     let mut stale_job = EnergyJob::new(operation, model, config).expect("energy admission");
     let mut stale_sequence = 0;
-    let mut stale_context = StepContext::new(operation.operation, Generation(4), semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut stale_sequence);
-    assert!(matches!(stale_job.step(&mut stale_context), StepOutcome::Fault(_)));
+    let mut stale_sequence_receipt = RetainedCloneProgress::default();
+    let mut stale_context = StepContext::new(operation.operation, Generation(4), semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut stale_sequence, &mut stale_sequence_receipt);
+    assert_eq!(seen_step(&mut stale_job, &mut stale_context), Seen::Fault);
     assert_eq!(stale_job.stage(), EnergyJobStage::Validate);
 }
 
@@ -706,8 +702,9 @@ fn p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_o
     job.stage = EnergyJobStage::ResolveWeather;
     let mut preview_sequence = 0;
     for _ in 0..2 {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut preview_sequence);
-        assert_eq!(job.step(&mut context), StepOutcome::Yield);
+        let mut preview_sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
+        assert_eq!(seen_step(&mut job, &mut context), Seen::Yield);
     }
     assert_eq!(job.weather.len(), 2);
     assert_eq!(job.weather.capacity(), census.weather_records);
@@ -721,24 +718,18 @@ fn p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_o
     assert_eq!(*job.weather.get_index(0).expect("weather zero"), before_records[0]);
     assert_eq!(*job.weather.get_index(1).expect("weather one"), before_records[1]);
     job.weather_cursor = 1;
-    let mut outcome = StepOutcome::Yield;
+    let mut outcome = Seen::Yield;
     for _ in 0..1024 {
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut preview_sequence);
-        outcome = job.step(&mut context);
-        if matches!(outcome, StepOutcome::Fault(_)) {
+        let mut preview_sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
+        outcome = seen_step(&mut job, &mut context);
+        if outcome == Seen::Fault {
             break;
         }
     }
-    assert!(matches!(outcome, StepOutcome::Fault(_)));
+    assert_eq!(outcome, Seen::Fault);
     assert_eq!(job.weather_fault, Some(WeatherFault::SlotRejected));
-    while !matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
-    InteractiveJob::begin_close(&mut job);
-    for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            return;
-        }
-    }
-    panic!("fixed weather authority did not close")
+    close_owned_job(&mut job);
 }
 
 #[test]
@@ -763,13 +754,7 @@ fn p7c1_weather_reserve_only_capacity_is_independently_charged_to_items() {
     assert_eq!(rejected.dimension, EnergyNumericalDimension::ObservedItems);
     assert_eq!(rejected.config.weather.as_ref().expect("weather").records.as_ptr(), pointer);
     let mut job = rejected.retry(EnergyNumericalBounds::default()).expect("weather item owner retry");
-    InteractiveJob::begin_close(&mut job);
-    for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            return;
-        }
-    }
-    panic!("weather item retry authority did not close")
+    close_owned_job(&mut job);
 }
 
 #[test]
@@ -789,16 +774,16 @@ fn p7c1_close_releases_no_more_than_one_owner_or_character_per_grant() {
     let mut job = EnergyJob::new(operation, test_model_full_topology(), SimulationConfig::default()).expect("energy admission");
     InteractiveJob::begin_close(&mut job);
     for _ in 0..100_000 {
-        match InteractiveJob::close_step(&mut job, 1, 4) {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= 4);
+        match InteractiveJob::close_step(&mut job, RUNG_GRANT) {
+            InteractiveJobCloseStep::Pending { progress } => {
+                assert!(progress.copied_items <= 1);
+                assert!(progress.released_bytes <= 4);
             }
-            semio_framework_job::InteractiveJobCloseStep::Complete => {
+            InteractiveJobCloseStep::Complete { .. } => {
                 assert!(InteractiveJob::terminal_is_empty(&job));
                 return;
             }
-            semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("Energy close cannot block"),
+            InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. } => panic!("Energy close cannot block or refuse"),
         }
     }
     panic!("Energy close did not retire within its admitted bound")
@@ -810,14 +795,14 @@ fn p7c1_direct_drop_requeues_exact_generation_and_resumes_partial_close() {
     let mut job = EnergyJob::new(operation, test_model_full_topology(), SimulationConfig::default()).expect("energy admission");
     let retained_pointer = job.model.zones.as_ptr();
     InteractiveJob::begin_close(&mut job);
-    assert!(matches!(InteractiveJob::close_step(&mut job, 1, 4), semio_framework_job::InteractiveJobCloseStep::Pending { .. }));
+    assert!(matches!(InteractiveJob::close_step(&mut job, RUNG_GRANT), InteractiveJobCloseStep::Pending { .. }));
     drop(job);
 
     let mut recovered = EnergyJob::recover_abandoned(operation).expect("same generation abandonment authority");
     assert_eq!(recovered.model.zones.as_ptr(), retained_pointer);
     assert!(EnergyJob::recover_abandoned(Operation { generation: Generation(8), ..operation }).is_none());
     for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut recovered, 1, 4), semio_framework_job::InteractiveJobCloseStep::Complete) {
+        if matches!(InteractiveJob::close_step(&mut recovered, RUNG_GRANT), InteractiveJobCloseStep::Complete { .. }) {
             assert!(InteractiveJob::terminal_is_empty(&recovered));
             return;
         }
@@ -838,13 +823,7 @@ fn p7c1_panic_unwind_requeues_the_same_incomplete_authority_once() {
     let mut recovered = EnergyJob::recover_abandoned(operation).expect("panic requeued exact authority");
     assert_eq!(recovered.model.zones.as_ptr(), retained_pointer);
     assert!(EnergyJob::recover_abandoned(operation).is_none(), "recovery is single-owner");
-    InteractiveJob::begin_close(&mut recovered);
-    for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut recovered, 1, 4), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            return;
-        }
-    }
-    panic!("panic-recovered Energy authority did not close")
+    close_owned_job(&mut recovered);
 }
 
 #[test]
@@ -881,22 +860,18 @@ fn p7c1_cancel_and_deadline_gate_every_declared_numerical_substage_before_mutati
         let cancel = CancelToken::root_now();
         cancel.cancel_now();
         let mut sequence = 0;
-        let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel, default_now_us, &mut sequence);
-        assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
+        assert_eq!(seen_step(&mut job, &mut cancelled), Seen::Cancelled);
         assert_eq!(job.numerical_cursor_signature(), before, "cancel mutated {stage:?}");
 
         let mut deadline_sequence = 0;
-        let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(0, 0), CancelToken::root_now(), default_now_us, &mut deadline_sequence);
-        assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
+        let mut deadline_sequence_receipt = RetainedCloneProgress::default();
+        let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(0, 0, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut deadline_sequence, &mut deadline_sequence_receipt);
+        assert_eq!(seen_step(&mut job, &mut deadline), Seen::Yield);
         assert_eq!(job.numerical_cursor_signature(), before, "deadline mutated {stage:?}");
     }
-    InteractiveJob::begin_close(&mut job);
-    for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut job, 1, 4), semio_framework_job::InteractiveJobCloseStep::Complete) {
-            return;
-        }
-    }
-    panic!("gated Energy job did not close")
+    close_owned_job(&mut job);
 }
 
 #[test]
@@ -910,21 +885,22 @@ fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation()
         let cancel = CancelToken::root_now();
         cancel.cancel_now();
         let mut sequence = 0;
-        let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel, default_now_us, &mut sequence);
-        assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
+        let mut sequence_receipt = RetainedCloneProgress::default();
+        let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
+        assert_eq!(seen_step(&mut job, &mut cancelled), Seen::Cancelled);
         assert_eq!(job.numerical_cursor_signature(), before);
 
         let mut deadline_sequence = 0;
-        let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(0, 0), CancelToken::root_now(), default_now_us, &mut deadline_sequence);
-        assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
+        let mut deadline_sequence_receipt = RetainedCloneProgress::default();
+        let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(0, 0, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut deadline_sequence, &mut deadline_sequence_receipt);
+        assert_eq!(seen_step(&mut job, &mut deadline), Seen::Yield);
         assert_eq!(job.numerical_cursor_signature(), before);
 
         let mut stale_sequence = 0;
-        let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut stale_sequence);
-        let mut outcome = job.step(&mut stale);
-        assert!(matches!(outcome, StepOutcome::Fault(_)));
+        let mut stale_sequence_receipt = RetainedCloneProgress::default();
+        let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut stale_sequence, &mut stale_sequence_receipt);
+        assert_eq!(seen_step(job, &mut stale), Seen::Fault);
         assert_eq!(job.numerical_cursor_signature(), before);
-        while !matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
     }
 
     let operation = Operation::new(allocate_operation_id(), RevisionId(61), Generation(9), 241);
@@ -1082,17 +1058,12 @@ fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation()
             sizing_gated = true;
         }
         if precompute_gated && timestep_builder_gated && timestep_gated && zone_gated && system_gated && plant_gated && schedule_gated && warmup_gated && aggregate_zone_gated && aggregate_facility_gated && sizing_gated {
-            InteractiveJob::begin_close(&mut job);
-            for _ in 0..100_000 {
-                if matches!(InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
-                    return;
-                }
-            }
-            panic!("live nested gate job did not close")
+            close_owned_job(&mut job);
+            return;
         }
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut preview_sequence);
-        let mut outcome = job.step(&mut context);
-        while !matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+        let mut preview_sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
+        let _ = seen_step(&mut job, &mut context);
     }
     panic!("live nested cursor family was never mounted")
 }

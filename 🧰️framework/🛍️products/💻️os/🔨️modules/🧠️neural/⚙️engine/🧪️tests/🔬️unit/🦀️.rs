@@ -917,6 +917,7 @@ fn compute_dirty_set_is_empty_for_unchanged_snapshots() {
     let seeds = HashMap::new();
     let snapshot = TreeSnapshot::capture(&tree, &seeds);
     assert!(compute_dirty_set(Some(&snapshot), &snapshot).is_empty());
+    snapshot.retire_cold();
     tree.retire_cold();
 }
 
@@ -933,6 +934,8 @@ fn compute_dirty_set_propagates_only_to_descendants_of_changed_leaf() {
     let current = TreeSnapshot::capture(&ColdOwner::new(make_tree(2.0)), &seeds);
     let dirty = compute_dirty_set(Some(&previous), &current);
     assert_eq!(dirty, HashSet::from(["a".to_string(), "b".to_string()]));
+    previous.retire_cold();
+    current.retire_cold();
 }
 
 #[test]
@@ -953,6 +956,8 @@ fn compute_dirty_set_marks_surviving_dependents_of_removed_neuron() {
     let dirty = compute_dirty_set(Some(&previous), &current);
     assert!(dirty.contains("c"), "surviving dependent of a removed neuron must be dirtied");
     assert!(!dirty.contains("a"), "unrelated unchanged neuron must stay clean");
+    previous.retire_cold();
+    current.retire_cold();
     before.retire_cold();
     after.retire_cold();
 }
@@ -968,6 +973,8 @@ fn compute_dirty_set_treats_seed_change_as_dirty() {
     let current = TreeSnapshot::capture(&tree, &after_seeds);
     let dirty = compute_dirty_set(Some(&previous), &current);
     assert_eq!(dirty, HashSet::from(["a".to_string()]));
+    previous.retire_cold();
+    current.retire_cold();
     before_seeds.retire_cold();
     after_seeds.retire_cold();
     tree.retire_cold();

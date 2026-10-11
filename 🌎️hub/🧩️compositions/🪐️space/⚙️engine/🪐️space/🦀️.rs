@@ -27,7 +27,7 @@ use crate::engine::space::commands::{
 use crate::engine::space::commands::{export_media, import_media, import_media_payload};
 use crate::engine::space::commands::{export_studio_dsl, export_studio_pack, import_space_pack, import_space_pack_payload, open_space, set_active_example};
 use crate::engine::space::commands::{go_home, navigate_virtual_file_system_node, set_active_panel_tab, set_app_registrations};
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ClipboardSetting};
 use crate::engine::space::presence::{SpacePresence, SpacePresenceMutation};
 use crate::engine::space::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
@@ -369,7 +369,7 @@ fn space_bounded_reduce(
     match command {
         SpaceCommand::NodeGraphEdit(payload) => return crate::engine::space::engine::resolve_future(node_graph_edit::edit(payload, &doc)),
         SpaceCommand::ReorganizeWorkflow(_) => return Ok(crate::engine::space::engine::resolve_future(reorganize_workflow::reorganize_selected(&doc, &selected()))),
-        SpaceCommand::CopyAppInstance(_) => return Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard { node_ids: selected() }])),
+        SpaceCommand::CopyAppInstance(_) => return Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: selected() })])),
         SpaceCommand::DuplicateAppInstance(_) => return Ok(crate::engine::space::engine::resolve_future(duplicate_app_instance::duplicate_nodes(selected(), snapshot))),
         SpaceCommand::RemoveAppInstance(payload) => return Ok(crate::engine::space::engine::resolve_future(remove_app_instance::remove_with_selection(payload, config, &selected()))),
         SpaceCommand::RenameAppInstance(payload) => return Ok(crate::engine::space::engine::resolve_future(rename_app_instance::rename_with_selection(payload, &doc, config, &selected()))),
@@ -486,245 +486,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceCommandJobFact
 /// 📏️ Sized for a real session, not for a single toggle: `openSpace` publishes a space id, a focus
 /// reset, a clipboard reset and an active node in one turn, and a studio's clipboard/collapsed sets
 /// are node-id lists.
-const SPACE_CONFIG_MAXIMUM_BYTES: usize = 65_536;
-const SPACE_CONFIG_MAXIMUM_ITEMS: usize = 256;
-const SPACE_CONFIG_TEXT_BYTES: usize = 8_192;
-const SPACE_CONFIG_METADATA_BYTES: usize = 64;
-
-struct SpaceConfigPreparationFactory;
-
-struct SpaceConfigPreparation {
-    base: Option<store::SnapshotRead<SpaceConfig>>,
-    mutation: Option<SpaceConfigMutation>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
-    candidate: Option<(SpaceConfig, SpaceConfigMutation, SpaceConfigMutation)>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<SpaceConfig, SpaceConfigMutation>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
-    retained_bytes: usize,
-    cancelled: bool,
-    closing: bool,
-}
-
-fn space_config_bytes(config: &SpaceConfig) -> Result<usize, String> {
-    let items = config.camera.len().saturating_add(config.collapsed_node_ids.len()).saturating_add(config.preview_off_node_ids.len()).saturating_add(config.clipboard_node_ids.len());
-    if items > SPACE_CONFIG_MAXIMUM_ITEMS {
-        return Err("Space Config exceeds its retained item envelope".into());
-    }
-    let mut bytes = 0usize;
-    for value in config.camera.keys().chain(config.collapsed_node_ids.iter()).chain(config.preview_off_node_ids.iter()).chain(config.clipboard_node_ids.iter()) {
-        bytes = bytes.saturating_add(value.len());
-    }
-    for value in [&config.active_node_id, &config.focused_node_id, &config.pending_import_node_id, &config.pending_import_format, &config.space_id] {
-        bytes = bytes.saturating_add(value.as_ref().map_or(0, String::len));
-    }
-    for value in [&config.workflow_engagement_input, &config.compiled_dag_engagement_input, &config.active_panel_tab] {
-        bytes = bytes.saturating_add(value.len());
-    }
-    if bytes > SPACE_CONFIG_TEXT_BYTES {
-        return Err("Space Config exceeds its encoded text envelope".into());
-    }
-    let bytes = bytes.saturating_add(size_of::<SpaceConfig>()).saturating_add(items.saturating_mul(128));
-    if bytes > SPACE_CONFIG_MAXIMUM_BYTES {
-        return Err("Space Config exceeds its retained byte envelope".into());
-    }
-    Ok(bytes)
-}
-
-fn space_config_mutation_bytes(mutation: &SpaceConfigMutation) -> Result<usize, String> {
-    let bytes = match mutation {
-        SpaceConfigMutation::SetActivePanelTab { tab_id } => tab_id.len(),
-        SpaceConfigMutation::SetCamera { window_id, .. } => window_id.len(),
-        SpaceConfigMutation::SetWorkflowEngagementInput { value } | SpaceConfigMutation::SetCompiledDagEngagementInput { value } => value.len(),
-        SpaceConfigMutation::SetActiveNode { node_id } | SpaceConfigMutation::SetFocusedNode { node_id } => node_id.as_ref().map_or(0, String::len),
-        SpaceConfigMutation::SetSpaceId { space_id } => space_id.as_ref().map_or(0, String::len),
-        SpaceConfigMutation::SetClipboard { node_ids } => node_ids.iter().map(String::len).sum(),
-        _ => return Err("Space Config preparation rejects a non-retained mutation".into()),
-    };
-    if bytes > SPACE_CONFIG_TEXT_BYTES {
-        return Err("Space Config mutation exceeds its encoded text envelope".into());
-    }
-    let bytes = bytes.saturating_add(size_of::<SpaceConfigMutation>());
-    if bytes > SPACE_CONFIG_MAXIMUM_BYTES {
-        return Err("Space Config mutation exceeds its retained byte envelope".into());
-    }
-    Ok(bytes)
-}
-
-/// 🧮️ The exact candidate a preparation step retains, priced from the live base and the mutation
-/// rather than from the envelope: the post config (base plus the mutation's text and one item slot),
-/// the inverse (at most a whole-config snapshot) and the forward mutation. A real session config fits
-/// the host's fixed 4 KiB typed-operation page; only an envelope-sized config would not.
-fn space_config_candidate_bytes(base_bytes: usize, mutation_bytes: usize) -> usize {
-    base_bytes.saturating_mul(2).saturating_add(mutation_bytes.saturating_mul(2)).saturating_add(128)
-}
-
-fn prepare_space_config(base: &SpaceConfig, mutation: SpaceConfigMutation) -> Result<(SpaceConfig, SpaceConfigMutation, SpaceConfigMutation), String> {
-    space_config_bytes(base)?;
-    space_config_mutation_bytes(&mutation)?;
-    let mut post = base.clone();
-    let inverse = match &mutation {
-        SpaceConfigMutation::SetActivePanelTab { tab_id } => {
-            post.active_panel_tab = tab_id.clone();
-            SpaceConfigMutation::SetActivePanelTab { tab_id: base.active_panel_tab.clone() }
-        }
-        SpaceConfigMutation::SetCamera { window_id, camera } => {
-            post.camera.insert(window_id.clone(), *camera);
-            base.camera.get(window_id).map_or_else(|| SpaceConfigMutation::RemoveCamera { window_id: window_id.clone() }, |camera| SpaceConfigMutation::SetCamera { window_id: window_id.clone(), camera: *camera })
-        }
-        SpaceConfigMutation::SetWorkflowEngagementInput { value } => {
-            post.workflow_engagement_input = value.clone();
-            SpaceConfigMutation::SetWorkflowEngagementInput { value: base.workflow_engagement_input.clone() }
-        }
-        SpaceConfigMutation::SetCompiledDagEngagementInput { value } => {
-            post.compiled_dag_engagement_input = value.clone();
-            SpaceConfigMutation::SetCompiledDagEngagementInput { value: base.compiled_dag_engagement_input.clone() }
-        }
-        SpaceConfigMutation::SetFocusedNode { node_id } => {
-            post.focused_node_id = node_id.clone();
-            SpaceConfigMutation::SetFocusedNode { node_id: base.focused_node_id.clone() }
-        }
-        SpaceConfigMutation::SetActiveNode { node_id } => {
-            post.active_node_id = node_id.clone();
-            SpaceConfigMutation::SetActiveNode { node_id: base.active_node_id.clone() }
-        }
-        SpaceConfigMutation::SetSpaceId { space_id } => {
-            post.space_id = space_id.clone();
-            SpaceConfigMutation::SetSpaceId { space_id: base.space_id.clone() }
-        }
-        SpaceConfigMutation::SetClipboard { node_ids } => {
-            post.clipboard_node_ids = node_ids.clone();
-            SpaceConfigMutation::SetClipboard { node_ids: base.clipboard_node_ids.clone() }
-        }
-        _ => return Err("Space Config preparation rejects a non-retained mutation".into()),
-    };
-    space_config_bytes(&post)?;
-    Ok((post, inverse, mutation))
-}
-
-impl store::ArtifactStoreOneItemPreparationFactory<SpaceConfig, SpaceConfigMutation> for SpaceConfigPreparationFactory {
-    fn preflight(&self, mutation: &SpaceConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
-            return Err("Space Config preparation rejects its lane".into());
-        }
-        space_config_mutation_bytes(mutation)?;
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024))
-    }
-
-    fn begin(
-        &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<SpaceConfig, SpaceConfigMutation>,
-    ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<SpaceConfig, SpaceConfigMutation>> {
-        if self.preflight(&request.mutation, request.lane).is_err()
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > SPACE_CONFIG_METADATA_BYTES
-        {
-            return Err(request);
-        }
-        Ok(Box::new(SpaceConfigPreparation {
-            base: Some(request.base),
-            mutation: Some(request.mutation),
-            authority: Some(request.authority),
-            candidate: None,
-            prepared: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-            retained_bytes: 0,
-            cancelled: false,
-            closing: false,
-        }))
-    }
-}
-
-impl store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation> for SpaceConfigPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || self.cancelled || self.closing {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
-        }
-        if self.candidate.is_none() {
-            let base = self.base.as_ref().ok_or_else(|| "Space Config preparation lost its exact base".to_string())?.get();
-            let mutation = self.mutation.as_ref().ok_or_else(|| "Space Config preparation lost its mutation".to_string())?;
-            let bytes = space_config_candidate_bytes(space_config_bytes(base)?, space_config_mutation_bytes(mutation)?);
-            if grant.maximum_bytes < bytes {
-                return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-            }
-            self.candidate = Some(prepare_space_config(base, self.mutation.take().ok_or_else(|| "Space Config preparation lost its mutation".to_string())?)?);
-            self.retained_bytes = bytes;
-            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
-        }
-        if grant.maximum_bytes < self.retained_bytes {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Space Config preparation lost its candidate".to_string())?;
-        let authority = self.authority.as_ref().ok_or_else(|| "Space Config preparation lost its Store authority".to_string())?;
-        let prepared = authority.prepare_one_item(authority.next_edit(forward, vec![inverse]), std::sync::Arc::new(post))?;
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
-        self.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
-    }
-
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<SpaceConfig, SpaceConfigMutation>> {
-        self.prepared.as_ref()
-    }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<SpaceConfig, SpaceConfigMutation>> {
-        self.prepared.take()
-    }
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        if !self.closing || !grant.permits_one() {
-            return Ok(store::SnapshotRetirementStep::Blocked);
-        }
-        if self.prepared.is_some() || self.candidate.is_some() {
-            if grant.maximum_bytes < self.retained_bytes {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            if self.prepared.take().is_none() {
-                self.candidate = None;
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
-        }
-        if let Some(mutation) = self.mutation.as_ref() {
-            let bytes = space_config_mutation_bytes(mutation).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,message))?;
-            if grant.maximum_bytes < bytes {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.mutation = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
-        }
-        if let Some(base) = self.base.take() {
-            if !base.return_to_registry() {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Space Config preparation could not return its exact base root"));
-            }
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(authority) = self.authority.as_ref() {
-            let bytes = authority.actor().len();
-            if grant.maximum_bytes < bytes {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.authority = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
-        }
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
-    }
-}
+const SPACE_CONFIG_RETAINED_BYTES: usize = 65_536;
 //#endregion 📬️ConfigStorePreparation
 
 impl ArtifactApp for SpaceApp {
@@ -806,15 +568,7 @@ impl ArtifactApp for SpaceApp {
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(std::sync::Arc::new(SpaceConfigPreparationFactory))
-    }
-
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+        crate::space_retained_store_preparation::<Self::Config, Self::ConfigMutation>("space-studio-config-retained", SPACE_CONFIG_RETAINED_BYTES)
     }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
@@ -839,15 +593,16 @@ impl ArtifactApp for SpaceApp {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let payload = ArtifactRetainedCommandPayload::try_new(
+        let payload = ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             SpaceCommand::command_id,
             SPACE_BOUNDED_RAW_BYTES,
             SPACE_BOUNDED_WORK_ITEMS,
             work,
-        )?;
+        );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
@@ -1285,7 +1040,7 @@ pub async fn create_space_app() -> App {
         // (`parse_demo_space_document`'s own doc: "the fixture holds only the `WorkflowSnapshot`
         // payload"), which already derives `ToValue` — read the immutable genesis snapshot.
         let document = parse_demo_space_document().await;
-        let document_value = semio_framework_value::ToValue::to_value(document.vcs.genesis.snapshot());
+        let document_value = semio_framework_value::ToValue::to_value(document.vcs.genesis.facts().snapshot());
         let json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&document_value));
         // 📊️ `label` is sourced from `S_STUDIO_EXAMPLES` — no per-locale split is available at the
         // source, so it is genuine runtime data here, not compile-checked native copy.

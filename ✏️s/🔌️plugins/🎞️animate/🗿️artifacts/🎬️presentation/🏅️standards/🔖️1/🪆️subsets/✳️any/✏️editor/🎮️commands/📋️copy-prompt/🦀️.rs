@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️CopyPrompt
 //#endregion 🔖️CopyPrompt
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "copy-prompt")]
 pub struct CopyPrompt {}
 

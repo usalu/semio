@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, SemioCadSnapshot};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_dxf::{
-    schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfTables, DxfValue},
+    schema::snapshot::{DxfBlock, DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfHeaderVar, DxfLayer, DxfTables, DxfValue},
     DxfSnapshot,
 };
 
@@ -19,7 +19,7 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: 
 //#region 🔖️OtherGroupCodes
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn ellipse_to_other(center: &SemioPoint2, major_axis_end: &SemioPoint2, ratio: f64, start_param: f64, end_param: f64) -> DxfEntity {
-    DxfEntity::Other {
+    DxfEntity::Other(DxfOther {
         kind: "ELLIPSE".into(),
         group_codes: vec![
             (10, DxfValue::Double { value: center.x }),
@@ -30,11 +30,11 @@ fn ellipse_to_other(center: &SemioPoint2, major_axis_end: &SemioPoint2, ratio: f
             (41, DxfValue::Double { value: start_param }),
             (42, DxfValue::Double { value: end_param }),
         ],
-    }
+    })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dimension_to_other(def_point: &SemioPoint2, text_position: &SemioPoint2, measurement: f64, text: &str) -> DxfEntity {
-    DxfEntity::Other {
+    DxfEntity::Other(DxfOther {
         kind: "DIMENSION".into(),
         group_codes: vec![
             (10, DxfValue::Double { value: def_point.x }),
@@ -44,7 +44,7 @@ fn dimension_to_other(def_point: &SemioPoint2, text_position: &SemioPoint2, meas
             (42, DxfValue::Double { value: measurement }),
             (1, DxfValue::Str { value: text.to_string() }),
         ],
-    }
+    })
 }
 //#endregion 🔖️OtherGroupCodes
 
@@ -53,21 +53,21 @@ fn dimension_to_other(def_point: &SemioPoint2, text_position: &SemioPoint2, meas
 fn dxf_entity_from_cad(rec: &CadEntityRecord) -> DxfEntity {
     let layer = rec.layer.clone();
     match &rec.entity {
-        CadEntity::Line { a, b } => DxfEntity::Line { start: [a.x, a.y, 0.0], end: [b.x, b.y, 0.0], layer, unknown_group_codes: vec![] },
-        CadEntity::Circle { center, radius } => DxfEntity::Circle { center: [center.x, center.y, 0.0], radius: *radius, layer, unknown_group_codes: vec![] },
-        CadEntity::Arc { center, radius, start_angle, end_angle } => DxfEntity::Arc { center: [center.x, center.y, 0.0], radius: *radius, start_angle: *start_angle, end_angle: *end_angle, layer, unknown_group_codes: vec![] },
+        CadEntity::Line { a, b } => DxfEntity::Line(DxfLine { start: [a.x, a.y, 0.0], end: [b.x, b.y, 0.0], layer, unknown_group_codes: vec![] }),
+        CadEntity::Circle { center, radius } => DxfEntity::Circle(DxfCircle { center: [center.x, center.y, 0.0], radius: *radius, layer, unknown_group_codes: vec![] }),
+        CadEntity::Arc { center, radius, start_angle, end_angle } => DxfEntity::Arc(DxfArc { center: [center.x, center.y, 0.0], radius: *radius, start_angle: *start_angle, end_angle: *end_angle, layer, unknown_group_codes: vec![] }),
         CadEntity::Ellipse { center, major_axis_end, ratio, start_param, end_param } => ellipse_to_other(center, major_axis_end, *ratio, *start_param, *end_param),
-        CadEntity::Polyline { vertices, closed } => DxfEntity::Polyline {
+        CadEntity::Polyline { vertices, closed } => DxfEntity::Polyline(DxfPolyline {
             vertices: vertices.iter().map(|v| semio_s_artifact_stdio_dxf::schema::snapshot::DxfVertex { x: v.x, y: v.y, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] }).collect(),
             closed: *closed,
             layer,
             unknown_group_codes: vec![],
-        },
-        CadEntity::Text { position, height, content, .. } => DxfEntity::Text { position: [position.x, position.y, 0.0], height: *height, value: content.clone(), layer, unknown_group_codes: vec![] },
+        }),
+        CadEntity::Text { position, height, content, .. } => DxfEntity::Text(DxfText { position: [position.x, position.y, 0.0], height: *height, value: content.clone(), layer, unknown_group_codes: vec![] }),
         CadEntity::Insert { block_name, insertion_point, scale, rotation } => {
-            DxfEntity::Insert { block_name: block_name.clone(), position: [insertion_point.x, insertion_point.y, 0.0], scale: [scale.x, scale.y, 1.0], rotation: *rotation, layer, unknown_group_codes: vec![] }
+            DxfEntity::Insert(DxfInsert { block_name: block_name.clone(), position: [insertion_point.x, insertion_point.y, 0.0], scale: [scale.x, scale.y, 1.0], rotation: *rotation, layer, unknown_group_codes: vec![] })
         }
-        CadEntity::Solid { p1, p2, p3, p4 } => DxfEntity::Solid { points: [[p1.x, p1.y, 0.0], [p2.x, p2.y, 0.0], [p3.x, p3.y, 0.0], [p4.x, p4.y, 0.0]], layer, unknown_group_codes: vec![] },
+        CadEntity::Solid { p1, p2, p3, p4 } => DxfEntity::Solid(DxfSolid { points: [[p1.x, p1.y, 0.0], [p2.x, p2.y, 0.0], [p3.x, p3.y, 0.0], [p4.x, p4.y, 0.0]], layer, unknown_group_codes: vec![] }),
         CadEntity::Dimension { def_point, text_position, measurement, text } => dimension_to_other(def_point, text_position, *measurement, text),
     }
 }

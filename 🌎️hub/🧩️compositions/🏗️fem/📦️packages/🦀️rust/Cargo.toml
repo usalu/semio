@@ -57,6 +57,7 @@ plugin-entry = []
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-fem-3d = { workspace = true, features = ["component-app-assembly"] }
+semio-framework-job = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }

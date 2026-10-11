@@ -3,7 +3,7 @@
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 📋️ Selects the document register rendered by one concrete Register window.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.architect.program.register-window.config", extension = "architectregisterwindowcfg")]
@@ -50,11 +50,20 @@ impl protocol::DiffAlgebra<ArchitectRegisterWindowConfig> for ArchitectRegisterW
     }
 }
 
+/// 📦️ Payload of `SetActiveRegister`; its field names are the wire names of the former named variant.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SetActiveRegister {
+    pub active_register: String,
+}
+
 /// 🔁️ Changes the selected register of one addressed Register window.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum ArchitectRegisterWindowConfigMutation {
-    SetActiveRegister { active_register: String },
+    SetActiveRegister(SetActiveRegister),
 }
 
 impl protocol::Mutation<ArchitectRegisterWindowConfig> for ArchitectRegisterWindowConfigMutation {
@@ -89,7 +98,7 @@ impl protocol::Mutation<ArchitectRegisterWindowConfig> for ArchitectRegisterWind
     }
 
     fn diff(&self, base: &ArchitectRegisterWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        let Self::SetActiveRegister { active_register } = self;
+        let Self::SetActiveRegister(SetActiveRegister { active_register }) = self;
         if base.active_register == *active_register {
             return protocol::MutationOutcome::new(ArchitectRegisterWindowConfigDiff::default()).warning("mutation.no-op", "Register selection is unchanged.");
         }
@@ -98,9 +107,9 @@ impl protocol::Mutation<ArchitectRegisterWindowConfig> for ArchitectRegisterWind
 
     fn inverse(&self, base: &ArchitectRegisterWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
-        let Self::SetActiveRegister { active_register } = self;
+        let Self::SetActiveRegister(SetActiveRegister { active_register }) = self;
         (base.active_register != *active_register)
-            .then(|| Self::SetActiveRegister { active_register: base.active_register.clone() })
+            .then(|| Self::SetActiveRegister(SetActiveRegister { active_register: base.active_register.clone() }))
             .into_iter()
             .collect()
     
@@ -172,6 +181,14 @@ impl protocol::OpBinary for ArchitectRegisterWindowConfigMutation {
     }
 }
 
+impl store::snapshot_clone_preparation::ConfigApplyMutation<ArchitectRegisterWindowConfig> for ArchitectRegisterWindowConfigMutation {
+    fn exchange(self, post: &mut ArchitectRegisterWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetActiveRegister(SetActiveRegister { active_register }) => Self::SetActiveRegister(SetActiveRegister { active_register: std::mem::replace(&mut post.active_register, active_register) }),
+        })
+    }
+}
+
 pub struct ArchitectRegisterWindowConfigOwner;
 
 impl semio_framework_plugin::WindowConfigOwner for ArchitectRegisterWindowConfigOwner {
@@ -180,6 +197,9 @@ impl semio_framework_plugin::WindowConfigOwner for ArchitectRegisterWindowConfig
     const MAXIMUM_PUBLICATION_BYTES: usize = 1_024;
     type State = ArchitectRegisterWindowConfig;
     type Mutation = ArchitectRegisterWindowConfigMutation;
+    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
 
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         semio_framework_plugin::bounded_window_config_store_owners::<Self>()
@@ -208,7 +228,7 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, active_register: Stri
     }
     Ok(semio_framework_plugin::WindowConfigMutation::of::<ArchitectRegisterWindowConfigOwner>(
         id,
-        ArchitectRegisterWindowConfigMutation::SetActiveRegister { active_register },
+        ArchitectRegisterWindowConfigMutation::SetActiveRegister(SetActiveRegister { active_register }),
     ))
 }
 

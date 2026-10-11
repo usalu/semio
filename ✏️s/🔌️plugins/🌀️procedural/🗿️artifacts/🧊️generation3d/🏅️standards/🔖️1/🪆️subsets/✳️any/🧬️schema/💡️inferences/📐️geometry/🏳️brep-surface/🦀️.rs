@@ -188,7 +188,7 @@ fn wire_face(kind: &Kind, inputs: &WidgetInputs, parallel_to_xy: bool) -> Box<dy
             .import(&wire)
             .once(move |work| {
                 if parallel_to_xy {
-                    let plane = wire_corners(&work.source(0)?).and_then(|corners| fit_plane(&corners, WIRE)).map_err(|fault| fault.at("wire"))?;
+                    let plane = wire_corners(&*work.source(0)?).and_then(|corners| fit_plane(&corners, WIRE)).map_err(|fault| fault.at("wire"))?;
                     if plane.normal[2].abs() < 1.0 - 1e-9 {
                         return Err(refusal("wire-not-xy-parallel", "The wire must lie in a plane parallel to the XY plane; use \u{201c}Face from wire\u{201d} for other planes.", "Der Kantenzug muss in einer zur XY-Ebene parallelen Ebene liegen; für andere Ebenen dient \u{201e}Fläche aus Kantenzug\u{201c}.").at("wire"));
                     }

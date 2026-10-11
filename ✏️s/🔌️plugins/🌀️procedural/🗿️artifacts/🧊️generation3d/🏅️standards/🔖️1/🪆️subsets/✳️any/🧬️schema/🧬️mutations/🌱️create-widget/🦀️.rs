@@ -8,7 +8,8 @@ use semio_framework_artifact_flow_flow::Widget;
 //#region 🔖️CreateWidget
 /// ➕ Full initial payload for a new widget, placed at `index` if no widget with the same id
 /// already exists (upsert-by-id, matching the widgets delta's own dedupe rule).
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateWidget {
     pub index: usize,

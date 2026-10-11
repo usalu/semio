@@ -18,8 +18,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub fn reorganize_edit(composed: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let mut host = host_from_snapshot(composed, config, session);
     let mut progress = |_| true;
-    let mut control = semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000, &mut progress);
-    let laid_out = host.reorganize(&semio_framework_os_infinite::board::schema::layout::DagLayoutOptions::default(), &mut control).is_ok();
+    let mut control = infinite_canvas::board::schema::layout::LayoutControl::new(100_000_000, &mut progress);
+    let laid_out = host.reorganize(&infinite_canvas::board::schema::layout::DagLayoutOptions::default(), &mut control).is_ok();
     let positions: Vec<(String, f64, f64)> = if laid_out { host.host_snapshot.widgets.iter().filter_map(|widget| { let id = crate::schema::widget_id(widget); host.host_snapshot.layout.get(id).map(|entry| (id.to_string(), entry.x, entry.y)) }).collect() } else { Vec::new() };
     host.retire_cold();
     let mut edit = ContentEdit::new(flow_composed_content(composed)?);

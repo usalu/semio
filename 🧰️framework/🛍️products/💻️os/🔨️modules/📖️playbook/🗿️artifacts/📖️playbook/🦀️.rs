@@ -28,7 +28,8 @@ pub use generation_forms::{
 };
 
 //#region 🔖️Domain
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PlaybookStep {
@@ -40,7 +41,8 @@ pub struct PlaybookStep {
     pub blocks: Vec<PlaybookBlock>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PlaybookBlock {
@@ -101,7 +103,8 @@ pub struct PlaybookBlock {
     pub condition: Option<PlaybookExpr>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PlaybookVectorField {
@@ -114,7 +117,8 @@ pub struct PlaybookVectorField {
     pub value: Option<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 pub struct PlaybookBlockOption {
     pub value: String,
@@ -127,7 +131,8 @@ pub struct PlaybookBlockOption {
 /// `DslField` impl (only named `DslRecord`/`DslScalar`/`DslEnum` types do), so every `Box`/`Vec<Self>`
 /// field routes through `#[dsl(statements, block)]` (tagged-variant dispatch, wrapped in its own
 /// `{ }` so `Eq`'s two boxed fields don't collide as two bare "the record's one Statements field").
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", retire_with = "retire_playbook_expr")]
 #[dsl(retire_with = "retire_playbook_expr")]
@@ -186,7 +191,8 @@ pub fn is_extension_block_kind(kind: &str) -> bool {
     !PLAYBOOK_BUILTIN_KINDS.contains(&kind)
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[artifact(id = "playbook.playbook")]
@@ -351,7 +357,8 @@ pub mod generation_forms {
     use ui_wgpu::wgpu::UiTreeSectionNode;
 
     //#region 🔖️Types
-    #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue)]
+    #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+    #[canonical_json(owner = semio_framework_pack_json)]
     #[value(rename_all = "camelCase")]
     pub struct FormGeneration {
         pub id: String,
@@ -359,7 +366,8 @@ pub mod generation_forms {
         pub values: PlaybookValues,
     }
 
-    #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+    #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+    #[canonical_json(owner = semio_framework_pack_json)]
     #[value(rename_all = "camelCase")]
     pub struct GenerationPlayState {
         #[value(default)]

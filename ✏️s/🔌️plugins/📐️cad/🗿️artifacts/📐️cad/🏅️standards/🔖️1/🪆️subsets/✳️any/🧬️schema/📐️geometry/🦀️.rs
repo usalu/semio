@@ -28,7 +28,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapsho
 
 //#region 🔖️EphemeralImportTypes
 /// 🧱️ EPHEMERAL — never persisted, never part of `ArtifactSchema`. See module doc comment.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct CadGeometry {
     #[value(skip)]
@@ -74,12 +74,19 @@ pub(crate) fn mesh_from_owned_brep(snapshot: &semio_s_artifact_stdio_semio::stan
         result.edge_ids.extend(mesh.edge_ids);
         result.edge_uvs.extend(mesh.edge_uvs);
         result.edge_is_seam.extend(mesh.edge_is_seam);
-        for (kind, labels) in mesh.component_references { result.component_references.entry(kind).or_default().extend(labels); }
+        let mut entries = std::mem::take(&mut result.component_references).into_entries();
+        for (kind, labels) in mesh.component_references.into_entries() {
+            match entries.iter_mut().find(|(existing, _)| *existing == kind) {
+                Some((_, rows)) => rows.extend(labels),
+                None => entries.push((kind, labels)),
+            }
+        }
+        result.component_references = semio_framework_mesh_engine::ComponentReferenceTable::from_entries(entries);
     }
     Ok(result)
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct CadVertex {
     pub id: String,
@@ -94,7 +101,7 @@ pub(crate) struct CadVertex {
 /// degraded to its two boundary vertices wherever the editor tessellated one — a circle picked and
 /// drew as a single chord where React's `edgeSamplePoints` draws 64 samples
 /// (`📓️w2f-cad-spatial-editor-wgpu.md` §5.2).
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct CadEdgeCurve {
     pub kind: String,
@@ -128,7 +135,7 @@ pub(crate) struct CadEdgeCurve {
     pub points: Vec<[f64; 3]>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct CadEdge {
     pub id: String,
@@ -136,14 +143,14 @@ pub(crate) struct CadEdge {
     pub curve: CadEdgeCurve,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct CadWire {
     pub id: String,
     pub edge_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct CadPlaneSurface {
     pub kind: String,
@@ -151,7 +158,7 @@ pub(crate) struct CadPlaneSurface {
     pub normal: [f64; 3],
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct CadFace {
     pub id: String,
@@ -159,14 +166,14 @@ pub(crate) struct CadFace {
     pub surface: CadPlaneSurface,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct CadShell {
     pub id: String,
     pub face_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct CadSolid {
     pub id: String,

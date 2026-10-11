@@ -34,18 +34,19 @@ async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from()
 /// document-replacement emit with no coalesce key — chunked by mutation kind, not one ingress per item.
 #[test]
 fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
-    use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+    use crate::retained_command::testing::PuzzleCommandWorkStep;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample command decodes");
     let mut work = Puzzle3dSetActiveExampleWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin example fits the fixed bounded work envelope");
+    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin example fits the fixed bounded work envelope");
     let mut progress_steps = 0usize;
     let emit = loop {
         assert!(progress_steps <= extent + 8, "setActiveExample work did not reach Complete within its own declared extent");
-        match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+        match crate::retained_command::testing::step(&mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => progress_steps += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
@@ -157,7 +158,8 @@ async fn the_nakagin_switch_assembles_every_object_onto_a_mesh_the_same_publicat
 /// `set_active_example_lands_as_one_edit_and_republishes_the_world_scene`.
 #[test]
 fn set_active_example_history_is_one_set_active_example_row() {
-    use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+    use crate::retained_command::testing::PuzzleCommandWorkStep;
+    use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
@@ -165,7 +167,7 @@ fn set_active_example_history_is_one_set_active_example_row() {
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample command decodes");
     let mut work = Puzzle3dSetActiveExampleWork::default();
     let emit = loop {
-        match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+        match crate::retained_command::testing::step(&mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => {}
             PuzzleCommandWorkStep::Complete(emit) => break emit,
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),

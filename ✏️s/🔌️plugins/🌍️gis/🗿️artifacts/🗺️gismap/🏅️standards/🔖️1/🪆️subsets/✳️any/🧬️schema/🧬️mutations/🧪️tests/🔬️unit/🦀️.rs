@@ -99,7 +99,10 @@ async fn descriptor_round_trips_through_document() {
 #[semio_framework_async_macros::async_test]
 async fn gis_map_document_vcs_replays_operations() {
     let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("map store");
-    store.install_document_store_owners_exact(crate::host::owned::gis_map_document_store_owners());
+    let owners = store::funded_bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>().expect("GIS owner catalog is fully funded");
+    if let Err((error, _owners)) = store.install_document_store_owners_exact(owners) {
+        panic!("GIS store refused its exact owner catalog: {error}");
+    }
     store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") })], transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     use semio_framework_plugin::ArtifactOwnedDisposer;

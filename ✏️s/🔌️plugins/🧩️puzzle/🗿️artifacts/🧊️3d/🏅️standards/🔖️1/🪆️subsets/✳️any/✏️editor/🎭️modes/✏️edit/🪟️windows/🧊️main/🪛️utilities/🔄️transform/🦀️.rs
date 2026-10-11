@@ -78,7 +78,7 @@ pub fn options(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeas
 
 //#region 🎬️Record
 /// 🎬️ How one selection transform moves its targets — the parameters of the leaf it yields.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum Puzzle3dSelectionMotion {
     Drag { offset: [f64; 3] },
     Rotate { axis: [f64; 3], angle: f64 },
@@ -109,7 +109,7 @@ impl Puzzle3dSelectionMotion {
 
 /// 🎬️ One selection transform the transform tool yields: the literal target ids, the motion, and the
 /// `(attracting, attracted)` full vortex ids its drop attracts once the targets moved.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Puzzle3dSelectionRecord {
     pub targets: Vec<String>,
     pub motion: Puzzle3dSelectionMotion,
@@ -210,7 +210,7 @@ pub const PUZZLE3D_RELOCATE_SCAN_PAGE: usize = 16;
 /// already attracted to the moved one, every [`Self::step`] measures the vortices of one page of objects, and
 /// [`Self::finish`] hands over the record — so a drop on a large scene reports progress page by page and stays
 /// cancellable between pages, with exactly the pairs (and order) the one-call scan finds.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Puzzle3dRelocateScan {
     record: Puzzle3dSelectionRecord,
     source: Option<(String, [f64; 3])>,

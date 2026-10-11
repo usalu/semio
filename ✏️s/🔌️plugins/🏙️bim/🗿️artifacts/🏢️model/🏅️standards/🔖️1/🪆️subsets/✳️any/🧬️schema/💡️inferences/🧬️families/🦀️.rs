@@ -30,7 +30,7 @@ pub const READS: &[&str] = &["families", "family_parameters", "family_solids", "
 
 //#region 🔖️Values
 /// 🔢️ An evaluated parameter value in SI base units: metres, radians.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub enum ParameterValue {
     Number { value: f64 },
     Length { value: f64 },
@@ -40,7 +40,7 @@ pub enum ParameterValue {
 }
 
 /// 🔢️ One parameter after evaluation: its kind, the effective formula (an override replaces the authored one) and the value; absent when the formula failed (see the issues).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct ResolvedParameter {
     pub kind: ParameterKind,
     pub formula: String,
@@ -49,7 +49,7 @@ pub struct ResolvedParameter {
 }
 
 /// 🧊️ One evaluated solid: flat counter-clockwise outward triangles in the family frame (metres), the measures, the evaluated material id and whether the visibility formula holds.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct FamilySolidMesh {
     pub name: String,
     pub material: String,
@@ -63,7 +63,7 @@ pub struct FamilySolidMesh {
 }
 
 /// 🧬️ Everything inferred about one family (or one placed instance of it).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct FamilyValue {
     pub name: String,
     #[value(default, skip_serializing_if = "Option::is_none")]

@@ -48,7 +48,7 @@ use semio_s_artifact_stdio_contract::editing;
 pub(crate) mod edit_audio;
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum WavEditCommand {
     /// 🎬️ Navbar example picker payload.
     SetActiveExample {
@@ -478,6 +478,7 @@ impl ArtifactEditor for WavEditor {
                 generation: request.operation.generation.0,
                 canonical_base_revision: request.canonical_base_revision,
                 authoring_seed: request.authoring_seed.clone(),
+                retained: request.retained,
             };
             let tool_id = wavEditor_command_id(&request.command);
             let payload = ArtifactRetainedCommandPayload::new(
@@ -512,6 +513,7 @@ impl ArtifactEditor for WavEditor {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
+            retained: request.retained,
         };
         let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
@@ -541,7 +543,7 @@ impl ArtifactEditor for WavEditor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_WAV_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-wav-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
     fn command_id(command: &Self::Command) -> &'static str {
         wavEditor_command_id(command)

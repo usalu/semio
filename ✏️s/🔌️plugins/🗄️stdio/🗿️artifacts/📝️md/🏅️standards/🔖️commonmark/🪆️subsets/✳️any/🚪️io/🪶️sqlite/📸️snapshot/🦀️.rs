@@ -187,7 +187,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
  })();result.map(|()|store::io_schema::IoOutcome::clean(())).map_err(store::io_schema::IoError::from_value_error)
 }
 
-fn decode_hook(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<MdSnapshot,ValueError>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::decode_owned(payload,control,native_control)}
+fn decode_hook(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<MdSnapshot,ValueError>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::decode_owned(payload,control,native_control)}
 fn encode_hook(value:&MdSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::encode_owned(value,encoding,control,native_owner)}
 fn retire_hook(value:MdSnapshot){crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::retire_owned(value)}
 

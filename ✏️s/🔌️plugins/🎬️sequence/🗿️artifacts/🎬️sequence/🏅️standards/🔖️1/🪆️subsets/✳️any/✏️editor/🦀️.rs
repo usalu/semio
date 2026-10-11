@@ -30,7 +30,7 @@ use dag::{would_create_cycle, DagHost};
 use graph::manifest::PropertyBag;
 use imperative_engine::{compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step};
 use infinite_board_port_directed_dag as dag;
-use neural_engine::{ChannelSpec, ColdOwner, Dictionary, Registry, RegistryRetirement, SharedRegistry, Value as NeuralValue, ValueRetirement, ValueRetirementStep};
+use neural_engine::{ChannelSpec, ColdOwner, Dictionary, Registry, RegistryRetirement, SharedRegistry, Value as NeuralValue, ValueRetirement};
 use semio_framework_artifact_infinite_dag::io::text::snapshot::dag_host_snapshot_to_wire_literal;
 use semio_framework_artifact_infinite_dag::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use semio_framework_plugin::app::{ChildEmit,ChildEmitPreparation};
@@ -523,8 +523,8 @@ impl SequenceHost {
     }
 
     pub fn pick_step_id_at_screen(&self, sx: f64, sy: f64, width: u32, height: u32, dpr: f64) -> Option<String> {
-        use infinite_canvas::camera::{screen_to_world, Camera as CanvasCamera, Viewport};
-        use infinite_canvas::Point;
+        use semio_framework_canvas::camera::{screen_to_world, Camera as CanvasCamera, Viewport};
+        use semio_framework_canvas::Point;
         let viewport = Viewport { width: width.max(1), height: height.max(1), dpr: dpr.max(1.0) };
         let camera = CanvasCamera { x: self.dag.host_snapshot.camera.x, y: self.dag.host_snapshot.camera.y, zoom: self.dag.host_snapshot.camera.zoom };
         let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
@@ -1055,6 +1055,7 @@ fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &Sequenc
 #[derive(Default)]
 struct SequenceRetainedSceneOwner {
     scene: Option<SequenceWorkingScene>,
+    pending: Vec<Dictionary>,
     retirement: ValueRetirement,
 }
 
@@ -1070,32 +1071,39 @@ impl SequenceRetainedSceneOwner {
         self.scene.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-retained-scene-required"))
     }
 
-    fn release_one(&mut self, maximum_bytes: usize) -> SequencePersistentRelease {
-        if !self.retirement.terminal_is_empty() {
-            return match self.retirement.close_step(1, maximum_bytes) {
-                ValueRetirementStep::Pending { released_bytes, .. } => SequencePersistentRelease::Progress(released_bytes),
-                ValueRetirementStep::Complete if self.retirement.terminal_is_empty() => SequencePersistentRelease::Progress(0),
-                ValueRetirementStep::Complete | ValueRetirementStep::Blocked => SequencePersistentRelease::Blocked,
-            };
+    fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        if grant.maximum_items == 0 {
+            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
+        }
+        if let Some(step) = sequence_drain_retirement(&mut self.retirement, grant) {
+            return step;
+        }
+        if let Some(step) = sequence_push_pending(&mut self.retirement, &mut self.pending, grant) {
+            return step;
         }
         if let Some(scene) = self.scene.as_mut() {
-            if let Some(step) = scene.steps.pop() {
-                let SequenceStep { mut params, .. } = step;
-                self.retirement.push_dictionary(std::mem::take(&mut params.0));
-                return SequencePersistentRelease::Progress(0);
+            if let Some(step) = scene.steps.last_mut() {
+                let progress = sequence_push_params(&mut self.retirement, step, grant)?;
+                scene.steps.pop();
+                return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress));
             }
             if scene.edges.pop().is_some() {
-                return SequencePersistentRelease::Progress(0);
+                return sequence_unit();
             }
         }
         if self.scene.take().is_some() {
-            return SequencePersistentRelease::Progress(0);
+            return sequence_unit();
         }
-        SequencePersistentRelease::Complete
+        Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))
+    }
+
+    fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let admits = !self.pending.is_empty() || self.scene.as_ref().is_some_and(|scene| !scene.steps.is_empty());
+        sequence_owner_demand(&self.retirement, admits, self.scene.is_some())
     }
 
     fn empty(&self) -> bool {
-        self.scene.is_none() && self.retirement.terminal_is_empty()
+        self.scene.is_none() && self.pending.is_empty() && self.retirement.terminal_is_empty()
     }
 }
 
@@ -1118,6 +1126,12 @@ impl SequenceRetainedArtifactWork {
 }
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedArtifactWork {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+    }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+    }
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -1165,7 +1179,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         let scene = self.scene_owner.scene()?;
         let (emit, discarded_params) = sequence_retained_artifact_emit(command, snapshot, scene, interaction)?;
         if let Some(params) = discarded_params {
-            self.scene_owner.retirement.push_dictionary(params);
+            self.scene_owner.pending.push(params);
         }
         let exact_child = emit.child_emits.first().is_none_or(|child| child.slot == "content" && child.child_id == snapshot.content.child_id);
         if !emit.config_mutations.is_empty() || !emit.draft_mutations.is_empty() || !emit.artifact_mutations.is_empty() || emit.child_emits.len() > 1 || !exact_child {
@@ -1176,16 +1190,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         Ok(ArtifactCommandWorkStep::Complete(emit))
     }
 
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < 24 {
-            return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-artifact-checkpoint-capacity"));
-        }
-        target[..24].fill(0);
-        target[..4].copy_from_slice(b"SRA1");
-        target[4] = u8::from(self.completed);
-        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
-        target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
-        Ok(24)
+    fn checkpoint_byte(&self, index: usize) -> Option<u8> {
+        let mut target = [0_u8; 24];
+        self.write_checkpoint(&mut target).ok()?;
+        target.get(index).copied()
     }
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
@@ -1206,22 +1214,77 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         if !self.closing {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        if grant.maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
         }
         self.replay_target = None;
-        match self.scene_owner.release_one(maximum_bytes) {
-            SequencePersistentRelease::Progress(released_bytes) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes },
-            SequencePersistentRelease::Blocked => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            SequencePersistentRelease::Complete => semio_framework_job::InteractiveJobCloseStep::Complete,
-        }
+        sequence_close_step(self.scene_owner.release_one(grant))
     }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.scene_owner.close_demand()?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.scene_owner.close_demand()?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.scene_owner.close_demand()?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.scene_owner.close_demand()?.depth) }
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.replay_target.is_none() && self.scene_owner.empty()
+    }
+}
+
+impl SequenceRetainedArtifactWork {
+    fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 24 {
+            return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-artifact-checkpoint-capacity"));
+        }
+        target[..24].fill(0);
+        target[..4].copy_from_slice(b"SRA1");
+        target[4] = u8::from(self.completed);
+        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
+        target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
+        Ok(24)
+    }
+}
+
+impl SequencePersistentWork {
+    fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 24 {
+            return Err(sequence_fault("sequence.editor.capacity", "sequence-persistent-checkpoint-capacity"));
+        }
+        target[..24].fill(0);
+        target[..4].copy_from_slice(b"SRP1");
+        target[8..16].copy_from_slice(&(self.progress as u64).to_le_bytes());
+        target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
+        Ok(24)
+    }
+}
+
+impl SequenceRetainedConfigWork {
+    fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 24 {
+            return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-checkpoint-capacity"));
+        }
+        target[..24].fill(0);
+        target[..4].copy_from_slice(b"SRC1");
+        target[4] = u8::from(self.completed);
+        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
+        target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
+        Ok(24)
+    }
+}
+
+impl SequenceRetainedExampleWork {
+    fn write_checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 24 {
+            return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-checkpoint-capacity"));
+        }
+        target[..24].fill(0);
+        target[..4].copy_from_slice(b"SRE1");
+        target[4] = u8::from(self.completed);
+        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
+        target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
+        Ok(24)
     }
 }
 
@@ -1495,13 +1558,12 @@ impl SequenceNodeGraphState {
         }
     }
 
-    fn release_one(&mut self, maximum_bytes: usize) -> SequencePersistentRelease {
-        if !self.retirement.terminal_is_empty() {
-            return match self.retirement.close_step(1, maximum_bytes) {
-                ValueRetirementStep::Pending { released_bytes, .. } => SequencePersistentRelease::Progress(released_bytes),
-                ValueRetirementStep::Complete if self.retirement.terminal_is_empty() => SequencePersistentRelease::Progress(0),
-                ValueRetirementStep::Complete | ValueRetirementStep::Blocked => SequencePersistentRelease::Blocked,
-            };
+    fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        if grant.maximum_items == 0 {
+            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
+        }
+        if let Some(step) = sequence_drain_retirement(&mut self.retirement, grant) {
+            return step;
         }
         if self.operations.pop().is_some()
             || self.gesture.take().is_some()
@@ -1509,20 +1571,33 @@ impl SequenceNodeGraphState {
             || self.delete_current.take().is_some()
             || self.delete_discovered.pop().is_some()
         {
-            return SequencePersistentRelease::Progress(0);
+            return sequence_unit();
         }
-        let step = self.discarded_steps.pop_front().or_else(|| self.edit.as_mut().and_then(|edit| edit.scene.steps.pop()));
-        if let Some(SequenceStep { mut params, .. }) = step {
-            self.retirement.push_dictionary(std::mem::take(&mut params.0));
-            return SequencePersistentRelease::Progress(0);
+        if let Some(step) = self.discarded_steps.front_mut() {
+            let progress = sequence_push_params(&mut self.retirement, step, grant)?;
+            self.discarded_steps.pop_front();
+            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress));
         }
-        if self.edit.as_mut().is_some_and(|edit| edit.scene.edges.pop().is_some() || edit.leaves.pop().is_some()) {
-            return SequencePersistentRelease::Progress(0);
+        if let Some(edit) = self.edit.as_mut() {
+            if let Some(step) = edit.scene.steps.last_mut() {
+                let progress = sequence_push_params(&mut self.retirement, step, grant)?;
+                edit.scene.steps.pop();
+                return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress));
+            }
+            if edit.scene.edges.pop().is_some() || edit.leaves.pop().is_some() {
+                return sequence_unit();
+            }
         }
         if self.edit.take().is_some() {
-            return SequencePersistentRelease::Progress(0);
+            return sequence_unit();
         }
-        SequencePersistentRelease::Complete
+        Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))
+    }
+
+    fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let admits = !self.discarded_steps.is_empty() || self.edit.as_ref().is_some_and(|edit| !edit.scene.steps.is_empty());
+        let retains = !self.operations.is_empty() || self.gesture.is_some() || !self.delete_frontier.is_empty() || self.delete_current.is_some() || !self.delete_discovered.is_empty() || self.edit.is_some();
+        sequence_owner_demand(&self.retirement, admits, retains)
     }
     fn empty(&self) -> bool {
         self.operations.is_empty()
@@ -1697,6 +1772,7 @@ struct SequenceRunState {
     initialized: bool,
     registry: Option<SharedRegistry>,
     registry_retirement: Option<RegistryRetirement>,
+    pending: Vec<Dictionary>,
     retirement: ValueRetirement,
     scope: Dictionary,
     effects: Vec<imperative_engine::EffectLogEntry>,
@@ -1821,10 +1897,10 @@ impl SequenceRunState {
                 let registry = self.registry.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-run-registry"))?;
                 let result = Executor::new(registry).run(&Path { steps: vec![Step { id: step.id.clone(), kind: step.kind.clone(), params: step.params.0.clone(), bodies: BTreeMap::new() }] }, &self.scope);
                 if self.effects.len().saturating_add(result.effects.len()) > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-                    self.retirement.push_dictionary(result.scope);
+                    self.pending.push(result.scope);
                     for effect in result.effects {
-                        self.retirement.push_dictionary(effect.input);
-                        if let Some(output) = effect.output { self.retirement.push_dictionary(output); }
+                        self.pending.push(effect.input);
+                        if let Some(output) = effect.output { self.pending.push(output); }
                     }
                     return Err(sequence_fault("sequence.run.capacity", "sequence-run-effect-capacity"));
                 }
@@ -1841,55 +1917,122 @@ impl SequenceRunState {
         Ok(SequencePersistentAdvance::Progress("sequence-run-step", "{\"en\":\"Executed Sequence step\",\"de\":\"Sequenzschritt wurde ausgeführt\"}".as_bytes()))
     }
 
-    fn release_one(&mut self, maximum_bytes: usize) -> SequencePersistentRelease {
-        if !self.retirement.terminal_is_empty() {
-            return match self.retirement.close_step(1, maximum_bytes) {
-                ValueRetirementStep::Pending { released_bytes, .. } => SequencePersistentRelease::Progress(released_bytes),
-                ValueRetirementStep::Complete if self.retirement.terminal_is_empty() => SequencePersistentRelease::Progress(0),
-                ValueRetirementStep::Complete | ValueRetirementStep::Blocked => SequencePersistentRelease::Blocked,
-            };
+    fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        if grant.maximum_items == 0 {
+            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
+        }
+        if let Some(step) = sequence_drain_retirement(&mut self.retirement, grant) {
+            return step;
+        }
+        if let Some(step) = sequence_push_pending(&mut self.retirement, &mut self.pending, grant) {
+            return step;
         }
         if let Some(effect) = self.effects.pop() {
-            self.retirement.push_dictionary(effect.input);
-            if let Some(output) = effect.output { self.retirement.push_dictionary(output); }
-            return SequencePersistentRelease::Progress(0);
+            self.pending.push(effect.input);
+            if let Some(output) = effect.output {
+                self.pending.push(output);
+            }
+            return sequence_unit();
         }
         if let Some(frame) = self.frames.last_mut() {
             if frame.order.release_one() {
-                return SequencePersistentRelease::Progress(0);
+                return sequence_unit();
             }
         }
-        if self.frames.pop().is_some() { return SequencePersistentRelease::Progress(0); }
+        if self.frames.pop().is_some() {
+            return sequence_unit();
+        }
         if let Some(registry) = self.registry.take() {
             drop(registry);
-            return SequencePersistentRelease::Progress(0);
+            return sequence_unit();
         }
         if let Some(retirement) = self.registry_retirement.as_mut() {
-            return match retirement.close_step(1, maximum_bytes) {
-                Ok(ValueRetirementStep::Pending { released_bytes, .. }) => SequencePersistentRelease::Progress(released_bytes),
-                Ok(ValueRetirementStep::Complete) if retirement.terminal_is_empty() => {
-                    self.registry_retirement = None;
-                    SequencePersistentRelease::Progress(0)
-                }
-                Ok(ValueRetirementStep::Complete) | Ok(ValueRetirementStep::Blocked) | Err(_) => SequencePersistentRelease::Blocked,
-            };
+            let step = retirement.close_step(grant)?;
+            if retirement.terminal_is_empty() {
+                self.registry_retirement = None;
+            }
+            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress()));
         }
         if self.initialized {
-            self.retirement.push_dictionary(std::mem::take(&mut self.scope));
+            self.pending.push(std::mem::take(&mut self.scope));
             self.initialized = false;
-            return SequencePersistentRelease::Progress(0);
+            return sequence_unit();
         }
-        SequencePersistentRelease::Complete
+        Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))
+    }
+
+    fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if let Some(retirement) = self.registry_retirement.as_ref().filter(|_| self.retirement.terminal_is_empty() && self.pending.is_empty() && self.effects.is_empty() && self.frames.is_empty() && self.registry.is_none()) {
+            let copy_bytes = retirement.next_copy_byte_demand()?;
+            return Ok(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: retirement.next_capacity_byte_demand(copy_bytes)?, release_bytes: retirement.next_release_byte_demand()?, depth: retirement.next_depth_demand()?.max(1) });
+        }
+        let admits = !self.pending.is_empty();
+        let retains = self.initialized || self.registry.is_some() || self.registry_retirement.is_some() || !self.effects.is_empty() || !self.frames.is_empty();
+        sequence_owner_demand(&self.retirement, admits, retains)
     }
     fn empty(&self) -> bool {
-        !self.initialized && self.registry.is_none() && self.registry_retirement.is_none() && self.retirement.terminal_is_empty() && self.effects.is_empty() && self.frames.is_empty()
+        !self.initialized && self.registry.is_none() && self.registry_retirement.is_none() && self.pending.is_empty() && self.retirement.terminal_is_empty() && self.effects.is_empty() && self.frames.is_empty()
     }
 }
 
-enum SequencePersistentRelease {
-    Progress(usize),
-    Blocked,
-    Complete,
+/// ♻️ Quotes the next neural value-retirement turn as one indivisible demand.
+fn sequence_retirement_demand(retirement: &ValueRetirement) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    let copy_bytes = retirement.next_copy_byte_demand()?;
+    Ok(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: retirement.next_capacity_byte_demand(copy_bytes)?, release_bytes: retirement.next_release_byte_demand()?, depth: retirement.next_depth_demand()?.max(1) })
+}
+
+/// 📏️ Quotes one parked-dictionary admission or one structural drop.
+fn sequence_owner_demand(retirement: &ValueRetirement, admits_dictionary: bool, retains_structure: bool) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    if !retirement.terminal_is_empty() {
+        return sequence_retirement_demand(retirement);
+    }
+    if admits_dictionary {
+        return Ok(semio_framework_value::RetirementDemand { capacity_bytes: ValueRetirement::domain_frame_birth_bytes(), depth: 1, ..Default::default() });
+    }
+    Ok(if retains_structure { semio_framework_value::RetirementDemand { depth: 1, ..Default::default() } } else { Default::default() })
+}
+
+/// ♻️ Drains one turn of a non-empty neural value retirement; `None` once it is terminal-empty.
+fn sequence_drain_retirement(retirement: &mut ValueRetirement, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>> {
+    if retirement.terminal_is_empty() {
+        return None;
+    }
+    Some(retirement.close_step(grant).map(|step| semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress())))
+}
+
+/// 🅿️ Admits one parked dictionary under the grant and keeps it parked when refused.
+fn sequence_push_pending(retirement: &mut ValueRetirement, pending: &mut Vec<Dictionary>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>> {
+    let dictionary = pending.pop()?;
+    Some(match retirement.push_dictionary(dictionary, grant) {
+        Ok(progress) => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)),
+        Err((error, dictionary)) => {
+            pending.push(dictionary);
+            Err(error)
+        }
+    })
+}
+
+/// 🧳️ Admits one step's parameter dictionary and puts it back when refused.
+fn sequence_push_params(retirement: &mut ValueRetirement, step: &mut SequenceStep, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::ValueError> {
+    let dictionary = std::mem::take(&mut step.params.0);
+    retirement.push_dictionary(dictionary, grant).map_err(|(error, dictionary)| {
+        step.params.0 = dictionary;
+        error
+    })
+}
+
+/// 🧱️ One structural item released without a physical backing grant.
+fn sequence_unit() -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+}
+
+/// 🗂️ Maps one release turn onto the interactive close contract.
+fn sequence_close_step(step: Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>) -> semio_framework_job::InteractiveJobCloseStep {
+    match step {
+        Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)) => semio_framework_job::InteractiveJobCloseStep::Pending { progress },
+        Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => semio_framework_job::InteractiveJobCloseStep::Complete { progress },
+        Err(error) => semio_framework_job::InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+    }
 }
 
 enum SequencePersistentWorkspace {
@@ -1912,11 +2055,19 @@ impl SequencePersistentWorkspace {
             Self::Run(state) => state.advance(scene),
         }
     }
-    fn release_one(&mut self, maximum_bytes: usize) -> SequencePersistentRelease {
+    fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         match self {
-            Self::Reorganize(state) => if state.release_one() { SequencePersistentRelease::Progress(0) } else { SequencePersistentRelease::Complete },
-            Self::NodeGraph(state) => state.release_one(maximum_bytes),
-            Self::Run(state) => state.release_one(maximum_bytes),
+            Self::Reorganize(state) => if state.release_one() { sequence_unit() } else { Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())) },
+            Self::NodeGraph(state) => state.release_one(grant),
+            Self::Run(state) => state.release_one(grant),
+        }
+    }
+
+    fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        match self {
+            Self::Reorganize(state) => Ok(if state.empty() { Default::default() } else { semio_framework_value::RetirementDemand { depth: 1, ..Default::default() } }),
+            Self::NodeGraph(state) => state.close_demand(),
+            Self::Run(state) => state.close_demand(),
         }
     }
     fn empty(&self) -> bool {
@@ -1956,6 +2107,12 @@ impl SequencePersistentWork {
 }
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequencePersistentWork {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+    }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+    }
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -2033,15 +2190,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
             }
         }
     }
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < 24 {
-            return Err(sequence_fault("sequence.editor.capacity", "sequence-persistent-checkpoint-capacity"));
-        }
-        target[..24].fill(0);
-        target[..4].copy_from_slice(b"SRP1");
-        target[8..16].copy_from_slice(&(self.progress as u64).to_le_bytes());
-        target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
-        Ok(24)
+    fn checkpoint_byte(&self, index: usize) -> Option<u8> {
+        let mut target = [0_u8; 24];
+        self.write_checkpoint(&mut target).ok()?;
+        target.get(index).copied()
     }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.len() != 24 || &checkpoint[..4] != b"SRP1" || checkpoint[4..8] != [0, 0, 0, 0] {
@@ -2064,26 +2216,31 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         if !self.closing {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        if grant.maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
         }
         self.replay_target = None;
-        match self.workspace.release_one(maximum_bytes) {
-            SequencePersistentRelease::Progress(released_bytes) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes },
-            SequencePersistentRelease::Blocked => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            SequencePersistentRelease::Complete => match self.scene_owner.release_one(maximum_bytes) {
-                SequencePersistentRelease::Progress(released_bytes) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes },
-                SequencePersistentRelease::Blocked => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                SequencePersistentRelease::Complete => semio_framework_job::InteractiveJobCloseStep::Complete,
-            },
+        if !self.workspace.empty() {
+            return sequence_close_step(self.workspace.release_one(grant));
         }
+        sequence_close_step(self.scene_owner.release_one(grant))
     }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.depth) }
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.replay_target.is_none() && self.workspace.empty() && self.scene_owner.empty()
+    }
+}
+
+impl SequencePersistentWork {
+    fn close_demand(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.workspace.empty() { self.workspace.close_demand() } else { self.scene_owner.close_demand() }
     }
 }
 
@@ -2174,6 +2331,12 @@ impl SequenceRetainedConfigWork {
 }
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedConfigWork {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+    }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+    }
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -2240,16 +2403,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         }
     }
 
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < 24 {
-            return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-checkpoint-capacity"));
-        }
-        target[..24].fill(0);
-        target[..4].copy_from_slice(b"SRC1");
-        target[4] = u8::from(self.completed);
-        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
-        target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
-        Ok(24)
+    fn checkpoint_byte(&self, index: usize) -> Option<u8> {
+        let mut target = [0_u8; 24];
+        self.write_checkpoint(&mut target).ok()?;
+        target.get(index).copied()
     }
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
@@ -2271,15 +2428,15 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         if !self.closing {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        if grant.maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
         }
         self.replay_target = None;
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -2385,6 +2542,12 @@ impl SequenceRetainedExampleWork {
 }
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedExampleWork {
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+    }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+    }
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -2439,16 +2602,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         }
     }
 
-    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
-        if target.len() < 24 {
-            return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-checkpoint-capacity"));
-        }
-        target[..24].fill(0);
-        target[..4].copy_from_slice(b"SRE1");
-        target[4] = u8::from(self.completed);
-        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
-        target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
-        Ok(24)
+    fn checkpoint_byte(&self, index: usize) -> Option<u8> {
+        let mut target = [0_u8; 24];
+        self.write_checkpoint(&mut target).ok()?;
+        target.get(index).copied()
     }
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
@@ -2470,15 +2627,15 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         if !self.closing {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        if grant.maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
         }
         self.replay_target = None;
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -2560,17 +2717,21 @@ const SEQUENCE_IMPORT_PORT: &str = "steps:in";
 /// remains owned through native parsing/projection, typed binding and the same composed child
 /// publication. Every source candidate drains through its existing retirement authority.
 struct SequenceImportJob {
-    port: String,
-    media: Option<MediaPayload>,
+    port: Option<String>,
+    media: Option<Media>,
     parser: Option<semio_framework_pack_json::JsonParseCursor>,
     projection: Option<semio_framework_pack_json::JsonValueProjection>,
     decode_receipt: Option<semio_framework_value::native_decoding::NativeDecodeContinuation>,
     input: Option<neural_engine::retirement::RetainedDictionaryInput>,
-    params: Option<StepParams>,
+    params: Option<Dictionary>,
     retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     snapshot: Option<std::sync::Arc<SequenceSnapshot>>,
     children: Option<semio_framework_plugin::app::ChildContentView>,
     emit: Option<Emit<SequenceMutation, NoConfigMutation>>,
+    checkpoint_publication: semio_framework_job::RetainedJobPublication,
+    checkpoint_delivered: bool,
+    fault_publication: semio_framework_job::RetainedJobPublication,
+    fault_detail: Option<Vec<u8>>,
     decoded: bool,
     completed: bool,
     closing: bool,
@@ -2578,22 +2739,12 @@ struct SequenceImportJob {
     pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
 }
 
-/// 🧾️ Admits one bounded job payload page, answering the empty page when the context refuses it.
-fn sequence_job_payload(cx: &mut semio_framework_job::StepContext<'_>, stream: semio_framework_job::JobPayloadStream, bytes: &[u8]) -> semio_framework_job::RetainedJobPayload {
-    match cx.payload_from_bytes(stream, bytes) {
-        Ok(payload) => payload,
-        Err(rejected) => {
-            drop(rejected.into_source());
-            semio_framework_job::RetainedJobPayload::empty(stream)
-        }
-    }
-}
+type SequenceJobTurn<'a> = Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError>;
 
-/// 🧯️ One bounded job fault carrying its own detail page.
-fn sequence_job_fault(cx: &mut semio_framework_job::StepContext<'_>, detail: &str) -> semio_framework_job::StepOutcome {
-    let bytes = detail.as_bytes();
-    let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
-    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: sequence_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, bounded) })
+enum SequenceDecodeTurn {
+    Cancelled,
+    Yield,
+    Done,
 }
 
 /// 📦️ Takes the original parameter value into its canonical dictionary shape.
@@ -2601,14 +2752,43 @@ fn sequence_import_parameter_value(value: semio_framework_value::DslValue) -> se
     if matches!(value, semio_framework_value::DslValue::Object(_)) { value } else { semio_framework_value::DslValue::Object(vec![("value".into(), value)]) }
 }
 
+/// 🎟️ The exact one-turn grant a quoted demand needs.
+fn sequence_demand_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
+}
+
+/// 🧾️ Projects one JSON grammar refusal onto the shared value refusal.
+fn sequence_json_error(error: semio_framework_pack_json::JsonError) -> semio_framework_value::ValueError {
+    match error {
+        semio_framework_pack_json::JsonError::Native(error) => error,
+        error => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()),
+    }
+}
+
+/// 🎟️ Quotes the grant for the next typed input binding turn.
+fn sequence_input_grant(input: &neural_engine::retirement::RetainedDictionaryInput) -> Result<semio_framework_value::retained_clone::RetainedCloneGrant, semio_framework_value::ValueError> {
+    let copy_bytes = input.next_copy_byte_demand()?;
+    Ok(sequence_demand_grant(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: input.next_capacity_byte_demand(copy_bytes)?, release_bytes: input.next_release_byte_demand()?, depth: input.next_depth_demand()?.max(1) }))
+}
+
 impl SequenceImportJob {
     fn new(request: semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<SequencePlayApp>>, port: String, media: Media) -> Self {
         Self {
-            port,
-            media: Some(media.payload), parser: None, projection: None, decode_receipt: None, input: None, params: None, retirement: None,
+            port: Some(port),
+            media: Some(media),
+            parser: None,
+            projection: None,
+            decode_receipt: None,
+            input: None,
+            params: None,
+            retirement: None,
             snapshot: Some(request.snapshot),
             children: Some(request.children),
             emit: None,
+            checkpoint_publication: semio_framework_job::RetainedJobPublication::new(),
+            checkpoint_delivered: false,
+            fault_publication: semio_framework_job::RetainedJobPublication::new(),
+            fault_detail: None,
             decoded: false,
             completed: false,
             closing: false,
@@ -2617,30 +2797,46 @@ impl SequenceImportJob {
         }
     }
 
-    fn decode(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Option<semio_framework_job::StepOutcome> {
-        if self.port != SEQUENCE_IMPORT_PORT {
-            return Some(sequence_job_fault(cx, "sequence import only implements steps:in"));
+    fn fault<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, detail: &str) -> SequenceJobTurn<'a> {
+        if self.fault_detail.is_none() {
+            let bytes = detail.as_bytes();
+            self.fault_detail = Some(bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec());
+        }
+        let bytes = self.fault_detail.as_deref().unwrap_or_default();
+        self.fault_publication.advance_from_source(semio_framework_job::JobPublicationKind::Fault, bytes, cx)
+    }
+
+    fn decode(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<SequenceDecodeTurn, String> {
+        if self.port.as_deref() != Some(SEQUENCE_IMPORT_PORT) {
+            return Err("sequence import only implements steps:in".into());
         }
         if self.params.is_none() {
             if self.input.is_none() && self.parser.is_none() && self.projection.is_none() {
-                match self.media.as_mut() {
+                match self.media.as_mut().map(|media| &mut media.payload) {
                     Some(MediaPayload::Intrinsic { value, .. }) => {
                         let value = std::mem::replace(value, semio_framework_value::DslValue::Null);
                         self.input = Some(neural_engine::retirement::RetainedDictionaryInput::new(sequence_import_parameter_value(value)));
                     },
                     Some(MediaPayload::Structured { .. }) => self.parser = Some(semio_framework_pack_json::JsonParseCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject)),
-                    Some(MediaPayload::Binary { .. }) | None => return Some(sequence_job_fault(cx, "sequence steps:in requires an intrinsic or structured parameter value")),
+                    Some(MediaPayload::Binary { .. }) | None => return Err("sequence steps:in requires an intrinsic or structured parameter value".into()),
                 }
                 cx.consume_fuel(1);
             }
             while !cx.should_yield() {
-                if cx.is_cancelled() { return Some(semio_framework_job::StepOutcome::Cancelled); }
+                if cx.is_cancelled() { return Ok(SequenceDecodeTurn::Cancelled); }
                 if let Some(input) = self.input.as_mut() {
                     cx.set_stage(input.progress().2);
-                    match input.step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-                        Ok(Some(dictionary)) => { self.params = Some(StepParams(dictionary)); cx.consume_fuel(1); break; },
-                        Ok(None) => {},
-                        Err(error) if error.kind == semio_framework_value::ValueRefusalKind::Canceled => return Some(semio_framework_job::StepOutcome::Cancelled), Err(error) => return Some(sequence_job_fault(cx, &error.message)),
+                    let grant = sequence_input_grant(input).map_err(|error| error.message.to_string())?;
+                    match input.step(grant) {
+                        Ok(step) => {
+                            if let Some(dictionary) = step.dictionary {
+                                self.params = Some(dictionary);
+                                cx.consume_fuel(1);
+                                break;
+                            }
+                        },
+                        Err(error) if error.kind == semio_framework_value::ValueRefusalKind::Canceled => return Ok(SequenceDecodeTurn::Cancelled),
+                        Err(error) => return Err(error.message.to_string()),
                     }
                 } else {
                     let result = {
@@ -2648,194 +2844,301 @@ impl SequenceImportJob {
                         let control = match self.decode_receipt.take() { Some(receipt) => semio_framework_value::NativeDecodeControl::resume(receipt, &mut accept), None => Ok(semio_framework_value::NativeDecodeControl::new(SEQUENCE_STORE_MAXIMUM_BYTES, &mut accept)) };
                         match control {
                             Ok(mut control) => {
-                                let result = if let Some(projection) = self.projection.as_mut() { projection.step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, &mut control) }
-                                else if let (Some(parser), Some(MediaPayload::Structured { json, .. })) = (self.parser.as_mut(), self.media.as_ref()) {
-                                    match parser.step(json, 1, &mut control) { Ok(Some(value)) => { self.projection = Some(semio_framework_pack_json::JsonValueProjection::new(value)); Ok(None) }, Ok(None) => Ok(None), Err(semio_framework_pack_json::JsonError::Native(error)) => Err(error), Err(error) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())) }
+                                let result = if let Some(projection) = self.projection.as_mut() {
+                                    match projection.normal_step_demands() {
+                                        Ok(demand) => projection.step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, &mut control, sequence_demand_grant(demand)),
+                                        Err(error) => Err(error),
+                                    }
+                                } else if let (Some(parser), Some(MediaPayload::Structured { json, .. })) = (self.parser.as_mut(), self.media.as_ref().map(|media| &media.payload)) {
+                                    match parser.normal_step_demands(json.as_str()).and_then(|demand| parser.step(json.as_str(), 1, &mut control, sequence_demand_grant(demand))) {
+                                        Ok(Some(value)) => { self.projection = Some(semio_framework_pack_json::JsonValueProjection::new(value)); Ok(None) },
+                                        Ok(None) => Ok(None),
+                                        Err(error) => Err(sequence_json_error(error)),
+                                    }
                                 } else { Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "sequence import source disappeared")) };
                                 match control.pause() { Ok(receipt) => { self.decode_receipt = Some(receipt); result }, Err(error) => Err(error) }
                             },
                             Err(error) => Err(error),
                         }
                     };
-                    match result { Ok(Some(value)) => self.input = Some(neural_engine::retirement::RetainedDictionaryInput::new(sequence_import_parameter_value(value))), Ok(None) => {}, Err(error) if error.kind == semio_framework_value::ValueRefusalKind::Canceled => return Some(semio_framework_job::StepOutcome::Cancelled), Err(error) => return Some(sequence_job_fault(cx, &error.message)) }
+                    match result {
+                        Ok(Some(value)) => self.input = Some(neural_engine::retirement::RetainedDictionaryInput::new(sequence_import_parameter_value(value))),
+                        Ok(None) => {},
+                        Err(error) if error.kind == semio_framework_value::ValueRefusalKind::Canceled => return Ok(SequenceDecodeTurn::Cancelled),
+                        Err(error) => return Err(error.message.to_string()),
+                    }
                     cx.set_stage(if self.projection.is_some() { "sequence-import-project" } else { "sequence-import-parse" });
                 }
                 cx.consume_fuel(1);
             }
-            return Some(semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: sequence_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &[0]), applied_progress: 0 }));
+            if self.params.is_none() {
+                return Ok(SequenceDecodeTurn::Yield);
+            }
         }
         let (Some(snapshot), Some(children)) = (self.snapshot.as_ref(), self.children.as_ref()) else {
-            return Some(sequence_job_fault(cx, "sequence import lost its snapshot authority"));
+            return Err("sequence import lost its snapshot authority".into());
         };
         let Ok(live) = sequence_host_snapshot_from_children(snapshot.as_ref(), children) else {
-            return Some(sequence_job_fault(cx, "sequence import could not read its composed flow child"));
+            return Err("sequence import could not read its composed flow child".into());
         };
         let id = format!("step-{}", max_serial_in_snapshot(&live).max(100) + 1);
         let x = live.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if live.steps.is_empty() { 0.0 } else { 280.0 };
         let mut edit = edit_rules::SceneEdit::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
-        edit.insert_step(SequenceStep { id, kind: "computation.import".into(), params: self.params.take().expect("retained parameter binding completed"), x, y: 0.0, slot: None, collapsed: false });
+        let params = StepParams(self.params.take().expect("retained parameter binding completed"));
+        edit.insert_step(SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false });
         self.emit = Some(sequence_child_leaves_emit(snapshot.as_ref(), edit.leaves));
         self.children = None;
         self.decoded = true;
-        None
+        Ok(SequenceDecodeTurn::Done)
+    }
+
+    fn nested(mut demand: semio_framework_value::RetirementDemand) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "sequence import close depth overflow"))?;
+        Ok(demand)
+    }
+
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if let Some(rejected) = self.pending_completion_rejection.as_ref() {
+            if let Ok(emit) = rejected.emit.as_ref() {
+                if let Some(demand) = emit.child_close_demands(body)? {
+                    return Ok(demand);
+                }
+            }
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if let Some(emit) = self.emit.as_ref() {
+            if let Some(demand) = emit.child_close_demands(body)? {
+                return Ok(demand);
+            }
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if let Some(active) = self.retirement.as_ref() {
+            return Self::nested(store::artifact_retirement_box_demands(active, body)?);
+        }
+        if self.children.is_some() {
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if let Some(input) = self.input.as_ref() {
+            let copy_bytes = input.next_close_copy_byte_demand()?;
+            return Ok(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: input.next_close_capacity_byte_demand(copy_bytes)?, release_bytes: input.next_close_release_byte_demand()?, depth: input.next_close_depth_demand()?.max(1) });
+        }
+        if self.params.is_some() {
+            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.params)?);
+        }
+        if self.media.is_some() {
+            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.media)?);
+        }
+        if self.parser.is_some() {
+            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.parser)?);
+        }
+        if self.projection.is_some() {
+            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.projection)?);
+        }
+        if self.port.is_some() {
+            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.port)?);
+        }
+        if self.completion.is_some() {
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if self.snapshot.is_some() {
+            return Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::shared_retirement_birth_bytes::<SequenceSnapshot>(), depth: 2, ..Default::default() });
+        }
+        if !self.fault_publication.terminal_is_empty() {
+            return Self::nested(self.fault_publication.retirement_demands()?);
+        }
+        if !self.checkpoint_publication.terminal_is_empty() {
+            return Self::nested(self.checkpoint_publication.retirement_demands()?);
+        }
+        Ok(Default::default())
+    }
+
+    fn close_original(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        let unit = || Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        if semio_framework_job::InteractiveJob::terminal_is_empty(self) {
+            return Ok(RetainedCloneStep::Complete(Default::default()));
+        }
+        if grant.maximum_items == 0 {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
+        }
+        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        if grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
+        }
+        let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+        let fault = |fault: Fault| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, fault.message);
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            if let Ok(emit) = rejected.emit.as_mut() {
+                if let Some(step) = emit.close_child_one(grant).map_err(fault)? {
+                    return Ok(RetainedCloneStep::Progress(step.progress().unwrap_or_default()));
+                }
+            }
+            self.pending_completion_rejection = None;
+            return unit();
+        }
+        if let Some(emit) = self.emit.as_mut() {
+            if let Some(step) = emit.close_child_one(grant).map_err(fault)? {
+                return Ok(RetainedCloneStep::Progress(step.progress().unwrap_or_default()));
+            }
+            self.emit = None;
+            return unit();
+        }
+        if self.retirement.is_some() {
+            return store::artifact_retirement_box_close_step(&mut self.retirement, child).map(|step| RetainedCloneStep::Progress(step.progress()));
+        }
+        if self.children.take().is_some() {
+            return unit();
+        }
+        if let Some(input) = self.input.as_mut() {
+            input.cancel();
+            let step = input.close_step(grant)?;
+            if input.terminal_is_empty() { self.input = None; }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        if self.params.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.params, &mut self.retirement, child);
+        }
+        if self.media.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.media, &mut self.retirement, child);
+        }
+        if self.parser.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.parser, &mut self.retirement, child);
+        }
+        if self.projection.is_some() {
+            self.decode_receipt = None;
+            return store::artifact_retirement_admit_owned(&mut self.projection, &mut self.retirement, child);
+        }
+        if self.port.is_some() {
+            return store::artifact_retirement_admit_owned(&mut self.port, &mut self.retirement, child);
+        }
+        if self.completion.take().is_some() {
+            return unit();
+        }
+        if let Some(snapshot) = self.snapshot.take() {
+            return match semio_framework_value::admit_shared_retirement(snapshot, child, true) {
+                Ok((owner, progress)) => {
+                    self.retirement = Some(owner);
+                    Ok(RetainedCloneStep::Progress(progress))
+                }
+                Err((error, snapshot)) => {
+                    self.snapshot = Some(snapshot);
+                    Err(error)
+                }
+            };
+        }
+        if !self.fault_publication.terminal_is_empty() {
+            return self.fault_publication.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
+        }
+        if !self.checkpoint_publication.terminal_is_empty() {
+            return self.checkpoint_publication.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
+        }
+        Ok(RetainedCloneStep::Complete(Default::default()))
     }
 }
 
 impl semio_framework_job::InteractiveJob for SequenceImportJob {
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> SequenceJobTurn<'a> {
         if cx.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
         }
-        if cx.should_yield() { return semio_framework_job::StepOutcome::Yield; }
+        if self.fault_detail.is_some() {
+            return self.fault(cx, "");
+        }
         if self.pending_completion_rejection.is_some() {
-            return sequence_job_fault(cx, "sequence import completion remains rejected");
+            return self.fault(cx, "sequence import completion remains rejected");
         }
         if !self.decoded {
             cx.set_stage("sequence-import-decode");
-            if let Some(outcome) = self.decode(cx) {
-                return outcome;
+            match self.decode(cx) {
+                Err(detail) => return self.fault(cx, &detail),
+                Ok(SequenceDecodeTurn::Cancelled) => return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx),
+                Ok(SequenceDecodeTurn::Yield) => return semio_framework_job::JobOutcomeBorrow::admit_yield(cx),
+                Ok(SequenceDecodeTurn::Done) => {
+                    cx.consume_fuel(1);
+                }
             }
-            cx.consume_fuel(1);
-            return semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
-                state: sequence_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &[1]),
-                applied_progress: 1,
-            });
+        }
+        if !self.checkpoint_delivered {
+            let outcome = self.checkpoint_publication.advance_from_source(semio_framework_job::JobPublicationKind::Checkpoint { applied_progress: 1 }, &[1], cx)?;
+            if outcome.is_some() {
+                self.checkpoint_delivered = true;
+            }
+            return Ok(outcome);
         }
         cx.set_stage("sequence-import-publish");
-        if let Some(emit)=self.emit.as_mut(){
-            let bytes=emit.next_child_preparation_byte_demand().max(1);
-            match emit.prepare_child_one(1,bytes){
-                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Ready)=>{},
-                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Pending)=>{cx.consume_fuel(1);return semio_framework_job::StepOutcome::Yield;},
-                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault))|Err(fault)=>return sequence_job_fault(cx,&fault.message),
+        if let Some(emit) = self.emit.as_mut() {
+            let demand = emit.child_preparation_demands(0)?;
+            match emit.prepare_child_one(sequence_demand_grant(demand)) {
+                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Ready(_)) => {}
+                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Pending(_)) => {
+                    cx.consume_fuel(1);
+                    return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+                }
+                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault, _)) | Err(fault) => return self.fault(cx, &fault.message),
             }
         }
         if !self.completed {
             let Some(emit) = self.emit.take() else {
-                return sequence_job_fault(cx, "sequence import lost its decoded child publication");
+                return self.fault(cx, "sequence import lost its decoded child publication");
             };
             let Some(completion) = self.completion.as_ref() else {
-                return sequence_job_fault(cx, "sequence import lost its completion authority");
+                self.emit = Some(emit);
+                return self.fault(cx, "sequence import lost its completion authority");
             };
             if !completion.has_mounted_consumer() {
                 self.emit = Some(emit);
-                return sequence_job_fault(cx, "sequence import completion consumer is absent");
+                return self.fault(cx, "sequence import completion consumer is absent");
             }
             if let Err(rejected) = completion.complete(Ok(emit), semio_framework_plugin::EphemeralEmit::default()) {
                 let message = rejected.fault.message.clone();
                 self.pending_completion_rejection = Some(rejected);
-                return sequence_job_fault(cx, &message);
+                return self.fault(cx, &message);
             }
             self.completed = true;
         }
-        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-        })
+        semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        match descriptor.kind() {
+            semio_framework_job::JobOutcomeKind::Yield => descriptor.yielded(),
+            semio_framework_job::JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            semio_framework_job::JobOutcomeKind::Complete => descriptor.complete(None, None),
+            semio_framework_job::JobOutcomeKind::CheckpointReady { .. } => self.checkpoint_publication.borrow_outcome(descriptor),
+            semio_framework_job::JobOutcomeKind::Fault => self.fault_publication.borrow_outcome(descriptor),
+            semio_framework_job::JobOutcomeKind::PreviewReady => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "sequence import publishes no preview")),
+        }
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        match semio_framework_plugin::ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
-            Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-            Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-            Ok(semio_framework_plugin::PluginCloseStep::Complete) if semio_framework_plugin::ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
-            Ok(semio_framework_plugin::PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        semio_framework_plugin::ArtifactReservedJob::terminal_is_empty(self)
-    }
-}
-
-impl semio_framework_plugin::ArtifactReservedJob for SequenceImportJob {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         self.closing = true;
-        if maximum_items == 0 || maximum_bytes == 0 {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
-            if let Ok(emit) = rejected.emit.as_mut() {
-                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
-                    return Ok(step);
-                }
-            }
-            self.pending_completion_rejection = None;
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(emit) = self.emit.as_mut() {
-            if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
-                return Ok(step);
-            }
-            self.emit = None;
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.children.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(input) = self.input.as_mut() {
-            input.cancel();
-            let step = input.close_step(maximum_items, maximum_bytes);
-            if input.terminal_is_empty() { self.input = None; }
-            return Ok(match step { ValueRetirementStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }, ValueRetirementStep::Complete => semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }, ValueRetirementStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "sequence parameter input retirement is blocked" } });
-        }
-        if let Some(close) = self.retirement.as_mut() {
-            let step = close.close_step(maximum_items, maximum_bytes).map_err(|error| sequence_fault("sequence.retained.close", error.message))?;
-            if close.terminal_is_empty() { self.retirement = None; }
-            return Ok(match step { store::SnapshotRetirementStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }, store::SnapshotRetirementStep::Complete => semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }, store::SnapshotRetirementStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "sequence media source retirement is blocked" } });
-        }
-        if let Some(mut params) = self.params.take() {
-            self.retirement = Some(semio_framework_value::retirement::owned_retirement(std::mem::take(&mut params.0)));
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(media) = self.media.take() {
-            self.retirement = Some(match media { MediaPayload::Intrinsic { schema, value } => semio_framework_value::retirement::owned_retirement((schema, value)), MediaPayload::Structured { schema, json } => semio_framework_value::retirement::owned_retirement((schema, json)), MediaPayload::Binary { format_kind, blob_hash } => semio_framework_value::retirement::owned_retirement((format_kind, blob_hash)) });
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(parser) = self.parser.take() {
-            self.retirement = Some(semio_framework_value::retirement::owned_retirement(parser));
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(projection) = self.projection.take() {
-            self.retirement = Some(semio_framework_value::retirement::owned_retirement(projection));
-            self.decode_receipt = None;
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if !self.port.is_empty() || self.port.capacity() > 0 {
-            self.retirement = Some(semio_framework_value::retirement::owned_retirement(std::mem::take(&mut self.port)));
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
-            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "sequence import snapshot has no mounted retained authority" });
-        }
-        if self.snapshot.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
-            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "sequence import completion has no mounted consumer authority" });
-        }
-        if self.completion.take().is_some() {
-            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        Ok(semio_framework_plugin::PluginCloseStep::Complete)
+        sequence_close_step(self.close_original(grant))
     }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(maximum_copy_bytes)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.depth) }
 
     fn terminal_is_empty(&self) -> bool {
         self.closing
-            && self.port.is_empty()
-            && self.port.capacity() == 0
+            && self.port.is_none()
             && self.media.is_none() && self.parser.is_none() && self.projection.is_none() && self.input.is_none() && self.params.is_none() && self.retirement.is_none()
             && self.children.is_none()
             && self.snapshot.is_none()
             && self.emit.is_none()
             && self.completion.is_none()
             && self.pending_completion_rejection.is_none()
+            && self.fault_publication.terminal_is_empty()
+            && self.checkpoint_publication.terminal_is_empty()
     }
 }
+
+impl semio_framework_plugin::ArtifactReservedJob for SequenceImportJob {}
 //#endregion 🎞️ReservedImport
 
 //#region 🔖️SequencePlayApp
@@ -2954,46 +3257,6 @@ impl ArtifactEditor for SequencePlayApp {
 })())
 }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::no_config_store_owners())
-    }
-
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::no_draft_store_owners())
-    }
-
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
-    }
-
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
-    }
-
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
-    }
-
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
-    }
-
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
-    }
-
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
-    }
-
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
-    }
-
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
@@ -3063,7 +3326,7 @@ impl ArtifactEditor for SequencePlayApp {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Sequence command does not match its exact retained route or payload envelope"));
         }
         let tool_id = request.command.command_id();
-        let operation_context = semio_framework_plugin::AppOperationContext {
+        let operation_context = semio_framework_plugin::AppOperationContext { retained: request.retained,
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id,
             operation_id: request.operation.operation.0,

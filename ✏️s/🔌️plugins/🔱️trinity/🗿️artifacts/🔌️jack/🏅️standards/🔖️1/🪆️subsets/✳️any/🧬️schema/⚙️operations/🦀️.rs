@@ -30,9 +30,7 @@ pub struct OwnedTrinityGraphStore(pub(crate) TrinityGraphStore);
 impl OwnedTrinityGraphStore {
     /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
     pub fn close(&mut self) {
-        while !self.0.close_owned_terminal_is_empty() {
-            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Jack document store closes through its exact bounded owners");
-        }
+        self.0.close_owned_unscheduled().expect("Jack document store closes through its exact bounded owners");
     }
 }
 
@@ -275,7 +273,7 @@ pub fn apply_trinity_graph_mutations(snapshot: JackSnapshot, operations: &[Trini
 }
 
 /// ▶️ Validates a batch incrementally, then dispatches it as one VCS edit.
-pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>) -> Result<(), crate::TrinityRamError> {
+pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>, identity: &mut ::store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), crate::TrinityRamError> {
     if operations.is_empty() {
         return Ok(());
     }
@@ -284,7 +282,7 @@ pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, ope
         validate_trinity_graph_operation(operation, &snapshot)?;
         apply_trinity_graph_mutation(&mut snapshot, operation)?;
     }
-    store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }).await.map_err(crate::TrinityRamError::from).map(|_| ())
+    store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }, identity).await.map_err(crate::TrinityRamError::from).map(|_| ())
 }
 //#endregion 🔖️BatchHelpers
 

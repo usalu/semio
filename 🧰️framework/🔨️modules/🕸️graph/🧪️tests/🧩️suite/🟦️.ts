@@ -97,7 +97,8 @@ test("independent owner previews execute with every specific owner unavailable",
       mkdirSync(join(sandbox, "owner", "🛂️manifest"), { recursive: true });
       writeFileSync(catalogPath, JSON.stringify(catalog));
       const execution = resolve(import.meta.dir, "../../🛂️manifest/🏃️execution/🟦️.ts");
-      const program = `import {PreviewGeneratedScript} from ${JSON.stringify(execution)};await new PreviewGeneratedScript(${JSON.stringify(packageRoot)},${JSON.stringify(sandbox)}).run();`;
+      const processInvocation = resolve(import.meta.dir, "../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts");
+      const program = `import {PreviewGeneratedScript} from ${JSON.stringify(execution)};import {createScriptProcessEnvelope,withScriptProcessEnvelope} from ${JSON.stringify(processInvocation)};await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"graph-preview-owner-test",maximumElapsedMilliseconds:0},{},Date.now()),async invocation=>{await new PreviewGeneratedScript(${JSON.stringify(packageRoot)},${JSON.stringify(sandbox)},invocation).run();});`;
       const result = await build({ stdin: { contents: program, resolveDir: import.meta.dir }, bundle: true, platform: "node", format: "esm", write: false, plugins: [{ name: "removed-specific-owners", setup(builder) { builder.onLoad({ filter: /.*/ }, (input) => refused.some((prefix) => input.path.replaceAll("\\", "/").startsWith(prefix)) ? { errors: [{ text: "General preview loads a removed owner: " + input.path }] } : undefined); } }] });
       const child = Bun.spawnSync(["node", "--input-type=module"], { stdin: Buffer.from(result.outputFiles![0]!.text), stdout: "pipe", stderr: "pipe" });
       expect(child.exitCode, Buffer.from(child.stderr).toString()).toBe(0);

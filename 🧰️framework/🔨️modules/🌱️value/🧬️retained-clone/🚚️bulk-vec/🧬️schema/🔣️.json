@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "pageBytes",
+    "elementBytes",
+    "sample",
+    "sampleCounts",
+    "overheadTurns",
+    "emptyCompletionTurns",
+    "copyGrants",
+    "elementwiseTurnsPerElement",
+    "maximumTurnsForFourMebibytes"
+  ],
+  "properties": {
+    "version": { "const": 1 },
+    "pageBytes": { "const": 65536 },
+    "elementBytes": { "const": 2 },
+    "sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["multiplier", "offset", "modulo"],
+      "properties": {
+        "multiplier": { "const": 40503 },
+        "offset": { "const": 12345 },
+        "modulo": { "const": 65536 }
+      }
+    },
+    "sampleCounts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "integer", "minimum": 0 }
+    },
+    "overheadTurns": { "const": 2 },
+    "emptyCompletionTurns": { "const": 1 },
+    "copyGrants": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "integer", "minimum": 2 }
+    },
+    "elementwiseTurnsPerElement": { "const": 13 },
+    "maximumTurnsForFourMebibytes": { "const": 66 }
+  }
+}

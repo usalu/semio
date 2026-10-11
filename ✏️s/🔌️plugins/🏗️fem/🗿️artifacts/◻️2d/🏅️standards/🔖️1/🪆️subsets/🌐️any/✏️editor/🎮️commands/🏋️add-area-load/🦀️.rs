@@ -53,7 +53,7 @@ fn next_load_id(doc: &Fem2dSnapshot, case_id: Option<&str>) -> String {
 //#region 🔖️SetSelfWeight
 //#endregion 🔖️SetSelfWeight
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "add-area-load")]
 pub struct AddAreaLoad {
     pub region_id: String,

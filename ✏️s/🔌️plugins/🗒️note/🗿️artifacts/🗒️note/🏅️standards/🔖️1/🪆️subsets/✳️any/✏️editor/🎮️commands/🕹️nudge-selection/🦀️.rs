@@ -31,7 +31,7 @@ pub(crate) fn nudge(doc: &ArtifactView<'_, NoteSnapshot>, ctx: &mut crate::edito
 }
 //#endregion 🔖️Nudge
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "nudge-selection")]
 pub struct NudgeSelection {
     pub dx: f64,

@@ -373,7 +373,7 @@
       ],
       "expected": {
         "progress": {
-          "completed": 3,
+          "completed": 1,
           "total": 2,
           "ownedBytes": 12
         },

@@ -37,6 +37,7 @@ impl protocol::OpText for Puzzle3dMutation {
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
+use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
 use crate::Puzzle3dSnapshot;
@@ -93,6 +94,7 @@ impl store::ArtifactDsl for Puzzle3dPlaySnapshot {
 pub use mutations_codec::*;
 
 mod semantic_cache_codec {
+use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
 use crate::Puzzle3dSnapshot;
@@ -137,11 +139,13 @@ use crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume:
 use crate::standards::v1::subsets::any::schema::mutations::scale_object::mutation::{scale_object, ScaleObject};
 use crate::standards::v1::subsets::any::schema::mutations::scale_selection::mutation::{scale_selection, ScaleSelection};
 use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::mutation::{scale_target_volume, ScaleTargetVolume};
+#[cfg(test)]
 impl Serialize for Puzzle3dPlaySnapshot {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         self.typed().serialize(serializer)
     }
 }
+#[cfg(test)]
 impl<'de> Deserialize<'de> for Puzzle3dPlaySnapshot {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         crate::Puzzle3dSnapshot::deserialize(deserializer).map(Self::new)

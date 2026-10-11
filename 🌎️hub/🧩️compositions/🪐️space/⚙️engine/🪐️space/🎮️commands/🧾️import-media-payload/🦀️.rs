@@ -1,12 +1,12 @@
 //! 🖼️ 🖼️ S Studio app command — `import-media-payload`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, PendingImportSetting};
 
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "import-media-payload")]
 pub struct ImportMediaPayload {
     pub payload: String,
@@ -18,7 +18,7 @@ pub fn handle(payload: &ImportMediaPayload, doc: &ArtifactView<'_, WorkflowSnaps
     if let (Some(node_id), Some(format_name)) = (config.pending_import_node_id.as_ref(), config.pending_import_format.as_ref()) {
         let node_id = node_id.clone();
         let format_name = format_name.clone();
-        let format_kind = directory::io::format_descriptor(&format_name)
+        let format_kind = store::io::format_descriptor(&format_name)
             .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?
             .map(|descriptor| descriptor.short_id)
             .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), format!("unknown media format `{format_name}`")))?;
@@ -30,7 +30,7 @@ pub fn handle(payload: &ImportMediaPayload, doc: &ArtifactView<'_, WorkflowSnaps
         // shell can't author from its own store), so this arm emits no studio document
         // operation.
         let _imported_document = semio_framework_os::import_os_app_instance_media_kind(node, &bytes, &format_kind).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.import"), error))?;
-        config_mutations.push(SpaceConfigMutation::SetPendingImport { node_id: None, format: None });
+        config_mutations.push(SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: None, format: None }));
     }
     Ok(Emit::config(config_mutations))
 }

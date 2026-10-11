@@ -82,7 +82,8 @@ fn default_active_example_id() -> String {
 /// 🎥️ Session-only per-window viewport camera — never a document field (see `setCamera`'s
 /// `ActionKind::View`): orbiting one window instance must never move a sibling's camera and must
 /// never create a VCS edit.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dCamera {
     #[value(default)]
@@ -114,7 +115,8 @@ pub fn puzzle3d_camera_distance(camera: &Puzzle3dCamera) -> f64 {
 //#endregion 🔖️Camera
 
 //#region 🔖️Selection
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dSelectableKinds {
     #[value(default = "default_true")]
@@ -133,7 +135,7 @@ impl Default for Puzzle3dSelectableKinds {
 
 /// 🎯️ Open per-vortex brush-candidate suggestion menu: a floating popup (Alt+right-click, armed brush) or the
 /// "suggest" row's submenu inside the regular context menu (`submenu`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dSuggestionMenu {
     pub x: f64,
@@ -154,7 +156,7 @@ pub struct Puzzle3dSuggestionMenu {
 //#endregion 🔖️Selection
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dRuntime {
     #[value(default)]
@@ -266,7 +268,7 @@ impl Default for Puzzle3dRuntime {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dConfig {
     #[value(default = "default_fill_count")]
@@ -321,7 +323,7 @@ impl store::ArtifactPack for Puzzle3dConfig {
 impl store::ConfigRecord for Puzzle3dConfig {}
 
 /// 🔺️ Sparse typed delta of the shared Puzzle 3D configuration: names only the fields a mutation changes.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle3dConfigDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -404,19 +406,19 @@ impl Puzzle3dConfig {
     pub fn mutations_to(&self, next: &Puzzle3dConfig) -> Vec<Puzzle3dConfigMutation> {
         let mut mutations = Vec::new();
         if self.fill_count != next.fill_count {
-            mutations.push(Puzzle3dConfigMutation::SetFillCount { count: next.fill_count });
+            mutations.push(Puzzle3dConfigMutation::SetFillCount(Puzzle3dConfigSetFillCount{ count: next.fill_count }));
         }
         if self.contact_tolerance != next.contact_tolerance {
-            mutations.push(Puzzle3dConfigMutation::SetContactTolerance { value: next.contact_tolerance });
+            mutations.push(Puzzle3dConfigMutation::SetContactTolerance(Puzzle3dConfigSetContactTolerance{ value: next.contact_tolerance }));
         }
         if self.object_kind_weights != next.object_kind_weights {
-            mutations.push(Puzzle3dConfigMutation::SetObjectKindWeights { value: next.object_kind_weights.clone() });
+            mutations.push(Puzzle3dConfigMutation::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ value: next.object_kind_weights.clone() }));
         }
         if self.vortex_kind_weights != next.vortex_kind_weights {
-            mutations.push(Puzzle3dConfigMutation::SetVortexKindWeights { value: next.vortex_kind_weights.clone() });
+            mutations.push(Puzzle3dConfigMutation::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ value: next.vortex_kind_weights.clone() }));
         }
         if self.active_example_id != next.active_example_id {
-            mutations.push(Puzzle3dConfigMutation::SetActiveExampleId { value: next.active_example_id.clone() });
+            mutations.push(Puzzle3dConfigMutation::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId{ value: next.active_example_id.clone() }));
         }
         mutations
     }
@@ -425,13 +427,49 @@ impl Puzzle3dConfig {
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+/// 🎚️ Payload of [`Puzzle3dConfigMutation::SetFillCount`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle3dConfigSetFillCount {
+    pub count: u32,
+}
+
+/// 🎚️ Payload of [`Puzzle3dConfigMutation::SetContactTolerance`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle3dConfigSetContactTolerance {
+    pub value: f64,
+}
+
+/// 🎚️ Payload of [`Puzzle3dConfigMutation::SetObjectKindWeights`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle3dConfigSetObjectKindWeights {
+    pub value: HashMap<String, f64>,
+}
+
+/// 🎚️ Payload of [`Puzzle3dConfigMutation::SetVortexKindWeights`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle3dConfigSetVortexKindWeights {
+    pub value: HashMap<String, f64>,
+}
+
+/// 🎚️ Payload of [`Puzzle3dConfigMutation::SetActiveExampleId`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct Puzzle3dConfigSetActiveExampleId {
+    pub value: String,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Puzzle3dConfigMutation {
-    SetFillCount { count: u32 },
-    SetContactTolerance { value: f64 },
-    SetObjectKindWeights { value: HashMap<String, f64> },
-    SetVortexKindWeights { value: HashMap<String, f64> },
-    SetActiveExampleId { value: String },
+    SetFillCount(Puzzle3dConfigSetFillCount),
+    SetContactTolerance(Puzzle3dConfigSetContactTolerance),
+    SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights),
+    SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights),
+    SetActiveExampleId(Puzzle3dConfigSetActiveExampleId),
 }
 
 impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
@@ -447,21 +485,21 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::SetFillCount { .. } => &Self::DESCRIPTORS[0],
-            Self::SetContactTolerance { .. } => &Self::DESCRIPTORS[1],
-            Self::SetObjectKindWeights { .. } => &Self::DESCRIPTORS[2],
-            Self::SetVortexKindWeights { .. } => &Self::DESCRIPTORS[3],
-            Self::SetActiveExampleId { .. } => &Self::DESCRIPTORS[4],
+            Self::SetFillCount(Puzzle3dConfigSetFillCount{ .. }) => &Self::DESCRIPTORS[0],
+            Self::SetContactTolerance(Puzzle3dConfigSetContactTolerance{ .. }) => &Self::DESCRIPTORS[1],
+            Self::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ .. }) => &Self::DESCRIPTORS[2],
+            Self::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ .. }) => &Self::DESCRIPTORS[3],
+            Self::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId{ .. }) => &Self::DESCRIPTORS[4],
         }
     }
 
     fn diff(&self, base: &Puzzle3dConfig) -> protocol::MutationOutcome<Puzzle3dConfigDiff> {
         let diff = match self {
-            Self::SetFillCount { count } => Puzzle3dConfigDiff { fill_count: (count != &base.fill_count).then_some(*count), ..Default::default() },
-            Self::SetContactTolerance { value } => Puzzle3dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
-            Self::SetObjectKindWeights { value } => Puzzle3dConfigDiff { object_kind_weights: (value != &base.object_kind_weights).then(|| value.clone()), ..Default::default() },
-            Self::SetVortexKindWeights { value } => Puzzle3dConfigDiff { vortex_kind_weights: (value != &base.vortex_kind_weights).then(|| value.clone()), ..Default::default() },
-            Self::SetActiveExampleId { value } => Puzzle3dConfigDiff { active_example_id: (value != &base.active_example_id).then(|| value.clone()), ..Default::default() },
+            Self::SetFillCount(Puzzle3dConfigSetFillCount{ count }) => Puzzle3dConfigDiff { fill_count: (count != &base.fill_count).then_some(*count), ..Default::default() },
+            Self::SetContactTolerance(Puzzle3dConfigSetContactTolerance{ value }) => Puzzle3dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
+            Self::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ value }) => Puzzle3dConfigDiff { object_kind_weights: (value != &base.object_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ value }) => Puzzle3dConfigDiff { vortex_kind_weights: (value != &base.vortex_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId{ value }) => Puzzle3dConfigDiff { active_example_id: (value != &base.active_example_id).then(|| value.clone()), ..Default::default() },
         };
         if protocol::DiffAlgebra::<Puzzle3dConfig>::is_empty(&diff) {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", "The configuration already holds this value.");
@@ -471,11 +509,11 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
 
     fn inverse(&self, base: &Puzzle3dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![match self {
-            Self::SetFillCount { .. } => Self::SetFillCount { count: base.fill_count },
-            Self::SetContactTolerance { .. } => Self::SetContactTolerance { value: base.contact_tolerance },
-            Self::SetObjectKindWeights { .. } => Self::SetObjectKindWeights { value: base.object_kind_weights.clone() },
-            Self::SetVortexKindWeights { .. } => Self::SetVortexKindWeights { value: base.vortex_kind_weights.clone() },
-            Self::SetActiveExampleId { .. } => Self::SetActiveExampleId { value: base.active_example_id.clone() },
+            Self::SetFillCount(Puzzle3dConfigSetFillCount{ .. }) => Self::SetFillCount(Puzzle3dConfigSetFillCount{ count: base.fill_count }),
+            Self::SetContactTolerance(Puzzle3dConfigSetContactTolerance{ .. }) => Self::SetContactTolerance(Puzzle3dConfigSetContactTolerance{ value: base.contact_tolerance }),
+            Self::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ .. }) => Self::SetObjectKindWeights(Puzzle3dConfigSetObjectKindWeights{ value: base.object_kind_weights.clone() }),
+            Self::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ .. }) => Self::SetVortexKindWeights(Puzzle3dConfigSetVortexKindWeights{ value: base.vortex_kind_weights.clone() }),
+            Self::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId{ .. }) => Self::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId{ value: base.active_example_id.clone() }),
         }])
     }
 }

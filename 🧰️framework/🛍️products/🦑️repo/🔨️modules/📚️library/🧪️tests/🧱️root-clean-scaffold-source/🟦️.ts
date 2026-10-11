@@ -4,6 +4,7 @@ import { dirname, relative, resolve } from "node:path";
 import Ajv, { type AnySchema } from "ajv";
 import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 
 /** 🧱️ One extracted owner module: where it lives, the semantic context that names it, and the declarations it owns. */
 interface CleanScaffoldOwner {
@@ -198,7 +199,7 @@ test("registers one Bun and Nx route", () => {
 });
 
 
-test("scaffolds through explicit physical owner paths and refuses ambiguous or escaped destinations", async () => {
+test("scaffolds through explicit physical owner paths and refuses ambiguous or escaped destinations", () => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "root-clean-scaffold-source-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async (invocation) => {
   const { mkdirSync, mkdtempSync, writeFileSync, symlinkSync, rmSync, existsSync } = await import("node:fs");
   const { join } = await import("node:path");
   const ownerModule = await import("../../🏗️authoring/🎮️command/🟦️.ts");
@@ -226,7 +227,7 @@ test("scaffolds through explicit physical owner paths and refuses ambiguous or e
       expect(ownerModule.newScaffoldDestinationV1(root, request.kind, request.owner, request.newDirectory)).toBe(vector.destination);
       expect(relative(root, resolve(root, vector.destination)).replaceAll("\\", "/")).toBe(vector.destination);
       const newDirectory = vector.kind === "artifact" ? "🧾️created" : vector.kind === "standard" ? "🔖️2" : vector.newDirectory;
-      new ownerModule.CleanMechanismNewScript(root, root).run([vector.kind, vector.owner, newDirectory]);
+      new ownerModule.CleanMechanismNewScript(root, root, invocation).run([vector.kind, vector.owner, newDirectory]);
       const destination = ownerModule.newScaffoldDestinationV1(root, request.kind, request.owner, newDirectory);
       expect(existsSync(join(root, destination, "🦀️.rs"))).toBe(true);
     }
@@ -243,9 +244,9 @@ test("scaffolds through explicit physical owner paths and refuses ambiguous or e
     expect(surface.discoverOwnedSubsetRels(root, ["owners/🔌️neutral"])).toEqual([subset]);
     expect(() => surface.discoverOwnedSubsetRels(root, ["../outside"])).toThrow();
     expect(() => surface.discoverOwnedSubsetRels(root, ["owners/🔌️neutral", "owners/🔌️neutral"])).toThrow();
-    new surface.NewScript(root, root).run(["surface", subset, "viewer"]);
+    new surface.NewScript(root, root, invocation).run(["surface", subset, "viewer"]);
     expect(existsSync(join(root, subset, "👁️viewer/🦀️.rs"))).toBe(true);
-    new surface.NewScript(root, root).run(["surface", "--all", "owners/🔌️neutral", "--dry-run"]);
+    new surface.NewScript(root, root, invocation).run(["surface", "--all", "owners/🔌️neutral", "--dry-run"]);
 
   } finally { console.log = log; rmSync(root, { recursive: true, force: true }); }
-});
+}));

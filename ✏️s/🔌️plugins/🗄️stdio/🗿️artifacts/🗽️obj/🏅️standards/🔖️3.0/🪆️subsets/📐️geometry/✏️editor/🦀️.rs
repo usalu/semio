@@ -51,7 +51,7 @@ pub const OBJ_ANY_DOCUMENT_SCHEMA: &str = "stdio.obj";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum ObjAnyEditCommand {
     /// 🎬️ Navbar example picker payload.
     SetActiveExample { example_id: String },
@@ -222,6 +222,7 @@ impl ArtifactEditor for ObjAnyEditor {
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
+            retained: request.retained,
         };
         let payload = ArtifactRetainedCommandPayload::new(
             ArtifactRetainedCommandInputs {
@@ -244,7 +245,7 @@ impl ArtifactEditor for ObjAnyEditor {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn command_id(command: &Self::Command) -> &'static str { objAnyEditor_command_id(command) }

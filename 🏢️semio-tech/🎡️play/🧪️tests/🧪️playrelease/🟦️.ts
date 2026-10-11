@@ -14,7 +14,7 @@ describe("published Play verification", () => {
     if (row.file !== null) expect(releaseAssetPath(root, row.request)).toBe(resolve(root, row.file));
   });
   for (const row of fixture.origins) test(`routes the exact publication host ${row.request}`, () => {
-    const origins = { "https://modules.assets.semio-tech.com": "http://127.0.0.1:1234" };
+    const origins: Record<string, string> = { "https://modules.assets.semio-tech.com": "http://127.0.0.1:1234" };
     expect(releaseRequestUrl(row.request, origins)).toBe(row.expected ?? undefined);
     if (row.expected !== null) {
       const url = new URL(row.request);

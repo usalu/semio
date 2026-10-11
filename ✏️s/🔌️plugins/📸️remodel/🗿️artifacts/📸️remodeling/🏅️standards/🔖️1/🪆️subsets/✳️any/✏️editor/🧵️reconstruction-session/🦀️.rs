@@ -15,7 +15,8 @@ use crate::{
     mesh_is_within_resolution_envelope, remodeling_mesh_content_handle, CameraPosePreview, CameraTrajectory, FrameRef, GeoProducts, MeshSource, ByteBuffer, Float32Buffer, QcReportSnapshot, RemodelingContentDigest, RemodelingContentKind, RemodelingMesh,
     RemodelingSnapshot, SparseCloud, WatertightReportSnapshot, REMODELING_DURABLE_CHUNK_RAW_BYTES,
 };
-use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedJobPublication, StepContext};
+use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, ValueError};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing,
@@ -167,7 +168,7 @@ impl ReconstructionRunCounter {
 }
 
 /// 🗒️ Trace and step reasons; codes are ordinals.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum ReconstructionRunReason {
     FrameAccepted,
     FrameSkipped,
@@ -446,6 +447,7 @@ pub fn reconstruction_inputs(snapshot: &RemodelingSnapshot) -> RemodelingContent
 //#endregion 🔖️Checkpoint
 
 //#region 🔖️Ingestion
+#[derive(semio_framework_value::RetireOwned)]
 struct FrameIngestion {
     frame: FrameRef,
     decoder: Option<BoundedStillDecoder>,
@@ -498,6 +500,7 @@ fn advance_frame_sharpness(ingestion: &mut FrameIngestion) -> bool {
 
 //#region 🔖️Products
 /// 🧱️ Raw leaves of one durable content entry under construction, content-addressed once complete.
+#[derive(semio_framework_value::RetireOwned)]
 struct ContentLeaves {
     kind: RemodelingContentKind,
     leaves: Vec<Vec<u8>>,
@@ -560,7 +563,7 @@ fn mesh_leaves(mesh: &semio_framework::MeshData) -> ContentLeaves {
     content
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum ProductPhase {
     Sparse,
     Quality,
@@ -573,6 +576,7 @@ enum ProductPhase {
 }
 
 /// 🏁️ What one bounded product unit yielded.
+#[derive(semio_framework_value::RetireOwned)]
 enum ProductYield {
     Working,
     Op(RemodelingMutation),
@@ -583,6 +587,7 @@ enum ProductYield {
 
 /// 🏭️ The product preparation after the engine finished: sparse leaves, QC, mesh leaves, DSM/DTM rasters,
 /// then the one `commit-reconstruction` op.
+#[derive(semio_framework_value::RetireOwned)]
 struct ProductPreparation {
     phase: ProductPhase,
     camera_cursor: usize,
@@ -781,20 +786,132 @@ impl ProductPreparation {
 }
 //#endregion 🔖️Products
 
-//#region 🧵️RunJob
+//#region 📤️Outbox
+/// 🧭️ Where one publication stands between the job and its driver.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum OutboxPhase {
+    Idle,
+    Building,
+    Delivered,
+    Retiring,
+}
+
+/// 📤️ One original payload source and the publication that lends it; the source never moves while the loan lives.
+#[derive(Default)]
+struct Outbox {
+    publication: RetainedJobPublication,
+    source: Vec<u8>,
+    kind: Option<JobPublicationKind>,
+    retiring: bool,
+}
+
+impl Outbox {
+    fn begin(&mut self, kind: JobPublicationKind, source: Vec<u8>) {
+        self.source = source;
+        self.kind = Some(kind);
+    }
+
+    fn phase(&self, cx: &StepContext<'_>) -> Result<OutboxPhase, ValueError> {
+        let Some(kind) = self.kind else { return Ok(OutboxPhase::Idle) };
+        if self.retiring {
+            return Ok(OutboxPhase::Retiring);
+        }
+        let demand = self.publication.advance_demands(kind, &self.source, cx)?;
+        let delivered = self.publication.published().is_some() && demand.copy_bytes == 0 && demand.capacity_bytes == 0 && demand.release_bytes == 0 && demand.depth == 0;
+        Ok(if delivered { OutboxPhase::Delivered } else { OutboxPhase::Building })
+    }
+
+    fn advance<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+        let kind = self.kind.expect("a building outbox owns its publication kind");
+        self.publication.advance_from_source(kind, &self.source, cx)
+    }
+
+    fn retire_step(&mut self, cx: &mut StepContext<'_>) -> Result<(), ValueError> {
+        self.retiring = true;
+        match self.publication.close_step(cx.retained_grant())? {
+            RetainedCloneStep::Progress(progress) => cx.consume_retained(progress),
+            RetainedCloneStep::Complete(progress) => {
+                cx.consume_retained(progress)?;
+                self.kind = None;
+                self.retiring = false;
+                self.source = Vec::new();
+                Ok(())
+            }
+        }
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        self.publication.borrow_outcome(descriptor)
+    }
+
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        if self.kind.is_none() && self.publication.terminal_is_empty() {
+            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
+        }
+        self.retiring = true;
+        let step = self.publication.close_step(grant)?;
+        if self.publication.terminal_is_empty() {
+            self.kind = None;
+            self.retiring = false;
+            self.source = Vec::new();
+        }
+        Ok(step)
+    }
+
+    fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        self.publication.retirement_demands()
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.kind.is_none() && self.publication.terminal_is_empty()
+    }
+}
+
+fn borrow_remodel_outcome<'a>(outbox: &'a Outbox, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+    match descriptor.kind() {
+        JobOutcomeKind::Yield => descriptor.yielded(),
+        JobOutcomeKind::Cancelled => descriptor.cancelled(),
+        JobOutcomeKind::Complete => descriptor.complete(None, None),
+        JobOutcomeKind::PreviewReady | JobOutcomeKind::CheckpointReady { .. } | JobOutcomeKind::Fault => outbox.borrow_outcome(descriptor),
+    }
+}
+
+fn close_outbox_turn(outbox: &mut Outbox, grant: RetainedCloneGrant) -> Option<InteractiveJobCloseStep> {
+    if outbox.terminal_is_empty() {
+        return None;
+    }
+    Some(match outbox.close_step(grant) {
+        Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+        Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+    })
+}
+//#endregion 📤️Outbox
+
+//#region 🧵️RunJob
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum Owed {
     Checkpoint,
     Complete,
     Fault,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 enum RunPhase {
     Ingest { stream: usize, frame: usize, ingestion: Option<FrameIngestion> },
     Pipeline,
     DenseTrace { cursor: usize },
     Products(Box<ProductPreparation>),
     Settled,
+}
+
+/// 🧺️ Every heap owner of a finished or cancelled run, retired in bounded turns through one controlled owner.
+#[derive(semio_framework_value::RetireOwned)]
+struct RunRemnant {
+    phase: RunPhase,
+    engine: Option<Box<ReconstructionEngine>>,
+    scene: Option<Arc<RemodelingSnapshot>>,
+    observations: Vec<EngineObservation>,
+    owed: VecDeque<Owed>,
 }
 
 /// ⏯️ The reconstruction `runJob`. One unit of fuel is one decision that produced visible evidence; engine
@@ -818,6 +935,8 @@ pub struct ReconstructionRunJob {
     checkpoint_at: u64,
     stage: ReconstructionRunStage,
     owed: VecDeque<Owed>,
+    outbox: Outbox,
+    remnant: Option<semio_framework_value::retirement::controlled::ControlledRetirement<RunRemnant>>,
     closing: bool,
 }
 
@@ -858,6 +977,8 @@ impl ReconstructionRunJob {
             checkpoint_at: 0,
             stage: ReconstructionRunStage::Ingest,
             owed: VecDeque::from(if resume.is_some() { Vec::new() } else { vec![Owed::Checkpoint] }),
+            outbox: Outbox::default(),
+            remnant: None,
             closing: false,
         }
     }
@@ -1184,52 +1305,54 @@ impl ReconstructionRunJob {
         }
     }
 
-    fn flush(&mut self, cx: &mut StepContext<'_>, state: ToolRunState) -> Option<StepOutcome> {
+    fn begin_preview(&mut self, state: ToolRunState) -> bool {
         if self.writer.is_empty() || !self.live() {
-            return None;
+            return false;
         }
         self.writer.progress(self.progress(state));
-        let bytes = self.writer.finish()?.encode().ok()?;
-        Some(match cx.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
-            Ok(payload) => StepOutcome::PreviewReady(payload),
-            Err(rejected) => {
-                drop(rejected.into_source());
-                fault_outcome()
-            }
-        })
+        let Some(bytes) = self.writer.finish().and_then(|tick| tick.encode().ok()) else { return false };
+        self.outbox.begin(JobPublicationKind::Preview, bytes);
+        true
     }
 
-    fn settle(&mut self, cx: &mut StepContext<'_>, owed: Owed) -> StepOutcome {
+    fn settle<'a>(&'a mut self, cx: &mut StepContext<'_>, owed: Owed) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         match owed {
-            Owed::Checkpoint => match cx.payload_from_bytes(JobPayloadStream::CheckpointState, &self.checkpoint().encode()) {
-                Ok(state) => StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: self.decisions }),
-                Err(rejected) => {
-                    drop(rejected.into_source());
-                    StepOutcome::Yield
-                }
-            },
-            Owed::Complete => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) }),
-            Owed::Fault => fault_outcome(),
+            Owed::Checkpoint => {
+                self.outbox.begin(JobPublicationKind::Checkpoint { applied_progress: self.decisions }, self.checkpoint().encode().to_vec());
+                cx.consume_fuel(1);
+                Ok(None)
+            }
+            Owed::Complete => JobOutcomeBorrow::admit_complete(cx, None, None),
+            Owed::Fault => {
+                self.outbox.begin(JobPublicationKind::Fault, Vec::new());
+                cx.consume_fuel(1);
+                Ok(None)
+            }
         }
     }
-}
-
-fn fault_outcome() -> StepOutcome {
-    StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
 }
 
 impl InteractiveJob for ReconstructionRunJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         if self.closing || cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return JobOutcomeBorrow::admit_cancelled(cx);
+        }
+        match self.outbox.phase(cx)? {
+            OutboxPhase::Building => return self.outbox.advance(cx),
+            OutboxPhase::Delivered | OutboxPhase::Retiring => {
+                self.outbox.retire_step(cx)?;
+                return Ok(None);
+            }
+            OutboxPhase::Idle => {}
         }
         let mut advanced = false;
         loop {
             let terminal = self.owed.iter().any(|owed| matches!(owed, Owed::Complete | Owed::Fault));
             if !self.owed.is_empty() && (self.live() || terminal) {
                 let state = if self.owed.contains(&Owed::Complete) { ToolRunState::Complete } else { ToolRunState::Running };
-                if let Some(preview) = self.flush(cx, state) {
-                    return preview;
+                if self.begin_preview(state) {
+                    cx.consume_fuel(1);
+                    return Ok(None);
                 }
                 let owed = self.owed.pop_front().expect("owed outcome");
                 return self.settle(cx, owed);
@@ -1238,7 +1361,11 @@ impl InteractiveJob for ReconstructionRunJob {
                 self.owed.clear();
             }
             if advanced && (cx.deadline_exceeded() || (self.live() && (cx.fuel_exhausted() || self.writer.pending_bytes() >= TICK_FLUSH_BYTES))) {
-                return self.flush(cx, ToolRunState::Running).unwrap_or(StepOutcome::Yield);
+                if self.begin_preview(ToolRunState::Running) {
+                    cx.consume_fuel(1);
+                    return Ok(None);
+                }
+                return JobOutcomeBorrow::admit_yield(cx);
             }
             advanced = true;
             match self.advance() {
@@ -1252,29 +1379,75 @@ impl InteractiveJob for ReconstructionRunJob {
         }
     }
 
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        borrow_remodel_outcome(&self.outbox, descriptor)
+    }
+
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.closing = true;
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
         }
-        if !matches!(self.phase, RunPhase::Settled) {
-            self.phase = RunPhase::Settled;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        if let Some(step) = close_outbox_turn(&mut self.outbox, grant) {
+            return step;
         }
-        if self.engine.take().is_some() || self.scene.take().is_some() || !self.observations.is_empty() || !self.owed.is_empty() {
-            self.observations.clear();
-            self.owed.clear();
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        if let Some(owner) = self.remnant.as_mut() {
+            let step = owner.step(grant);
+            if owner.terminal_is_empty() {
+                self.remnant = None;
+            }
+            return match step {
+                Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Complete { progress },
+                Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            };
         }
-        InteractiveJobCloseStep::Complete
+        if matches!(self.phase, RunPhase::Settled) && self.engine.is_none() && self.scene.is_none() && self.observations.is_empty() && self.owed.is_empty() {
+            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
+        }
+        let remnant = RunRemnant { phase: std::mem::replace(&mut self.phase, RunPhase::Settled), engine: self.engine.take(), scene: self.scene.take(), observations: std::mem::take(&mut self.observations), owed: std::mem::take(&mut self.owed) };
+        match semio_framework_value::retirement::controlled::ControlledRetirement::new(remnant) {
+            Ok(owner) => {
+                self.remnant = Some(owner);
+                InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }
+            }
+            Err((error, remnant)) => {
+                self.phase = remnant.phase;
+                self.engine = remnant.engine;
+                self.scene = remnant.scene;
+                self.observations = remnant.observations;
+                self.owed = remnant.owed;
+                InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() }
+            }
+        }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        self.remnant.as_ref().map_or_else(|| Ok(self.outbox.retirement_demands()?.copy_bytes), |owner| owner.next_copy_byte_demand())
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError> {
+        self.remnant.as_ref().map_or_else(|| Ok(self.outbox.retirement_demands()?.capacity_bytes), |owner| owner.next_capacity_byte_demand(maximum_copy_bytes))
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        self.remnant.as_ref().map_or_else(|| Ok(self.outbox.retirement_demands()?.release_bytes), |owner| owner.next_release_byte_demand())
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        if let Some(owner) = self.remnant.as_ref() {
+            return owner.next_depth_demand();
+        }
+        let publication = self.outbox.retirement_demands()?.depth;
+        Ok(if publication == 0 { usize::from(!self.terminal_is_empty()) } else { publication })
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && matches!(self.phase, RunPhase::Settled) && self.engine.is_none() && self.scene.is_none() && self.observations.is_empty() && self.owed.is_empty()
+        self.closing && self.remnant.is_none() && matches!(self.phase, RunPhase::Settled) && self.outbox.terminal_is_empty() && self.engine.is_none() && self.scene.is_none() && self.observations.is_empty() && self.owed.is_empty()
     }
 }
 //#endregion 🧵️RunJob
@@ -1288,27 +1461,44 @@ pub struct ReconstructionRevalidateJob {
     run_inputs: Option<RemodelingContentDigest>,
     provisional: u32,
     owed: Option<Owed>,
+    outbox: Outbox,
     closing: bool,
 }
 
 impl ReconstructionRevalidateJob {
     pub fn new(identity: ToolRunIdentity, head: Arc<RemodelingSnapshot>, checkpoint: Option<&[u8]>, provisional: u32) -> Self {
-        Self { identity, head: Some(head), run_inputs: checkpoint.and_then(ReconstructionRunCheckpoint::decode).map(|checkpoint| checkpoint.inputs), provisional, owed: None, closing: false }
+        Self { identity, head: Some(head), run_inputs: checkpoint.and_then(ReconstructionRunCheckpoint::decode).map(|checkpoint| checkpoint.inputs), provisional, owed: None, outbox: Outbox::default(), closing: false }
     }
 }
 
 impl InteractiveJob for ReconstructionRevalidateJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         if self.closing || cx.is_cancelled() {
-            return StepOutcome::Cancelled;
+            return JobOutcomeBorrow::admit_cancelled(cx);
+        }
+        match self.outbox.phase(cx)? {
+            OutboxPhase::Building => return self.outbox.advance(cx),
+            OutboxPhase::Delivered | OutboxPhase::Retiring => {
+                self.outbox.retire_step(cx)?;
+                return Ok(None);
+            }
+            OutboxPhase::Idle => {}
         }
         if let Some(owed) = self.owed.take() {
             return match owed {
-                Owed::Complete => StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) }),
-                Owed::Checkpoint | Owed::Fault => fault_outcome(),
+                Owed::Complete => JobOutcomeBorrow::admit_complete(cx, None, None),
+                Owed::Checkpoint | Owed::Fault => {
+                    self.outbox.begin(JobPublicationKind::Fault, Vec::new());
+                    cx.consume_fuel(1);
+                    Ok(None)
+                }
             };
         }
-        let Some(head) = self.head.take() else { return fault_outcome() };
+        let Some(head) = self.head.take() else {
+            self.outbox.begin(JobPublicationKind::Fault, Vec::new());
+            cx.consume_fuel(1);
+            return Ok(None);
+        };
         let unchanged = self.run_inputs == Some(reconstruction_inputs(&head));
         let mut writer = ToolRunTickWriter::with_provisional_base(self.identity, self.provisional);
         if !unchanged {
@@ -1329,30 +1519,57 @@ impl InteractiveJob for ReconstructionRevalidateJob {
             conflicts: if unchanged { 0 } else { self.provisional },
             steps: ToolRunStepRing::new(),
         });
-        self.owed = Some(Owed::Complete);
-        match writer.finish().and_then(|tick| tick.encode().ok()).map(|bytes| cx.payload_from_bytes(JobPayloadStream::Preview, &bytes)) {
-            Some(Ok(payload)) => StepOutcome::PreviewReady(payload),
-            Some(Err(rejected)) => {
-                drop(rejected.into_source());
-                fault_outcome()
+        match writer.finish().and_then(|tick| tick.encode().ok()) {
+            Some(bytes) => {
+                self.owed = Some(Owed::Complete);
+                self.outbox.begin(JobPublicationKind::Preview, bytes);
             }
-            None => fault_outcome(),
+            None => self.outbox.begin(JobPublicationKind::Fault, Vec::new()),
         }
+        Ok(None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        borrow_remodel_outcome(&self.outbox, descriptor)
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.closing = true;
-        self.head = None;
-        self.owed = None;
-        InteractiveJobCloseStep::Complete
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+        }
+        if let Some(step) = close_outbox_turn(&mut self.outbox, grant) {
+            return step;
+        }
+        if self.head.take().is_some() || self.owed.take().is_some() {
+            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } };
+        }
+        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.outbox.retirement_demands()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> {
+        Ok(self.outbox.retirement_demands()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.outbox.retirement_demands()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        let publication = self.outbox.retirement_demands()?.depth;
+        Ok(if publication == 0 { usize::from(!self.terminal_is_empty()) } else { publication })
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.head.is_none() && self.owed.is_none()
+        self.closing && self.head.is_none() && self.owed.is_none() && self.outbox.terminal_is_empty()
     }
 }
 //#endregion 🔍️RevalidateJob

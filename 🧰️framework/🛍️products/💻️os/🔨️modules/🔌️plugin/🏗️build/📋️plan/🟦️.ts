@@ -11,11 +11,13 @@ import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRo
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
-import { projectedHostPluginFilter, readGeneratedCatalogProjection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
+import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection, type CatalogSelection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
 
-import type { DeployedRegistryEntryV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import { discoverPluginBuildTargets, type ComponentSourceOwnerV1, type PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
+
+const registryGeneratedDirectory = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated");
 
 
 
@@ -63,16 +65,25 @@ function pluginCargoArgs(packageName: string, profile: string, manifestPath: str
   return args;
 }
 
-function resolvePluginBuildTargets(entries: readonly DeployedRegistryEntryV1[], filterPlugin?: string): readonly DeployedRegistryEntryV1[] {
+/** 🔨️ Every discovered plugin crate with the generated playground declarations: the one catalog builds select from.
+ * Rows come from the plugin manifests, never from the deployed registry, so a crate whose descriptor is stale is
+ * still built, re-described and thereby re-admitted by the next registry generation. */
+function discoverPluginBuildCatalog(): CatalogSelection<PluginBuildTargetV1> {
+  return { entries: discoverPluginBuildTargets(repoRoot), playgrounds: readGeneratedCatalogProjection(registryGeneratedDirectory).playgrounds };
+}
+
+/** 🎯️ Selects the build targets one filter names (or all of them) from the discovered crates; `SEMIO_PLUGIN_ONLY` narrows that selection to one crate. */
+function resolvePluginBuildTargets(filterPlugin?: string, catalog: CatalogSelection<PluginBuildTargetV1> = discoverPluginBuildCatalog()): readonly PluginBuildTargetV1[] {
+  const filterPluginId = resolveCatalogFilterPluginId(filterPlugin, catalog);
+  const selected = filterProjectedPluginRegistry(catalog, filterPluginId);
   const only = process.env.SEMIO_PLUGIN_ONLY?.trim();
   if (only) {
-    const matched = entries.filter((entry) => entry.pluginId === only);
+    const matched = selected.filter((entry) => entry.pluginId === only);
     if (matched.length === 0) throw new Error(`SEMIO_PLUGIN_ONLY=${JSON.stringify(only)} matched no plugin crates`);
     return matched;
   }
-  if (!filterPlugin || projectedHostPluginFilter(readGeneratedCatalogProjection(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")), filterPlugin)) return entries;
-  if (entries.length === 0) throw new Error(`no program build targets for filter ${JSON.stringify(filterPlugin)}`);
-  return entries;
+  if (selected.length === 0 && filterPluginId !== undefined) throw new Error(`no program build targets for filter ${JSON.stringify(filterPlugin)}`);
+  return selected;
 }
 
 //#region 🔖️PlaygroundVariantResolution
@@ -98,8 +109,8 @@ function resolvePlaygroundFilter(filterPlugin: string): ResolvedPlaygroundFilter
 }
 
 /** 🎯️ Resolves a raw filter to the crate pluginId `generatePluginRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */
-function resolveCatalogFilterPluginId(filterPlugin?: string): string | undefined {
-  return filterPlugin && !projectedHostPluginFilter(readGeneratedCatalogProjection(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")), filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
+function resolveCatalogFilterPluginId(filterPlugin?: string, catalog: CatalogSelection<ComponentSourceOwnerV1> = readGeneratedCatalogProjection(registryGeneratedDirectory)): string | undefined {
+  return filterPlugin && !projectedHostPluginFilter(catalog, filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
 }
 
-export { PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_WASM_TARGET, type ResolvedPlaygroundFilter, WGPU_PACKAGE_ROOT, WGPU_SCRIPT_PATH, devStagingProfile, ensureWasmTarget, playgroundCatalog, pluginCargoArgs, pluginOutRoot, pluginWasmProfile, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets };
+export { PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_WASM_TARGET, type ResolvedPlaygroundFilter, WGPU_PACKAGE_ROOT, WGPU_SCRIPT_PATH, devStagingProfile, discoverPluginBuildCatalog, ensureWasmTarget, playgroundCatalog, pluginCargoArgs, pluginOutRoot, pluginWasmProfile, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets };

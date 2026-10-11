@@ -109,14 +109,6 @@ semio_framework_value::artifact_retire_struct!(JackEditorSelection { start, end 
 semio_framework_value::artifact_retire_struct!(JackEditorWindowTransient { selection });
 semio_framework_value::artifact_retire_struct!(SetEditorSelection { selection });
 
-impl semio_framework_value::retirement::RetireOwned for JackEditorWindowTransientMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self {
-            Self::SetEditorSelection(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(value)]),
-        }
-    }
-}
-
 fn editor_window_transient_footprint(_: &JackEditorWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(std::mem::size_of::<JackEditorWindowTransient>()))
 }

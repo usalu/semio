@@ -26,9 +26,9 @@ pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, s
     let servable = may_rearm(&host.host_snapshot);
     host.retire_cold();
     if pending {
-        session.note_window_tick_outcome(window_id, true);
+        session.note_window_tick_outcome(window_id, true, crate::editor::flow::cold_grant()).expect("flow cold session grant");
     }
-    if servable && session.arm_owed_window_tick(window_id) {
+    if servable && session.arm_owed_window_tick(window_id, crate::editor::flow::cold_grant()).expect("flow cold session grant").0 {
         Emit { effects: vec![eval_tick_effect(window_id, window_kind_id)], ..Default::default() }
     } else {
         Emit::default()

@@ -18,7 +18,7 @@ pub const PDF17X_DIALECT: Dialect = Dialect { artifact_kind: PDF_ARTIFACT_SCHEMA
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions, so its typed command channel has exactly one inert variant.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Pdf17XViewCommand {
     #[default]
     Noop,

@@ -1,7 +1,7 @@
 //! 🗂️ Literal unique graph properties own concrete sorted contiguous member slots.
 use super::PropertyValue;
 use semio_framework_value::{DecodedValue,DslValue,FromValue,NativeDecodeControl,NativeEncodeControl,ToValue,ValueError,ValueRefusalKind};
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone)]
 pub struct PropertyBag { members:Vec<(String,PropertyValue)> }
 impl PropertyBag {
  pub fn new()->Self{Self::default()}

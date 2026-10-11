@@ -92,7 +92,9 @@ impl Default for ImperativeHost {
 /// 🧊️ The host is the cold boundary of its seed's neural values (steps retire their own params on drop).
 impl Drop for ImperativeHost {
     fn drop(&mut self) {
-        neural_engine::ColdRetire::retire_cold(std::mem::take(&mut self.seed));
+        for (_, value) in std::mem::take(&mut self.seed) {
+            neural_engine::ColdRetire::retire_cold(value);
+        }
     }
 }
 

@@ -27,5 +27,5 @@ async fn real_byte_round_trip_through_tiff_codec() {
     assert_eq!(decoded.height(), Some(1));
     let page = semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::decode_tiff_page_rgba(&decoded, 0).expect("project the decoded page");
     assert_eq!(page.pixels, semio.frames[0].rgba8, "RGBA must survive exactly");
-    assert!(decoded.ifds[0].entries.iter().any(|t| t.tag == 270 && matches!(&t.values, TiffValues::Ascii(s) if s.strip_suffix(&[0]).unwrap_or(s) == b"semio fixture")));
+    assert!(decoded.ifds[0].entries.iter().any(|t| t.tag == 270 && matches!(&t.values, TiffValues::Ascii(s) if s.as_slice() == ["semio fixture"])));
 }

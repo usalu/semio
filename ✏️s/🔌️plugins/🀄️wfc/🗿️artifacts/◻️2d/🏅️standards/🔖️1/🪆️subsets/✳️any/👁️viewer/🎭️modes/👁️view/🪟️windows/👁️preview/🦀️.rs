@@ -5,7 +5,7 @@
 //! The layer projection is duplicated from the editor's preview on purpose: a viewer file importing
 //! through the sibling editor module is exactly what `policyViewerPurityBreaches` refuses.
 
-use crate::schema::snapshot::{Wfc2dColor, Wfc2dPathSegment, Wfc2dSlot, Wfc2dTile, Wfc2dTileMedia};
+use crate::schema::snapshot::{Wfc2dColor, Wfc2dPathSegment, Wfc2dSegmentCubic, Wfc2dSegmentQuad, Wfc2dSegmentTo, Wfc2dSlot, Wfc2dTile, Wfc2dTileMedia, Wfc2dVectorMedia};
 use crate::Wfc2dSnapshot;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
@@ -108,10 +108,10 @@ fn point(value: [f64; 2]) -> String {
 fn segment_json(segment: &Wfc2dPathSegment) -> String {
     match segment {
         Wfc2dPathSegment::Close => "{\"kind\":\"close\"}".to_string(),
-        Wfc2dPathSegment::Move { to } => format!("{{\"kind\":\"move\",\"to\":{}}}", point(*to)),
-        Wfc2dPathSegment::Line { to } => format!("{{\"kind\":\"line\",\"to\":{}}}", point(*to)),
-        Wfc2dPathSegment::Quad { ctrl, to } => format!("{{\"kind\":\"quad\",\"ctrl\":{},\"to\":{}}}", point(*ctrl), point(*to)),
-        Wfc2dPathSegment::Cubic { ctrl1, ctrl2, to } => format!("{{\"kind\":\"cubic\",\"ctrl1\":{},\"ctrl2\":{},\"to\":{}}}", point(*ctrl1), point(*ctrl2), point(*to)),
+        Wfc2dPathSegment::Move(Wfc2dSegmentTo { to }) => format!("{{\"kind\":\"move\",\"to\":{}}}", point(*to)),
+        Wfc2dPathSegment::Line(Wfc2dSegmentTo { to }) => format!("{{\"kind\":\"line\",\"to\":{}}}", point(*to)),
+        Wfc2dPathSegment::Quad(Wfc2dSegmentQuad { ctrl, to }) => format!("{{\"kind\":\"quad\",\"ctrl\":{},\"to\":{}}}", point(*ctrl), point(*to)),
+        Wfc2dPathSegment::Cubic(Wfc2dSegmentCubic { ctrl1, ctrl2, to }) => format!("{{\"kind\":\"cubic\",\"ctrl1\":{},\"ctrl2\":{},\"to\":{}}}", point(*ctrl1), point(*ctrl2), point(*to)),
     }
 }
 
@@ -139,7 +139,7 @@ fn slot_layers(slot: &Wfc2dSlot, tile: Option<&Wfc2dTile>, layers: &mut Vec<Stri
             slot.height
         ));
     }
-    if let Wfc2dTileMedia::Vector { paths } = &tile.media {
+    if let Wfc2dTileMedia::Vector(Wfc2dVectorMedia { paths }) = &tile.media {
         for (index, path) in paths.iter().enumerate() {
             let segments: Vec<String> = path.segments.iter().map(segment_json).collect();
             let fill = path.fill.as_ref().map_or_else(|| "null".to_string(), |color| format!("{{\"color\":{}}}", rgba(color)));

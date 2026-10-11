@@ -23,7 +23,7 @@ mod component_reference_custody_tests;
 use serde::{Deserialize, Serialize};
 
 /// 🎨️ Attribute identities share the existing mesh value and its topology domains.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::RetireOwned, semio_framework_value_derive::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[value(crate = "::pack::value", rename_all = "camelCase")]
 pub enum MeshAttributeDomain { Vertex, Corner, Face, Edge }
@@ -32,7 +32,7 @@ impl semio_framework_dsl_record::BorrowedDslField for MeshAttributeDomain {
 }
 
 /// 🧭️ Authored channel meaning controls transforms and preview expansion.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::RetireOwned, semio_framework_value_derive::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[value(crate = "::pack::value", rename_all = "camelCase")]
 pub enum MeshAttributeSemantic { Normal, Uv, Color, Material, Custom }
@@ -41,7 +41,7 @@ impl semio_framework_dsl_record::BorrowedDslField for MeshAttributeSemantic {
 }
 
 /// 🧵️ New topology declares how source values combine rather than silently discarding them.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::RetireOwned, semio_framework_value_derive::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize), serde(rename_all = "camelCase"))]
 #[value(crate = "::pack::value", rename_all = "camelCase")]
 pub enum MeshAttributeInterpolation { Linear, Nearest, Constant }
@@ -192,6 +192,8 @@ pub(crate) fn validate_mesh_attribute_sample(name:&str,attribute:&MeshAttribute,
     Ok(())
 }
 
+#[path="🌲️canonical/🦀️.rs"]
+mod canonical_tree;
 //#region MeshData
 #[derive(Clone, Debug, PartialEq, Default)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]

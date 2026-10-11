@@ -276,7 +276,7 @@ impl LowpolyScratch {
 /// 💾️ One window's in-flight paint gesture between dispatches: the paint tool's statechart configuration by stable
 /// ids, the admission's authoring seed and the base revision it opened on, the open transaction's ref and its ONE
 /// provisional leaf — an `apply-paint-stroke` whose dabs grow tick by tick, or the `edit-paint-layer` of a fill.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyPaintGesture {
     pub states: Vec<String>,
@@ -288,7 +288,7 @@ pub struct LowpolyPaintGesture {
 //#endregion 🖌️PaintGesture
 
 //#region 🔖️Transient
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub(crate) struct LowpolyTransientState {
     mesh_workspace: Arc<BTreeMap<String, crate::LowpolyMeshState>>,
     paint: BTreeMap<String, LowpolyPaintGesture>,
@@ -323,7 +323,7 @@ struct LowpolyTransientStateWire {
 
 /// 🫧️ Immutable request-owned Lowpoly editing session snapshot: the live mesh bytes behind one shared typed root, and
 /// every window's open paint gesture.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct LowpolyTransient {
     state: Arc<LowpolyTransientState>,
 }
@@ -393,6 +393,8 @@ semio_framework_plugin::transient_root! {
     extension: "lowpoly.transient",
     whole,
 }
+
+semio_framework_plugin::window_transient_transfer! { state: LowpolyTransient, mutation: LowpolyTransientMutation }
 
 impl LowpolyScratch {
     /// 🫧️ The dispatch context rehydrated from the live transient: its mesh cache and its window paint gestures.
@@ -531,7 +533,7 @@ impl machine::Host<lowpoly_tool::LowpolyTool> for LowpolyToolHost {
 /// 🛠️ Runs one gesture through a lowpoly tool at rest as ONE transaction of `<appId>#<verb>`, its ref minted from the
 /// admission's `authoring_seed` and the host clock. `None` when the gesture yields nothing: zero trace.
 pub fn lowpoly_tool_once(verb: &str, authoring_seed: &str, leaves: Vec<LowpolyMutation>) -> Option<(protocol::TransactionRef, Vec<LowpolyMutation>)> {
-    let mut runner = ToolMachineRunner::<lowpoly_tool::LowpolyTool, LowpolyToolHost>::start(format!("{LOWPOLY_TOOL_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), LowpolyToolContext::default(), LowpolyToolHost).ok()?;
+    let mut runner = ToolMachineRunner::<lowpoly_tool::LowpolyTool, LowpolyToolHost>::start(format!("{LOWPOLY_TOOL_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.into()), LowpolyToolContext::default(), LowpolyToolHost).ok()?;
     match runner.send(lowpoly_tool::Event::Once(LowpolyToolRequest { leaves }), semio_framework_tool_machine::authoring_clock(0)).ok()? {
         ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
         _ => None,
@@ -569,7 +571,7 @@ impl GestureTool for LowpolyPaintTool {
     type Mutation = LowpolyMutation;
 
     fn start(_verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
-        let runner = ToolMachineRunner::start(Self::tool_id(), protocol::ActorId(authoring_seed.to_string()), LowpolyToolContext::default(), LowpolyToolHost)?;
+        let runner = ToolMachineRunner::start(Self::tool_id(), protocol::ActorId(authoring_seed.into()), LowpolyToolContext::default(), LowpolyToolHost)?;
         Ok(Self { runner, authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string() })
     }
 
@@ -578,7 +580,7 @@ impl GestureTool for LowpolyPaintTool {
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: <lowpoly_tool::LowpolyTool as machine::Machine>::definition().fingerprint, states: gesture.states.clone(), history: Vec::new(), done: false };
         let snapshot = machine::restore::<lowpoly_tool::LowpolyTool, machine::NoMigrations>(&persisted, context, &[]).map_err(|_| ToolRefusal::Closed)?;
         let transaction = ToolTransaction::resume(gesture.transaction.clone(), vec![(LOWPOLY_TOOL_STREAM_KEY.to_string(), gesture.leaf.clone())]);
-        let runner = ToolMachineRunner::resume(Self::tool_id(), protocol::ActorId(gesture.authoring_seed.clone()), LowpolyToolContext::default(), snapshot, Some(transaction), LowpolyToolHost)?;
+        let runner = ToolMachineRunner::resume(Self::tool_id(), protocol::ActorId(gesture.authoring_seed.as_str().into()), LowpolyToolContext::default(), snapshot, Some(transaction), LowpolyToolHost)?;
         Ok(Self { runner, authoring_seed: gesture.authoring_seed.clone(), base_revision: gesture.base_revision.clone() })
     }
 

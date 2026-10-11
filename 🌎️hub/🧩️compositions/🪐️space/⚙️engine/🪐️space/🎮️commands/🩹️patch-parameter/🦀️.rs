@@ -7,7 +7,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 use crate::engine::space::engine::parameter_entity_id;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "patch-parameter")]
 pub struct PatchParameter {
     pub parameter_id: String,

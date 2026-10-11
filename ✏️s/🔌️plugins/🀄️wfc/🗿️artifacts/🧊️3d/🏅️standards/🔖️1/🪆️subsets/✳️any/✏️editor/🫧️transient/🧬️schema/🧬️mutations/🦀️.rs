@@ -7,7 +7,8 @@ use super::{Wfc3dTransient, Wfc3dAssignment};
 mod set_solve;
 pub use set_solve::SetSolve;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Wfc3dTransient, diff = Wfc3dTransientDiff, schema = "wfc.wfc3d.transient")]
 pub enum Wfc3dTransientMutation {
     #[dsl(key = "set-solve")]
@@ -20,7 +21,7 @@ pub enum Wfc3dTransientMutation {
 
 
 /// 🔺️ Field-sparse diff of [`Wfc3dTransient`]: each field is an optional absolute value.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Wfc3dTransientDiff {
     pub assignments: Option<Vec<Wfc3dAssignment>>,

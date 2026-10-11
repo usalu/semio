@@ -13,7 +13,7 @@ use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
 
 //#region 🔖️ClimateSummary
 /// 🌡️ Epw's hourly dry-bulb temperature min/max/avg.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct EpwClimateSummary {
     pub record_count: u32,

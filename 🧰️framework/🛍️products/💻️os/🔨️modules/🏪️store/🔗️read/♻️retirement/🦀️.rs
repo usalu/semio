@@ -6,7 +6,7 @@ use std::{mem::ManuallyDrop,sync::Arc};
 struct SnapshotReadRetirement<T:RetireOwned+Sync> {
     read:ManuallyDrop<Option<SnapshotRead<T>>>,
     alias:ManuallyDrop<Option<SharedControlledRetirement<T>>>,
-    registry:ManuallyDrop<Option<crate::os_store::SnapshotReadRegistryHandle>>,
+    registry:ManuallyDrop<Option<crate::os_store::SnapshotReadRegistryAliasRetirement>>,
     active_returned:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
 impl<T:RetireOwned+Sync> SnapshotReadRetirement<T> {
@@ -32,7 +32,7 @@ impl<T:RetireOwned+Sync> SnapshotReadRetirement<T> {
             if alias.terminal_is_empty(){self.alias.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
             return alias.step(child).map(|step|RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(mut read)=self.read.take(){if let Some(mut lease)=read.lease.take(){lease.return_now();*self.registry=Some(lease.registry);}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+        if let Some(mut read)=self.read.take(){if let Some(mut lease)=read.lease.take(){lease.return_now();*self.registry=Some(crate::os_store::SnapshotReadRegistryAliasRetirement::new(lease.registry));}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
         if self.active_returned.is_some(){return artifact_retirement_box_close_step(&mut self.active_returned,child).map(|step|RetainedCloneStep::Progress(step.progress()));}
         if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){return match registry.try_admit_one_returned::<T,_>(child,|root,grant|admit_shared_retirement(root,grant,true)){Ok((owner,receipt))=>{*self.active_returned=owner;if !receipt.fits(child){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained read constructor exceeded its original grant"));}Ok(RetainedCloneStep::Progress(receipt))},Err(SnapshotReadLeaseRefusal::Busy)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(reason)=>Err(reason.into_value_error())};}}
         snapshot_registry_alias_close_step(&mut self.registry,grant)

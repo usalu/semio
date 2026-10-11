@@ -12,7 +12,7 @@ fn load(text: &str) -> ModelSnapshot {
 }
 
 fn plan_for(model: &ModelSnapshot) -> Plan {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::try_with_inference(None, model, |inferred| plan_of(model, inferred)).expect("infers").expect("a plan")
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| plan_of(model, inferred)).expect("infers").expect("a plan")
 }
 
 fn count(text: &str, needle: &str) -> usize {
@@ -154,7 +154,7 @@ fn the_export_is_deterministic() {
 fn the_staged_export_ends_with_the_same_document_and_reports_its_progress() {
     let model = load(ZONING);
     let one_shot = export_gbxml(&model).expect("an export").0;
-    let staged = crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::try_with_inference(None, &model, |inferred| {
+    let staged = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, &model, |inferred| {
         let mut job = StagedGbxml::new();
         let mut seen = vec![job.stage()];
         let mut last = job.fraction();

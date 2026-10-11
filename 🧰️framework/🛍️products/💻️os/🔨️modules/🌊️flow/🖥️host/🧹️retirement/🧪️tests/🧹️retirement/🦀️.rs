@@ -286,7 +286,7 @@ fn close(mut session: FlowEvalSession, copy_budget: usize, original_bytes: usize
         for denied in (grant.maximum_capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant}).into_iter().chain((grant.maximum_release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(1),..grant})){
             let (step,heap)=observe(||session.close_step(denied));
             assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-            assert!(matches!(step,Step::Pending{progress} if progress==RetainedCloneProgress::default())||matches!(step,Step::Refused(_)));
+            assert!(matches!(step,Step::Pending{progress} if progress==RetainedCloneProgress::default())||matches!(step,Step::Refused{..}));
         }
         let (step,heap)=observe(||session.close_step(grant));
         let receipt=match step{Step::Pending{progress}|Step::Complete{progress}=>progress,step=>panic!("funded original session close refused: {step:?}")};

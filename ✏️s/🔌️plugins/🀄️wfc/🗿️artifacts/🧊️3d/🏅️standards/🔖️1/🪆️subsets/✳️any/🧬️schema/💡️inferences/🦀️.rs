@@ -71,7 +71,7 @@ pub(crate) const PARENT_PREVIEW_TIME_INTERVAL_MS: u64 = 16;
 
 
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Wfc3dInferenceCommit {
     pub assignments: BTreeMap<String, String>,
@@ -107,7 +107,7 @@ pub struct Wfc3dInferenceCommit {
 /// 🏁 The solved assignment (slot id → tile id), or `Unsolved` for every non-`Solved` outcome
 /// (unsatisfiable/contradiction/budget/cancellation) — see `Wfc3dContradiction` for the dedicated
 /// satisfiability verdict.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum Wfc3dSolveResult {
     #[default]

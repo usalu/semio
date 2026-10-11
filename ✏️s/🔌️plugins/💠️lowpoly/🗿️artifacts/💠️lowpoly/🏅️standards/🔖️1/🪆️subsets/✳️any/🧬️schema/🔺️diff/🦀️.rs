@@ -1,14 +1,14 @@
 //! 🧬️ Lowpoly diff schema — sparse edits over the artifact: a positional object row delta whose patches carry the object's own
 //! field patch, an ordered list of paint-layer edits and an ordered list of selection motions applied to its mesh.
 
-use crate::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer, LowpolySnapshot};
+use crate::{LowpolyObject, LowpolyPaintLayer, LowpolySnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::{MutationDiff, Patchable};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the lowpoly artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff). There is no
 /// whole-document slot: objects are a positional row delta and every object patch is field-sparse.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.lowpoly.lowpoly")]
 pub struct LowpolyDiff {
@@ -26,7 +26,7 @@ protocol::list_delta! {
 }
 
 /// 🩹 One patched object entry: the object's own field patch, then its paint-layer edits, then its mesh vertex positions and the Normal channels they rewrote, in that order.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct LowpolyObjectPatchEntry {
     pub patch: LowpolyObjectPatch,
@@ -36,14 +36,14 @@ pub struct LowpolyObjectPatchEntry {
 }
 
 /// 🖌️ Ordered paint-layer edits under an object patch (layers are addressed by index and carry no identity).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct LowpolyPaintLayersDelta {
     pub edits: Vec<LowpolyPaintEdit>,
 }
 
 /// ✏️ One edit of an object's paint-layer list; edits apply in order.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(tag = "op", rename_all = "camelCase")]
 pub enum LowpolyPaintEdit {
     Insert { index: u32, layer: LowpolyPaintLayer },
@@ -55,7 +55,8 @@ pub enum LowpolyPaintEdit {
 
 /// 📍️ One vertex of an object's managed mesh at an absolute position; the central applier writes it, recomputes the normals and
 /// re-derives the mesh handle.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct LowpolyVertexPosition {
     pub vertex: u32,
@@ -63,7 +64,7 @@ pub struct LowpolyVertexPosition {
 }
 
 /// 🩹 Paint-layer metadata patch.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct LowpolyPaintLayerPatch {
     pub name: Option<String>,

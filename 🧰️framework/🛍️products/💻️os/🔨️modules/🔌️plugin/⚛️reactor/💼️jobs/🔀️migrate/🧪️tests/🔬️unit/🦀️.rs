@@ -1,8 +1,6 @@
 use super::super::*;
+use super::super::tests::{slice_fixture,start_fixture,terminal_fixture};
 
-/// ⛽️ A grant that covers any state action a builtin declares — `WORK_UNITS_EXECUTE` is the price
-/// the execute state of every two-phase builtin charges for its unchunked native dispatch.
-const FULL_GRANT: JobBudget = JobBudget { fuel: WORK_UNITS_EXECUTE, deadline_ms: 1 };
 
 fn append_job_test_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
     let mut out = bytes.to_vec();
@@ -35,9 +33,9 @@ async fn input_bytes(from: &str, to: &str, pack: Vec<u8>) -> Vec<u8> {
 async fn a_two_slice_migrate_job_decodes_then_dispatches_to_the_registered_migration() {
     let (from, to) = register_job_test_migration().await;
     let input = input_bytes(&from, &to, vec![1, 2, 3]).await;
-    start_job(400, JOB_KIND_MIGRATE, &input).await;
+    start_fixture(400, JOB_KIND_MIGRATE, input.clone(), None);
 
-    match step_job(400, FULL_GRANT).await {
+    match slice_fixture(400) {
         JobStep::Running(Some(progress)) => {
             assert_eq!(progress, format!("{from}->{to}").into_bytes());
         }
@@ -48,7 +46,7 @@ async fn a_two_slice_migrate_job_decodes_then_dispatches_to_the_registered_migra
         JobStep::Done(_) => panic!("slice 1 must not finish in one tick"),
         JobStep::Running(None) => panic!("slice 1 must be Running(Some(coordinates)), not a bare Running(None)"),
     }
-    match step_job(400, FULL_GRANT).await {
+    match slice_fixture(400) {
         JobStep::Done(bytes) => assert_eq!(bytes, vec![1, 2, 3, 0xAB]),
         JobStep::Failed(bytes) => {
             let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
@@ -65,23 +63,23 @@ async fn migrate_job_checkpoint_restore_matches_an_uninterrupted_run() {
     let (from, to) = register_job_test_migration().await;
     let input = input_bytes(&from, &to, vec![9, 9]).await;
 
-    start_job(401, JOB_KIND_MIGRATE, &input).await;
-    step_job(401, FULL_GRANT).await;
-    let baseline = match step_job(401, FULL_GRANT).await {
+    start_fixture(401, JOB_KIND_MIGRATE, input.clone(), None);
+    slice_fixture(401);
+    let baseline = match slice_fixture(401) {
         JobStep::Done(bytes) => bytes,
         _ => panic!("uninterrupted run must finish Done within 2 slices"),
     };
 
-    start_job(402, JOB_KIND_MIGRATE, &input).await;
-    step_job(402, FULL_GRANT).await;
+    start_fixture(402, JOB_KIND_MIGRATE, input.clone(), None);
+    slice_fixture(402);
     let entries = checkpoint_jobs().await;
     let entry = entries.iter().find(|entry| entry.job == 402).expect("job 402 must appear in checkpoint_jobs()");
     assert_eq!(entry.checkpoint.as_deref(), Some(PHASE_DECODED));
     let checkpoint = entry.checkpoint.clone();
     cancel_job(402).await;
-
-    restore_job(402, JOB_KIND_MIGRATE, &input, checkpoint).await;
-    let restored_final = match step_job(402, FULL_GRANT).await {
+    terminal_fixture(402);
+    start_fixture(402, JOB_KIND_MIGRATE, input.clone(), checkpoint);
+    let restored_final = match slice_fixture(402) {
         JobStep::Done(bytes) => bytes,
         _ => panic!("a restore from PHASE_DECODED must finish Done on its FIRST step_job call"),
     };
@@ -95,9 +93,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let from = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "1".to_string(), subset: "*".to_string() }.to_coordinate();
     let to = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.jobtest.migrate-missing".to_string(), standard: "2".to_string(), subset: "*".to_string() }.to_coordinate();
     let input = input_bytes(&from, &to, vec![1]).await;
-    start_job(403, JOB_KIND_MIGRATE, &input).await;
-    step_job(403, FULL_GRANT).await;
-    match step_job(403, FULL_GRANT).await {
+    start_fixture(403, JOB_KIND_MIGRATE, input.clone(), None);
+    slice_fixture(403);
+    match slice_fixture(403) {
         JobStep::Failed(bytes) => {
             let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             assert_eq!(fault.code.0, "job.migrate");
@@ -108,8 +106,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
 #[semio_framework_async_macros::async_test]
 async fn migrate_job_reports_a_named_decode_fault_on_garbage_input() {
-    start_job(404, JOB_KIND_MIGRATE, b"not json").await;
-    match step_job(404, FULL_GRANT).await {
+    start_fixture(404, JOB_KIND_MIGRATE, b"not json".to_vec(), None);
+    match slice_fixture(404) {
         JobStep::Failed(bytes) => {
             let fault = semio_framework_diagnostic::decode_fault_bytes(&bytes);
             assert_eq!(fault.code.0, "job.migrate.decode");

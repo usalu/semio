@@ -1,9 +1,10 @@
 //! 👁️ Replaces the viewer's ephemeral local-only evaluated flow output — the render input
 //! every preview repaint reads instead of re-evaluating the whole fixture from scratch.
 
-use super::{Generation3dViewTransientPatch, Generation3dViewTransient, Generation3dViewTransientMutation};
+use super::{Generation3dViewTransientPatch, Generation3dPreviewEvalChange, Generation3dViewTransient, Generation3dViewTransientMutation};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "set-preview-eval")]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]

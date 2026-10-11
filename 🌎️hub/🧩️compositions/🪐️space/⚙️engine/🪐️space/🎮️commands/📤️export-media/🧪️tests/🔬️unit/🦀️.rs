@@ -69,7 +69,7 @@ async fn export_media_emits_download_effect_and_import_requests_file_open() {
 
     let import = studio_emit(&projection, &config, &SpaceCommand::ImportMedia(crate::engine::space::commands::import_media::ImportMedia { node_id: node.id.clone(), format: DWG_FORMAT_ID.into() })).await.expect("handle");
     assert!(import.effects.iter().any(|effect| matches!(effect, Effect::RequestFileOpen { import_action, accept, .. } if import_action == "importMediaPayload" && accept.contains(".dwg"))));
-    assert_eq!(import.config_mutations, vec![SpaceConfigMutation::SetPendingImport { node_id: Some(node.id), format: Some(DWG_FORMAT_ID.into()) }]);
+    assert_eq!(import.config_mutations, vec![SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: Some(node.id), format: Some(DWG_FORMAT_ID.into()) })]);
 
     let pending_config = apply_config(&config, &import.config_mutations).await;
     let payload = studio_emit(&projection, &pending_config, &SpaceCommand::ImportMediaPayload(crate::engine::space::commands::import_media_payload::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") })).await.expect("handle");

@@ -23,7 +23,8 @@ const MAX_INTERACTIVE_IMAGE_BYTES: usize = MAX_INTERACTIVE_IMAGE_PIXELS * 4;
 /// count (`0` = unbounded), and `min_sharpness`/`rolling_window` drive the relative blur gate: a frame is
 /// rejected when its gradient-based sharpness score falls below `min_sharpness * median(last
 /// rolling_window accepted scores)`, once at least 3 accepted frames exist to form a baseline.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct IngestParams {
     pub stride: u32,
     pub max_frames: u32,
@@ -49,7 +50,7 @@ pub enum FrameAcceptance {
 /// 🖼️ One accepted input frame: pixels, true media timestamp, originating stream/camera id (single
 /// stream, id `0`, until [`FrameSource`] grows multi-stream support), and the sharpness score that let
 /// it through the blur gate.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct AcceptedFrame {
     pub index: u32,
     pub image: remodeling_image::ImageRgba8,
@@ -141,6 +142,7 @@ fn describe_probe(probe: &remodeling_video::VideoProbe) -> (String, u32, u32, f6
 /// 📥️ Accumulates accepted input frames for one reconstruction: the real ingestion point where
 /// stride/max-frame sampling and the gradient-score blur-rejection gate actually run, for both
 /// direct-frame ([`push_frame`](Self::push_frame)) and video ([`push_video`](Self::push_video)) input.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct FrameSource {
     ingest: IngestParams,
     stream_id: u32,
@@ -228,7 +230,7 @@ impl FrameSource {
 /// pinhole focal-length ratio (no calibration stage exists yet, so intrinsics are derived from frame
 /// dimensions), feature/matching/SfM/dense/mesh sub-configs (reusing each domain crate's own config type
 /// directly rather than re-declaring their fields), and toggles for the optional motion/geo analyses.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct EngineParams {
     pub ingest: IngestParams,
     pub assumed_focal_ratio: f64,
@@ -307,7 +309,7 @@ fn default_intrinsics(width: u32, height: u32, focal_ratio: f64, distortion: rem
 /// 🚦️ Named stage of the cooperative reconstruction state machine — mirrors the stage *names* the
 /// not-yet-rewritten `remodeling_document::ReconstructionStage` plans to expose, without depending on that
 /// crate.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum EngineStage {
     Idle,
     ExtractingFeatures,
@@ -335,7 +337,7 @@ pub enum EngineStatus {
 /// 🔭️ One decision the pipeline took while observed ([`ReconstructionEngine::observe`]): every feature set,
 /// match candidate verdict, pair, camera registration, triangulated or pruned point, depth map, fused cloud
 /// and extracted mesh. A run job turns each into a visible trace record or step.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum EngineObservation {
     FeaturesExtracted { frame: usize, keypoints: usize },
     MatchAccepted { frame_a: usize, frame_b: usize, query: u32, candidate: u32, distance: u32 },
@@ -488,6 +490,7 @@ fn compute_voxel_bounds_from_extrema(lo: [f64; 3], hi: [f64; 3], voxel_size: f64
 /// depth map, one TSDF integration batch, one `remodeling_mesh` pipeline stage) and is genuinely resumable —
 /// calling it repeatedly with a small budget or once with a huge budget reaches the same [`EngineStatus::Done`]
 /// result, only the call count differs.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ReconstructionEngine {
     params: EngineParams,
     frame_source: FrameSource,
@@ -594,13 +597,14 @@ const LOCAL_BUNDLE_ITERATIONS: usize = 5;
 /// ⏱️ Residual terms one bundle-adjustment unit accumulates (each is ~20 reprojections).
 const BUNDLE_TERMS_PER_STEP: usize = 4;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum FeaturePhase {
     Luma,
     Detect,
     Describe,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct FeaturePreparation {
     frame: usize,
     phase: FeaturePhase,
@@ -614,6 +618,7 @@ struct FeaturePreparation {
     descriptors: Vec<remodeling_feature::Descriptor256>,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct PairMatchPreparation {
     frame_a: usize,
     frame_b: usize,
@@ -633,6 +638,7 @@ struct PairMatchPreparation {
 }
 
 /// 🧭️ Running state of one pair's geometric verification.
+#[derive(semio_framework_value::RetireOwned)]
 struct PairVerification {
     correspondences: Vec<([f64; 2], [f64; 2])>,
     attempts: usize,
@@ -660,13 +666,14 @@ const PAIR_VERIFICATION_THRESHOLD_PX: f64 = 1.0;
 const PAIR_VERIFICATION_MIN_INLIERS: usize = 12;
 const PAIR_VERIFICATION_MIN_INLIER_SHARE: f64 = 0.5;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum DenseStereoPhase {
     ReferenceLuma,
     SourceLuma,
     PatchMatch,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct DenseStereoPreparation {
     phase: DenseStereoPhase,
     reference_frame: usize,
@@ -682,6 +689,7 @@ struct DenseStereoPreparation {
     patch_match: Option<remodeling_dense::PatchMatchPreparation>,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct TextureViewPreparation {
     pose: remodeling_camera::CameraPose,
     intrinsics: remodeling_camera::Intrinsics,
@@ -689,6 +697,7 @@ struct TextureViewPreparation {
     cursor: usize,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct MeshingPreparation {
     sparse_cursor: usize,
     dense_cursor: usize,
@@ -699,7 +708,7 @@ struct MeshingPreparation {
     views: Vec<remodeling_mesh::TextureView>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum FinalizationPhase {
     Snapshot,
     CameraIndex,
@@ -708,6 +717,7 @@ enum FinalizationPhase {
     Done,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct FinalizationPreparation {
     phase: FinalizationPhase,
     snapshot: Option<remodeling_sfm::ReconstructionSnapshotPreparation>,
@@ -731,19 +741,21 @@ impl MeshingPreparation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum TrackPhase {
     Union,
     Group,
     Finish,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct TrackGroup {
     observations: Vec<(usize, u32)>,
     frames: std::collections::BTreeSet<usize>,
     conflict: bool,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct TrackPreparation {
     phase: TrackPhase,
     pair: usize,
@@ -2030,6 +2042,7 @@ pub struct TerminalQualityChunk {
 }
 
 /// 🗺️ Incremental terminal geo-product state; each advance consumes a capped point slice.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct TerminalGeoPreparation {
     pub cursor: usize,
     bounds_complete: bool,
@@ -2207,7 +2220,8 @@ fn pack_reconstruction_bounded(r: &remodeling_sfm::Reconstruction, max_cameras: 
 // #region 🔖️Products
 /// 🌍️ Optional georeferencing-adjacent rasters, populated only when `EngineParams::geo_enabled` and
 /// there's a fused dense point cloud to derive them from.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct GeoProducts {
     pub dsm: remodeling_geo::Raster,
     pub dtm: remodeling_geo::Raster,

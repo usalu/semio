@@ -92,7 +92,8 @@ impl Library {
 }
 
 /// 📅️ What a schedule name of the BIM model stands for: the whole year, or the weekdays between two hours.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Profile {
     Always,
     Weekdays { from: u32, to: u32 },

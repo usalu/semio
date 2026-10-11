@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_tiff::schema::snapshot::{TiffIfd, TiffStorage, TiffStorageKind, TiffTag};
+use semio_s_artifact_stdio_tiff::schema::snapshot::{TiffIfd, TiffSampleBlock, TiffTag, TiffWord64};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_tiff() -> TiffSnapshot {
@@ -10,10 +10,10 @@ fn sample_tiff() -> TiffSnapshot {
                 TiffTag { tag: TAG_IMAGE_LENGTH, values: TiffValues::Long(vec![1]) },
                 TiffTag { tag: TAG_BITS_PER_SAMPLE, values: TiffValues::Short(vec![8, 8, 8]) },
                 TiffTag { tag: TAG_PHOTOMETRIC, values: TiffValues::Short(vec![2]) },
-                TiffTag { tag: 270, values: TiffValues::Ascii(b"semio fixture\0".to_vec()) },
+                TiffTag { tag: 270, values: TiffValues::Ascii(vec!["semio fixture".into()]) },
                 TiffTag { tag: TAG_SAMPLES_PER_PIXEL, values: TiffValues::Short(vec![3]) },
             ],
-            storage: TiffStorage { kind: TiffStorageKind::Strips, chunks: vec![vec![255, 0, 0, 0, 255, 0]], ..TiffStorage::default() },
+            blocks: vec![TiffSampleBlock { x: 0, y: 0, width: 2, height: 1, channels: 3, samples: [255u64, 0, 0, 0, 255, 0].into_iter().map(TiffWord64::from_word).collect() }],
         }],
         ..TiffSnapshot::default()
     }

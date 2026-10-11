@@ -205,6 +205,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
     let cursor_name = format_ident!("__{name}RetainedCloneCursor");
     let generics = bounded_generics(input, quote!(::semio_framework_value::retained_clone::RetainedClone));
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let bitwise = bitwise_methods(input, fields)?;
     let field_rows = fields
         .iter()
         .enumerate()
@@ -336,7 +337,29 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
         impl #impl_generics ::semio_framework_value::retained_clone::RetainedClone for #name #ty_generics #where_clause {
             type Cursor = #cursor_name #ty_generics;
             fn retained_clone_cursor() -> Self::Cursor { Default::default() }
+            #bitwise
         }
+    })
+}
+
+/// 🚚️ Reads `#[retained_clone(bitwise)]`: the opt-in that a `Copy` struct of bitwise fields clones as one memcpy run inside vectors and arrays.
+fn bitwise_opt_in(input: &DeriveInput) -> syn::Result<bool> {
+    let mut bitwise = false;
+    for attribute in input.attrs.iter().filter(|attribute| attribute.path().is_ident("retained_clone")) {
+        attribute.parse_nested_meta(|meta| {
+            if meta.path.is_ident("bitwise") { bitwise = true; Ok(()) } else { Err(meta.error("unknown retained_clone option; expected `bitwise`")) }
+        })?;
+    }
+    Ok(bitwise)
+}
+
+fn bitwise_methods(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStream> {
+    if !bitwise_opt_in(input)? { return Ok(TokenStream::new()); }
+    let types = fields.iter().map(|field| &field.ty);
+    Ok(quote! {
+        const BITWISE: bool = true #(&& <#types as ::semio_framework_value::retained_clone::RetainedClone>::BITWISE)*;
+        fn bitwise_array<const N: usize>(source: &[Self; N]) -> Option<[Self; N]> { if Self::BITWISE { Some(*source) } else { None } }
+        fn bitwise_extend(target: &mut Vec<Self>, source: &[Self]) -> bool { if Self::BITWISE { target.extend_from_slice(source); true } else { false } }
     })
 }
 

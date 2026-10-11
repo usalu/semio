@@ -27,7 +27,7 @@ type Fem2dSnapshot = crate::Fem2dSnapshot;
 /// 🕐️ One frame of the playback chain of ONE results window. `window_id` is the window the chain
 /// was armed for — the retained route captures that exact window's transient authority from it,
 /// never from whichever pane the shell happened to focus when it redispatched the hop.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "result-animation-tick")]
 pub struct ResultAnimationTick {
     pub window_id: String,

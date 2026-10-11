@@ -2460,7 +2460,8 @@ export function mutationEditabilityReport(repoRoot: string, under = "", roots: r
         continue;
       }
       const descriptor = readJsonObject(repoRoot, `${leaf.directory}/🔣️.json`);
-      const composite = descriptor?.composition === "composite";
+      const leafSourcePath = join(repoRoot, leaf.directory, "🦀️.rs");
+      const composite = descriptor?.composition === "composite" && existsSync(leafSourcePath) && /fn\s+may_emit_foreign_steps\s*\(\s*&self\s*\)\s*->\s*bool\s*\{\s*true\b/u.test(readFileSync(leafSourcePath, "utf8"));
       const withdrawOnly = descriptor?.editable === false;
       const wrapper = tree.wrappers.get(leaf.directory)?.find((candidate) => candidate.name === aggregate.payloadTypes.get(variant));
       const inert = wrapper === undefined ? [] : [...wrapper.variants.keys()].filter((phase) => phase !== wrapper.payloadVariant);

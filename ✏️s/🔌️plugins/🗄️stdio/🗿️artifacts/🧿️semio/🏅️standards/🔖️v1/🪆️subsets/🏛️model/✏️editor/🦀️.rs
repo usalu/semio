@@ -50,7 +50,7 @@ pub const SEMIO_MODEL_DOCUMENT_SCHEMA: &str = "stdio.semio.model";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum SemioModelEditCommand {
     /// 🎬️ Navbar example picker payload.
     SetActiveExample { example_id: String },
@@ -173,13 +173,6 @@ pub(crate) mod edit_rules;
 #[derive(Default, Clone, Copy)]
 pub struct SemioModelEditor;
 
-/// 🌱️ Prices the exact selected Model wire and bounded preparation constructors.
-pub(crate) fn member_preparation_birth_bytes() -> usize {
-    store::operation_wire_preparation_factory_birth_bytes::<SemioModelSnapshot, SemioModelMutation>(
-        semio_framework_plugin::bounded_config_store_one_item_preparation_factory_birth_bytes::<SemioModelSnapshot, SemioModelMutation>(),
-    )
-}
-
 impl ArtifactEditor for SemioModelEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
@@ -230,6 +223,7 @@ impl ArtifactEditor for SemioModelEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(
@@ -250,10 +244,6 @@ impl ArtifactEditor for SemioModelEditor {
             Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semioModelEditor_retained_reduce, semioModelEditor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
-    }
-
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::operation_wire_preparation_factory(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES), <Self as editing::SnapshotEditingEditor>::snapshot_operation_wire_source, |operation| { let semantics = semio_framework_plugin::plugin_app_close_prelude::protocol::SemanticMutation::semantics(operation); Some((semantics.entity, semantics.kind)) }))
     }
 
     fn command_id(command: &Self::Command) -> &'static str { semioModelEditor_command_id(command) }

@@ -37,7 +37,7 @@ use semio_framework_plugin::ViewerApp;
 /// pointer sample over the pane). Every route is inert: a viewer emits no mutation by construction,
 /// and `ArtifactViewer` has no `build_document_store_initialization_job`, so it cannot admit a
 /// whole-document replacement either — switching examples is an editor gesture.
-#[derive(Clone, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslEnum, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslEnum, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum Grid2dViewCommand {
     #[dsl(key = "set-active-example")]
     SetActiveExample { example_id: String },
@@ -239,13 +239,7 @@ impl ArtifactViewer for Grid2dViewer {
     /// store lane per stage and faults the whole close with `interactive-job.close-owned-disposer-missing`
     /// (or, one layer down, `artifact store has no owner-supplied bounded disposer`) the moment a lane
     /// answers `None`. A viewer never edits these stores, but it still owns and must release them.
-    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-    }
 
-    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-    }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
@@ -310,6 +304,7 @@ impl ArtifactViewer for Grid2dViewer {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(

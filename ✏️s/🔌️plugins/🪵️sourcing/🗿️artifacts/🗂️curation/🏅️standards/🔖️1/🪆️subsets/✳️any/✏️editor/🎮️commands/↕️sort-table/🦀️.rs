@@ -2,11 +2,11 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::{CurationSnapshot, SortDirection, TableSort};
-use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
+use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation, SetSortEdit};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "sort-table")]
 pub struct SortTable {
     pub column_id: String,
@@ -15,5 +15,5 @@ pub struct SortTable {
 
 pub fn handle(payload: &SortTable, _doc: &ArtifactView<'_, CurationSnapshot>, _cfg: &ConfigView<'_, SourcingCurationConfig>) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation>, Fault> {
     let sort = TableSort { column_id: payload.column_id.clone(), direction: if payload.direction == "desc" { SortDirection::Desc } else { SortDirection::Asc } };
-    Ok(Emit::config(vec![SourcingCurationConfigMutation::SetSort { sort: Some(sort) }]))
+    Ok(Emit::config(vec![SourcingCurationConfigMutation::SetSort(SetSortEdit { sort: Some(sort) })]))
 }

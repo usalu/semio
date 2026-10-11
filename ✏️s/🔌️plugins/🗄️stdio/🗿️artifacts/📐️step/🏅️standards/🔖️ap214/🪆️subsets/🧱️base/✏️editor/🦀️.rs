@@ -51,7 +51,7 @@ pub const STEP_ANY_DOCUMENT_SCHEMA: &str = "stdio.step";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum StepAnyEditCommand {
     /// 🎬️ Navbar example picker payload.
     SetActiveExample { example_id: String },
@@ -226,6 +226,7 @@ impl ArtifactEditor for StepAnyEditor {
             operation_id: request.operation.operation.0,
             generation: request.operation.generation.0,
             canonical_base_revision: request.canonical_base_revision,
+            retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
         let payload = ArtifactRetainedCommandPayload::new(
@@ -246,10 +247,6 @@ impl ArtifactEditor for StepAnyEditor {
             Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, stepAnyEditor_retained_reduce, stepAnyEditor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
-    }
-
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory("stdio-snapshot-edit-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn command_id(command: &Self::Command) -> &'static str { stepAnyEditor_command_id(command) }

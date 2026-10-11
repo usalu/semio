@@ -1,0 +1,20 @@
+{
+  "schema": "semio.artifact.presence-native-json-fixture/v1",
+  "grant": { "items": 1000000, "copyBytes": 16777216, "capacityBytes": 16777216, "releaseBytes": 16777216, "depth": 256 },
+  "nativeMaximumBytes": 67108864,
+  "accepted": [
+    { "name": "Empty Record Defaults", "input": "{\"camera\":{\"eyeHeight\":0.0,\"zoom\":1.0,\"target\":null},\"showMode\":\"shaded\",\"selectedGenerationId\":null,\"label\":\"\",\"revision\":0}" },
+    { "name": "Full Record", "input": "{\"camera\":{\"eyeHeight\":1.75,\"zoom\":0.5,\"target\":\"node-7\"},\"showMode\":\"wire\",\"selectedGenerationId\":\"gen-\\u00e4\\ud83d\\ude00\",\"label\":\"line\\nbreak \\\"quoted\\\"\",\"revision\":18446744073709551615}" },
+    { "name": "Whitespace Tolerant", "input": " { \"camera\" : { \"eyeHeight\" : -2.5e-3 , \"zoom\" : 100 , \"target\" : \"x\" } , \"showMode\" : \"shaded\" , \"selectedGenerationId\" : \"g\" , \"label\" : \"l\" , \"revision\" : 7 } " }
+  ],
+  "refused": [
+    { "name": "Empty Input", "input": "" },
+    { "name": "Unknown Field", "input": "{\"camera\":{\"eyeHeight\":0.0,\"zoom\":1.0,\"target\":null},\"showMode\":\"shaded\",\"selectedGenerationId\":null,\"label\":\"\",\"revision\":0,\"extra\":1}" },
+    { "name": "Wrong Scalar Type", "input": "{\"camera\":{\"eyeHeight\":\"high\",\"zoom\":1.0,\"target\":null},\"showMode\":\"shaded\",\"selectedGenerationId\":null,\"label\":\"\",\"revision\":0}" },
+    { "name": "Unknown Variant", "input": "{\"camera\":{\"eyeHeight\":0.0,\"zoom\":1.0,\"target\":null},\"showMode\":\"glow\",\"selectedGenerationId\":null,\"label\":\"\",\"revision\":0}" },
+    { "name": "Negative Unsigned", "input": "{\"camera\":{\"eyeHeight\":0.0,\"zoom\":1.0,\"target\":null},\"showMode\":\"shaded\",\"selectedGenerationId\":null,\"label\":\"\",\"revision\":-1}" },
+    { "name": "Trailing Data", "input": "{\"camera\":{\"eyeHeight\":0.0,\"zoom\":1.0,\"target\":null},\"showMode\":\"shaded\",\"selectedGenerationId\":null,\"label\":\"\",\"revision\":0} 1" },
+    { "name": "Truncated Object", "input": "{\"camera\":{\"eyeHeight\":0.0" },
+    { "name": "Not An Object", "input": "[1,2,3]" }
+  ]
+}

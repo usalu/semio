@@ -326,7 +326,7 @@ fn sqlite_snapshot_framework_flow_erased_both_formats_expose_persisted_entities(
         let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
         let bytes = independent_sqlite_file(&bytes);
         let database = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-        let payload = with_native_control(|native|(capability.import)("flow.host_snapshot", &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),&mut native.snapshot_encode().unwrap())).unwrap().value;
+        let payload = with_native_control(|native|(capability.import)("flow.host_snapshot", &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),&mut native.snapshot_encode().unwrap())).unwrap().value;
         let actual = Owned::new(match payload {
             store::io_schema::IoPayload::Binary(bytes) => FlowHostSnapshot::decode_pack(&bytes).unwrap(),
             store::io_schema::IoPayload::Text(text) => FlowHostSnapshot::parse_dsl(&text).unwrap(),
@@ -390,12 +390,12 @@ async fn sqlite_snapshot_framework_flow_public_io_reaches_actual_persisted_owner
             SnapshotEncoding::Text => IoPayload::Text(expected.print_dsl()),
         };
         let mut phases = Vec::new();
-        let output = with_native_control(|native|io_run_with_snapshot_control(&export, payload,native,&mut SqliteSnapshotControl::new(&mut |event|{phases.push(event.phase);true},SqliteDatabaseLimits::default()))).await.expect("framework Flow native state must reach public physical SQLite").value;
+        let output = with_native_control(|native|io_run_with_snapshot_control(&export, &mut Some(payload),native,&mut SqliteSnapshotControl::new(&mut |event|{phases.push(event.phase);true},SqliteDatabaseLimits::default()))).await.expect("framework Flow native state must reach public physical SQLite").value;
         let IoPayload::Binary(bytes) = output else { panic!("SQLite endpoint must return binary"); };
         for phase in [SqliteSnapshotPhase::DecodeNative, SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::WritePages] { assert!(phases.contains(&phase)); }
         let bytes = independent_sqlite_file_with_metadata(&bytes, Some(encoding));
         phases.clear();
-        let payload = with_native_control(|native|io_run_with_snapshot_control(&import, IoPayload::Binary(bytes),native,&mut SqliteSnapshotControl::new(&mut |event|{phases.push(event.phase);true},SqliteDatabaseLimits::default()))).await.expect("independently serialized SQLite must reach framework Flow native state").value;
+        let payload = with_native_control(|native|io_run_with_snapshot_control(&import, &mut Some(IoPayload::Binary(bytes)),native,&mut SqliteSnapshotControl::new(&mut |event|{phases.push(event.phase);true},SqliteDatabaseLimits::default()))).await.expect("independently serialized SQLite must reach framework Flow native state").value;
         for phase in [SqliteSnapshotPhase::ReadPages, SqliteSnapshotPhase::ReconstructSnapshot, SqliteSnapshotPhase::EncodeNative] { assert!(phases.contains(&phase)); }
         let actual = Owned::new(match payload {
             IoPayload::Binary(bytes) => FlowHostSnapshot::decode_pack(&bytes).unwrap(),

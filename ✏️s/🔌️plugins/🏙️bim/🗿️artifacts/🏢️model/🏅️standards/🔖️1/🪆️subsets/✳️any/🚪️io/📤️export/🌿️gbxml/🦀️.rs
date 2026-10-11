@@ -651,12 +651,12 @@ pub fn inferred_to_gbxml(model: &ModelSnapshot, inferred: &ModelInference) -> Re
 
 /// 📤️ The gbXML text of `model` plus a note per item that could not be written: the inference comes from the shared session.
 pub fn export_gbxml(model: &ModelSnapshot) -> Result<(String, Vec<String>), String> {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::try_with_inference(None, model, |inferred| inferred_to_gbxml(model, inferred)).map_err(|error| error.to_string())?
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred_to_gbxml(model, inferred)).map_err(|error| error.to_string())?
 }
 
 /// 📊️ The canonical JSON table of the export of `model` (see [`tables`]): the table the lxml, shapely and numpy oracle measures from the written file.
 pub fn export_table(model: &ModelSnapshot) -> Result<String, String> {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::registry::try_with_inference(None, model, |inferred| plan_of(model, inferred).map(|plan| tables::table_json(&plan, model))).map_err(|error| error.to_string())?
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| plan_of(model, inferred).map(|plan| tables::table_json(&plan, model))).map_err(|error| error.to_string())?
 }
 
 /// 🧵️ An export that runs one [`STAGES`] entry per step, so a job can report how far it is and stop between two stages; it keeps the plan and no borrow of the inference.
@@ -714,7 +714,7 @@ pub struct ModelIntoGbxml;
 impl Serializer<ModelSnapshot> for ModelIntoGbxml {
     const INTO: Dialect = XML_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
+    async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let (text, notes) = export_gbxml(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ModelIntoGbxml: {message}"))))?;
         let diagnostics = notes
             .into_iter()

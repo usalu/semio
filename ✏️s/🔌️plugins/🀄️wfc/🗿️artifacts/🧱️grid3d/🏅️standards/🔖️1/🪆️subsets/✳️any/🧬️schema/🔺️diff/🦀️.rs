@@ -5,6 +5,11 @@ use crate::schema::snapshot::{cell_key, Grid3dCell, Grid3dDirection, Grid3dPinne
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
+/// 🚫️ The typed rejection of a patch row, addressed at its field and index.
+fn rejection(code: &str, message: &str, field: &str, index: &str) -> protocol::MutationApplyError {
+    protocol::MutationApplyError::new(code, message).at([field, index])
+}
+
 //#region 🔖️Rows
 /// 📍️ The canonical position a new row of a list lands at in the after list.
 pub trait Grid3dRow: Clone + PartialEq {
@@ -14,7 +19,7 @@ pub trait Grid3dRow: Clone + PartialEq {
 
 //#region 🔖️Optionals
 /// 🔤 An optional String field set to a value or cleared.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Grid3dOptionalText {
     pub value: Option<String>,
@@ -26,7 +31,7 @@ pub struct Grid3dOptionalText {
 macro_rules! wfc_patch {
     ($(#[$doc:meta])* $name:ident for $row:ty { plain { $($field:ident : $ty:ty),* } optional { $($ofield:ident : $wrap:ident),* } }) => {
         $(#[$doc])*
-        #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+        #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, protocol::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase", default)]
         pub struct $name {
             $(pub $field: Option<$ty>,)*
@@ -56,7 +61,7 @@ macro_rules! wfc_patch {
 
 //#region 🔖️Axes
 /// 📏 One cell-size row of an axis: the size the cell at `index` takes.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Grid3dAxisSize {
     pub index: u32,
@@ -64,7 +69,7 @@ pub struct Grid3dAxisSize {
 }
 
 /// 📏 Sparse change of one axis' cell sizes: an optional new length, then per-cell size rows (cells appended by a longer length are set by rows too).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Grid3dAxisPatch {
     pub length: Option<u32>,
@@ -184,7 +189,7 @@ protocol::list_delta! {
 //#endregion 🔖️RowTypes
 
 //#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.wfc.grid3d")]
 pub struct Grid3dDiff {

@@ -5,7 +5,7 @@ use crate::registers::AdjacencyKind;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🔍️ Selects the optional adjacency kind rendered by one concrete Adjacency window.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.architect.program.adjacency-window.config", extension = "architectadjacencywindowcfg")]
@@ -46,11 +46,20 @@ impl protocol::DiffAlgebra<ArchitectAdjacencyWindowConfig> for ArchitectAdjacenc
     }
 }
 
+/// 📦️ Payload of `SetAdjacencyKindFilter`; its field names are the wire names of the former named variant.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SetAdjacencyKindFilter {
+    pub adjacency_kind_filter: Option<AdjacencyKind>,
+}
+
 /// 🔁️ Changes the kind filter of one addressed Adjacency window.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum ArchitectAdjacencyWindowConfigMutation {
-    SetAdjacencyKindFilter { adjacency_kind_filter: Option<AdjacencyKind> },
+    SetAdjacencyKindFilter(SetAdjacencyKindFilter),
 }
 
 impl protocol::Mutation<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWindowConfigMutation {
@@ -85,7 +94,7 @@ impl protocol::Mutation<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWi
     }
 
     fn diff(&self, base: &ArchitectAdjacencyWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        let Self::SetAdjacencyKindFilter { adjacency_kind_filter } = self;
+        let Self::SetAdjacencyKindFilter(SetAdjacencyKindFilter { adjacency_kind_filter }) = self;
         if base.adjacency_kind_filter == *adjacency_kind_filter {
             return protocol::MutationOutcome::new(ArchitectAdjacencyWindowConfigDiff::default()).warning("mutation.no-op", "Adjacency filter is unchanged.");
         }
@@ -94,9 +103,9 @@ impl protocol::Mutation<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWi
 
     fn inverse(&self, base: &ArchitectAdjacencyWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
-        let Self::SetAdjacencyKindFilter { adjacency_kind_filter } = self;
+        let Self::SetAdjacencyKindFilter(SetAdjacencyKindFilter { adjacency_kind_filter }) = self;
         (base.adjacency_kind_filter != *adjacency_kind_filter)
-            .then(|| Self::SetAdjacencyKindFilter { adjacency_kind_filter: base.adjacency_kind_filter.clone() })
+            .then(|| Self::SetAdjacencyKindFilter(SetAdjacencyKindFilter { adjacency_kind_filter: base.adjacency_kind_filter.clone() }))
             .into_iter()
             .collect()
     
@@ -160,6 +169,14 @@ impl protocol::OpBinary for ArchitectAdjacencyWindowConfigMutation {
     }
 }
 
+impl store::snapshot_clone_preparation::ConfigApplyMutation<ArchitectAdjacencyWindowConfig> for ArchitectAdjacencyWindowConfigMutation {
+    fn exchange(self, post: &mut ArchitectAdjacencyWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
+        Ok(match self {
+            Self::SetAdjacencyKindFilter(SetAdjacencyKindFilter { adjacency_kind_filter }) => Self::SetAdjacencyKindFilter(SetAdjacencyKindFilter { adjacency_kind_filter: std::mem::replace(&mut post.adjacency_kind_filter, adjacency_kind_filter) }),
+        })
+    }
+}
+
 pub struct ArchitectAdjacencyWindowConfigOwner;
 
 impl semio_framework_plugin::WindowConfigOwner for ArchitectAdjacencyWindowConfigOwner {
@@ -168,6 +185,9 @@ impl semio_framework_plugin::WindowConfigOwner for ArchitectAdjacencyWindowConfi
     const MAXIMUM_PUBLICATION_BYTES: usize = 1_024;
     type State = ArchitectAdjacencyWindowConfig;
     type Mutation = ArchitectAdjacencyWindowConfigMutation;
+    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
+    const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
     fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
@@ -187,6 +207,6 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, adjacency_kind_filter
     }
     Ok(semio_framework_plugin::WindowConfigMutation::of::<ArchitectAdjacencyWindowConfigOwner>(
         id,
-        ArchitectAdjacencyWindowConfigMutation::SetAdjacencyKindFilter { adjacency_kind_filter },
+        ArchitectAdjacencyWindowConfigMutation::SetAdjacencyKindFilter(SetAdjacencyKindFilter { adjacency_kind_filter }),
     ))
 }

@@ -121,6 +121,7 @@ mod runtime_close_budget_tests {
             assert_eq!(stalled.load(Ordering::SeqCst), 0);
             assert_eq!(runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, Some(1_000_000 + RUNTIME_CLOSE_STALL_CREDIT_US)).0, RuntimeCloseStatus::Ready);
         }
+        let (stalled, since) = stall_state();
         assert_eq!(runtime_close_stall_verdict(false, Some(crate::app::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
         assert_eq!(stalled.load(Ordering::SeqCst), 0);
         assert_eq!(runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, Some(1_000_000 + RUNTIME_CLOSE_STALL_CREDIT_US)).0, RuntimeCloseStatus::Ready);

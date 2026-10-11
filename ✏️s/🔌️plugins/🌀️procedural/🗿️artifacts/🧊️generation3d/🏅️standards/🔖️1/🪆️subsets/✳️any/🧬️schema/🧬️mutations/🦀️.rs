@@ -366,7 +366,8 @@ pub mod change_generation_preview {
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the generation3d document, derived per
 /// `📓️derivation-rules.md` from `Generation3dSnapshot`'s shape.
-#[derive(Clone, Debug, PartialEq, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Generation3dSnapshot, diff = Generation3dDiff, schema = "generation.3d")]
 pub enum Generation3dMutation {
     CreateWidget(create_widget::CreateWidget),

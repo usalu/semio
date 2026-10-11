@@ -66,7 +66,7 @@ export class MaterializeScript extends BundleScript {
       controller.signal.throwIfAborted();
       console.log(`Materializing ${pluginId} ${profile}: descriptor`);
       const stdoutPath = join(temporary, ".descriptor.stdout"), stderrPath = join(temporary, ".descriptor.stderr");
-      const probe = await captureOwnedProcess("node", ["--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, join(temporary, componentBase + ".js")], { cwd: repo, env: process.env, budgetMs: 60_000, maxOutputBytes: 12 * 1024 * 1024, stdoutPath, stderrPath, cancelled: () => controller.signal.aborted });
+      const probe = await captureOwnedProcess("node", ["--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, join(temporary, componentBase + ".js")], { invocation: this.invocation, cwd: repo, env: process.env, budgetMs: 60_000, maxOutputBytes: 12 * 1024 * 1024, stdoutPath, stderrPath });
       if (probe.status !== 0) throw new Error(`Plugin descriptor failed for ${pluginId}: ${probe.stderr}`);
       const base64 = probe.stdout.trim();
       if (!/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) throw new Error(`Invalid descriptor response for ${pluginId}`);

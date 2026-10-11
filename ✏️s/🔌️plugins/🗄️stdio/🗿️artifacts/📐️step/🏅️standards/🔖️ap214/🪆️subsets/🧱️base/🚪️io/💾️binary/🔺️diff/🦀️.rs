@@ -18,7 +18,7 @@ use crate::schema::snapshot::StepFileDescription;
 use crate::schema::snapshot::StepFileName;
 use crate::schema::snapshot::StepFileSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::schema::snapshot::StepValue;
+use crate::schema::snapshot::{StepTypedValue, StepValue};
 
 /// 🧪️ P2-FG1: real LEB128-varint-framed binary primitives backing the upgraded `OpBinary`
 /// (`../🧬️mutations/🦀️.rs`) and `DiffCodec` (below) frames — mirrors md/dxf's own
@@ -122,7 +122,7 @@ pub(crate) fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
                 enc_value_bin(item, out);
             }
         }
-        StepValue::TypedValue { type_name, value } => {
+        StepValue::TypedValue(StepTypedValue { type_name, value }) => {
             out.push(8);
             write_str_bin(out, type_name);
             enc_value_bin(value, out);
@@ -149,7 +149,7 @@ pub(crate) fn dec_value_bin(reader: &mut store::ByteReader<'_>) -> Result<StepVa
         8 => {
             let type_name = read_str_bin(reader)?;
             let value = Box::new(dec_value_bin(reader)?);
-            Ok(StepValue::TypedValue { type_name, value })
+            Ok(StepValue::TypedValue(StepTypedValue { type_name, value }))
         }
         other => Err(format!("step value binary: unknown tag {other}")),
     }

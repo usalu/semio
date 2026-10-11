@@ -18,7 +18,6 @@ name = "semio_framework_tool_machine"
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 # 🎰️ `statechart!` expansions name the kernel `machine::…`, so the dependency carries that name.
 machine = { path = "../../../🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 semio-framework-replication = { workspace = true }

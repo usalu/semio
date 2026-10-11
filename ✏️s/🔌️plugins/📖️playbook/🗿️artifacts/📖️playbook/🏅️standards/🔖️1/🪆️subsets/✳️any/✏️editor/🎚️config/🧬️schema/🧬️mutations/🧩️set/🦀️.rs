@@ -2,7 +2,8 @@
 
 use super::{PlaybookConfig, PlaybookConfigDiff, PlaybookConfigMutation};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "set-contributions")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetContributions {

@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️Records
 /// 📐️ Precomputed zone geometry.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ZoneGeometry {
     pub floor_area_m2: f64,
     pub exterior_area_m2: f64,
@@ -25,7 +25,7 @@ pub struct ZoneGeometry {
 }
 
 /// 🧱️ One opaque heat-transfer surface in world coordinates.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SurfacePrecompute {
     pub zone_id: EntityId,
     pub class: SurfaceClass,
@@ -52,7 +52,7 @@ pub struct SurfacePrecompute {
 }
 
 /// 🪟️ One window placed on its host surface.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct WindowPrecompute {
     pub zone_id: EntityId,
     pub surface_id: EntityId,
@@ -73,7 +73,7 @@ pub struct WindowPrecompute {
 }
 
 /// 🔲️ What one enclosure face is.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum EnclosureFace {
     Opaque(EntityId),
     Window(EntityId),
@@ -84,7 +84,7 @@ pub enum EnclosureFace {
 pub const EXACT_ENCLOSURE_FACES: usize = 48;
 
 /// 🔲️ Long-wave exchange model of one enclosure.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum EnclosureRadiation {
     /// Row-major approximate view factors `F[i][j]` from `i` to `j` and gray-body exchange factors
     /// `𝓕[i][j]`: the net flux into face `i` is `Σ_j σ 𝓕[i][j] (T_j⁴ − T_i⁴)`.
@@ -102,7 +102,7 @@ impl Default for EnclosureRadiation {
 
 /// 🔲️ One zone's radiant enclosure: faces, their areas and room-side emissivities, the long-wave
 /// exchange model, and the diffuse-solar multiplier `1 / Σ A·α` that closes the shortwave balance.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct EnclosurePrecompute {
     pub faces: Vec<EnclosureFace>,
     pub areas_m2: Vec<f64>,
@@ -113,7 +113,7 @@ pub struct EnclosurePrecompute {
 }
 
 /// 🌡️ Resolved thermostat setpoints for a zone.
-#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ResolvedSetpoints {
     pub heating_c: f64,
     pub cooling_c: f64,
@@ -124,7 +124,7 @@ pub struct ResolvedSetpoints {
 
 // #region 🔖️PrecomputedModel
 /// 🧮️ All precomputed data for a simulation run.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct PrecomputedModel {
     pub(crate) zone_geometry: FixedTable<EntityId, ZoneGeometry>,
     pub(crate) surfaces: FixedTable<EntityId, SurfacePrecompute>,
@@ -197,7 +197,7 @@ impl PrecomputedModel {
 
 // #region 🔖️PrecomputeBuilder
 /// 🧮️ Persistent one-record-at-a-time precomputation stage.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(crate) enum PrecomputeStage {
     ReserveBacking,
     IndexMaterials,
@@ -240,7 +240,7 @@ pub(crate) const P7C1_PRECOMPUTE_STAGES: [PrecomputeStage; 17] = [
 ];
 
 /// 🧮️ Cursor state for deterministic, resumable model precomputation.
-#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(crate) struct PrecomputeBuilder {
     output: PrecomputedModel,
     stage: PrecomputeStage,

@@ -7,6 +7,6 @@ use crate::{En1990Mutation, En1990Snapshot};
 
 pub fn inverse(mutation: &ChangePermanents, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
     let removed = mutation.new_permanents.iter().map(|_| En1990Mutation::RemovePermanent(RemovePermanent { index: 0 }));
-    let inserted = base.permanents.iter().cloned().enumerate().map(|(index, item)| En1990Mutation::InsertPermanent(InsertPermanent { index, item }));
+    let inserted = base.permanents.iter().cloned().enumerate().map(|(index, item)| En1990Mutation::InsertPermanent(InsertPermanent { index: Some(index), item }));
     Ok(removed.chain(inserted).rev().collect())
 }

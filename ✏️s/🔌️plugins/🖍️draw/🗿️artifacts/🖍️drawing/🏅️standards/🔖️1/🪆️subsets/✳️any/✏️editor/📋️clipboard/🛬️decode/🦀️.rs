@@ -28,7 +28,7 @@ impl ClipboardHydration{
     fn queue(&mut self,path:&[usize],kind:Kind,source:DslValue,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
         let mut address=[0;MAX_DEPTH];let length=path.len().min(MAX_DEPTH);address[..length].copy_from_slice(&path[..length]);let original=Task{path:address,depth:path.len(),kind,source,at:0,offset:0};
         if path.len()>MAX_DEPTH||self.tasks.len()==MAX_TASKS{self.rejected_task=Some(original);return Err(invalid());}
-        while !self.tasks.has_reserved_slot(){let bytes=match self.tasks.next_allocation_bytes(){Ok(bytes)=>bytes,Err(error)=>{self.rejected_task=Some(original);return Err(error);}};if let Err(error)=control.charge(bytes){self.rejected_task=Some(original);return Err(error);}if let Err(error)=self.tasks.reserve_one(bytes){self.rejected_task=Some(original);return Err(error.refusal().into());}}
+        while !self.tasks.has_reserved_slot(){let bytes=match self.tasks.next_allocation_bytes(){Ok(bytes)=>bytes,Err(error)=>{self.rejected_task=Some(original);return Err(error.into());}};if let Err(error)=control.charge(bytes){self.rejected_task=Some(original);return Err(error);}if let Err(error)=self.tasks.reserve_one(bytes){self.rejected_task=Some(original);return Err(error.refusal().into());}}
         self.tasks.push_reserved(original).map_err(|task|{self.rejected_task=Some(task);invalid()})
     }
     fn strip(&mut self,path:&[usize],entries:&mut[(String,DslValue)],key:&'static str,kind:Kind,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name==key){let source=std::mem::replace(value,match kind{Kind::Text(_)=>DslValue::String(String::new()),_=>DslValue::Array(Vec::new())});self.queue(path,kind,source,control)?;}Ok(())}

@@ -7,7 +7,7 @@
 
 use crate::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
 use crate::FlowSnapshot;
-use flow::{flow_backed_node_graph_extras, flow_host_with_session, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
+use flow::{flow_backed_node_graph_extras, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_artifact_infinite_dag::DagHostSnapshot;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
@@ -92,7 +92,7 @@ fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<NodeGr
 pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
     let live = document.to_host_snapshot();
     let session = FlowEvalSession::new();
-    let host = flow_host_with_session(&live, &session);
+    let host = crate::editor::flow::host_with_session(document.to_host_snapshot(), &session);
     let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.host_snapshot);
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     let snapshot_json = Some(semio_framework_pack_json::to_json_string(document));

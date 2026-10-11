@@ -101,7 +101,7 @@ pub struct ConductionLayer {
 /// 🧱️ Finite-difference node chain of a construction per unit area: `conductance_w_m2k[k]`
 /// couples node `k` and `k + 1`, `capacitance_j_m2k[k]` is node `k`'s lumped heat capacity. Node
 /// `0` is the outside face, the last node the inside face.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct NodeChain {
     pub conductance_w_m2k: Vec<f64>,
     pub capacitance_j_m2k: Vec<f64>,

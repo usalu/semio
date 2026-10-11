@@ -7,7 +7,8 @@ use crate::Generation3dSnapshot;
 
 //#region 🔖️ChangeGenerationPreview
 /// 📝️ Sets the document preview text to `text`, or clears it when it is `None`.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeGenerationPreview {
     pub text: Option<String>,

@@ -36,7 +36,7 @@ pub(crate) type NamedDiffParts<D, T> = (Vec<String>, Vec<(String, D)>, Vec<(usiz
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
+use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
 use crate::DxfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -291,7 +291,7 @@ fn named_absorb_pair<T: DxfNamedElem>(d1_removed: &[String], d1_modified: &[(Str
 //#endregion 🔖️NamedCollectionCore
 
 //#region 🔖️HeaderVarDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfHeaderVarDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -339,19 +339,19 @@ impl DxfNamedElem for DxfHeaderVar {
         }
     }
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfHeaderVarModified {
     pub name: String,
     pub diff: DxfHeaderVarDiff,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfHeaderVarAdded {
     pub index: usize,
     pub header_var: DxfHeaderVar,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfHeaderVarsDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -402,7 +402,7 @@ impl DxfHeaderVarsDiff {
 //#endregion 🔖️HeaderVarDiff
 
 //#region 🔖️LayerDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLayerDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -459,19 +459,19 @@ impl DxfNamedElem for DxfLayer {
         }
     }
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLayerModified {
     pub name: String,
     pub diff: DxfLayerDiff,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLayerAdded {
     pub index: usize,
     pub layer: DxfLayer,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLayersDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -522,7 +522,7 @@ impl DxfLayersDiff {
 //#endregion 🔖️LayerDiff
 
 //#region 🔖️StyleDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfStyleDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -570,19 +570,19 @@ impl DxfNamedElem for DxfStyle {
         }
     }
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfStyleModified {
     pub name: String,
     pub diff: DxfStyleDiff,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfStyleAdded {
     pub index: usize,
     pub style: DxfStyle,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfStylesDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -633,7 +633,7 @@ impl DxfStylesDiff {
 //#endregion 🔖️StyleDiff
 
 //#region 🔖️LinetypeDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLinetypeDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -681,19 +681,19 @@ impl DxfNamedElem for DxfLinetype {
         }
     }
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLinetypeModified {
     pub name: String,
     pub diff: DxfLinetypeDiff,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLinetypeAdded {
     pub index: usize,
     pub linetype: DxfLinetype,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLinetypesDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -746,7 +746,7 @@ impl DxfLinetypesDiff {
 //#region 🔖️TablesDiff
 /// 🔺️ Groups the three name-keyed table diffs — `DxfTables` itself is a weak grouping struct
 /// (not a collection), so its diff is a plain per-field `Option<...>` struct, one per sub-collection.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfTablesDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -822,7 +822,7 @@ impl DxfTablesDiff {
 //#endregion 🔖️TablesDiff
 
 //#region 🔖️EntityDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfLineDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -834,7 +834,7 @@ pub struct DxfLineDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub unknown_group_codes: Option<Vec<(i32, DxfValue)>>,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfCircleDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -846,7 +846,7 @@ pub struct DxfCircleDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub unknown_group_codes: Option<Vec<(i32, DxfValue)>>,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfArcDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -864,7 +864,7 @@ pub struct DxfArcDiff {
 }
 /// 🔺️ `vertices` is a weak leaf value (a polyline's own vertex list) — whole-vec replaced,
 /// never sub-diffed (recipe's weak-entity rule).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfPolylineDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -876,7 +876,7 @@ pub struct DxfPolylineDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub unknown_group_codes: Option<Vec<(i32, DxfValue)>>,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfTextDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -890,7 +890,7 @@ pub struct DxfTextDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub unknown_group_codes: Option<Vec<(i32, DxfValue)>>,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfSolidDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -900,7 +900,7 @@ pub struct DxfSolidDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub unknown_group_codes: Option<Vec<(i32, DxfValue)>>,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfInsertDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -918,7 +918,7 @@ pub struct DxfInsertDiff {
 }
 /// 🔺️ `group_codes` is a weak leaf value — whole-vec replaced (the entity's `kind` never
 /// changes within an `Other` variant match; a kind change is handled by `DxfEntityDiff::Replace`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfOtherDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -928,7 +928,7 @@ pub struct DxfOtherDiff {
 /// 🔺️ Per-entity diff: `Replace` when the entity KIND changes at this index (the plan's
 /// json/xml "Replace on kind change" rule applied to this enum collection element); otherwise a
 /// kind-specific sparse field diff.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum DxfEntityDiff {
     Replace { entity: DxfEntity },
@@ -962,13 +962,13 @@ fn entity_diff_is_empty(d: &DxfEntityDiff) -> bool {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn entity_field_changes(a: &DxfEntity, b: &DxfEntity) -> DxfEntityDiff {
     match (a, b) {
-        (DxfEntity::Line { start: sa, end: ea, layer: la, unknown_group_codes: ua }, DxfEntity::Line { start: sb, end: eb, layer: lb, unknown_group_codes: ub }) => {
+        (DxfEntity::Line(DxfLine { start: sa, end: ea, layer: la, unknown_group_codes: ua }), DxfEntity::Line(DxfLine { start: sb, end: eb, layer: lb, unknown_group_codes: ub })) => {
             DxfEntityDiff::Line(DxfLineDiff { start: (sa != sb).then_some(*sb), end: (ea != eb).then_some(*eb), layer: (la != lb).then(|| lb.clone()), unknown_group_codes: (ua != ub).then(|| ub.clone()) })
         }
-        (DxfEntity::Circle { center: ca, radius: ra, layer: la, unknown_group_codes: ua }, DxfEntity::Circle { center: cb, radius: rb, layer: lb, unknown_group_codes: ub }) => {
+        (DxfEntity::Circle(DxfCircle { center: ca, radius: ra, layer: la, unknown_group_codes: ua }), DxfEntity::Circle(DxfCircle { center: cb, radius: rb, layer: lb, unknown_group_codes: ub })) => {
             DxfEntityDiff::Circle(DxfCircleDiff { center: (ca != cb).then_some(*cb), radius: (ra != rb).then_some(*rb), layer: (la != lb).then(|| lb.clone()), unknown_group_codes: (ua != ub).then(|| ub.clone()) })
         }
-        (DxfEntity::Arc { center: ca, radius: ra, start_angle: saa, end_angle: eaa, layer: la, unknown_group_codes: ua }, DxfEntity::Arc { center: cb, radius: rb, start_angle: sab, end_angle: eab, layer: lb, unknown_group_codes: ub }) => {
+        (DxfEntity::Arc(DxfArc { center: ca, radius: ra, start_angle: saa, end_angle: eaa, layer: la, unknown_group_codes: ua }), DxfEntity::Arc(DxfArc { center: cb, radius: rb, start_angle: sab, end_angle: eab, layer: lb, unknown_group_codes: ub })) => {
             DxfEntityDiff::Arc(DxfArcDiff {
                 center: (ca != cb).then_some(*cb),
                 radius: (ra != rb).then_some(*rb),
@@ -978,20 +978,20 @@ pub fn entity_field_changes(a: &DxfEntity, b: &DxfEntity) -> DxfEntityDiff {
                 unknown_group_codes: (ua != ub).then(|| ub.clone()),
             })
         }
-        (DxfEntity::Polyline { vertices: va, closed: cla, layer: la, unknown_group_codes: ua }, DxfEntity::Polyline { vertices: vb, closed: clb, layer: lb, unknown_group_codes: ub }) => {
+        (DxfEntity::Polyline(DxfPolyline { vertices: va, closed: cla, layer: la, unknown_group_codes: ua }), DxfEntity::Polyline(DxfPolyline { vertices: vb, closed: clb, layer: lb, unknown_group_codes: ub })) => {
             DxfEntityDiff::Polyline(DxfPolylineDiff { vertices: (va != vb).then(|| vb.clone()), closed: (cla != clb).then_some(*clb), layer: (la != lb).then(|| lb.clone()), unknown_group_codes: (ua != ub).then(|| ub.clone()) })
         }
-        (DxfEntity::Text { position: pa, height: ha, value: vaa, layer: la, unknown_group_codes: ua }, DxfEntity::Text { position: pb, height: hb, value: vab, layer: lb, unknown_group_codes: ub }) => DxfEntityDiff::Text(DxfTextDiff {
+        (DxfEntity::Text(DxfText { position: pa, height: ha, value: vaa, layer: la, unknown_group_codes: ua }), DxfEntity::Text(DxfText { position: pb, height: hb, value: vab, layer: lb, unknown_group_codes: ub })) => DxfEntityDiff::Text(DxfTextDiff {
             position: (pa != pb).then_some(*pb),
             height: (ha != hb).then_some(*hb),
             value: (vaa != vab).then(|| vab.clone()),
             layer: (la != lb).then(|| lb.clone()),
             unknown_group_codes: (ua != ub).then(|| ub.clone()),
         }),
-        (DxfEntity::Solid { points: pa, layer: la, unknown_group_codes: ua }, DxfEntity::Solid { points: pb, layer: lb, unknown_group_codes: ub }) => {
+        (DxfEntity::Solid(DxfSolid { points: pa, layer: la, unknown_group_codes: ua }), DxfEntity::Solid(DxfSolid { points: pb, layer: lb, unknown_group_codes: ub })) => {
             DxfEntityDiff::Solid(DxfSolidDiff { points: (pa != pb).then_some(*pb), layer: (la != lb).then(|| lb.clone()), unknown_group_codes: (ua != ub).then(|| ub.clone()) })
         }
-        (DxfEntity::Insert { block_name: ba, position: pa, scale: sca, rotation: ra, layer: la, unknown_group_codes: ua }, DxfEntity::Insert { block_name: bb, position: pb, scale: scb, rotation: rb, layer: lb, unknown_group_codes: ub }) => {
+        (DxfEntity::Insert(DxfInsert { block_name: ba, position: pa, scale: sca, rotation: ra, layer: la, unknown_group_codes: ua }), DxfEntity::Insert(DxfInsert { block_name: bb, position: pb, scale: scb, rotation: rb, layer: lb, unknown_group_codes: ub })) => {
             DxfEntityDiff::Insert(DxfInsertDiff {
                 block_name: (ba != bb).then(|| bb.clone()),
                 position: (pa != pb).then_some(*pb),
@@ -1001,7 +1001,7 @@ pub fn entity_field_changes(a: &DxfEntity, b: &DxfEntity) -> DxfEntityDiff {
                 unknown_group_codes: (ua != ub).then(|| ub.clone()),
             })
         }
-        (DxfEntity::Other { kind: ka, group_codes: ga }, DxfEntity::Other { kind: kb, group_codes: gb }) if ka == kb => DxfEntityDiff::Other(DxfOtherDiff { group_codes: (ga != gb).then(|| gb.clone()) }),
+        (DxfEntity::Other(DxfOther { kind: ka, group_codes: ga }), DxfEntity::Other(DxfOther { kind: kb, group_codes: gb })) if ka == kb => DxfEntityDiff::Other(DxfOtherDiff { group_codes: (ga != gb).then(|| gb.clone()) }),
         _ => DxfEntityDiff::Replace { entity: b.clone() },
     }
 }
@@ -1011,9 +1011,9 @@ pub fn entity_field_changes(a: &DxfEntity, b: &DxfEntity) -> DxfEntityDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_entity_diff(d: &DxfEntityDiff, base: &DxfEntity) -> DxfEntityDiff {
     match (d, base) {
-        (DxfEntityDiff::Line(x), DxfEntity::Line { start, end, layer, unknown_group_codes }) => DxfEntityDiff::Line(DxfLineDiff { start: x.start.map(|_| *start), end: x.end.map(|_| *end), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
-        (DxfEntityDiff::Circle(x), DxfEntity::Circle { center, radius, layer, unknown_group_codes }) => DxfEntityDiff::Circle(DxfCircleDiff { center: x.center.map(|_| *center), radius: x.radius.map(|_| *radius), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
-        (DxfEntityDiff::Arc(x), DxfEntity::Arc { center, radius, start_angle, end_angle, layer, unknown_group_codes }) => DxfEntityDiff::Arc(DxfArcDiff {
+        (DxfEntityDiff::Line(x), DxfEntity::Line(DxfLine { start, end, layer, unknown_group_codes })) => DxfEntityDiff::Line(DxfLineDiff { start: x.start.map(|_| *start), end: x.end.map(|_| *end), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
+        (DxfEntityDiff::Circle(x), DxfEntity::Circle(DxfCircle { center, radius, layer, unknown_group_codes })) => DxfEntityDiff::Circle(DxfCircleDiff { center: x.center.map(|_| *center), radius: x.radius.map(|_| *radius), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
+        (DxfEntityDiff::Arc(x), DxfEntity::Arc(DxfArc { center, radius, start_angle, end_angle, layer, unknown_group_codes })) => DxfEntityDiff::Arc(DxfArcDiff {
             center: x.center.map(|_| *center),
             radius: x.radius.map(|_| *radius),
             start_angle: x.start_angle.map(|_| *start_angle),
@@ -1021,16 +1021,16 @@ fn inverse_entity_diff(d: &DxfEntityDiff, base: &DxfEntity) -> DxfEntityDiff {
             layer: x.layer.as_ref().map(|_| layer.clone()),
             unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()),
         }),
-        (DxfEntityDiff::Polyline(x), DxfEntity::Polyline { vertices, closed, layer, unknown_group_codes }) => DxfEntityDiff::Polyline(DxfPolylineDiff { vertices: x.vertices.as_ref().map(|_| vertices.clone()), closed: x.closed.map(|_| *closed), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
-        (DxfEntityDiff::Text(x), DxfEntity::Text { position, height, value, layer, unknown_group_codes }) => DxfEntityDiff::Text(DxfTextDiff {
+        (DxfEntityDiff::Polyline(x), DxfEntity::Polyline(DxfPolyline { vertices, closed, layer, unknown_group_codes })) => DxfEntityDiff::Polyline(DxfPolylineDiff { vertices: x.vertices.as_ref().map(|_| vertices.clone()), closed: x.closed.map(|_| *closed), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
+        (DxfEntityDiff::Text(x), DxfEntity::Text(DxfText { position, height, value, layer, unknown_group_codes })) => DxfEntityDiff::Text(DxfTextDiff {
             position: x.position.map(|_| *position),
             height: x.height.map(|_| *height),
             value: x.value.as_ref().map(|_| value.clone()),
             layer: x.layer.as_ref().map(|_| layer.clone()),
             unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()),
         }),
-        (DxfEntityDiff::Solid(x), DxfEntity::Solid { points, layer, unknown_group_codes }) => DxfEntityDiff::Solid(DxfSolidDiff { points: x.points.map(|_| *points), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
-        (DxfEntityDiff::Insert(x), DxfEntity::Insert { block_name, position, scale, rotation, layer, unknown_group_codes }) => DxfEntityDiff::Insert(DxfInsertDiff {
+        (DxfEntityDiff::Solid(x), DxfEntity::Solid(DxfSolid { points, layer, unknown_group_codes })) => DxfEntityDiff::Solid(DxfSolidDiff { points: x.points.map(|_| *points), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
+        (DxfEntityDiff::Insert(x), DxfEntity::Insert(DxfInsert { block_name, position, scale, rotation, layer, unknown_group_codes })) => DxfEntityDiff::Insert(DxfInsertDiff {
             block_name: x.block_name.as_ref().map(|_| block_name.clone()),
             position: x.position.map(|_| *position),
             scale: x.scale.map(|_| *scale),
@@ -1038,7 +1038,7 @@ fn inverse_entity_diff(d: &DxfEntityDiff, base: &DxfEntity) -> DxfEntityDiff {
             layer: x.layer.as_ref().map(|_| layer.clone()),
             unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()),
         }),
-        (DxfEntityDiff::Other(x), DxfEntity::Other { group_codes, .. }) => DxfEntityDiff::Other(DxfOtherDiff { group_codes: x.group_codes.as_ref().map(|_| group_codes.clone()) }),
+        (DxfEntityDiff::Other(x), DxfEntity::Other(DxfOther { group_codes, .. })) => DxfEntityDiff::Other(DxfOtherDiff { group_codes: x.group_codes.as_ref().map(|_| group_codes.clone()) }),
         _ => DxfEntityDiff::Replace { entity: base.clone() },
     }
 }
@@ -1065,8 +1065,8 @@ fn apply_line_diff(d: &DxfLineDiff, start: &mut [f64; 3], end: &mut [f64; 3], la
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_entity_diff(d: &DxfEntityDiff, item: &mut DxfEntity) {
     match (d, item) {
-        (DxfEntityDiff::Line(ld), DxfEntity::Line { start, end, layer, unknown_group_codes }) => apply_line_diff(ld, start, end, layer, unknown_group_codes),
-        (DxfEntityDiff::Circle(cd), DxfEntity::Circle { center, radius, layer, unknown_group_codes }) => {
+        (DxfEntityDiff::Line(ld), DxfEntity::Line(DxfLine { start, end, layer, unknown_group_codes })) => apply_line_diff(ld, start, end, layer, unknown_group_codes),
+        (DxfEntityDiff::Circle(cd), DxfEntity::Circle(DxfCircle { center, radius, layer, unknown_group_codes })) => {
             if let Some(v) = cd.center {
                 *center = v;
             }
@@ -1080,7 +1080,7 @@ fn apply_entity_diff(d: &DxfEntityDiff, item: &mut DxfEntity) {
                 *unknown_group_codes = v.clone();
             }
         }
-        (DxfEntityDiff::Arc(ad), DxfEntity::Arc { center, radius, start_angle, end_angle, layer, unknown_group_codes }) => {
+        (DxfEntityDiff::Arc(ad), DxfEntity::Arc(DxfArc { center, radius, start_angle, end_angle, layer, unknown_group_codes })) => {
             if let Some(v) = ad.center {
                 *center = v;
             }
@@ -1100,7 +1100,7 @@ fn apply_entity_diff(d: &DxfEntityDiff, item: &mut DxfEntity) {
                 *unknown_group_codes = v.clone();
             }
         }
-        (DxfEntityDiff::Polyline(pd), DxfEntity::Polyline { vertices, closed, layer, unknown_group_codes }) => {
+        (DxfEntityDiff::Polyline(pd), DxfEntity::Polyline(DxfPolyline { vertices, closed, layer, unknown_group_codes })) => {
             if let Some(v) = &pd.vertices {
                 *vertices = v.clone();
             }
@@ -1114,7 +1114,7 @@ fn apply_entity_diff(d: &DxfEntityDiff, item: &mut DxfEntity) {
                 *unknown_group_codes = v.clone();
             }
         }
-        (DxfEntityDiff::Text(td), DxfEntity::Text { position, height, value, layer, unknown_group_codes }) => {
+        (DxfEntityDiff::Text(td), DxfEntity::Text(DxfText { position, height, value, layer, unknown_group_codes })) => {
             if let Some(v) = td.position {
                 *position = v;
             }
@@ -1131,7 +1131,7 @@ fn apply_entity_diff(d: &DxfEntityDiff, item: &mut DxfEntity) {
                 *unknown_group_codes = v.clone();
             }
         }
-        (DxfEntityDiff::Solid(sd), DxfEntity::Solid { points, layer, unknown_group_codes }) => {
+        (DxfEntityDiff::Solid(sd), DxfEntity::Solid(DxfSolid { points, layer, unknown_group_codes })) => {
             if let Some(v) = sd.points {
                 *points = v;
             }
@@ -1142,7 +1142,7 @@ fn apply_entity_diff(d: &DxfEntityDiff, item: &mut DxfEntity) {
                 *unknown_group_codes = v.clone();
             }
         }
-        (DxfEntityDiff::Insert(id), DxfEntity::Insert { block_name, position, scale, rotation, layer, unknown_group_codes }) => {
+        (DxfEntityDiff::Insert(id), DxfEntity::Insert(DxfInsert { block_name, position, scale, rotation, layer, unknown_group_codes })) => {
             if let Some(v) = &id.block_name {
                 *block_name = v.clone();
             }
@@ -1162,7 +1162,7 @@ fn apply_entity_diff(d: &DxfEntityDiff, item: &mut DxfEntity) {
                 *unknown_group_codes = v.clone();
             }
         }
-        (DxfEntityDiff::Other(od), DxfEntity::Other { group_codes, .. }) => {
+        (DxfEntityDiff::Other(od), DxfEntity::Other(DxfOther { group_codes, .. })) => {
             if let Some(v) = &od.group_codes {
                 *group_codes = v.clone();
             }
@@ -1332,13 +1332,13 @@ impl DxfIndexElem for DxfEntity {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfEntityModified {
     pub index: usize,
     pub diff: DxfEntityDiff,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfEntityAdded {
     pub index: usize,
@@ -1346,7 +1346,7 @@ pub struct DxfEntityAdded {
 }
 /// 🔺️ Index-keyed removed/modified/added triple over an entity collection — reused for BOTH
 /// `DxfSnapshot::entities` and each `DxfBlock::entities`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfEntitiesDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -1397,7 +1397,7 @@ impl DxfEntitiesDiff {
 //#endregion 🔖️EntityDiff
 
 //#region 🔖️BlockDiff
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfBlockDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -1462,19 +1462,19 @@ impl DxfIndexElem for DxfBlock {
         }
     }
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfBlockModified {
     pub index: usize,
     pub diff: DxfBlockDiff,
 }
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfBlockAdded {
     pub index: usize,
     pub block: DxfBlock,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct DxfBlocksDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -1526,7 +1526,7 @@ impl DxfBlocksDiff {
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.dxf`. `schema` is an identity field and never appears here.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dxf.diff")]
 pub struct DxfDiff {
@@ -1639,14 +1639,14 @@ fn entity_diff_matches(entity: &DxfEntity, diff: &DxfEntityDiff) -> bool {
     matches!(
         (entity, diff),
         (_, DxfEntityDiff::Replace { .. })
-            | (DxfEntity::Line { .. }, DxfEntityDiff::Line(_))
-            | (DxfEntity::Circle { .. }, DxfEntityDiff::Circle(_))
-            | (DxfEntity::Arc { .. }, DxfEntityDiff::Arc(_))
-            | (DxfEntity::Polyline { .. }, DxfEntityDiff::Polyline(_))
-            | (DxfEntity::Text { .. }, DxfEntityDiff::Text(_))
-            | (DxfEntity::Solid { .. }, DxfEntityDiff::Solid(_))
-            | (DxfEntity::Insert { .. }, DxfEntityDiff::Insert(_))
-            | (DxfEntity::Other { .. }, DxfEntityDiff::Other(_))
+            | (DxfEntity::Line(DxfLine { .. }), DxfEntityDiff::Line(_))
+            | (DxfEntity::Circle(DxfCircle { .. }), DxfEntityDiff::Circle(_))
+            | (DxfEntity::Arc(DxfArc { .. }), DxfEntityDiff::Arc(_))
+            | (DxfEntity::Polyline(DxfPolyline { .. }), DxfEntityDiff::Polyline(_))
+            | (DxfEntity::Text(DxfText { .. }), DxfEntityDiff::Text(_))
+            | (DxfEntity::Solid(DxfSolid { .. }), DxfEntityDiff::Solid(_))
+            | (DxfEntity::Insert(DxfInsert { .. }), DxfEntityDiff::Insert(_))
+            | (DxfEntity::Other(DxfOther { .. }), DxfEntityDiff::Other(_))
     )
 }
 
@@ -2128,7 +2128,7 @@ pub fn diff_set_block(index: usize, diff: DxfBlockDiff) -> DxfDiff {
 pub(crate) fn demo_diff_cases() -> Vec<DxfDiff> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn line_entity() -> DxfEntity {
-        DxfEntity::Line { start: [0.0, 0.0, 0.0], end: [1.0, 2.0, 3.0], layer: "0".into(), unknown_group_codes: vec![(40, DxfValue::Double { value: 1.5 })] }
+        DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 2.0, 3.0], layer: "0".into(), unknown_group_codes: vec![(40, DxfValue::Double { value: 1.5 })] })
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn block_with_entity() -> DxfBlock {
@@ -2140,7 +2140,7 @@ pub(crate) fn demo_diff_cases() -> Vec<DxfDiff> {
         tables: None,
         blocks: None,
         other_tables: None,
-        entities: Some(DxfEntitiesDiff { removed: vec![2], modified: vec![], added: vec![DxfEntityAdded { index: 0, entity: DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] } }] }),
+        entities: Some(DxfEntitiesDiff { removed: vec![2], modified: vec![], added: vec![DxfEntityAdded { index: 0, entity: DxfEntity::Circle(DxfCircle { center: [0.0, 0.0, 0.0], radius: 1.0, layer: "0".into(), unknown_group_codes: vec![] }) }] }),
     };
 
     let rich = DxfDiff {
@@ -2173,9 +2173,9 @@ pub(crate) fn demo_diff_cases() -> Vec<DxfDiff> {
             removed: vec![2],
             modified: vec![
                 DxfEntityModified { index: 0, diff: DxfEntityDiff::Line(DxfLineDiff { start: Some([9.0, 9.0, 9.0]), end: None, layer: None, unknown_group_codes: None }) },
-                DxfEntityModified { index: 1, diff: DxfEntityDiff::Replace { entity: DxfEntity::Text { position: [0.0, 0.0, 0.0], height: 1.0, value: "swap".into(), layer: "0".into(), unknown_group_codes: vec![] } } },
+                DxfEntityModified { index: 1, diff: DxfEntityDiff::Replace { entity: DxfEntity::Text(DxfText { position: [0.0, 0.0, 0.0], height: 1.0, value: "swap".into(), layer: "0".into(), unknown_group_codes: vec![] }) } },
             ],
-            added: vec![DxfEntityAdded { index: 3, entity: DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![(10, DxfValue::Double { value: 0.0 })] } }],
+            added: vec![DxfEntityAdded { index: 3, entity: DxfEntity::Other(DxfOther { kind: "3DFACE".into(), group_codes: vec![(10, DxfValue::Double { value: 0.0 })] }) }],
         }),
         other_tables: Some(vec![DxfOtherTable { name: "VIEW".into(), tags: vec![] }]),
     };

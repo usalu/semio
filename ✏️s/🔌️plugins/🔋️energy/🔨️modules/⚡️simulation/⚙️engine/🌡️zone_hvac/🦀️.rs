@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖️ZoneEquipment
 /// 🏠️ Zone-level HVAC equipment catalog.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum ZoneEquipment {
     Baseboard { heating: HeatingCoil },
     Radiant { heating: HeatingCoil, cooling: Option<CoolingCoil>, surface_area_m2: f64 },
@@ -22,7 +22,7 @@ pub enum ZoneEquipment {
 }
 
 /// 📥️ Zone equipment simulation request.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ZoneEquipmentRequest {
     pub zone_temperature_c: f64,
     pub zone_humidity_ratio: f64,
@@ -37,7 +37,7 @@ pub struct ZoneEquipmentRequest {
 }
 
 /// 📤️ Zone equipment simulation result.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct ZoneEquipmentOutput {
     pub delivered_heating_w: f64,
     pub delivered_cooling_w: f64,

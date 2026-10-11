@@ -25,7 +25,7 @@ pub const GENERATION3D_IMPORT_REQUEST_ID: u64 = 131;
 /// 🎬️ The action the shell re-dispatches once per picked file, with `{ payload, name }`.
 pub const GENERATION3D_IMPORT_ACTION: &str = "importDocument";
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "import-document-request")]
 #[value(rename_all = "camelCase")]
 pub struct ImportDocumentRequest {

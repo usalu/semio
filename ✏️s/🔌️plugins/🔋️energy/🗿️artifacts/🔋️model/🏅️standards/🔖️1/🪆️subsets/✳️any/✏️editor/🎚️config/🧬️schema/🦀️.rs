@@ -2,7 +2,7 @@
 //! @see ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs
 
 /// 🧬️ config schema of `s.energy.model`, projected from `EnergyModelConfig`.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct EnergyModelConfig {
     /// 🏷️ @state config
     pub zone_timestep_minutes: u32,

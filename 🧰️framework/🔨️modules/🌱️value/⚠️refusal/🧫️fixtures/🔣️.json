@@ -334,7 +334,7 @@
       "id": "retained lease identity",
       "operation": "cloneLeaseChanged",
       "kind": "invariantViolated",
-      "message": "retained clone source lease or projected path changed",
+      "message": "original clone source or projected path changed",
       "path": [
         "body",
         3,
@@ -342,7 +342,7 @@
       ],
       "expected": {
         "kind": "invariantViolated",
-        "display": "body.3.field.retained clone source lease or projected path changed"
+        "display": "body.3.field.original clone source or projected path changed"
       }
     },
     {

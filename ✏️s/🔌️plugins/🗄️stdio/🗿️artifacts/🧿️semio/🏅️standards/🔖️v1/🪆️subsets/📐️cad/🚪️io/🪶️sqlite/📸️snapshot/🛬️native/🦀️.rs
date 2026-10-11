@@ -9,7 +9,7 @@ pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotCo
  let limits=control.limits();crate::standards::v1::subsets::cad::io::sqlite::snapshot::admit_layout(limits)?;
  let size=match payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio CAD native input exceeds file limit"))}
  control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-  let native_before=native_control.owned_bytes();let result=native_control.scoped_maximum(native_before.checked_add(remaining).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?,|native_control|{
+  let native_before=native_control.owned_bytes();let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native_control|{
   let result=(||->Result<SemioCadSnapshot,ValueError>{let result=match payload{
    store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOCAD_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control)?;binary(body,native_control,limits)?},
    store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOCAD_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,native_control,limits)?}
@@ -53,3 +53,5 @@ pub(crate) fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:Sql
  owner.get_mut().blocks=native::text_list(fields[2].unwrap_or("[]"),control,limits,&mut entities,|value,control,entities|{let[name,base_point,records]=native::record(value,control)?;let name=native::hex_text(name,control)?;let mut owner=native::Owned::new(CadBlock{name,base_point:SemioPoint2{x:0.0,y:0.0},entities:Vec::new()});owner.get_mut().base_point=point_text(base_point,control)?;owner.get_mut().entities=native::text_list(records,control,limits,entities,|value,control,entities|record_text(value,control,limits,entities))?;Ok(owner.take())})?;
  owner.get_mut().entities=native::text_list(fields[3].unwrap_or("[]"),control,limits,&mut entities,|value,control,entities|record_text(value,control,limits,entities))?;Ok(owner.take())
 }
+/// 🕳️ The empty typed root every native prefix starts from.
+pub(crate) fn empty()->crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot{crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot{schema:String::new(),layers:Vec::new(),blocks:Vec::new(),entities:Vec::new()}}

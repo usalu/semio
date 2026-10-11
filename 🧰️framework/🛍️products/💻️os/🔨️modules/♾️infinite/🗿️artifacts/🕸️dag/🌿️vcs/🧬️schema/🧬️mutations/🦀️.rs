@@ -45,7 +45,8 @@ pub use replace_node_kind::ReplaceNodeKind;
 pub use replace_node_properties::ReplaceNodeProperties;
 pub use resize_node::ResizeNode;
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = DagSnapshot, diff = DagDiff, schema = "dag.dag")]
 pub enum DagMutation {
